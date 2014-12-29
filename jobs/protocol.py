@@ -165,19 +165,19 @@ class TsvProtocol(object):
             ret += str(len(obj))
 
             for key in obj:
-                ret += self.TAB_SEPARATOR
+                ret += TsvProtocol.TAB_SEPARATOR
                 ret += TsvProtocol.parseAndWrite(key)
-                ret += self.TAB_SEPARATOR
+                ret += TsvProtocol.TAB_SEPARATOR
                 ret += TsvProtocol.parseAndWrite(obj[key])
 
         elif isinstance(obj, list):
             ret += str(len(obj))
             for element in obj:
-                ret += self.TAB_SEPARATOR
+                ret += TsvProtocol.TAB_SEPARATOR
                 ret += TsvProtocol.parseAndWrite(element)
 
         elif isinstance(obj, tuple):
-            ret += self.TAB_SEPARATOR.join([TsvProtocol.parseAndWrite(elem) for elem in obj])
+            ret += TsvProtocol.TAB_SEPARATOR.join([TsvProtocol.parseAndWrite(elem) for elem in obj])
 
         else:
             ret += obj.to_tsv()
