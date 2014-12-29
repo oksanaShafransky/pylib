@@ -3,6 +3,7 @@ __author__ = 'Felix'
 class JobStats:
 
     def __init__(self, runner):
+        self.job_name = runner.get_job_name()
         self.counters = runner.counters()
         self.opts = runner.get_opts()
 
@@ -24,9 +25,6 @@ class PostJobHandler:
 class PrintRecorder:
 
     def record(self, stats):
-        print 'got %d counters' % len(stats.counters)
+        print 'job %s stats:' % stats.job_name
 
         print stats.counters
-
-        print 'these are the opts:'
-        print stats.opts

@@ -6,13 +6,15 @@ import subprocess
 from mrjob.job import MRJob
 
 from stats import PostJobHandler, PrintRecorder
-from protocol import HBaseProtocol
+from protocol import HBaseProtocol, TsvProtocol
+
+from inspect import isclass
 
 std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
 
-lib_path = os.path.abspath(os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pylib'))
-lib_file = 'jobs.tar.gz'
+lib_path = os.path.abspath(os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
+lib_file = 'pylib.tar.gz'
 
 
 class JobBuilder:
@@ -21,9 +23,11 @@ class JobBuilder:
     max_reduce_task_fails = 20
 
     def __init__(self, job_name='MRJob'):
+        os.environ['HADOOP_LOG_DIR'] = '/user/felixv/logs'
         self.stages = []
         self.args = [
                      '--no-output',
+                     '--cleanup', 'NONE',
                      '--python-archive', '%s/%s' % (lib_path, lib_file),
                      '--jobconf', ('mapred.job.name=%s' % job_name),
                      '--jobconf', ('mapred.max.map.failures.percent=%d' % self.max_map_fails),
@@ -46,6 +50,16 @@ class JobBuilder:
     def add_input_path(self, input_path, combine=False):
         self.input_paths += [input_path]
         return self
+
+    def add_tsv_input_path(self, input_path, key_class, value_class, combine=False):
+        if not isclass(key_class) or not hasattr(key_class, 'read_tsv'):
+            raise Exception('key_class parameter must be a class with read_tsv method definition')
+        if not isclass(value_class) or not hasattr(value_class, 'read_tsv'):
+            raise Exception('value_class parameter must be a class with read_tsv method definition')
+        self.args += ['--setup', 'export %s=%s.%s' % (TsvProtocol.named_key_class_env(input_path), key_class.__module__, key_class.__name__)]
+        self.args += ['--setup', 'export %s=%s.%s' % (TsvProtocol.named_value_class_env(input_path), value_class.__module__, value_class.__name__)]
+
+        return self.add_input_path(input_path, combine)
 
     def output_on(self, output_path):
         self.output_method = 'file'

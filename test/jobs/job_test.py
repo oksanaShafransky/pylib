@@ -1,35 +1,33 @@
 __author__ = 'Felix'
 
 from mrjob.job import MRJob
+from mrjob.protocol import PickleProtocol
 
 from funcs import Summer
+from funcs import Token, Count
 from jobs.protocol import TsvProtocol, HBaseProtocol
 from jobs.builder import Job
 
-SEPARATOR = '\t'
-
 class MyJob(Job):
 
+    INPUT_PROTOCOL = TsvProtocol
+    INTERNAL_PROTOCOL = PickleProtocol
     OUTPUT_PROTOCOL = HBaseProtocol
 
     def configure_options(self):
         super(MyJob, self).configure_options()
         self.add_passthrough_option('--factor', help="Multiplicative Factor")
 
-    def mapper(self, _, line):
-
-        fields = line.split(SEPARATOR)
-        tok = fields[0]
-        count = int(fields[1])
-
-        yield tok, count
+    def mapper(self, key, value):
+        self.increment_counter('Read', 'Random Shit', 1)
+        yield key, value
 
     def reducer(self, key, values):
 
         self.processor = Summer(int(self.options.factor))
-        agg_val = self.processor.apply(values)
+        agg_val = self.processor.apply([value.count for value in values])
         hbase_put = {'clean_value': str(agg_val)}
-        yield key, hbase_put
+        yield key.token, hbase_put
 
 
     def steps(self):
