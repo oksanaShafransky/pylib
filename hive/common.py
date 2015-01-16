@@ -31,6 +31,8 @@ logging.basicConfig(format='%(asctime)s [ %(process)s : %(count)s ] %(filename)s
 logger = logging.getLogger(os.path.basename(__file__))
 logger.addFilter(ContextFilter())
 
+MOBILE_ALL_CATEGORY = '\"\"'
+
 quality_count_writable = "sum(a.visits),sum(a.pageviews),sum(a.onepagevisits),sum(a.timeonsite)"
 quality_estimated_count_writable = "sum(a.visits), sum(a.estimatedvisits),sum(a.pageviews),sum(a.estimatedpageviews),sum(a.onepagevisits),sum(a.timeonsite)"
 unique_visits_pvs_count_writable = "sum(a.visits),sum(a.pageviews),sum(a.onepagevisits),sum(a.timeonsite),sum(a.unique)"
@@ -379,23 +381,24 @@ def deploy_jar(deploy_path, jar_location):
         ["hadoop", "fs", "-put", deploy_path + "/lib/common-1.0.jar", jar_location + "/common.jar"])
 
 
-# use ['add jar %s' % jar for jar in deploy_all_jars(...) ]
+# use ['add jar %s' % jar for jar in detect_jars(...) ]
+def detect_jars(deploy_path, lib_path="lib"):
+    main_jars = [jar for jar in listdir(deploy_path) if isfile(join(deploy_path, jar)) and jar.endswith('.jar')]
+    full_lib_path = join(deploy_path, lib_path)
+    lib_jars = [jar for jar in listdir(full_lib_path) if isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
+
+    return lib_jars + main_jars
+
+
 def deploy_all_jars(deploy_path, jar_location, lib_path="lib"):
     logger.info("copy jars to hdfs, location on hdfs: " + jar_location + " from local path: " + deploy_path)
-    if GLOBAL_DRYRUN:
-        'print dryrun set, not actually deploying'
-        return
 
-    main_jars = [jar for jar in listdir(deploy_path) if isfile(join(deploy_path, jar)) and jar.endswith('.jar')]
-    full_lib_path = join(deploy_path,lib_path)
-    lib_jars = [jar for jar in listdir(full_lib_path) if isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
+    full_lib_path = join(deploy_path, lib_path)
 
     subprocess.call(["hadoop", "fs", "-rm", "-r", jar_location])
     subprocess.call(["hadoop", "fs", "-mkdir", jar_location])
     subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (deploy_path, jar_location)])
     subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (full_lib_path, jar_location)])
-
-    return lib_jars + main_jars
 
 
 def wait_on_processes(processes):
