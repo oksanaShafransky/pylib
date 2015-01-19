@@ -42,21 +42,26 @@ class Exporter:
 
 class ByteHelper:
 
-    bytes = ''
+    def __init__(self):
+        self._bytes = ''
+
+    @property
+    def bytes(self):
+        return self._bytes
 
     def append_utf(self, str):
         encoded = str.encode('utf-8')
         self.append_short(len(encoded))
-        self.bytes += encoded
+        self._bytes += encoded
 
     def append_short(self, num):
-        self.bytes += pack('>h', num)
+        self._bytes += pack('>h', num)
 
     def append_int(self, num):
-        self.bytes += pack('>i', num)
+        self._bytes += pack('>i', num)
 
     def append_double(self, num):
-        self.bytes += pack('>d', num)
+        self._bytes += pack('>d', num)
 
     def append_collection(self, collection, types):
         self.append_int(len(collection))
