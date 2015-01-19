@@ -201,6 +201,8 @@ def run_hive_job(hql, job_name, num_of_reducers, calc_pool='calculation', sync=T
            "-hiveconf", "mapred.fairscheduler.pool=" + calc_pool,
            "-hiveconf", "hive.exec.compress.output=" + compress,
            "-hiveconf", "io.seqfile.compression=BLOCK",
+           "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
+           "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
            "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
            "-hiveconf", "mapred.max.split.size=134217728"
     ]
