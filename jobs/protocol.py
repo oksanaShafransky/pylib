@@ -1,32 +1,43 @@
+import binascii
+
 __author__ = 'Felix'
 
-import sys
 import os
 from hbase import Exporter
 import xml.etree.ElementTree as ET
 
 
+def encode_env(s):
+    return 'v' + binascii.b2a_hex(s)
+
+
+def decode_env(s):
+    assert s[0]=='v'
+    return binascii.a2b_hex(s[1:])
+
+
 def load_class(class_name):
     parts = class_name.split('.')
     module = ".".join(parts[:-1])
-    m = __import__( module )
+    m = __import__(module)
     for comp in parts[1:]:
-        m = getattr(m, comp)            
+        m = getattr(m, comp)
     return m
 
+
 def determine_hbase_servers():
-        hbase_conf = os.environ['HBASE_CONF_DIR'] if 'HBASE_CONF_DIR' in os.environ else '/etc/hbase/conf'
+    hbase_conf = os.environ['HBASE_CONF_DIR'] if 'HBASE_CONF_DIR' in os.environ else '/etc/hbase/conf'
 
-        conf = ET.parse('%s/hbase-site.xml' % hbase_conf)
-        root = conf.getroot()
+    conf = ET.parse('%s/hbase-site.xml' % hbase_conf)
+    root = conf.getroot()
 
-        # should only be 1
-        quorum_prop = [elem.find('value').text for elem in root.findall('property') if elem.find('name').text == 'hbase.zookeeper.quorum'][0]
-        return quorum_prop.split(',')
+    # should only be 1
+    quorum_prop = [elem.find('value').text for elem in root.findall('property') if
+                   elem.find('name').text == 'hbase.zookeeper.quorum'][0]
+    return quorum_prop.split(',')
 
 
 class HBaseProtocol(object):
-
     HBASE_TABLE_ENV = 'mrjob_hbase_table'
     HBASE_COLUMN_FAMILY_ENV = 'mrjob_hbase_cf'
 
@@ -49,12 +60,11 @@ class HBaseProtocol(object):
                 continue
 
 
-
     def write(self, key, value):
         self.writer.put(key, value)
 
-class TsvProtocol(object):
 
+class TsvProtocol(object):
     TAB_SEPARATOR = '\t'
 
     KEY_CLASS_PROPERTY_ENV = 'key_class_name'
@@ -62,28 +72,30 @@ class TsvProtocol(object):
 
     @staticmethod
     def named_key_class_env(name):
-        return '%s_%s' % (TsvProtocol.KEY_CLASS_PROPERTY_ENV, name.replace('/', '_SLASH_'))
+        return encode_env('%s_%s' % (TsvProtocol.KEY_CLASS_PROPERTY_ENV, name))
 
     @staticmethod
     def named_value_class_env(name):
-        return '%s_%s' % (TsvProtocol.VALUE_CLASS_PROPERTY_ENV, name.replace('/','_SLASH_'))
+        return encode_env('%s_%s' % (TsvProtocol.VALUE_CLASS_PROPERTY_ENV, name))
 
     @staticmethod
     def determine_key_class():
         file_name = os.environ['map_input_file']
-        for env in os.environ:
-            reverted = env.replace('_SLASH_', '/')
-            if TsvProtocol.KEY_CLASS_PROPERTY_ENV in env and reverted[len(TsvProtocol.KEY_CLASS_PROPERTY_ENV+'_'):] in file_name:
-                return load_class(os.environ[env])
-        
+        for env_key in os.environ:
+            reverted = decode_env(env_key.replace)
+            if TsvProtocol.KEY_CLASS_PROPERTY_ENV in env_key and reverted[len(
+                            TsvProtocol.KEY_CLASS_PROPERTY_ENV + '_'):] in file_name:
+                return load_class(os.environ[env_key])
+
         raise Exception('key class undefined for %s' % file_name)
 
     @staticmethod
     def determine_value_class():
         file_name = os.environ['map_input_file']
         for env in os.environ:
-            reverted = env.replace('_SLASH_', '/')
-            if TsvProtocol.VALUE_CLASS_PROPERTY_ENV in env and reverted[len(TsvProtocol.VALUE_CLASS_PROPERTY_ENV+'_'):] in file_name:
+            reverted = decode_env(env.replace)
+            if TsvProtocol.VALUE_CLASS_PROPERTY_ENV in env and reverted[len(
+                            TsvProtocol.VALUE_CLASS_PROPERTY_ENV + '_'):] in file_name:
                 return load_class(os.environ[env])
 
         raise Exception('value class undefined for %s' % file_name)
@@ -98,15 +110,15 @@ class TsvProtocol(object):
         ret_idx = idx
 
         dict_len = int(fields[ret_idx])
-        ret_idx = ret_idx + 1
+        ret_idx += 1
 
         for i in range(dict_len):
             key = key_class()
             ret_idx = TsvProtocol.read_value(key, fields, ret_idx)
-              
+
             value = value_class()
             ret_idx = TsvProtocol.read_value(value, fields, ret_idx)
- 
+
             ret[key] = value
 
         return ret, ret_idx
@@ -117,7 +129,7 @@ class TsvProtocol(object):
         ret_idx = idx
 
         list_len = int(fields[ret_idx])
-        ret_idx = ret_idx + 1
+        ret_idx += 1
 
         for i in range(list_len):
             elem = element_class()
@@ -126,14 +138,14 @@ class TsvProtocol(object):
             ret += [elem]
 
         return ret, ret_idx
- 
+
     @staticmethod
     def read_tuple(element_classes, fields, idx):
         lst = []
         ret_idx = idx
 
         list_len = int(fields[ret_idx])
-        ret_idx = ret_idx + 1
+        ret_idx += 1
 
         for i in range(list_len):
             elem = element_classes[i]()
@@ -141,7 +153,7 @@ class TsvProtocol(object):
 
             lst += [elem]
 
-        return tuple(lst), ret_idx   
+        return tuple(lst), ret_idx
 
     def read(self, line):
         fields = line.split(TsvProtocol.TAB_SEPARATOR)
@@ -156,7 +168,7 @@ class TsvProtocol(object):
         return key, value
 
     @staticmethod
-    def parseAndWrite(obj):
+    def parse_and_write(obj):
 
         ret = ''
 
@@ -166,18 +178,18 @@ class TsvProtocol(object):
 
             for key in obj:
                 ret += TsvProtocol.TAB_SEPARATOR
-                ret += TsvProtocol.parseAndWrite(key)
+                ret += TsvProtocol.parse_and_write(key)
                 ret += TsvProtocol.TAB_SEPARATOR
-                ret += TsvProtocol.parseAndWrite(obj[key])
+                ret += TsvProtocol.parse_and_write(obj[key])
 
         elif isinstance(obj, list):
             ret += str(len(obj))
             for element in obj:
                 ret += TsvProtocol.TAB_SEPARATOR
-                ret += TsvProtocol.parseAndWrite(element)
+                ret += TsvProtocol.parse_and_write(element)
 
         elif isinstance(obj, tuple):
-            ret += TsvProtocol.TAB_SEPARATOR.join([TsvProtocol.parseAndWrite(elem) for elem in obj])
+            ret += TsvProtocol.TAB_SEPARATOR.join([TsvProtocol.parse_and_write(elem) for elem in obj])
 
         else:
             ret += obj.to_tsv()
@@ -185,4 +197,4 @@ class TsvProtocol(object):
         return ret
 
     def write(self, key, value):
-        return self.parseAndWrite(key) + self.TAB_SEPARATOR + self.parseAndWrite(value)
+        return self.parse_and_write(key) + self.TAB_SEPARATOR + self.parse_and_write(value)

@@ -1,3 +1,5 @@
+import tempfile
+
 __author__ = 'Felix'
 
 import os
@@ -9,6 +11,7 @@ from stats import PostJobHandler, PrintRecorder
 from protocol import HBaseProtocol, TsvProtocol
 
 from inspect import isclass
+import cPickle as pickle
 
 std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
@@ -126,6 +129,7 @@ class JobBuilder:
             return False, 'output path not configured'
 
         return True, 'OK'
+
 
     def get_job(self, job_cls, runner='hadoop', **kwargs):
 
