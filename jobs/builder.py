@@ -19,6 +19,8 @@ lib_file = 'pylib.tar.gz'
 
 class JobBuilder:
 
+    GZ_COUNTER = 0
+
     max_map_fails = 90
     max_reduce_task_fails = 20
 
@@ -28,6 +30,7 @@ class JobBuilder:
         self.args = [
                      '--no-output',
                      '--cleanup', 'NONE',
+                     '--interpreter', '/usr/bin/python',
                      '--python-archive', '%s/%s' % (lib_path, lib_file),
                      '--jobconf', ('mapred.job.name=%s' % job_name),
                      '--jobconf', ('mapred.max.map.failures.percent=%d' % self.max_map_fails),
@@ -114,6 +117,18 @@ class JobBuilder:
         self.args += ['--file', file]
         return self
 
+    def get_next_gz(self):
+        ret = '%d.tar.gz' % JobBuilder.GZ_COUNTER
+        JobBuilder.GZ_COUNTER = JobBuilder.GZ_COUNTER + 1
+        return ret
+
+    def include_dir(self, dir):
+        archive_name = self.get_next_gz()
+        self.add_setup_cmd('tar -zcvf %s %s' % (archive_name, dir))
+        self.args += ['--python-archive', '%s' % archive_name]
+        self.add_follow_up_cmd('rm %s' % archive_name)
+        return self
+
     def set_property(self, prop_name, prop_value):
         self.args += [('--%s' % prop_name), prop_value]
         return self
@@ -147,11 +162,17 @@ class JobBuilder:
                 self.args += ['--output-dir', ('hdfs://%s' % self.output_path)]
 
             self.args += [('hdfs://%s' % path) for path in self.input_paths]
+
+            for del_path in self.deleted_paths:
+                self.add_setup_cmd('hadoop fs -rm -r -f %s' % del_path)
         else:
             if self.output_method == 'file':
                 self.args += ['--output-dir', self.output_path]
 
             self.args += self.input_paths
+
+            for del_path in self.deleted_paths:
+                self.add_setup_cmd('rm -rf %s' % del_path)
 
         for setup in self.setups:
             setup()
