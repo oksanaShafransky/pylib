@@ -26,6 +26,10 @@ class Arg:
         except ValueError:
             return datetime.strptime(date_str, '%Y-%m')
 
+    @staticmethod
+    def list_arg(arg_str):
+        return arg_str.split(',')
+
     def __init__(self, short_name, long_name, attribute, type, help, required=True, default=None):
         self.short = short_name
         self.long = long_name
