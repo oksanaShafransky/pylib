@@ -118,7 +118,7 @@ class JobBuilder:
         return self
 
     def get_next_gz(self):
-        ret = '%d.tar.gz' % JobBuilder.GZ_COUNTER
+        ret = '/tmp/%d.tar.gz' % JobBuilder.GZ_COUNTER
         JobBuilder.GZ_COUNTER = JobBuilder.GZ_COUNTER + 1
         return ret
 
