@@ -19,22 +19,21 @@ def decode_env(s):
 def load_class(class_name):
     parts = class_name.split('.')
     module = ".".join(parts[:-1])
-    m = __import__(module)
+    m = __import__( module )
     for comp in parts[1:]:
-        m = getattr(m, comp)
+        m = getattr(m, comp)            
     return m
 
 
 def determine_hbase_servers():
-    hbase_conf = os.environ['HBASE_CONF_DIR'] if 'HBASE_CONF_DIR' in os.environ else '/etc/hbase/conf'
+        hbase_conf = os.environ['HBASE_CONF_DIR'] if 'HBASE_CONF_DIR' in os.environ else '/etc/hbase/conf'
 
-    conf = ET.parse('%s/hbase-site.xml' % hbase_conf)
-    root = conf.getroot()
+        conf = ET.parse('%s/hbase-site.xml' % hbase_conf)
+        root = conf.getroot()
 
-    # should only be 1
-    quorum_prop = [elem.find('value').text for elem in root.findall('property') if
-                   elem.find('name').text == 'hbase.zookeeper.quorum'][0]
-    return quorum_prop.split(',')
+        # should only be 1
+        quorum_prop = [elem.find('value').text for elem in root.findall('property') if elem.find('name').text == 'hbase.zookeeper.quorum'][0]
+        return quorum_prop.split(',')
 
 
 class HBaseProtocol(object):
@@ -86,7 +85,7 @@ class TsvProtocol(object):
             if TsvProtocol.KEY_CLASS_PROPERTY_ENV in env_key and reverted[len(
                             TsvProtocol.KEY_CLASS_PROPERTY_ENV + '_'):] in file_name:
                 return load_class(os.environ[env_key])
-
+        
         raise Exception('key class undefined for %s' % file_name)
 
     @staticmethod
@@ -115,10 +114,10 @@ class TsvProtocol(object):
         for i in range(dict_len):
             key = key_class()
             ret_idx = TsvProtocol.read_value(key, fields, ret_idx)
-
+              
             value = value_class()
             ret_idx = TsvProtocol.read_value(value, fields, ret_idx)
-
+ 
             ret[key] = value
 
         return ret, ret_idx
@@ -138,7 +137,7 @@ class TsvProtocol(object):
             ret += [elem]
 
         return ret, ret_idx
-
+ 
     @staticmethod
     def read_tuple(element_classes, fields, idx):
         lst = []
@@ -153,7 +152,7 @@ class TsvProtocol(object):
 
             lst += [elem]
 
-        return tuple(lst), ret_idx
+        return tuple(lst), ret_idx   
 
     def read(self, line):
         fields = line.split(TsvProtocol.TAB_SEPARATOR)
