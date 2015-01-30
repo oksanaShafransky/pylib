@@ -349,14 +349,19 @@ def get_range_where_clause(year, month, day, mode, mode_type):
     elif mode_type == "annually":
         return " (year = %02d) " % (end_date.year % 100)
 
+    return get_where_between_dates(start_date, end_date)
+
+
+def get_where_between_dates(start_date, end_date):
     where_clause = ""
 
+    curr_date = start_date
     while True:
         if where_clause != "":
             where_clause += " or "
-        where_clause += ' (year=%02d and month=%02d and day=%02d) ' % (start_date.year % 100, start_date.month, start_date.day)
-        start_date = start_date + timedelta(days=1)
-        if start_date > end_date:
+        where_clause += ' (year=%02d and month=%02d and day=%02d) ' % (curr_date.year % 100, curr_date.month, curr_date.day)
+        curr_date = curr_date + timedelta(days=1)
+        if curr_date > end_date:
             break
 
     return ' (%s) ' % where_clause

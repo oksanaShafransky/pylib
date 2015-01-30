@@ -3,6 +3,7 @@ import binascii
 __author__ = 'Felix'
 
 import os
+import sys
 from hbase import Exporter
 import xml.etree.ElementTree as ET
 
@@ -80,10 +81,12 @@ class TsvProtocol(object):
     @staticmethod
     def determine_key_class():
         file_name = os.environ['map_input_file']
+        sys.stderr.write('file name is\n' % file_name)
         for env_key in os.environ:
             reverted = decode_env(env_key.replace)
             if TsvProtocol.KEY_CLASS_PROPERTY_ENV in env_key and reverted[len(
                             TsvProtocol.KEY_CLASS_PROPERTY_ENV + '_'):] in file_name:
+                sys.stderr.write('found it %s\n' % os.environ[env_key])
                 return load_class(os.environ[env_key])
         
         raise Exception('key class undefined for %s' % file_name)
