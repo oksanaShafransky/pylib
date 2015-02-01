@@ -30,6 +30,7 @@ class JobBuilder:
         self.stages = []
         self.args = [
                      '--no-output',
+                     '--strict-protocols',
                      '--cleanup', 'NONE',
                      '--python-archive', '%s/%s' % (lib_path, lib_file),
                      '--jobconf', ('mapred.job.name=%s' % job_name),
