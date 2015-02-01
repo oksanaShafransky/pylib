@@ -1,4 +1,6 @@
+import logging
 import tempfile
+from mrjob.util import log_to_stream
 
 __author__ = 'Felix'
 
@@ -16,12 +18,12 @@ import cPickle as pickle
 std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
 
-lib_path = os.path.abspath(os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
+lib_path = os.path.abspath(
+    os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
 lib_file = 'pylib.tar.gz'
 
 
 class JobBuilder:
-
     max_map_fails = 90
     max_reduce_task_fails = 20
 
@@ -29,16 +31,16 @@ class JobBuilder:
         os.environ['HADOOP_LOG_DIR'] = '/user/felixv/logs'
         self.stages = []
         self.args = [
-                     '--no-output',
-                     '--strict-protocols',
-                     '--cleanup', 'NONE',
-                     '--python-archive', '%s/%s' % (lib_path, lib_file),
-                     '--jobconf', ('mapred.job.name=%s' % job_name),
-                     '--jobconf', ('mapred.max.map.failures.percent=%d' % self.max_map_fails),
-                     '--jobconf', ('mapred.reduce.max.attempts=%d' % self.max_reduce_task_fails),
-                     '--setup', 'export PATH=$PATH:/usr/lib/python2.6/site-packages:/usr/lib64/python2.6/site-packages',
-                     '--setup', 'export PYTHONPATH=$PYTHONPATH:$PATH'
-                     ]
+            '--no-output',
+            '--strict-protocols',
+            '--cleanup', 'NONE',
+            '--python-archive', '%s/%s' % (lib_path, lib_file),
+            '--jobconf', ('mapred.job.name=%s' % job_name),
+            '--jobconf', ('mapred.max.map.failures.percent=%d' % self.max_map_fails),
+            '--jobconf', ('mapred.reduce.max.attempts=%d' % self.max_reduce_task_fails),
+            '--setup', 'export PATH=$PATH:/usr/lib/python2.6/site-packages:/usr/lib64/python2.6/site-packages',
+            '--setup', 'export PYTHONPATH=$PYTHONPATH:$PATH'
+        ]
 
         self.input_paths = []
         self.output_method = 'file'
@@ -60,8 +62,10 @@ class JobBuilder:
             raise Exception('key_class parameter must be a class with read_tsv method definition')
         if not isclass(value_class) or not hasattr(value_class, 'read_tsv'):
             raise Exception('value_class parameter must be a class with read_tsv method definition')
-        self.args += ['--setup', 'export %s=%s.%s' % (TsvProtocol.named_key_class_env(input_path), key_class.__module__, key_class.__name__)]
-        self.args += ['--setup', 'export %s=%s.%s' % (TsvProtocol.named_value_class_env(input_path), value_class.__module__, value_class.__name__)]
+        self.args += ['--setup', 'export %s=%s.%s' % (
+        TsvProtocol.named_key_class_env(input_path), key_class.__module__, key_class.__name__)]
+        self.args += ['--setup', 'export %s=%s.%s' % (
+        TsvProtocol.named_value_class_env(input_path), value_class.__module__, value_class.__name__)]
 
         return self.add_input_path(input_path, combine)
 
@@ -102,6 +106,7 @@ class JobBuilder:
 
     def add_setup_cmd(self, cmd_str):
         def cmd(): subprocess.Popen(cmd_str.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
         self.add_setup(cmd)
         return self
 
@@ -111,6 +116,7 @@ class JobBuilder:
 
     def add_follow_up_cmd(self, cmd_str):
         def cmd(): subprocess.Popen(cmd_str.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
         self.add_follow_up(cmd)
         return self
 
@@ -146,7 +152,8 @@ class JobBuilder:
             hadoop_home = kwargs['hadoop_home'] if 'hadoop_home' in kwargs else std_hadoop_home
             os.environ['HADOOP_HOME'] = hadoop_home
             self.args += ['--hadoop-bin', hadoop_home]
-            self.args += ['--hadoop-streaming-jar', '/usr/lib/hadoop-0.20-mapreduce/contrib/streaming/hadoop-streaming.jar']
+            self.args += ['--hadoop-streaming-jar',
+                          '/usr/lib/hadoop-0.20-mapreduce/contrib/streaming/hadoop-streaming.jar']
 
             if self.output_method == 'file':
                 self.args += ['--output-dir', ('hdfs://%s' % self.output_path)]
@@ -169,8 +176,21 @@ class JobBuilder:
 
 
 class Job(MRJob):
-
     follow_ups = []
+
+    def __init__(self):
+        super(Job, self).__init__()
+        self._logger = None
+
+    @property
+    def logger(self):
+        if self._logger is not None:
+            return self._logger
+        logger_name = type(self).__name__
+        log_to_stream(logger_name)
+        self._logger = logging.getLogger(logger_name)
+        return self._logger
+
 
     def post_exec(self, **kwargs):
         for follow_up in self.follow_ups:
