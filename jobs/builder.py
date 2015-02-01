@@ -109,7 +109,7 @@ class JobBuilder:
         return self
 
     def add_follow_up_cmd(self, cmd_str):
-        def cmd(): subprocess.Popen(cmd_str.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        def cmd(**kwargs): subprocess.Popen(cmd_str.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         self.add_follow_up(cmd)
         return self
 
