@@ -3,6 +3,8 @@ import binascii
 __author__ = 'Felix'
 
 import os
+import sys
+import binascii
 from hbase import Exporter
 import xml.etree.ElementTree as ET
 
@@ -12,8 +14,8 @@ def encode_env(s):
 
 
 def decode_env(s):
-    assert s[0]=='v'
-    return binascii.a2b_hex(s[1:])
+    if s[0] == 'v':
+        return binascii.a2b_hex(s[1:])
 
 
 def load_class(class_name):
@@ -80,23 +82,32 @@ class TsvProtocol(object):
     @staticmethod
     def determine_key_class():
         file_name = os.environ['map_input_file']
+
         for env_key in os.environ:
-            reverted = decode_env(env_key.replace)
-            if TsvProtocol.KEY_CLASS_PROPERTY_ENV in env_key and reverted[len(
-                            TsvProtocol.KEY_CLASS_PROPERTY_ENV + '_'):] in file_name:
+            reverted = decode_env(env_key)
+            if reverted is None:
+                continue
+
+            if TsvProtocol.KEY_CLASS_PROPERTY_ENV in reverted and reverted[len(
+                    TsvProtocol.KEY_CLASS_PROPERTY_ENV + '_'):] in file_name:
                 return load_class(os.environ[env_key])
-        
+
+        sys.stderr.write('key class undefined for %s\n' % file_name)
         raise Exception('key class undefined for %s' % file_name)
 
     @staticmethod
     def determine_value_class():
         file_name = os.environ['map_input_file']
         for env in os.environ:
-            reverted = decode_env(env.replace)
-            if TsvProtocol.VALUE_CLASS_PROPERTY_ENV in env and reverted[len(
-                            TsvProtocol.VALUE_CLASS_PROPERTY_ENV + '_'):] in file_name:
+            reverted = decode_env(env)
+            if reverted is None:
+                continue
+
+            if TsvProtocol.VALUE_CLASS_PROPERTY_ENV in reverted and reverted[len(
+                    TsvProtocol.VALUE_CLASS_PROPERTY_ENV + '_'):] in file_name:
                 return load_class(os.environ[env])
 
+        sys.stderr.write('value class undefined for %s\n' % file_name)
         raise Exception('value class undefined for %s' % file_name)
 
     @staticmethod
