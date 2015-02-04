@@ -63,9 +63,9 @@ class JobBuilder:
         if not isclass(value_class) or not hasattr(value_class, 'read_tsv'):
             raise Exception('value_class parameter must be a class with read_tsv method definition')
         self.args += ['--setup', 'export %s=%s.%s' % (
-        TsvProtocol.named_key_class_env(input_path), key_class.__module__, key_class.__name__)]
+            TsvProtocol.named_key_class_env(input_path), key_class.__module__, key_class.__name__)]
         self.args += ['--setup', 'export %s=%s.%s' % (
-        TsvProtocol.named_value_class_env(input_path), value_class.__module__, value_class.__name__)]
+            TsvProtocol.named_value_class_env(input_path), value_class.__module__, value_class.__name__)]
 
         return self.add_input_path(input_path, combine)
 
@@ -178,8 +178,8 @@ class JobBuilder:
 class Job(MRJob):
     follow_ups = []
 
-    def __init__(self):
-        super(Job, self).__init__()
+    def __init__(self, args=None):
+        super(Job, self).__init__(args)
         self._logger = None
 
     @property
