@@ -158,8 +158,13 @@ class JobBuilder:
             self.args += ['--hadoop-bin', hadoop_home]
             self.args += ['--hadoop-streaming-jar', '/usr/lib/hadoop-0.20-mapreduce/contrib/streaming/hadoop-streaming.jar']
 
+            log_dir = None
+
             if self.output_method == 'file':
                 self.args += ['--output-dir', ('hdfs://%s' % self.output_path)]
+                log_dir = '%s/_logs/history/' % self.output_path
+            else:
+                log_dir = 'USER_DIR'
 
             self.args += [('hdfs://%s' % path) for path in self.input_paths]
 
@@ -178,7 +183,7 @@ class JobBuilder:
             setup()
 
         job = job_cls(self.args)
-
+        job.log_dir = log_dir
         job.follow_ups = self.follow_ups
 
         return job
