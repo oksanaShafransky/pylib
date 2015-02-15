@@ -32,6 +32,7 @@ logger = logging.getLogger(os.path.basename(__file__))
 logger.addFilter(ContextFilter())
 
 MOBILE_ALL_CATEGORY = '\"\"'
+UNRANKED = -1
 
 quality_count_writable = "sum(a.visits),sum(a.pageviews),sum(a.onepagevisits),sum(a.timeonsite)"
 quality_estimated_count_writable = "sum(a.visits), sum(a.estimatedvisits),sum(a.pageviews),sum(a.estimatedpageviews),sum(a.onepagevisits),sum(a.timeonsite)"
