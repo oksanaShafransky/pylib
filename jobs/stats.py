@@ -1,5 +1,6 @@
 __author__ = 'Felix'
 
+
 class JobStats:
 
     def __init__(self, runner):
