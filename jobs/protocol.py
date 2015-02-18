@@ -6,7 +6,7 @@ import os
 import sys
 import binascii
 from hbase import Exporter
-import xml.etree.ElementTree as ET
+
 
 
 def encode_env(s):
@@ -27,38 +27,35 @@ def load_class(class_name):
     return m
 
 
-def determine_hbase_servers():
-        hbase_conf = os.environ['HBASE_CONF_DIR'] if 'HBASE_CONF_DIR' in os.environ else '/etc/hbase/conf'
 
-        conf = ET.parse('%s/hbase-site.xml' % hbase_conf)
-        root = conf.getroot()
-
-        # should only be 1
-        quorum_prop = [elem.find('value').text for elem in root.findall('property') if elem.find('name').text == 'hbase.zookeeper.quorum'][0]
-        return quorum_prop.split(',')
 
 
 class HBaseProtocol(object):
     HBASE_TABLE_ENV = 'mrjob_hbase_table'
+    HBASE_SERVER_ENV = 'mrjob_hbase_server'
     HBASE_COLUMN_FAMILY_ENV = 'mrjob_hbase_cf'
 
     def __init__(self):
 
         if not self.HBASE_TABLE_ENV in os.environ:
-            raise 'Must specify hbase column to write to'
+            raise ValueError('Must specify hbase column to write to')
         else:
             table_name = os.environ[self.HBASE_TABLE_ENV]
 
         if self.HBASE_COLUMN_FAMILY_ENV in os.environ:
             cf = os.environ[self.HBASE_COLUMN_FAMILY_ENV]
+        else:
+            cf = None
 
-        for server in determine_hbase_servers():
-            try:
-                self.writer = Exporter(server, table_name, col_family=cf)
-                if self.writer:
-                    break
-            except:
-                continue
+
+
+
+        if not self.HBASE_SERVER_ENV in os.environ:
+            raise ValueError('Must specify hbase server to write to')
+        else:
+            server = os.environ[self.HBASE_SERVER_ENV]
+
+        self.writer = Exporter(server, table_name, col_family=cf)
 
 
     def write(self, key, value):

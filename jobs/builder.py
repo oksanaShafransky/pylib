@@ -1,6 +1,7 @@
 import logging
 import tempfile
 from mrjob.util import log_to_stream
+from jobs.hbase import Exporter
 
 __author__ = 'Felix'
 
@@ -14,6 +15,7 @@ from protocol import HBaseProtocol, TsvProtocol
 
 from inspect import isclass
 import cPickle as pickle
+import xml.etree.ElementTree as ET
 
 std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
@@ -21,6 +23,17 @@ std_hadoop_home = '/usr/bin/hadoop'
 lib_path = os.path.abspath(
     os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
 lib_file = 'pylib.tar.gz'
+
+
+def determine_hbase_servers():
+    hbase_conf = os.environ['HBASE_CONF_DIR'] if 'HBASE_CONF_DIR' in os.environ else '/etc/hbase/conf'
+
+    conf = ET.parse('%s/hbase-site.xml' % hbase_conf)
+    root = conf.getroot()
+
+    # should only be 1
+    quorum_prop = [elem.find('value').text for elem in root.findall('property') if elem.find('name').text == 'hbase.zookeeper.quorum'][0]
+    return quorum_prop.split(',')
 
 
 class JobBuilder:
@@ -84,12 +97,21 @@ class JobBuilder:
         self.deleted_paths += [path]
         return self
 
-    def output_to_hbase(self, table, cf=None):
+    def output_to_hbase(self, table, cf=None, server=None):
         self.output_method = 'hbase'
         self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_TABLE_ENV, table)]
         if cf:
             self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_COLUMN_FAMILY_ENV, cf)]
 
+        if server is None:
+            for server in determine_hbase_servers():
+                try:
+                    writer = Exporter(server, table, col_family=cf)
+                    if writer:
+                        self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_SERVER_ENV, server)]
+                        break
+                except:
+                    continue
         return self
 
     def pool(self, pool):
