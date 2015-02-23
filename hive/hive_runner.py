@@ -10,6 +10,8 @@ import warnings
 from xml.sax.saxutils import escape
 import os
 
+from jobs.stats import *
+
 try:
     from lxml.etree import HTML
     import MySQLdb
@@ -17,59 +19,6 @@ try:
     CAN_REPORT = True
 except ImportError:
     CAN_REPORT = False
-
-
-def check_output(*popenargs, **kwargs):
-    """Run command with arguments and return its output as a byte string.
-    Backported from Python 2.7 as it's implemented as pure python on stdlib.
-    """
-    process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
-    output, unused_err = process.communicate()
-    retcode = process.poll()
-    if retcode:
-        cmd = kwargs.get("args")
-        if cmd is None:
-            cmd = popenargs[0]
-        error = subprocess.CalledProcessError(retcode, cmd)
-        error.output = output
-        raise error
-    return output
-
-
-def get_job_stats(job_id):
-    cmd = 'mapred job -status %s' % job_id
-    output = check_output(cmd, shell=True)
-    conf_url = None
-    # Get counters and tracking url
-    counters_started = False
-    current_counter_head = ''
-    counters = []
-    for line in output.split('\n'):
-        if line.startswith('tracking URL:'):
-            tracking_url = line.split(':', 1)[-1]
-            conf_url = tracking_url.replace('jobdetails', 'jobconf')
-        if line.startswith('Counters: '):
-            counters_started = True
-            continue
-        if not counters_started:
-            continue
-        if not '=' in line:
-            current_counter_head = line.strip()
-        else:
-            counters.append('%s.%s' % (current_counter_head, line.strip()))
-    # Get config
-    config_xml = '<?xml version="1.0" encoding="UTF-8" standalone="no"?><configuration>'
-    config = {}
-    config_str = urlopen(conf_url).read()
-    config_html = HTML(config_str)
-    elements = config_html.xpath('/html/body/table/tbody/tr')
-    for element in elements:
-        k, v = [i for i in element.itertext() if i != '\n']  # Just two text elements
-        config[k] = v
-        config_xml += (
-        '<property><name>%s</name><value>%s</value><source>dont.know</source></property>' % (escape(k), escape(v)))
-    config_xml += '</configuration>'
-    return counters, config, config_xml
 
 
 def run_hive(cmd):
