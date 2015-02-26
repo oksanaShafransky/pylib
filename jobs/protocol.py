@@ -62,6 +62,17 @@ class HBaseProtocol(object):
         self.writer.put(key, value)
 
 
+class TextProtocol(object):
+
+    SEPARATOR = ''
+
+    def read(self, line):
+        return line
+
+    def write(self, key, value):
+        return unicode(key) + TextProtocol.SEPARATOR + unicode(value)
+
+
 class TsvProtocol(object):
     TAB_SEPARATOR = '\t'
 

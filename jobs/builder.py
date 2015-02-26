@@ -20,6 +20,8 @@ import xml.etree.ElementTree as ET
 std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
 
+user_path = 'USER'
+
 lib_path = os.path.abspath(
     os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
 lib_file = 'pylib.tar.gz'
@@ -37,6 +39,9 @@ def determine_hbase_servers():
 
 
 class JobBuilder:
+
+    GZ_COUNTER = 0
+
     max_map_fails = 90
     max_reduce_task_fails = 20
 
@@ -137,13 +142,25 @@ class JobBuilder:
         return self
 
     def add_follow_up_cmd(self, cmd_str):
-        def cmd(): subprocess.Popen(cmd_str.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        def cmd(**kwargs): subprocess.Popen(cmd_str.split(' '), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         self.add_follow_up(cmd)
         return self
 
     def include_file(self, file):
         self.args += ['--file', file]
+        return self
+
+    def get_next_gz(self):
+        ret = '/tmp/%d.tar.gz' % JobBuilder.GZ_COUNTER
+        JobBuilder.GZ_COUNTER = JobBuilder.GZ_COUNTER + 1
+        return ret
+
+    def include_dir(self, dir):
+        archive_name = self.get_next_gz()
+        self.add_setup_cmd('tar -zcvf %s %s' % (archive_name, dir))
+        self.args += ['--python-archive', '%s' % archive_name]
+        self.add_follow_up_cmd('rm %s' % archive_name)
         return self
 
     def set_property(self, prop_name, prop_value):
@@ -183,14 +200,22 @@ class JobBuilder:
                 self.args += ['--output-dir', ('hdfs://%s' % self.output_path)]
                 log_dir = '%s/_logs/history/' % self.output_path
             else:
-                log_dir = 'USER_DIR'
+                log_dir = user_path
+
+            for path in self.deleted_paths:
+                self.add_setup_cmd('hadoop fs -rm -r -f %s' % path)
 
             self.args += [('hdfs://%s' % path) for path in self.input_paths]
         else:
+            for path in self.deleted_paths:
+                self.add_setup_cmd('rm -rf %s' % path)
+
             if self.output_method == 'file':
                 self.args += ['--output-dir', self.output_path]
 
             self.args += self.input_paths
+
+            log_dir = None
 
         for setup in self.setups:
             setup()
