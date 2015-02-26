@@ -33,7 +33,7 @@ def run(job):
             for file_def in history_ls:
                 file = file_def[len(log_dir):]
                 if file.endswith(conf_file_suffix):
-                    job_id = file[:(len(file) - len(conf_file_suffix))]
+                    job_id = file[:(len(file) - len(conf_file_suffix) + 1)]
 
         if job_id is not None:
             counters, config, config_xml = get_job_stats(job_id)
