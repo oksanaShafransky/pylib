@@ -2,7 +2,6 @@ __author__ = 'Felix'
 
 import subprocess
 from urllib2 import urlopen
-from lxml.etree import HTML
 from xml.sax.saxutils import escape
 
 
@@ -49,6 +48,8 @@ def get_job_stats(job_id):
     config_xml = '<?xml version="1.0" encoding="UTF-8" standalone="no"?><configuration>'
     config = {}
     config_str = urlopen(conf_url).read()
+
+    from lxml.etree import HTML
     config_html = HTML(config_str)
     elements = config_html.xpath('/html/body/table/tbody/tr')
     for element in elements:

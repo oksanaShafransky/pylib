@@ -119,6 +119,22 @@ class JobBuilder:
                     continue
         return self
 
+    def compress_output(self, codec='gz'):
+        if codec == 'gz':
+            codec_name = 'org.apache.hadoop.io.compress.GzipCodec'
+        elif codec == 'bz':
+            codec_name = 'org.apache.hadoop.io.compress.BzipCodec'
+        elif codec == 'snappy':
+            codec_name = 'org.apache.hadoop.io.compress.SnappyCodec'
+        else:
+            codec_name = None
+
+        if codec_name is not None:
+            self.args += ['--jobconf', 'mapred.output.compress=true']
+            self.args += ['--jobconf', 'mapred.output.compression.codec=%s' % codec_name]
+
+        return self
+
     def pool(self, pool):
         self.args += ['--jobconf', ('mapred.fairscheduler.pool=%s' % pool)]
         return self

@@ -23,11 +23,11 @@ def run(job):
 
         if log_dir is not None:
             ls_sp = subprocess.Popen(['hadoop', 'fs', '-ls', log_dir], stdout=subprocess.PIPE)
-            history_ls = [line.split(' ')[len(line.split(' ')) - 1].replace('\n', '') for line in ls_sp.stdout]
+            history_ls = [line.split(' ')[len(line.split(' '))].replace('\n', '') for line in ls_sp.stdout]
             for file_def in history_ls:
                 file = file_def[len(log_dir):]
                 if file.endswith(conf_file_suffix):
-                    job_id = file[:(len(file) - len(conf_file_suffix) + 1)]
+                    job_id = file[:(len(file) - len(conf_file_suffix))]
 
         if job_id:
             counters, config, config_xml = get_job_stats(job_id)
