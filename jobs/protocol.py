@@ -70,7 +70,7 @@ class TextProtocol(object):
         return line
 
     def write(self, key, value):
-        return unicode(key) + TextProtocol.SEPARATOR + unicode(value)
+        return key + TextProtocol.SEPARATOR + value
 
 
 class TsvProtocol(object):

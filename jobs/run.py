@@ -6,7 +6,7 @@ from builder import user_path
 from stats import get_job_stats
 
 HADOOP_CONF_DIR = '/etc/hadoop/conf'
-hadoop_user_log_dir_template = '/user/%s/tmp/mrjob/%s/output/_logs/history'
+hadoop_user_log_dir_template = '/user/%s/tmp/mrjob/%s/output/_logs/history/'
 
 conf_file_suffix = '_conf.xml'
 
