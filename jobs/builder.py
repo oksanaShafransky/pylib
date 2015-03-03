@@ -119,6 +119,12 @@ class JobBuilder:
                     continue
         return self
 
+    def partition_by_key(self, key_part_start=1, key_part_end=1):
+        self.args += ['--partitioner', 'org.apache.hadoop.mapred.lib.KeyFieldBasedPartitioner']
+        self.args += ['--jobconf', ('mapreduce.partition.keypartitioner.options=-k%d,%d' % (key_part_start, key_part_end))]
+
+        return self
+
     def compress_output(self, codec='gz'):
         if codec == 'gz':
             codec_name = 'org.apache.hadoop.io.compress.GzipCodec'
@@ -237,8 +243,10 @@ class JobBuilder:
             setup()
 
         job = job_cls(self.args)
-        job.log_dir = log_dir
-        job.follow_ups = self.follow_ups
+        job.log_dir = None
+        job.follow_ups = []
+        # doesnt work right now with cdh 5 job.log_dir = log_dir
+        #job.follow_ups = self.follow_ups
 
         return job
 
