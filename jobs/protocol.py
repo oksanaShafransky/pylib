@@ -27,13 +27,12 @@ def load_class(class_name):
     return m
 
 
-
-
-
 class HBaseProtocol(object):
     HBASE_TABLE_ENV = 'mrjob_hbase_table'
     HBASE_SERVER_ENV = 'mrjob_hbase_server'
     HBASE_COLUMN_FAMILY_ENV = 'mrjob_hbase_cf'
+
+    DEFAULT_BATCH_SIZE = 100000
 
     def __init__(self):
 
@@ -47,15 +46,12 @@ class HBaseProtocol(object):
         else:
             cf = None
 
-
-
-
         if not self.HBASE_SERVER_ENV in os.environ:
             raise ValueError('Must specify hbase server to write to')
         else:
             server = os.environ[self.HBASE_SERVER_ENV]
 
-        self.writer = Exporter(server, table_name, col_family=cf)
+        self.writer = Exporter(server, table_name, col_family=cf, batch_size=HBaseProtocol.DEFAULT_BATCH_SIZE)
 
 
     def write(self, key, value):

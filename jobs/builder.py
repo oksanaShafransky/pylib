@@ -7,6 +7,7 @@ __author__ = 'Felix'
 
 import os
 import subprocess
+import sys
 
 from mrjob.job import MRJob
 
