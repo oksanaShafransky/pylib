@@ -32,7 +32,7 @@ class HBaseProtocol(object):
     HBASE_SERVER_ENV = 'mrjob_hbase_server'
     HBASE_COLUMN_FAMILY_ENV = 'mrjob_hbase_cf'
 
-    DEFAULT_BATCH_SIZE = 100000
+    DEFAULT_BATCH_SIZE = 1000
 
     def __init__(self):
 
