@@ -2,15 +2,19 @@ __author__ = 'Felix'
 
 from struct import *
 import happybase
+import sys
+
 
 class Exporter:
-
     cf_params = {'max_versions': 1, 'compression': 'snappy'}
 
     batch = None
 
-    def __init__(self, db_url, table_name, col_family=None, col=None, create_table=False, overwrite=False, batch_size=1):
+    def __init__(self, db_url, table_name, col_family=None, col=None, create_table=False, overwrite=False,
+                 batch_size=1):
         self.conn = happybase.Connection(db_url)
+        self.count = 0
+        self.batch_size = batch_size
 
         if create_table:
             table_exists = table_name in self.conn.tables()
@@ -28,6 +32,10 @@ class Exporter:
         self.col = col
 
     def put(self, key, data):
+        self.count += 1
+        if self.count % self.batch_size == 0 and self.count > 0:
+            sys.stderr.write('Wrote %s lines\n' % self.count)
+
         data_for_write = {}
 
         if self.col_family:
@@ -51,7 +59,6 @@ class Exporter:
 
 
 class ByteHelper:
-
     def __init__(self):
         self._bytes = ''
 
