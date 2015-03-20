@@ -18,6 +18,8 @@ from inspect import isclass
 import cPickle as pickle
 import xml.etree.ElementTree as ET
 
+HADOOP_JAR_HOME = '/usr/lib/hadoop-0.20-mapreduce'
+
 std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
 
@@ -26,6 +28,8 @@ user_path = 'USER'
 lib_path = os.path.abspath(
     os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
 lib_file = 'pylib.tar.gz'
+
+DFS_BLOCK_SIZE = 128
 
 
 def determine_hbase_servers():
@@ -43,8 +47,9 @@ class JobBuilder:
 
     GZ_COUNTER = 0
 
-    max_map_fails = 90
-    max_reduce_task_fails = 20
+    max_map_fail_percentage = 90
+    max_map_task_fails = 4
+    max_reduce_task_fails = 8
 
     def __init__(self, job_name='MRJob'):
         os.environ['HADOOP_LOG_DIR'] = '/user/felixv/logs'
@@ -55,11 +60,14 @@ class JobBuilder:
             '--cleanup', 'NONE',
             '--python-archive', '%s/%s' % (lib_path, lib_file),
             '--jobconf', ('mapred.job.name=%s' % job_name),
-            '--jobconf', ('mapred.max.map.failures.percent=%d' % self.max_map_fails),
+            '--jobconf', ('mapred.max.map.failures.percent=%d' % self.max_map_fail_percentage),
+            '--jobconf', ('mapred.map.max.attempts=%d' % self.max_map_task_fails),
             '--jobconf', ('mapred.reduce.max.attempts=%d' % self.max_reduce_task_fails),
             '--setup', 'export PATH=$PATH:/usr/lib/python2.6/site-packages:/usr/lib64/python2.6/site-packages',
             '--setup', 'export PYTHONPATH=$PYTHONPATH:$PATH'
         ]
+
+        self.avro_job = False
 
         self.input_paths = []
         self.output_method = 'file'
@@ -71,6 +79,13 @@ class JobBuilder:
 
         self.add_follow_up(PostJobHandler([PrintRecorder()]).handle_job)
 
+    def with_avro_input(self):
+        #self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
+        # refactor laster to add jars normally
+        self.avro_job = True
+        self.args += ['--hadoop-arg', '-libjars']
+        self.args += ['--hadoop-arg', '%s/lib/avro-1.7.3.jar,%s/avro-mapred-1.7.3-hadoop2.jar' % (HADOOP_JAR_HOME, lib_path)]
+        return self
 
     def add_input_path(self, input_path, combine=False):
         self.input_paths += [input_path]
@@ -137,9 +152,26 @@ class JobBuilder:
             codec_name = None
 
         if codec_name is not None:
-            self.args += ['--jobconf', 'mapred.output.compress=true']
-            self.args += ['--jobconf', 'mapred.output.compression.codec=%s' % codec_name]
+            self.args += ['--jobconf', 'mapreduce.output.fileoutputformat.compress=true']
+            self.args += ['--jobconf', 'mapreduce.output.fileoutputformat.compress.codec=%s' % codec_name]
 
+        return self
+
+    def with_input_split_size(self, megabytes):
+        self.args += ['--jobconf', ('mapred.max.split.size=%d' % (megabytes * 1024 * 1024))]
+        self.args += ['--jobconf', ('mapred.min.split.size=%d' % (megabytes * 1024 * 1024))]
+
+        if megabytes < DFS_BLOCK_SIZE:
+            self.args += ['--jobconf', ('dfs.blocksize=%d' % (megabytes * 1024 * 1024))]
+
+        return self
+
+    def with_task_memory(self, megabytes, task_type='all'):
+        self.args += ['--jobconf', ('mapred.child.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
+        return self
+
+    def with_io_memory(self, megabytes, task_type='all'):
+        self.args += ['--jobconf', ('io.sort.mb=%d' % megabytes)]
         return self
 
     def pool(self, pool):
@@ -147,7 +179,7 @@ class JobBuilder:
         return self
 
     def num_reducers(self, reducers):
-        self.args += ['--jobconf', ('mapred.reduce.tasks=%s' % reducers)]
+        self.args += ['--jobconf', ('mapreduce.job.reduces=%s' % reducers)]
         return self
 
     def add_setup(self, setup):
@@ -174,6 +206,12 @@ class JobBuilder:
         self.args += ['--file', file]
         return self
 
+    def include_all_files(self, files):
+        for file in files:
+            self.include_file(file)
+
+        return self
+
     def get_next_gz(self):
         ret = '/tmp/%d.tar.gz' % JobBuilder.GZ_COUNTER
         JobBuilder.GZ_COUNTER = JobBuilder.GZ_COUNTER + 1
@@ -184,6 +222,12 @@ class JobBuilder:
         self.add_setup_cmd('tar -zcvf %s %s' % (archive_name, dir))
         self.args += ['--python-archive', '%s' % archive_name]
         self.add_follow_up_cmd('rm %s' % archive_name)
+        return self
+
+    def include_all_dirs(self, dirs):
+        for dir in dirs:
+            self.include_dir(dir)
+
         return self
 
     def set_property(self, prop_name, prop_value):
@@ -215,7 +259,7 @@ class JobBuilder:
             os.environ['HADOOP_HOME'] = hadoop_home
             self.args += ['--hadoop-bin', hadoop_home]
             self.args += ['--hadoop-streaming-jar',
-                          '/usr/lib/hadoop-0.20-mapreduce/contrib/streaming/hadoop-streaming.jar']
+                          '%s/contrib/streaming/hadoop-streaming.jar' % HADOOP_JAR_HOME]
 
             log_dir = None
 
@@ -244,6 +288,10 @@ class JobBuilder:
             setup()
 
         job = job_cls(self.args)
+
+        if self.avro_job:
+            job.HADOOP_INPUT_FORMAT = 'org.apache.avro.mapred.AvroAsTextInputFormat'
+
         job.log_dir = None
         job.follow_ups = []
         # doesnt work right now with cdh 5 job.log_dir = log_dir
