@@ -2,6 +2,8 @@
 import subprocess
 import xml.etree.ElementTree as ET
 
+from mrjob import util
+
 from builder import user_path
 from stats import get_job_stats
 
@@ -12,6 +14,8 @@ conf_file_suffix = '_conf.xml'
 
 
 def run(job):
+    util.log_to_stream(debug=False)
+
     with job.make_runner() as runner:
         result = runner.run()
 
