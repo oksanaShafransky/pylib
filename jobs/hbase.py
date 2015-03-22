@@ -9,11 +9,15 @@ class Exporter:
     cf_params = {'max_versions': 1, 'compression': 'snappy'}
 
     batch = None
+    MAX_BATCH_BYTES = 1024 * 1024 * 8
+    HBASE_VERSION = '0.94'
+
 
     def __init__(self, db_url, table_name, col_family=None, col=None, create_table=False, overwrite=False,
                  batch_size=1):
-        self.conn = happybase.Connection(db_url)
+        self.conn = happybase.Connection(db_url, compat=self.HBASE_VERSION)
         self.count = 0
+        self.bytes_in_batch = 0
         self.batch_size = batch_size
 
         if create_table:
@@ -46,8 +50,10 @@ class Exporter:
                     data_for_write['%s:%s' % (self.col_family, column)] = data[column]
         else:
             data_for_write = data
-
+        self.bytes_in_batch += len(key) + len(data_for_write)
         self.batch.put(key, data_for_write)
+        if self.bytes_in_batch > self.MAX_BATCH_BYTES:
+            self.batch.send()
 
     def __del__(self):
         if self.batch is not None:
