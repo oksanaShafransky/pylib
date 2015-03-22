@@ -185,7 +185,7 @@ class JobBuilder:
         return self
 
     def num_reducers(self, reducers):
-        self.args += ['--jobconf', ('mapreduce.job.reduces=%s' % reducers)]
+        self.args += ['--jobconf', ('mapred.reduce.tasks=%s' % reducers)]
         return self
 
     def add_setup(self, setup):
