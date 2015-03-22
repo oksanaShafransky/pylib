@@ -67,7 +67,7 @@ class JobBuilder:
             '--setup', 'export PYTHONPATH=$PYTHONPATH:$PATH'
         ]
 
-        self.avro_job = False
+        self.input_type = 'plain'
 
         self.input_paths = []
         self.output_method = 'file'
@@ -82,9 +82,15 @@ class JobBuilder:
     def with_avro_input(self):
         #self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
         # refactor laster to add jars normally
-        self.avro_job = True
+        self.input_type = 'avro'
         self.args += ['--hadoop-arg', '-libjars']
         self.args += ['--hadoop-arg', '%s/lib/avro-1.7.3.jar,%s/avro-mapred-1.7.3-hadoop2.jar' % (HADOOP_JAR_HOME, lib_path)]
+        return self
+
+    def with_sequence_file_input(self):
+        #self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
+        # refactor laster to add jars normally
+        self.input_type = 'sequence'
         return self
 
     def add_input_path(self, input_path, combine=False):
@@ -289,8 +295,10 @@ class JobBuilder:
 
         job = job_cls(self.args)
 
-        if self.avro_job:
+        if self.input_type == 'avro':
             job.HADOOP_INPUT_FORMAT = 'org.apache.avro.mapred.AvroAsTextInputFormat'
+        elif self.input_type == 'sequence':
+            job.HADOOP_INPUT_FORMAT = 'org.apache.hadoop.mapred.SequenceFileAsTextInputFormat'
 
         job.log_dir = None
         job.follow_ups = []
