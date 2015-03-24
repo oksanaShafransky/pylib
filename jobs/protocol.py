@@ -47,11 +47,12 @@ class HBaseProtocol(object):
             cf = None
 
         if not self.HBASE_SERVER_ENV in os.environ:
-            raise ValueError('Must specify hbase server to write to')
+            raise ValueError('Must specify hbase servers to write to')
         else:
-            server = os.environ[self.HBASE_SERVER_ENV]
+            servers_str = os.environ[self.HBASE_SERVER_ENV]
+            servers = servers_str.split(',')
 
-        self.writer = Exporter(server, table_name, col_family=cf, batch_size=HBaseProtocol.DEFAULT_BATCH_SIZE)
+        self.writer = Exporter(servers, table_name, col_family=cf, batch_size=HBaseProtocol.DEFAULT_BATCH_SIZE)
 
 
     def write(self, key, value):

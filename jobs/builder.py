@@ -1,3 +1,4 @@
+from inspect import isclass
 import logging
 import tempfile
 from mrjob.util import log_to_stream
@@ -14,9 +15,8 @@ from mrjob.job import MRJob
 from stats import PostJobHandler, PrintRecorder
 from protocol import HBaseProtocol, TsvProtocol
 
-from inspect import isclass
 import cPickle as pickle
-import xml.etree.ElementTree as ET
+from lxml.etree import XML
 
 HADOOP_JAR_HOME = '/usr/lib/hadoop-0.20-mapreduce'
 
@@ -32,19 +32,25 @@ lib_file = 'pylib.tar.gz'
 DFS_BLOCK_SIZE = 128
 
 
-def determine_hbase_servers():
-    hbase_conf = os.environ['HBASE_CONF_DIR'] if 'HBASE_CONF_DIR' in os.environ else '/etc/hbase/conf'
+def get_zookeeper_host():
+    xml_data = file('/etc/hbase/conf/hbase-site.xml', 'rb').read()
+    for host in XML(xml_data).xpath("//property[name='hbase.zookeeper.quorum']/value")[0].text.split(','):
+        return host
 
-    conf = ET.parse('%s/hbase-site.xml' % hbase_conf)
-    root = conf.getroot()
 
-    # should only be 1
-    quorum_prop = [elem.find('value').text for elem in root.findall('property') if elem.find('name').text == 'hbase.zookeeper.quorum'][0]
-    return quorum_prop.split(',')
+
+def get_region_servers():
+    from kazoo.client import KazooClient
+    zk = KazooClient(hosts=get_zookeeper_host(), read_only=True)
+    try:
+        zk.start()
+        children = zk.get_children('/hbase/rs')
+        return [c.encode('utf-8').split(',')[0] for c in children]
+    finally:
+        zk.stop()
 
 
 class JobBuilder:
-
     GZ_COUNTER = 0
 
     max_map_fail_percentage = 90
@@ -80,11 +86,12 @@ class JobBuilder:
         self.add_follow_up(PostJobHandler([PrintRecorder()]).handle_job)
 
     def with_avro_input(self):
-        #self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
+        # self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
         # refactor laster to add jars normally
         self.avro_job = True
         self.args += ['--hadoop-arg', '-libjars']
-        self.args += ['--hadoop-arg', '%s/lib/avro-1.7.3.jar,%s/avro-mapred-1.7.3-hadoop2.jar' % (HADOOP_JAR_HOME, lib_path)]
+        self.args += ['--hadoop-arg',
+                      '%s/lib/avro-1.7.3.jar,%s/avro-mapred-1.7.3-hadoop2.jar' % (HADOOP_JAR_HOME, lib_path)]
         return self
 
     def add_input_path(self, input_path, combine=False):
@@ -118,26 +125,23 @@ class JobBuilder:
         self.deleted_paths += [path]
         return self
 
-    def output_to_hbase(self, table, cf=None, server=None):
+    def output_to_hbase(self, table, cf=None, servers=None):
         self.output_method = 'hbase'
         self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_TABLE_ENV, table)]
         if cf:
             self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_COLUMN_FAMILY_ENV, cf)]
 
-        if server is None:
-            for server in determine_hbase_servers():
-                try:
-                    writer = Exporter(server, table, col_family=cf)
-                    if writer:
-                        self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_SERVER_ENV, server)]
-                        break
-                except:
-                    continue
+        if servers is None:
+            servers = get_region_servers()
+            sys.stderr.write('region servers: %s\n' % str(servers))
+
+        self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_SERVER_ENV, ','.join(servers))]
         return self
 
     def partition_by_key(self, key_part_start=1, key_part_end=1):
         self.args += ['--partitioner', 'org.apache.hadoop.mapred.lib.KeyFieldBasedPartitioner']
-        self.args += ['--jobconf', ('mapreduce.partition.keypartitioner.options=-k%d,%d' % (key_part_start, key_part_end))]
+        self.args += ['--jobconf',
+                      ('mapreduce.partition.keypartitioner.options=-k%d,%d' % (key_part_start, key_part_end))]
 
         return self
 
@@ -234,6 +238,10 @@ class JobBuilder:
         self.args += [('--%s' % prop_name), prop_value]
         return self
 
+    def set_job_conf(self, key, value):
+        self.args += ['--jobconf', ('%s=%s' % (key, value))]
+        return self
+
     # validation checks for
     def do_checks(self):
         if len(self.input_paths) == 0:
@@ -295,7 +303,7 @@ class JobBuilder:
         job.log_dir = None
         job.follow_ups = []
         # doesnt work right now with cdh 5 job.log_dir = log_dir
-        #job.follow_ups = self.follow_ups
+        # job.follow_ups = self.follow_ups
 
         return job
 
