@@ -32,9 +32,10 @@ def get_job_stats(job_id):
     current_counter_head = ''
     counters = []
     for line in output.split('\n'):
-        if line.startswith('tracking URL:'):
+        if line.startswith('Job Tracking URL'):
             tracking_url = line.split(':', 1)[-1]
-            conf_url = tracking_url.replace('jobdetails', 'jobconf')
+        if line.startswith('Job File'):
+            conf_as_text_cmd = 'hadoop fs -text %s' % line.split(':', 1)[-1]
         if line.startswith('Counters: '):
             counters_started = True
             continue
@@ -44,22 +45,33 @@ def get_job_stats(job_id):
             current_counter_head = line.strip()
         else:
             counters.append('%s.%s' % (current_counter_head, line.strip()))
-    # Get config
-    config_xml = '<?xml version="1.0" encoding="UTF-8" standalone="no"?><configuration>'
-    config = {}
-    config_str = urlopen(conf_url).read()
 
-    from lxml.etree import HTML
-    config_html = HTML(config_str)
-    elements = config_html.xpath('/html/body/table/tbody/tr')
-    for element in elements:
-        k, v = [i for i in element.itertext() if i != '\n']  # Just two text elements
-        config[k] = v
-        config_xml += (
-        '<property><name>%s</name><value>%s</value><source>dont.know</source></property>' % (escape(k), escape(v)))
-    config_xml += '</configuration>'
+    # Get config
+    config_xml = check_output(conf_as_text_cmd, shell=True)
+    config = parse_config_xml(config_xml)
 
     return counters, config, config_xml
+
+
+def parse_config_xml(config_xml):
+    ret = {}
+
+    from xml.etree import ElementTree as ET
+    config_doc = ET.fromstring(config_xml)
+
+    properties = config_doc.findall('./property')
+    for prop in properties:
+        key, value = None, None
+        for elem in prop:
+            if elem.tag == 'name':
+                key = elem.text
+            elif elem.tag == 'value':
+                value = elem.text
+
+            if key is not None and value is not None:
+                ret[key] = value    
+
+    return ret
 
 
 class JobStats:
@@ -70,7 +82,7 @@ class JobStats:
         self.config_xml = kwargs['config_xml']
         counters = kwargs['counters']
 
-        self.job_name = config['mapred.job.name']
+        self.job_name = config['mapreduce.job.name']
         self.mapper_class = config.get('mapred.mapper.class', 'no mapper')
         self.reducer_class = config.get('mapred.reducer.class', 'no reducer')
 
