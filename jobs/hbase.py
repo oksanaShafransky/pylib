@@ -161,7 +161,7 @@ class ByteHelper:
 
     def append_utf(self, bytes_or_unicode):
         if type(bytes_or_unicode) is unicode:
-            encoded = str.encode('utf-8')
+            encoded = bytes_or_unicode.encode('utf-8')
         else:
             encoded = bytes_or_unicode
         self.append_short(len(encoded))
