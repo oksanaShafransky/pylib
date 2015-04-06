@@ -1,8 +1,6 @@
 from inspect import isclass
 import logging
-import tempfile
 from mrjob.util import log_to_stream
-from jobs.hbase import Exporter
 
 __author__ = 'Felix'
 
@@ -14,9 +12,6 @@ from mrjob.job import MRJob
 
 from stats import PostJobHandler, PrintRecorder
 from protocol import HBaseProtocol, TsvProtocol
-
-import cPickle as pickle
-from lxml.etree import XML
 
 HADOOP_JAR_HOME = '/usr/lib/hadoop-0.20-mapreduce'
 
@@ -33,6 +28,7 @@ DFS_BLOCK_SIZE = 128
 
 
 def get_zookeeper_host():
+    from lxml.etree import XML
     xml_data = file('/etc/hbase/conf/hbase-site.xml', 'rb').read()
     for host in XML(xml_data).xpath("//property[name='hbase.zookeeper.quorum']/value")[0].text.split(','):
         return host
