@@ -36,9 +36,13 @@ def run(job):
         job_id = job_ids[0] if len(job_ids) > 0 else None
 
         if job_id is not None:
-            counters, config, config_xml = get_job_stats(job_id)
-            job.counters = dict([line.split('=', 1) for line in counters])
-            job.post_exec(result=result, counters=counters, config=config, config_xml=config_xml)
+            try:
+                counters, config, config_xml = get_job_stats(job_id)
+                job.counters = dict([line.split('=', 1) for line in counters])
+                job.post_exec(result=result, counters=counters, config=config, config_xml=config_xml)
+            except:
+                #job.post_exec(result=result)
+                print 'no post exec this time'
         else:
             job.post_exec(result=result)
 
