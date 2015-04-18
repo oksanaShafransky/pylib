@@ -191,8 +191,6 @@ class JobBuilder:
 
     def cache_files_keyed(self, key, path):
         files_to_cache = find_files(path)
-        #self.args += ['--hadoop-arg', '-files']
-        #self.args += ['--hadoop-arg', ','.join(['hdfs://%s#%s' % (cache_file, os.path.basename(cache_file)) for cache_file in files_to_cache])]
 
         for cache_file in files_to_cache:
             self.args += ['--file', 'hdfs://%s' % cache_file]
@@ -202,6 +200,13 @@ class JobBuilder:
 
     def cache_files(self, path):
         return self.cache_files_keyed('', path)
+
+    def cache_object_keyed(self, key, obj):
+        obj_file, key_cmd = cache_obj(key, obj)
+        self.args += ['--file', obj_file]
+        self.args += ['--setup', key_cmd]
+        self.add_follow_up_cmd('rm %s' % obj_file)
+        return self
 
     def add_setup(self, setup):
         self.setups += [setup]

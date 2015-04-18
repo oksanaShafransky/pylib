@@ -1,6 +1,8 @@
 __author__ = 'Felix'
 
 import os
+import pickle
+import tempfile
 import gzip
 import bz2
 from stats import check_output
@@ -34,6 +36,23 @@ def get_cached_files(key=''):
         return []
     else:
         return os.environ[key_env].split(',')
+
+
+def cache_obj(key, obj):
+    obj_tmp_file = tempfile.NamedTemporaryFile(delete=False)
+    pickle.dump(obj, obj_tmp_file)
+    return obj_tmp_file.name, 'export %s_%s=%s' % (CACHE_FILES_ENV, key, obj_tmp_file.name.split('/')[-1:][0])
+
+
+def get_cached_object(key):
+    key_env = '%s_%s' % (CACHE_FILES_ENV, key)
+    if key_env not in os.environ:
+        return None
+    else:
+        obj_file = open(os.environ[key_env])
+        obj = pickle.load(obj_file)
+        obj_file.close()
+        return obj
 
 
 def open_file(file_name):
