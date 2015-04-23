@@ -1,10 +1,11 @@
 
-import subprocess
+import sys
+import re
 import xml.etree.ElementTree as ET
+from tempfile import *
 
 from mrjob import util
 
-from builder import user_path
 from stats import get_job_stats
 
 HADOOP_CONF_DIR = '/etc/hadoop/conf'
@@ -14,31 +15,34 @@ conf_file_suffix = '_conf.xml'
 
 
 def run(job):
+    out_log = NamedTemporaryFile(delete=False)
+    sys.stderr = out_log
     util.log_to_stream(debug=False)
 
     with job.make_runner() as runner:
         result = runner.run()
 
-        job_id = None
-        log_dir = job.log_dir
+        whole_log = ''
+        for line in open(out_log.name):
+            whole_log += line
+            sys.stdout.write(line)
 
-        if log_dir == user_path:
-            job_name = runner.get_job_name()
-            user_id = job_name.split('.')[1]
-            log_dir = hadoop_user_log_dir_template % (user_id, job_name)
+        # revert stderr
+        sys.stderr = sys.__stderr__
 
-        if log_dir is not None:
-            ls_sp = subprocess.Popen(['hadoop', 'fs', '-ls', log_dir], stdout=subprocess.PIPE)
-            history_ls = [line.split(' ')[len(line.split(' '))].replace('\n', '') for line in ls_sp.stdout]
-            for file_def in history_ls:
-                file = file_def[len(log_dir):]
-                if file.endswith(conf_file_suffix):
-                    job_id = file[:(len(file) - len(conf_file_suffix) + 1)]
+        job_ids = re.findall('job_\d+_\d+', whole_log)
+
+        # for now, assume only one job existed, patch later if needed        
+        job_id = job_ids[0] if len(job_ids) > 0 else None
 
         if job_id is not None:
-            counters, config, config_xml = get_job_stats(job_id)
-            job.counters = dict([line.split('=', 1) for line in counters])
-            job.post_exec(result=result, counters=counters, config=config, config_xml=config_xml)
+            try:
+                counters, config, config_xml = get_job_stats(job_id)
+                job.counters = dict([line.split('=', 1) for line in counters])
+                job.post_exec(result=result, counters=counters, config=config, config_xml=config_xml)
+            except:
+                #job.post_exec(result=result)
+                print 'no post exec this time'
         else:
             job.post_exec(result=result)
 

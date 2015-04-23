@@ -23,8 +23,6 @@ HADOOP_JAR_HOME = '/usr/lib/hadoop-0.20-mapreduce'
 std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
 
-user_path = 'USER'
-
 lib_path = os.path.abspath(
     os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
 lib_file = 'pylib.tar.gz'
@@ -68,6 +66,7 @@ class JobBuilder:
         ]
 
         self.input_type = 'plain'
+        self.combine_input = False
 
         self.input_paths = []
         self.output_method = 'file'
@@ -80,18 +79,25 @@ class JobBuilder:
         self.add_follow_up(PostJobHandler([PrintRecorder()]).handle_job)
 
     def with_avro_input(self):
-        #self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
         # refactor laster to add jars normally
         self.input_type = 'avro'
         self.args += ['--hadoop-arg', '-libjars']
-        self.args += ['--hadoop-arg', '%s/lib/avro-1.7.3.jar,%s/avro-mapred-1.7.3-hadoop2.jar' % (HADOOP_JAR_HOME, lib_path)]
+        self.args += ['--hadoop-arg', '%s/lib/avro.jar,%s/avro-mapred-1.7.3-hadoop2.jar' % (HADOOP_JAR_HOME, lib_path)]
         return self
 
     def with_sequence_file_input(self):
-        #self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
-        # refactor laster to add jars normally
         self.input_type = 'sequence'
         return self
+
+
+    def combine_input_files(self, chunk=None):
+        self.combine_input = True
+        if chunk is not None:
+            self.combine_chunk = chunk
+
+        self.args += ['--hadoop-arg', '-libjars']
+        self.args += ['--hadoop-arg', '%s/common.jar' % lib_path]
+        return self    
 
     def add_input_path(self, input_path, combine=False):
         self.input_paths += [input_path]
@@ -173,7 +179,14 @@ class JobBuilder:
         return self
 
     def with_task_memory(self, megabytes, task_type='all'):
-        self.args += ['--jobconf', ('mapred.child.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
+        if task_type == 'map' or task_type == 'all':
+            self.args += ['--jobconf', 'mapreduce.map.memory.mb=%d' % (int)(megabytes * 1.3)]
+            self.args += ['--jobconf', ('mapreduce.map.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
+
+        if task_type == 'reduce' or task_type == 'all':
+            self.args += ['--jobconf', 'mapreduce.reduce.memory.mb=%d' % (int)(megabytes * 1.3)]
+            self.args += ['--jobconf', ('mapreduce.reduce.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
+
         return self
 
     def with_io_memory(self, megabytes, task_type='all'):
@@ -288,8 +301,6 @@ class JobBuilder:
 
             self.args += self.input_paths
 
-            log_dir = None
-
         for setup in self.setups:
             setup()
 
@@ -299,11 +310,10 @@ class JobBuilder:
             job.HADOOP_INPUT_FORMAT = 'org.apache.avro.mapred.AvroAsTextInputFormat'
         elif self.input_type == 'sequence':
             job.HADOOP_INPUT_FORMAT = 'org.apache.hadoop.mapred.SequenceFileAsTextInputFormat'
+        elif self.combine_input:
+            job.HADOOP_INPUT_FORMAT = 'com.similargroup.common.combine.CombineTextInputFormat'
 
-        job.log_dir = None
-        job.follow_ups = []
-        # doesnt work right now with cdh 5 job.log_dir = log_dir
-        #job.follow_ups = self.follow_ups
+        job.follow_ups = self.follow_ups
 
         return job
 
