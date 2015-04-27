@@ -5,8 +5,6 @@ __author__ = 'Felix'
 import os
 import sys
 import binascii
-from hbase import Exporter
-
 
 
 def encode_env(s):
@@ -21,9 +19,14 @@ def decode_env(s):
 def load_class(class_name):
     parts = class_name.split('.')
     module = ".".join(parts[:-1])
-    m = __import__( module )
-    for comp in parts[1:]:
-        m = getattr(m, comp)            
+    class_name = parts[-1:]
+    sys.stderr.write('class name is %s\n' % class_name)
+    m = __import__(module)
+    sys.stderr.write('loaded  module %s\n' % str(m))
+    for part in parts[1:]:
+        m = getattr(m, part)
+        sys.stderr.write('loaded  module %s\n' % str(m))
+
     return m
 
 
@@ -47,12 +50,13 @@ class HBaseProtocol(object):
             cf = None
 
         if not self.HBASE_SERVER_ENV in os.environ:
-            raise ValueError('Must specify hbase server to write to')
+            raise ValueError('Must specify hbase servers to write to')
         else:
-            server = os.environ[self.HBASE_SERVER_ENV]
+            servers_str = os.environ[self.HBASE_SERVER_ENV]
+            servers = servers_str.split(',')
 
-        self.writer = Exporter(server, table_name, col_family=cf, batch_size=HBaseProtocol.DEFAULT_BATCH_SIZE)
-
+        from hbase import Exporter
+        self.writer = Exporter(servers, table_name, col_family=cf, batch_size=HBaseProtocol.DEFAULT_BATCH_SIZE)
 
     def write(self, key, value):
         self.writer.put(key, value)
@@ -175,7 +179,6 @@ class TsvProtocol(object):
 
         key = TsvProtocol.determine_key_class()()
         idx = TsvProtocol.read_value(key, fields, idx)
-
         value = TsvProtocol.determine_value_class()()
         TsvProtocol.read_value(value, fields, idx)
 

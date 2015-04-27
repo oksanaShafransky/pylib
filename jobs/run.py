@@ -27,24 +27,19 @@ def run(job):
             whole_log += line
             sys.stdout.write(line)
 
-        # revert stderr
-        sys.stderr = sys.__stderr__
-
         job_ids = re.findall('job_\d+_\d+', whole_log)
 
-        # for now, assume only one job existed, patch later if needed        
+        # for now, assume only one job existed, patch later if needed
         job_id = job_ids[0] if len(job_ids) > 0 else None
 
         if job_id is not None:
-            try:
-                counters, config, config_xml = get_job_stats(job_id)
-                job.counters = dict([line.split('=', 1) for line in counters])
-                job.post_exec(result=result, counters=counters, config=config, config_xml=config_xml)
-            except:
-                #job.post_exec(result=result)
-                print 'no post exec this time'
+            counters, config, config_xml = get_job_stats(job_id)
+            job.counters = dict([line.split('=', 1) for line in counters])
+            job.post_exec(result=result, counters=counters, config=config, config_xml=config_xml)
         else:
             job.post_exec(result=result)
+
+
 
 
 def _get_namenode():

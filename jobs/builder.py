@@ -1,7 +1,6 @@
+from inspect import isclass
 import logging
-import tempfile
 from mrjob.util import log_to_stream
-from jobs.hbase import Exporter
 
 __author__ = 'Felix'
 
@@ -14,14 +13,12 @@ from mrjob.job import MRJob
 from stats import PostJobHandler, PrintRecorder
 from protocol import HBaseProtocol, TsvProtocol
 
-from inspect import isclass
-import cPickle as pickle
-import xml.etree.ElementTree as ET
-
 HADOOP_JAR_HOME = '/usr/lib/hadoop-0.20-mapreduce'
 
 std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
+
+user_path = 'USER'
 
 lib_path = os.path.abspath(
     os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
@@ -30,19 +27,26 @@ lib_file = 'pylib.tar.gz'
 DFS_BLOCK_SIZE = 128
 
 
-def determine_hbase_servers():
-    hbase_conf = os.environ['HBASE_CONF_DIR'] if 'HBASE_CONF_DIR' in os.environ else '/etc/hbase/conf'
+def get_zookeeper_host():
+    from lxml.etree import XML
+    xml_data = file('/etc/hbase/conf/hbase-site.xml', 'rb').read()
+    for host in XML(xml_data).xpath("//property[name='hbase.zookeeper.quorum']/value")[0].text.split(','):
+        return host
 
-    conf = ET.parse('%s/hbase-site.xml' % hbase_conf)
-    root = conf.getroot()
 
-    # should only be 1
-    quorum_prop = [elem.find('value').text for elem in root.findall('property') if elem.find('name').text == 'hbase.zookeeper.quorum'][0]
-    return quorum_prop.split(',')
+
+def get_region_servers():
+    from kazoo.client import KazooClient
+    zk = KazooClient(hosts=get_zookeeper_host(), read_only=True)
+    try:
+        zk.start()
+        children = zk.get_children('/hbase/rs')
+        return [c.encode('utf-8').split(',')[0] for c in children]
+    finally:
+        zk.stop()
 
 
 class JobBuilder:
-
     GZ_COUNTER = 0
 
     max_map_fail_percentage = 90
@@ -66,7 +70,6 @@ class JobBuilder:
         ]
 
         self.input_type = 'plain'
-        self.combine_input = False
 
         self.input_paths = []
         self.output_method = 'file'
@@ -79,25 +82,19 @@ class JobBuilder:
         self.add_follow_up(PostJobHandler([PrintRecorder()]).handle_job)
 
     def with_avro_input(self):
+        # self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
         # refactor laster to add jars normally
         self.input_type = 'avro'
         self.args += ['--hadoop-arg', '-libjars']
-        self.args += ['--hadoop-arg', '%s/lib/avro.jar,%s/avro-mapred-1.7.3-hadoop2.jar' % (HADOOP_JAR_HOME, lib_path)]
+        self.args += ['--hadoop-arg',
+                      '%s/lib/avro-1.7.3.jar,%s/avro-mapred-1.7.3-hadoop2.jar' % (HADOOP_JAR_HOME, lib_path)]
         return self
 
     def with_sequence_file_input(self):
+        #self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
+        # refactor laster to add jars normally
         self.input_type = 'sequence'
         return self
-
-
-    def combine_input_files(self, chunk=None):
-        self.combine_input = True
-        if chunk is not None:
-            self.combine_chunk = chunk
-
-        self.args += ['--hadoop-arg', '-libjars']
-        self.args += ['--hadoop-arg', '%s/common.jar' % lib_path]
-        return self    
 
     def add_input_path(self, input_path, combine=False):
         self.input_paths += [input_path]
@@ -130,26 +127,23 @@ class JobBuilder:
         self.deleted_paths += [path]
         return self
 
-    def output_to_hbase(self, table, cf=None, server=None):
+    def output_to_hbase(self, table, cf=None, servers=None):
         self.output_method = 'hbase'
         self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_TABLE_ENV, table)]
         if cf:
             self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_COLUMN_FAMILY_ENV, cf)]
 
-        if server is None:
-            for server in determine_hbase_servers():
-                try:
-                    writer = Exporter(server, table, col_family=cf)
-                    if writer:
-                        self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_SERVER_ENV, server)]
-                        break
-                except:
-                    continue
+        if servers is None:
+            servers = get_region_servers()
+            sys.stderr.write('region servers: %s\n' % str(servers))
+
+        self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_SERVER_ENV, ','.join(servers))]
         return self
 
     def partition_by_key(self, key_part_start=1, key_part_end=1):
         self.args += ['--partitioner', 'org.apache.hadoop.mapred.lib.KeyFieldBasedPartitioner']
-        self.args += ['--jobconf', ('mapreduce.partition.keypartitioner.options=-k%d,%d' % (key_part_start, key_part_end))]
+        self.args += ['--jobconf',
+                      ('mapreduce.partition.keypartitioner.options=-k%d,%d' % (key_part_start, key_part_end))]
 
         return self
 
@@ -179,14 +173,7 @@ class JobBuilder:
         return self
 
     def with_task_memory(self, megabytes, task_type='all'):
-        if task_type == 'map' or task_type == 'all':
-            self.args += ['--jobconf', 'mapreduce.map.memory.mb=%d' % (int)(megabytes * 1.3)]
-            self.args += ['--jobconf', ('mapreduce.map.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
-
-        if task_type == 'reduce' or task_type == 'all':
-            self.args += ['--jobconf', 'mapreduce.reduce.memory.mb=%d' % (int)(megabytes * 1.3)]
-            self.args += ['--jobconf', ('mapreduce.reduce.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
-
+        self.args += ['--jobconf', ('mapred.child.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
         return self
 
     def with_io_memory(self, megabytes, task_type='all'):
@@ -253,6 +240,10 @@ class JobBuilder:
         self.args += [('--%s' % prop_name), prop_value]
         return self
 
+    def set_job_conf(self, key, value):
+        self.args += ['--jobconf', ('%s=%s' % (key, value))]
+        return self
+
     # validation checks for
     def do_checks(self):
         if len(self.input_paths) == 0:
@@ -301,6 +292,8 @@ class JobBuilder:
 
             self.args += self.input_paths
 
+            log_dir = None
+
         for setup in self.setups:
             setup()
 
@@ -310,10 +303,11 @@ class JobBuilder:
             job.HADOOP_INPUT_FORMAT = 'org.apache.avro.mapred.AvroAsTextInputFormat'
         elif self.input_type == 'sequence':
             job.HADOOP_INPUT_FORMAT = 'org.apache.hadoop.mapred.SequenceFileAsTextInputFormat'
-        elif self.combine_input:
-            job.HADOOP_INPUT_FORMAT = 'com.similargroup.common.combine.CombineTextInputFormat'
 
-        job.follow_ups = self.follow_ups
+        job.log_dir = None
+        job.follow_ups = []
+        # doesnt work right now with cdh 5 job.log_dir = log_dir
+        # job.follow_ups = self.follow_ups
 
         return job
 
