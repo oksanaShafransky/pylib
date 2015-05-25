@@ -269,7 +269,7 @@ class JobBuilder:
             os.environ['HADOOP_HOME'] = hadoop_home
             self.args += ['--hadoop-bin', hadoop_home]
             self.args += ['--hadoop-streaming-jar',
-                          '%s/contrib/streaming/hadoop-streaming.jar' % HADOOP_JAR_HOME]
+                          '%s/contrib/streaming/hadoop-streaming-mr1.jar' % HADOOP_JAR_HOME]
 
             log_dir = None
 
