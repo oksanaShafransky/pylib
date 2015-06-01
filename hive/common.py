@@ -7,7 +7,6 @@ import calendar
 from datetime import *
 from os.path import isfile, join
 from os import listdir
-from dateutil.relativedelta import relativedelta
 
 from dateutil.relativedelta import relativedelta
 import sys
