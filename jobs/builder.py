@@ -173,7 +173,11 @@ class JobBuilder:
         return self
 
     def with_task_memory(self, megabytes, task_type='all'):
-        self.args += ['--jobconf', ('mapred.child.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
+        if task_type == 'map' or task_type == 'all':
+            self.args += ['--jobconf', 'mapreduce.map.memory.mb=%d' % int(megabytes * 1.3)]
+        if task_type == 'reduce' or task_type == 'all':
+            self.args += ['--jobconf', 'mapreduce.reduce.memory.mb=%d' % int(megabytes * 1.3)]
+
         return self
 
     def with_io_memory(self, megabytes, task_type='all'):
