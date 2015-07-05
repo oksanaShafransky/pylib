@@ -16,6 +16,7 @@ def decode_env(s):
         return binascii.a2b_hex(s[1:])
 
 
+# TODO - find a way to pass logger
 def load_class(class_name):
     parts = class_name.split('.')
     module = ".".join(parts[:-1])
@@ -79,6 +80,11 @@ class TsvProtocol(object):
     KEY_CLASS_PROPERTY_ENV = 'key_class_name'
     VALUE_CLASS_PROPERTY_ENV = 'value_class_name'
 
+    def __init__(self):
+        self.instances = dict()
+        self.file_name_2_key_class = dict()
+        self.file_name_2_value_class = dict()
+
     @staticmethod
     def named_key_class_env(name):
         return encode_env('%s_%s' % (TsvProtocol.KEY_CLASS_PROPERTY_ENV, name))
@@ -87,9 +93,11 @@ class TsvProtocol(object):
     def named_value_class_env(name):
         return encode_env('%s_%s' % (TsvProtocol.VALUE_CLASS_PROPERTY_ENV, name))
 
-    @staticmethod
-    def determine_key_class():
+    def determine_key_class(self):
         file_name = os.environ['map_input_file']
+        try_find = self.file_name_2_key_class.get(file_name, None)
+        if try_find is not None:
+            return try_find
 
         for env_key in os.environ:
             reverted = decode_env(env_key)
@@ -98,25 +106,40 @@ class TsvProtocol(object):
 
             if TsvProtocol.KEY_CLASS_PROPERTY_ENV in reverted and reverted[len(
                     TsvProtocol.KEY_CLASS_PROPERTY_ENV + '_'):] in file_name:
-                return load_class(os.environ[env_key])
+                self.file_name_2_key_class[file_name] = os.environ[env_key]
+                return os.environ[env_key]
 
         sys.stderr.write('key class undefined for %s\n' % file_name)
         raise Exception('key class undefined for %s' % file_name)
 
-    @staticmethod
-    def determine_value_class():
+    def determine_value_class(self):
         file_name = os.environ['map_input_file']
-        for env in os.environ:
-            reverted = decode_env(env)
+        try_find = self.file_name_2_value_class.get(file_name, None)
+        if try_find is not None:
+            return try_find
+
+        for env_key in os.environ:
+            reverted = decode_env(env_key)
             if reverted is None:
                 continue
 
             if TsvProtocol.VALUE_CLASS_PROPERTY_ENV in reverted and reverted[len(
                     TsvProtocol.VALUE_CLASS_PROPERTY_ENV + '_'):] in file_name:
-                return load_class(os.environ[env])
+                self.file_name_2_value_class[file_name] = os.environ[env_key]
+                return os.environ[env_key]
 
         sys.stderr.write('value class undefined for %s\n' % file_name)
         raise Exception('value class undefined for %s' % file_name)
+
+    def get_instance(self, cls):
+        existing = self.instances.get(cls, None)
+        if existing is not None:
+            existing.clear()
+            return existing
+        else:
+            new_instance = load_class(cls)()
+            self.instances[cls] = new_instance
+            return new_instance
 
     @staticmethod
     def read_value(object, fields, idx):
@@ -177,9 +200,9 @@ class TsvProtocol(object):
         fields = line.split(TsvProtocol.TAB_SEPARATOR)
         idx = 0
 
-        key = TsvProtocol.determine_key_class()()
+        key = self.get_instance(self.determine_key_class())
         idx = TsvProtocol.read_value(key, fields, idx)
-        value = TsvProtocol.determine_value_class()()
+        value = self.get_instance(self.determine_value_class())
         TsvProtocol.read_value(value, fields, idx)
 
         return key, value
