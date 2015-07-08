@@ -12,6 +12,7 @@ from mrjob.job import MRJob
 
 from stats import PostJobHandler, PrintRecorder
 from protocol import HBaseProtocol, TsvProtocol
+from distcache import *
 
 HADOOP_JAR_HOME = '/usr/lib/hadoop-0.20-mapreduce'
 
@@ -186,6 +187,25 @@ class JobBuilder:
 
     def num_reducers(self, reducers):
         self.args += ['--jobconf', ('mapred.reduce.tasks=%s' % reducers)]
+        return self
+
+    def cache_files_keyed(self, key, path):
+        files_to_cache = find_files(path)
+
+        for cache_file in files_to_cache:
+            self.args += ['--file', 'hdfs://%s#%s' % (cache_file, '%s_%s' % (key, cache_file.split('/')[-1:][0]))]
+
+        self.args += ['--setup', cache_files_cmd(files_to_cache, key)]
+        return self
+
+    def cache_files(self, path):
+        return self.cache_files_keyed('', path)
+
+    def cache_object_keyed(self, key, obj):
+        obj_file, key_cmd = cache_obj(key, obj)
+        self.args += ['--file', obj_file]
+        self.args += ['--setup', key_cmd]
+        self.add_follow_up_cmd('rm %s' % obj_file)
         return self
 
     def add_setup(self, setup):
