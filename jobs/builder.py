@@ -1,7 +1,5 @@
 import logging
-import tempfile
 from mrjob.util import log_to_stream
-from jobs.hbase import Exporter
 
 __author__ = 'Felix'
 
@@ -15,8 +13,7 @@ from stats import PostJobHandler, PrintRecorder
 from protocol import HBaseProtocol, TsvProtocol
 
 from inspect import isclass
-import cPickle as pickle
-import xml.etree.ElementTree as ET
+from distcache import *
 
 HADOOP_JAR_HOME = '/usr/lib/hadoop-0.20-mapreduce'
 
@@ -30,15 +27,22 @@ lib_file = 'pylib.tar.gz'
 DFS_BLOCK_SIZE = 128
 
 
-def determine_hbase_servers():
-    hbase_conf = os.environ['HBASE_CONF_DIR'] if 'HBASE_CONF_DIR' in os.environ else '/etc/hbase/conf'
+def get_zookeeper_host():
+    from lxml.etree import XML
+    xml_data = file('/etc/hbase/conf/hbase-site.xml', 'rb').read()
+    for host in XML(xml_data).xpath("//property[name='hbase.zookeeper.quorum']/value")[0].text.split(','):
+        return host
 
-    conf = ET.parse('%s/hbase-site.xml' % hbase_conf)
-    root = conf.getroot()
 
-    # should only be 1
-    quorum_prop = [elem.find('value').text for elem in root.findall('property') if elem.find('name').text == 'hbase.zookeeper.quorum'][0]
-    return quorum_prop.split(',')
+def get_region_servers():
+    from kazoo.client import KazooClient
+    zk = KazooClient(hosts=get_zookeeper_host(), read_only=True)
+    try:
+        zk.start()
+        children = zk.get_children('/hbase/rs')
+        return [c.encode('utf-8').split(',')[0] for c in children]
+    finally:
+        zk.stop()
 
 
 class JobBuilder:
@@ -130,21 +134,17 @@ class JobBuilder:
         self.deleted_paths += [path]
         return self
 
-    def output_to_hbase(self, table, cf=None, server=None):
+    def output_to_hbase(self, table, cf=None, servers=None):
         self.output_method = 'hbase'
         self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_TABLE_ENV, table)]
         if cf:
             self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_COLUMN_FAMILY_ENV, cf)]
 
-        if server is None:
-            for server in determine_hbase_servers():
-                try:
-                    writer = Exporter(server, table, col_family=cf)
-                    if writer:
-                        self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_SERVER_ENV, server)]
-                        break
-                except:
-                    continue
+        if servers is None:
+            servers = get_region_servers()
+            sys.stderr.write('region servers: %s\n' % str(servers))
+
+        self.args += ['--setup', 'export %s=%s' % (HBaseProtocol.HBASE_SERVER_ENV, ','.join(servers))]
         return self
 
     def partition_by_key(self, key_part_start=1, key_part_end=1):
@@ -199,6 +199,25 @@ class JobBuilder:
 
     def num_reducers(self, reducers):
         self.args += ['--jobconf', ('mapred.reduce.tasks=%s' % reducers)]
+        return self
+
+    def cache_files_keyed(self, key, path):
+        files_to_cache = find_files(path)
+
+        for cache_file in files_to_cache:
+            self.args += ['--file', 'hdfs://%s#%s' % (cache_file, '%s_%s' % (key, cache_file.split('/')[-1:][0]))]
+
+        self.args += ['--setup', cache_files_cmd(files_to_cache, key)]
+        return self
+
+    def cache_files(self, path):
+        return self.cache_files_keyed('', path)
+
+    def cache_object_keyed(self, key, obj):
+        obj_file, key_cmd = cache_obj(key, obj)
+        self.args += ['--file', obj_file]
+        self.args += ['--setup', key_cmd]
+        self.add_follow_up_cmd('rm %s' % obj_file)
         return self
 
     def add_setup(self, setup):
@@ -285,8 +304,6 @@ class JobBuilder:
             if self.output_method == 'file':
                 self.args += ['--output-dir', ('hdfs://%s' % self.output_path)]
                 log_dir = '%s/_logs/history/' % self.output_path
-            else:
-                log_dir = user_path
 
             for path in self.deleted_paths:
                 self.add_setup_cmd('hadoop fs -rm -r -f %s' % path)

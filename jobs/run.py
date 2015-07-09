@@ -32,7 +32,7 @@ def run(job):
 
         job_ids = re.findall('job_\d+_\d+', whole_log)
 
-        # for now, assume only one job existed, patch later if needed        
+        # for now, assume only one job existed, patch later if needed
         job_id = job_ids[0] if len(job_ids) > 0 else None
 
         if job_id is not None:

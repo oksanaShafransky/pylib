@@ -7,15 +7,17 @@ from random import random
 from struct import *
 import happybase
 import sys
+import cProfile, pstats
+import cStringIO as StringIO
 
 
 class Exporter:
     cf_params = {'max_versions': 1, 'compression': 'snappy'}
 
     batch = None
-    MAX_BATCH_BYTES = 1024 * 1024 * 8
+    MAX_BATCH_BYTES = 1024 * 1024 * 14
     HBASE_VERSION = '0.94'
-    CONNECTION_REFRESH_INTERVAL = 10000
+    CONNECTION_REFRESH_INTERVAL = 20000
 
     def __init__(self, server_urls, table_name, col_family=None, col=None, create_table=False, overwrite=False,
                  batch_size=1):
@@ -25,6 +27,8 @@ class Exporter:
         self.bytes_in_batch = 0
         self.batch_size = batch_size
         self.table_name = table_name
+        self.pr = cProfile.Profile()
+        self.pr.enable()
 
         if create_table:
             table_exists = table_name in self.conn.tables()
@@ -104,12 +108,13 @@ class Exporter:
             data_for_write = data
 
         self.bytes_in_batch += len(key) + len(data_for_write)
-        try:
-            # self.batch.put(key, data_for_write)
-            self._run_in_thread(self.batch.put, (key, data_for_write))
-        except RuntimeError:
-            sys.stderr.write('Batch submit timed out\n')
-            return
+        # try:
+        # # self.batch.put(key, data_for_write)
+        #     self._run_in_thread(self.batch.put, (key, data_for_write))
+        # except RuntimeError:
+        #     sys.stderr.write('Batch submit timed out\n')
+        #     return
+        self.batch.put(key, data_for_write)
         if self.bytes_in_batch > self.MAX_BATCH_BYTES:
             sys.stderr.write('Committing oversized (%s) batch...' % self.bytes_in_batch)
             self.bytes_in_batch = 0
@@ -118,38 +123,58 @@ class Exporter:
         if self.count % self.CONNECTION_REFRESH_INTERVAL == 0:
             self.refresh_connection()
 
+
+    def _finish_profile(self):
+        self.pr.disable()
+        s = StringIO.StringIO()
+        sortby = 'cumulative'
+        ps = pstats.Stats(self.pr, stream=s).sort_stats(sortby)
+        ps.print_stats()
+        sys.stderr.write(s.getvalue())
+
     def __del__(self):
         if self.batch is not None:
             self.batch.send()
         self._conn.close()
+        self._finish_profile()
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         if self.batch is not None:
             self.batch.send()
         self._conn.close()
+        self._finish_profile()
 
 
 class ByteHelper:
     def __init__(self):
-        self._bytes = ''
+        self._bytes = StringIO.StringIO()
 
     @property
     def bytes(self):
-        return self._bytes
+        return self._bytes.getvalue()
 
-    def append_utf(self, str):
-        encoded = str.encode('utf-8')
+    def close(self):
+        self._bytes.close()
+
+    def __del__(self):
+        self.close()
+
+    def append_utf(self, bytes_or_unicode):
+        if type(bytes_or_unicode) is unicode:
+            encoded = bytes_or_unicode.encode('utf-8')
+        else:
+            encoded = bytes_or_unicode
         self.append_short(len(encoded))
-        self._bytes += encoded
+        self._bytes.write(encoded)
 
     def append_short(self, num):
-        self._bytes += pack('>h', num)
+        self._bytes.write(pack('>h', num))
 
     def append_int(self, num):
-        self._bytes += pack('>i', num)
+        self._bytes.write(pack('>i', num))
 
     def append_double(self, num):
-        self._bytes += pack('>d', num)
+        self._bytes.write(pack('>d', num))
 
     def append_collection(self, collection, types):
         self.append_int(len(collection))
