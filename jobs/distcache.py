@@ -65,11 +65,3 @@ def open_file(file_name):
         raise TypeError('snappy files are currently not supported')
     else:
         return open(file_name)
-=======
-from stats import check_output
-
-
-def find_files(path):
-    cmd = ['hadoop', 'fs', '-ls', path]
-    ls_out = check_output()
->>>>>>> Stashed changes
