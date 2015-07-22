@@ -7,7 +7,6 @@ import calendar
 from datetime import *
 from os.path import isfile, join
 from os import listdir
-from dateutil.relativedelta import relativedelta
 
 from dateutil.relativedelta import relativedelta
 import sys
@@ -354,6 +353,13 @@ def get_range_where_clause(year, month, day, mode, mode_type):
 
     return get_where_between_dates(start_date, end_date)
 
+def get_day_range_where_clause(year, month, day, window_size):
+    if int(year) < 100:
+        end_date = datetime(2000 + int(year), int(month), int(day)).date()
+    else:
+        end_date = datetime(int(year), int(month), int(day)).date()
+
+    return get_where_between_dates(end_date - timedelta(days=int(window_size) - 1), end_date)
 
 def get_where_between_dates(start_date, end_date):
     where_clause = ""
