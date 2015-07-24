@@ -50,7 +50,6 @@ def get_region_servers():
 class JobBuilder:
     GZ_COUNTER = 0
 
-    max_map_fail_percentage = 90
     max_map_task_fails = 4
     max_reduce_task_fails = 8
 
@@ -63,7 +62,6 @@ class JobBuilder:
             '--cleanup', 'NONE',
             '--python-archive', '%s/%s' % (lib_path, lib_file),
             '--jobconf', ('mapred.job.name=%s' % job_name),
-            '--jobconf', ('mapred.max.map.failures.percent=%d' % self.max_map_fail_percentage),
             '--jobconf', ('mapred.map.max.attempts=%d' % self.max_map_task_fails),
             '--jobconf', ('mapred.reduce.max.attempts=%d' % self.max_reduce_task_fails),
             '--setup', 'export PATH=$PATH:/usr/lib/python2.6/site-packages:/usr/lib64/python2.6/site-packages',
