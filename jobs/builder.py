@@ -52,7 +52,7 @@ class JobBuilder:
 
     # needed by some jobs, TODO: move to per job basis
     max_map_fail_percentage = 1
-    
+
     max_map_task_fails = 4
     max_reduce_task_fails = 8
 
