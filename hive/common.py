@@ -387,7 +387,7 @@ def deploy_jar(deploy_path, jar_location):
         return
 
     subprocess.call(["hadoop", "fs", "-rm", "-r", jar_location])
-    subprocess.call(["hadoop", "fs", "-mkdir", jar_location])
+    subprocess.call(["hadoop", "fs", "-mkdir", "-p", jar_location])
     subprocess.call(["hadoop", "fs", "-put", deploy_path + "/analytics.jar", jar_location + "/analytics.jar"])
     subprocess.call(
         ["hadoop", "fs", "-put", deploy_path + "/lib/common-1.0.jar", jar_location + "/common.jar"])
@@ -413,7 +413,7 @@ def deploy_all_jars(deploy_path, jar_location, lib_path="lib"):
     lib_jars = [jar for jar in listdir(full_lib_path) if isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
 
     subprocess.call(["hadoop", "fs", "-rm", "-r", jar_location])
-    subprocess.call(["hadoop", "fs", "-mkdir", jar_location])
+    subprocess.call(["hadoop", "fs", "-mkdir", "-p", jar_location])
     subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (deploy_path, jar_location)])
     subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (full_lib_path, jar_location)])
 
