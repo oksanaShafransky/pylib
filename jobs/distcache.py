@@ -24,12 +24,14 @@ def find_files(path):
     return files
 
 
-def cache_files_cmd(files, key=''):
-    return 'export %s_%s=%s' % (CACHE_FILES_ENV, key, ','.join(['%s_%s' % (key, cached_file.split('/')[-1:][0]) for cached_file in files]))
+def cache_files_cmd(path, key=''):
+    files = find_files(path)
+    return 'export %s_%s=%s' % (CACHE_FILES_ENV, key, ','.join(['%s/%s' % (key, cached_file.split('/')[-1:][0]) for cached_file in files]))
 
 
 def get_cached_files(key=''):
     import os
+
     key_env = '%s_%s' % (CACHE_FILES_ENV, key)
 
     if key_env not in os.environ:
