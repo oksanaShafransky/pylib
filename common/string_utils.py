@@ -7,7 +7,7 @@ def sanitize(raw_str):
     for c in raw_str:
         try:
             buff.write(c.decode('ascii'))
-        except UnicodeEncodeError:
+        except UnicodeEncodeError, UnicodeDecodeError:
             pass
 
     return buff.getvalue()
