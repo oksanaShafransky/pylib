@@ -61,6 +61,8 @@ class HBaseProtocol(object):
 
     def write(self, key, value):
         self.writer.put(key, value)
+        # for the sake of normal writer flow, it is assumed this output is redirected to a temp dir
+        return ''
 
 
 class TextProtocol(object):
