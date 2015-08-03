@@ -89,7 +89,7 @@ class JobBuilder:
         # refactor laster to add jars normally
         self.input_type = 'avro'
         self.args += ['--hadoop-arg', '-libjars']
-        self.args += ['--hadoop-arg', '/usr/lib/avro/avro.jar']
+        self.args += ['--hadoop-arg', '/usr/lib/avro/avro-mapred-hadoop2.jar']
         return self
 
     def with_sequence_file_input(self):
