@@ -476,11 +476,11 @@ def list_days(end_date, mode, mode_type):
         else:
             return None
     elif mode == 'window':
-        if mode_type == 'last30':
+        if mode_type == 'last-30':
             delta = timedelta(days=30)
-        elif mode_type == 'last28':
+        elif mode_type == 'last-28':
             delta = timedelta(days=28)
-        elif mode_type == 'last7':
+        elif mode_type == 'last-7':
             delta = timedelta(days=7)
         else:
             return None
