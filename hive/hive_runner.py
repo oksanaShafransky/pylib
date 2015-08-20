@@ -204,7 +204,8 @@ def run_hive_job(hql, job_name, num_of_reducers, calc_pool='calculation', sync=T
            "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
            "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
            "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
-           "-hiveconf", "mapred.max.split.size=134217728"
+           "-hiveconf", "mapred.max.split.size=134217728",
+           "-hiveconf", "hive.exec.dynamic.partition.mode=nonstrict"
     ]
     if codec:
         cmd += ["-hiveconf", "mapred.output.compression.codec=" + codec]
