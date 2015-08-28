@@ -95,6 +95,11 @@ class JobBuilder:
     def with_sequence_file_input(self):
         #self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
         # refactor laster to add jars normally
+        core_lib_path = '/usr/lib/hadoop-0.20-mapreduce/hadoop-core-mr1.jar'
+        if not os.path.exists(core_lib_path):
+            core_lib_path = '/usr/lib/hadoop-0.20-mapreduce/hadoop-core.jar'
+        self.args += ['--hadoop-arg', '-libjars']
+        self.args += ['--hadoop-arg', core_lib_path]
         self.input_type = 'sequence'
         return self
 
@@ -289,12 +294,16 @@ class JobBuilder:
             self.args += ['-r', runner]
 
         if runner == 'hadoop' or runner == 'dry':
+            #Streaming jars are named differently in different CDH versions
+            streaming_jar_path ='%s/contrib/streaming/hadoop-streaming-mr1.jar' % HADOOP_JAR_HOME
+            if not os.path.exists(streaming_jar_path):
+                streaming_jar_path ='%s/contrib/streaming/hadoop-streaming.jar' % HADOOP_JAR_HOME
 
             hadoop_home = kwargs['hadoop_home'] if 'hadoop_home' in kwargs else std_hadoop_home
             os.environ['HADOOP_HOME'] = hadoop_home
             self.args += ['--hadoop-bin', hadoop_home]
             self.args += ['--hadoop-streaming-jar',
-                          '%s/contrib/streaming/hadoop-streaming-mr1.jar' % HADOOP_JAR_HOME]
+                          streaming_jar_path]
 
             log_dir = None
 
