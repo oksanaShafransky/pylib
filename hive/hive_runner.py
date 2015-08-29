@@ -12,10 +12,10 @@ import os
 
 try:
     from lxml.etree import HTML
-    import MySQLdb
-
+    import gelfclient
     CAN_REPORT = True
 except ImportError:
+    HTML = gelfclient = None
     CAN_REPORT = False
 
 
@@ -67,7 +67,7 @@ def get_job_stats(job_id):
         k, v = [i for i in element.itertext() if i != '\n']  # Just two text elements
         config[k] = v
         config_xml += (
-        '<property><name>%s</name><value>%s</value><source>dont.know</source></property>' % (escape(k), escape(v)))
+            '<property><name>%s</name><value>%s</value><source>dont.know</source></property>' % (escape(k), escape(v)))
     config_xml += '</configuration>'
     return counters, config, config_xml
 
@@ -87,7 +87,7 @@ def run_hive(cmd):
     out_temp.close()
 
     if CAN_REPORT is False:
-        warnings.warn('Cannot update db8. Python packages (mysqldb, lxml, gelfclient) missing')
+        warnings.warn('Cannot update db8. Python packages (lxml, gelfclient) missing')
         return
     try:
         end_time = datetime.now()
@@ -122,29 +122,28 @@ def run_hive(cmd):
                 job_success = 1
             if number_of_mappers:
                 average_mapper_time = int(float(counters_dict[
-                    'Job Counters.Total time spent by all maps in occupied slots (ms)']) / number_of_mappers / 1000)
+                                                    'Job Counters.Total time spent by all maps in occupied slots (ms)']) / number_of_mappers / 1000)
             if number_of_reducers:
                 average_reducer_time = int(float(counters_dict[
-                    'Job Counters.Total time spent by all reduces in occupied slots (ms)']) / number_of_reducers / 1000)
+                                                     'Job Counters.Total time spent by all reduces in occupied slots (ms)']) / number_of_reducers / 1000)
             else:
                 average_reducer_time = 0
-            # Write to MySQL
-            mysql_cmd = '''INSERT INTO hadoop.job_stats (job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers, number_of_reducers, average_mapper_time, average_reducer_time, submit_host, number_of_input_records, number_of_output_records, counters, config, fail_message)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        '''
-            params = (
-            job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers,
-            number_of_reducers, average_mapper_time, average_reducer_time, hostname, number_of_input_records,
-            number_of_output_records, counters_str, config_xml, None)
-            conn = MySQLdb.connect(host='db8', user='root', passwd='SimilarWeb123',
-                                   db='hadoop')  # TODO: actual password
-            cursor = conn.cursor()
-            cursor.execute(mysql_cmd, params)
-            conn.commit()
-            conn.close()
-
-            #Write to Gelf
-            import gelfclient
+            # # Write to MySQL
+            # mysql_cmd = '''INSERT INTO hadoop.job_stats (job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers, number_of_reducers, average_mapper_time, average_reducer_time, submit_host, number_of_input_records, number_of_output_records, counters, config, fail_message)
+            #                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            #             '''
+            # params = (
+            # job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers,
+            # number_of_reducers, average_mapper_time, average_reducer_time, hostname, number_of_input_records,
+            # number_of_output_records, counters_str, config_xml, None)
+            # conn = MySQLdb.connect(host='db8', user='root', passwd='SimilarWeb123',
+            #                        db='hadoop')  # TODO: actual password
+            # cursor = conn.cursor()
+            # cursor.execute(mysql_cmd, params)
+            # conn.commit()
+            # conn.close()
+            #
+            # Write to Gelf
 
             param_dict = {"job_id": job_id,
                           "job_name": job_name,
@@ -174,7 +173,7 @@ def run_hive(cmd):
     except:
         import traceback
 
-        warnings.warn('Cannot update db8. Exception during excecution:\n %s' % traceback.format_exc())
+        warnings.warn('Cannot update Kibana. Exception during excecution:\n %s' % traceback.format_exc())
     if p.returncode != 0:
         print 'Hive return code was: %s!' % p.returncode
         print 'Hive stdout: %s' % stdoutdata
@@ -205,7 +204,7 @@ def run_hive_job(hql, job_name, num_of_reducers, calc_pool='calculation', sync=T
            "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
            "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
            "-hiveconf", "mapred.max.split.size=134217728"
-    ]
+           ]
     if codec:
         cmd += ["-hiveconf", "mapred.output.compression.codec=" + codec]
     if sync:
