@@ -93,7 +93,7 @@ cross_cache_stage = DockerBashOperator(
     task_id='cross_cache_stage',
     dag=window_dag,
     docker_name="op-hbs2",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -p update_stage'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_bucket'
 )
 
 cross_cache_stage.set_upstream(calculate_cross_cache)
@@ -112,7 +112,7 @@ cross_cache_prod = DockerBashOperator(
     task_id='cross_cache_prod',
     dag=window_dag,
     docker_name="op-hbs2",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -p update_prod'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_bucket'
 )
 
 cross_cache_prod.set_upstream(calculate_cross_cache)
