@@ -38,9 +38,8 @@ from operators import DockerBashOperator, CopyHbaseTableOperator, DockerBashSens
 
 
 # Test for deciding when to start
-import sys, os
-sys.path += os.path.abspath('.')
-from moving_window.daily_calculation import *
-from moving_window.window_calculation import *
-from moving_window.deployment import *
+
+from sw_airflow.desktop.moving_window.daily_calculation import *
+from sw_airflow.desktop.moving_window.window_calculation import *
+from sw_airflow.desktop.moving_window.deployment import *
 

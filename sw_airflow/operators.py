@@ -71,20 +71,20 @@ class BashSensor(BaseSensorOperator):
 class DockerBashOperator(BashOperator):
     ui_color = '#FFFF66'
     cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
-        -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
-        -v /etc/localtime:/etc/localtime:ro                           \
-        -v /tmp/logs:/tmp/logs                                        \
-        -v /var/lib/sss:/var/lib/sss                                  \
-        -v /etc/localtime:/etc/localtime:ro                           \
-        -v /usr/bin:/opt/old_bin                                      \
-        -v /var/run/similargroup:/var/run/similargroup                \
-        --rm                                                          \
-        --sig-proxy=false                                             \
-        --user=`id -u`                                                \
-        -e DOCKER_GATE={{ docker_manager }}                           \
-        -e GELF_HOST="runsrv2.sg.internal"                            \
-        -e HOME=/tmp                                                  \
-        runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
+-v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
+-v /etc/localtime:/etc/localtime:ro                           \
+-v /tmp/logs:/tmp/logs                                        \
+-v /var/lib/sss:/var/lib/sss                                  \
+-v /etc/localtime:/etc/localtime:ro                           \
+-v /usr/bin:/opt/old_bin                                      \
+-v /var/run/similargroup:/var/run/similargroup                \
+--rm                                                          \
+--sig-proxy=false                                             \
+--user=`id -u`                                                \
+-e DOCKER_GATE={{ docker_manager }}                           \
+-e GELF_HOST="runsrv2.sg.internal"                            \
+-e HOME=/tmp                                                  \
+runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
     @apply_defaults

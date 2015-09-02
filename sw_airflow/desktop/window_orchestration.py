@@ -1,5 +1,3 @@
-
-
 MASTER_EXECUTION_DIR = '/home/jeniag/similargroup_master'
 CDH5_EXECUTION_DIR = '/home/jeniag/similargroup_cdh5_test'
 __author__ = 'jeniag'
@@ -8,7 +6,7 @@ __author__ = 'jeniag'
 
 from airflow.models import DAG
 from datetime import datetime, timedelta
-from operators import DockerBashSensor, DockerBashOperator
+from sw_airflow.operators import DockerBashSensor, DockerBashOperator
 
 
 
