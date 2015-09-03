@@ -1,7 +1,5 @@
 __author__ = 'jeniag'
 
-
-from sw_airflow.operators import DockerBashOperator
 from daily_calculation import *
 from sw_airflow.desktop.moving_window.dag import window_dag
 

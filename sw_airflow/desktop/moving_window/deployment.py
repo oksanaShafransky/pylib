@@ -1,7 +1,6 @@
 __author__ = 'jeniag'
 
-from airflow.operators.dummy_operator import DummyOperator
-from sw_airflow.operators import DockerBashOperator, CopyHbaseTableOperator
+from sw_airflow.operators import CopyHbaseTableOperator
 from sw_airflow.desktop.moving_window.window_calculation import *
 
 # Copy tables to production
