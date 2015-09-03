@@ -22,14 +22,14 @@ for offset_days in reversed(range(28)):
         task_id='dagg_%d' % offset_days,
         dag=window_dag,
         docker_name="op-hbs2",
-        bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 {{transients}}' % offset_days
+        bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ macros.ds_add(ds, -%d) }} {{transients}}' % offset_days
     )
 
     daily_estimation = DockerBashOperator(
         task_id='dest_%d' % offset_days,
         dag=window_dag,
         docker_name="op-hbs2",
-        bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 --outliersdate {{ ds }} {{transients}}' % offset_days
+        bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ macros.ds_add(ds, -%d) }} --outliersdate {{ ds }} {{transients}}' % offset_days
     )
 
     daily_estimation_check = DockerBashOperator(
