@@ -150,7 +150,7 @@ for offset_days in reversed(range(7, 13)):
         task_id='cleanup_stage_%d' % offset_days,
         dag=window_dag,
         docker_name="op-hbs2",
-        bash_command='{{ params.execution_dir }}/$DIR/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et staging -p delete_files,drop_crosscache_stage,drop_hbase_tables' % offset_days
+        bash_command='{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et staging -p delete_files,drop_crosscache_stage,drop_hbase_tables' % offset_days
     )
     cleanup_prod = DummyOperator(task_id='cleanup_prod_%d' % offset_days, dag=window_dag)
     for docker in ('op-hbp1', 'op-hbp2'):
@@ -158,7 +158,7 @@ for offset_days in reversed(range(7, 13)):
             task_id='cleanup_prod_%d_%s' % (offset_days, docker),
             dag=window_dag,
             docker_name=docker,
-            bash_command='{{ params.execution_dir }}/$DIR/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et production -p drop_crosscache_stage,drop_hbase_tables' % offset_days
+            bash_command='{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et production -p drop_crosscache_stage,drop_hbase_tables' % offset_days
         )
         cleanup_prod.set_upstream(cleanup_prod_single)
         cleanup_prod_single.set_upstream(cross_cache_prod)
@@ -178,7 +178,7 @@ repair_dest_tables = DockerBashOperator(
     task_id='repair_dest_tables',
     dag=window_dag,
     docker_name="op-hbs2",
-    bash_command='{{ params.execution_dir }}/$DIR/daily/dailyEstimation.sh -d {{ ds }} -m window -mt last-28 -p repair'
+    bash_command='{{ params.execution_dir }}/analytics/daily/dailyEstimation.sh -d {{ ds }} -m window -mt last-28 -p repair'
 )
 
 repair_dest_tables.set_upstream(dest_all)
@@ -187,7 +187,7 @@ repair_dagg_tables = DockerBashOperator(
     task_id='repair_dagg_tables',
     dag=window_dag,
     docker_name="op-hbs2",
-    bash_command='{{ params.execution_dir }}/$DIR/daily/dailyAggregation.sh -d {{ ds }} -m window -mt last-28 -p repair'
+    bash_command='{{ params.execution_dir }}/analytics/daily/dailyAggregation.sh -d {{ ds }} -m window -mt last-28 -p repair'
 )
 
 repair_dagg_tables.set_upstream(dagg_all)
