@@ -1,10 +1,11 @@
+from airflow.operators.python_operator import PythonOperator
 import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
 
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import BaseSensorOperator
-from airflow.utils import TemporaryDirectory, apply_defaults
+from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
 
 
@@ -91,7 +92,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
     def __init__(self, docker_name, bash_command, *args, **kwargs):
         random_string = str(datetime.utcnow().strftime('%s'))
         docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': docker_name,
-                                                        'bash_command': bash_command}
+                                                            'bash_command': bash_command}
         super(DockerBashOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
 
@@ -117,7 +118,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
     def __init__(self, docker_name, bash_command, *args, **kwargs):
         random_string = str(datetime.utcnow().strftime('%s'))
         docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': docker_name,
-                                                        'bash_command': bash_command}
+                                                            'bash_command': bash_command}
         super(DockerBashSensor, self).__init__(bash_command=docker_command, *args, **kwargs)
 
 
@@ -130,6 +131,36 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
     @apply_defaults
     def __init__(self, source_cluster, target_cluster, table_name_template, *args, **kwargs):
         docker_command = CopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
-                                                            'target_cluster': target_cluster,
-                                                            'table_name': table_name_template}
+                                                                'target_cluster': target_cluster,
+                                                                'table_name': table_name_template}
         super(CopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
+
+
+class SuccedOrSkipOperator(PythonOperator):
+    ui_color = '#CC6699'
+
+    def execute(self, context):
+        skip_list, success_list = super(SuccedOrSkipOperator, self).execute(context)
+
+        logging.info("Skipping taks: " + str(skip_list))
+        session = settings.Session()
+        for task in skip_list:
+            ti = TaskInstance(
+                task, execution_date=context['ti'].execution_date)
+            ti.state = State.SKIPPED
+            ti.start_date = datetime.now()
+            ti.end_date = datetime.now()
+            session.merge(ti)
+
+        logging.info("Marking tasks as succeded: " + str(success_list))
+        for task in success_list:
+            ti = TaskInstance(
+                task, execution_date=context['ti'].execution_date)
+            ti.state = State.SUCCESS
+            ti.start_date = datetime.now()
+            ti.end_date = datetime.now()
+            session.merge(ti)
+
+        session.commit()
+        session.close()
+        logging.info("Done.")

@@ -16,5 +16,5 @@ dag_args = {
 dag_template_params = {'execution_dir': MASTER_EXECUTION_DIR, 'docker_gate': 'docker-a01.sg.internal',
                        'base_hdfs_dir': '/similargroup/data/analytics',
                        'transients': ''}
-window_dag = DAG(dag_id='moving_window', default_args=dag_args, params=dag_template_params)
+temp_dag = DAG(dag_id='moving_window', default_args=dag_args, params=dag_template_params)
 
