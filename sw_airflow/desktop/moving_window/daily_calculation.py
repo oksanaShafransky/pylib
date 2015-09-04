@@ -36,7 +36,7 @@ for offset_days in reversed(range(28)):
         task_id='dest_check_%d' % offset_days,
         dag=temp_dag,
         docker_name="{{ params.default_docker }}",
-        bash_command='{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteAndCountryEstimation.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -nw 7"' % offset_days
+        bash_command='{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteAndCountryEstimation.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -nw 7 {{transients}}' % offset_days
     )
 
     daily_aggregation.set_upstream(should_run_window)
