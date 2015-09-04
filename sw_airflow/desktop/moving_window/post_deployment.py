@@ -23,12 +23,9 @@ for offset_days in reversed(range(7, 13)):
             bash_command='{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et production -p drop_crosscache_stage,drop_hbase_tables' % offset_days
         )
         cleanup_prod.set_upstream(cleanup_prod_single)
-        cleanup_prod_single.set_upstream(cross_cache_prod)
-        cleanup_prod_single.set_upstream(dynamic_settings_prod)
         cleanup_prod_single.set_upstream(deploy_prod_done)
 
-    cleanup_stage.set_upstream(cross_cache_stage)
-    cleanup_stage.set_upstream(dynamic_settings_stage)
+    cleanup_stage.set_upstream(deploy_stage_done)
     cleanup_stage_all.set_upstream(cleanup_stage)
     cleanup_prod_all.set_upstream(cleanup_prod)
 

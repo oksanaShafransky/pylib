@@ -1,3 +1,4 @@
+from airflow.models import TaskInstance
 from airflow.operators.python_operator import PythonOperator
 import logging
 from subprocess import PIPE, STDOUT, Popen
@@ -7,6 +8,7 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import BaseSensorOperator
 from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
+from airflow import settings
 
 
 class BashSensor(BaseSensorOperator):
@@ -140,25 +142,26 @@ class SuccedOrSkipOperator(PythonOperator):
     ui_color = '#CC6699'
 
     def execute(self, context):
+        logging.info('Task params: ' + str((self.op_args, self.op_kwargs)))
         skip_list, success_list = super(SuccedOrSkipOperator, self).execute(context)
 
         logging.info("Skipping taks: " + str(skip_list))
+        logging.info("Marking success for: " + str(success_list))
         session = settings.Session()
-        for task in skip_list:
-            ti = TaskInstance(
-                task, execution_date=context['ti'].execution_date)
-            ti.state = State.SKIPPED
-            ti.start_date = datetime.now()
-            ti.end_date = datetime.now()
-            session.merge(ti)
 
-        logging.info("Marking tasks as succeded: " + str(success_list))
-        for task in success_list:
+        for task in self.get_flat_relatives():
+            if task.task_id not in (skip_list + success_list):
+                logging.info('Unrelated: ' + str(task))
+                continue
+            logging.info('Skipping or succeding: '+ str(task))
             ti = TaskInstance(
                 task, execution_date=context['ti'].execution_date)
-            ti.state = State.SUCCESS
             ti.start_date = datetime.now()
             ti.end_date = datetime.now()
+            if task.task_id in skip_list:
+                ti.state = State.SKIPPED
+            else:
+                ti.state = State.SUCCESS
             session.merge(ti)
 
         session.commit()

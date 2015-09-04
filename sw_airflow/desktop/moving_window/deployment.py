@@ -10,22 +10,39 @@ from sw_airflow.desktop.moving_window.dag import dag_template_params as dag_para
 
 copy_to_prod = DummyOperator(task_id='copy_to_prod', dag=temp_dag)
 deploy_prod_done = DummyOperator(task_id='deploy_prod_done', dag=temp_dag)
+deploy_stage_done = DummyOperator(task_id='deploy_stage_done', dag=temp_dag)
 deploy_prod_done.set_upstream(copy_to_prod)
 
 
-def switch_function(params):
+def prod_switch_function(params):
     if params['deploy_prod']:
         success_list = ['can_deploy_prod']
         skip_list = []
     else:
         success_list = ['deploy_prod_done']
         skip_list = ['can_deploy_prod']
-
+    return skip_list, success_list
 
 can_deploy_prod = SuccedOrSkipOperator(task_id='can_deploy_prod',
                                        dag=temp_dag,
-                                       python_callable=switch_function,
-                                       op_args=dag_params)
+                                       python_callable=prod_switch_function,
+                                       op_args=[dag_params])
+
+def stage_switch_function(params):
+    if params['deploy_stage']:
+        success_list = ['can_deploy_stage']
+        skip_list = []
+    else:
+        success_list = ['deploy_stage_done']
+        skip_list = ['can_deploy_stage']
+    return skip_list, success_list
+
+can_deploy_stage = SuccedOrSkipOperator(task_id='can_deploy_stage',
+                                       dag=temp_dag,
+                                       python_callable=stage_switch_function,
+                                       op_args=[dag_params])
+
+
 
 for target_cluster in ('hbp1', 'hbp2'):
     copy_to_prod_top_lists = CopyHbaseTableOperator(
@@ -70,7 +87,10 @@ dynamic_settings_stage = DockerBashOperator(
     bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_pro -p update_special_referrers_stage'
 )
 
+dynamic_settings_stage.set_upstream(can_deploy_stage)
 dynamic_settings_stage.set_upstream(all_calculation)
+deploy_stage_done.set_upstream(dynamic_settings_stage)
+
 
 dynamic_settings_prod = DummyOperator(task_id='dynamic_settings_prod', dag=temp_dag)
 dynamic_settings_hbp1 = DockerBashOperator(
@@ -123,8 +143,10 @@ cross_cache_stage = DockerBashOperator(
     bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_bucket'
 )
 
+
 cross_cache_stage.set_upstream(calculate_cross_cache)
 cross_cache_stage.set_upstream(dynamic_settings_stage)
+deploy_stage_done.set_upstream(cross_cache_stage)
 
 dynamic_settings_cross_stage = DockerBashOperator(
     task_id='dynamic_settings_cross_stage',
