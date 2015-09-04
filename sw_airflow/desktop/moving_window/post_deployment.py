@@ -38,7 +38,7 @@ repair_dest_tables = DockerBashOperator(
     task_id='repair_dest_tables',
     dag=temp_dag,
     docker_name="op-hbs2",
-    bash_command='{{ params.execution_dir }}/analytics/daily/dailyEstimation.sh -d {{ ds }} -m window -mt last-28 -p repair'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -m window -mt last-28 -p repair'
 )
 
 repair_dest_tables.set_upstream(dest_all)
@@ -47,7 +47,7 @@ repair_dagg_tables = DockerBashOperator(
     task_id='repair_dagg_tables',
     dag=temp_dag,
     docker_name="op-hbs2",
-    bash_command='{{ params.execution_dir }}/analytics/daily/dailyAggregation.sh -d {{ ds }} -m window -mt last-28 -p repair'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -m window -mt last-28 -p repair'
 )
 
 repair_dagg_tables.set_upstream(dagg_all)
