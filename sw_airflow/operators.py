@@ -73,6 +73,7 @@ class BashSensor(BaseSensorOperator):
 
 class DockerBashOperator(BashOperator):
     ui_color = '#FFFF66'
+    template_fields = ('bash_command', 'docker_name')
     cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
 -v /etc/localtime:/etc/localtime:ro                           \
@@ -92,13 +93,15 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
 
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
+        self.docker_name = docker_name
         random_string = str(datetime.utcnow().strftime('%s'))
-        docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': docker_name,
+        docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': self.docker_name,
                                                             'bash_command': bash_command}
         super(DockerBashOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
 
 class DockerBashSensor(BashSensor):
+    template_fields = ('bash_command', 'docker_name')
     cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
 -v /etc/localtime:/etc/localtime:ro                           \
@@ -118,6 +121,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
 
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
+        self.docker_name = docker_name
         random_string = str(datetime.utcnow().strftime('%s'))
         docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': docker_name,
                                                             'bash_command': bash_command}

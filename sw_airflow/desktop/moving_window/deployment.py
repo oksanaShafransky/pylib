@@ -83,7 +83,7 @@ for target_cluster in ('hbp1', 'hbp2'):
 dynamic_settings_stage = DockerBashOperator(
     task_id='dynamic_settings_stage',
     dag=temp_dag,
-    docker_name="op-hbs2",
+    docker_name="{{ params.default_docker }}",
     bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_pro -p update_special_referrers_stage'
 )
 
@@ -130,7 +130,7 @@ deploy_prod_done.set_upstream(dynamic_settings_prod)
 calculate_cross_cache = DockerBashOperator(
     task_id='calculate_cross_cache',
     dag=temp_dag,
-    docker_name="op-hbs2",
+    docker_name="{{ params.default_docker }}",
     bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -p create_hive'
 )
 
@@ -139,7 +139,7 @@ calculate_cross_cache.set_upstream(export_rest)
 cross_cache_stage = DockerBashOperator(
     task_id='cross_cache_stage',
     dag=temp_dag,
-    docker_name="op-hbs2",
+    docker_name="{{ params.default_docker }}",
     bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_bucket'
 )
 
@@ -151,7 +151,7 @@ deploy_stage_done.set_upstream(cross_cache_stage)
 dynamic_settings_cross_stage = DockerBashOperator(
     task_id='dynamic_settings_cross_stage',
     dag=temp_dag,
-    docker_name="op-hbs2",
+    docker_name="{{ params.default_docker }}",
     bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_cross_cache'
 )
 
@@ -160,7 +160,7 @@ dynamic_settings_cross_stage.set_upstream(cross_cache_stage)
 cross_cache_prod = DockerBashOperator(
     task_id='cross_cache_prod',
     dag=temp_dag,
-    docker_name="op-hbs2",
+    docker_name="{{ params.default_docker }}",
     bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_bucket'
 )
 

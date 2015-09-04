@@ -8,7 +8,7 @@ from sw_airflow.desktop.moving_window.dag import temp_dag
 should_run_window = DockerBashSensor(
     task_id='should_run_window',
     dag=temp_dag,
-    docker_name="op-hbs2",
+    docker_name="{{ params.default_docker }}",
     bash_command='''{{ params.execution_dir }}/analytics/scripts/checks/should_run_window.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }}'''
 )
 
@@ -21,21 +21,21 @@ for offset_days in reversed(range(28)):
     daily_aggregation = DockerBashOperator(
         task_id='dagg_%d' % offset_days,
         dag=temp_dag,
-        docker_name="op-hbs2",
+        docker_name="{{ params.default_docker }}",
         bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ macros.ds_add(ds, -%d) }} {{transients}}' % offset_days
     )
 
     daily_estimation = DockerBashOperator(
         task_id='dest_%d' % offset_days,
         dag=temp_dag,
-        docker_name="op-hbs2",
+        docker_name="{{ params.default_docker }}",
         bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ macros.ds_add(ds, -%d) }} --outliersdate {{ ds }} {{transients}}' % offset_days
     )
 
     daily_estimation_check = DockerBashOperator(
         task_id='dest_check_%d' % offset_days,
         dag=temp_dag,
-        docker_name="op-hbs2",
+        docker_name="{{ params.default_docker }}",
         bash_command='{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteAndCountryEstimation.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -nw 7"' % offset_days
     )
 
