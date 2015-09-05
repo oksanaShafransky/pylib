@@ -181,5 +181,5 @@ export_rest = DockerBashOperator(
 
 export_rest.set_upstream(ranks)
 
-calculation_done = DummyOperator(task_id='all_calculation', dag=temp_dag)
+calculation_done = DummyOperator(task_id='calculation_done', dag=temp_dag)
 calculation_done.set_upstream([incoming, outgoing, ranks, misc, keywords, export_rest, popular_pages, daily_incoming])

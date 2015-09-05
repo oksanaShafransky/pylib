@@ -1,6 +1,3 @@
-# Test for deciding when to start
-from copy import deepcopy
-
 __author__ = 'jeniag'
 
 from sw_airflow.desktop.moving_window.daily_calculation import *
