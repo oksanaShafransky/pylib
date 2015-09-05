@@ -15,7 +15,8 @@ for offset_days in reversed(range(7, 13)):
         bash_command='{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et staging -p delete_files,drop_crosscache_stage,drop_hbase_tables' % offset_days
     )
     cleanup_prod = DummyOperator(task_id='cleanup_prod_%d' % offset_days, dag=temp_dag)
-    for docker in ('op-hbp1', 'op-hbp2'):
+    # for docker in ('op-hbp1', 'op-hbp2'):
+    for docker in ('op-hbp1',):
         cleanup_prod_single = DockerBashOperator(
             task_id='cleanup_prod_%d_%s' % (offset_days, docker),
             dag=temp_dag,
@@ -38,7 +39,7 @@ repair_dest_tables = DockerBashOperator(
     task_id='repair_dest_tables',
     dag=temp_dag,
     docker_name="{{ params.default_docker }}",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -m window -mt last-28 -p repair'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -p repair'
 )
 
 repair_dest_tables.set_upstream(dest_all)
@@ -47,7 +48,7 @@ repair_dagg_tables = DockerBashOperator(
     task_id='repair_dagg_tables',
     dag=temp_dag,
     docker_name="{{ params.default_docker }}",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -m window -mt last-28 -p repair'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -p repair'
 )
 
 repair_dagg_tables.set_upstream(dagg_all)

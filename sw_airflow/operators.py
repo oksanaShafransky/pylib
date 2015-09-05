@@ -1,9 +1,8 @@
-from airflow.models import TaskInstance
+from airflow.models import TaskInstance, Log
 from airflow.operators.python_operator import PythonOperator
 import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
-
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import BaseSensorOperator
 from airflow.utils import TemporaryDirectory, apply_defaults, State
@@ -155,9 +154,7 @@ class SuccedOrSkipOperator(PythonOperator):
 
         for task in self.get_flat_relatives():
             if task.task_id not in (skip_list + success_list):
-                logging.info('Unrelated: ' + str(task))
                 continue
-            logging.info('Skipping or succeding: '+ str(task))
             ti = TaskInstance(
                 task, execution_date=context['ti'].execution_date)
             ti.start_date = datetime.now()
@@ -166,6 +163,7 @@ class SuccedOrSkipOperator(PythonOperator):
                 ti.state = State.SKIPPED
             else:
                 ti.state = State.SUCCESS
+                session.add(Log(State.SUCCESS, ti))
             session.merge(ti)
 
         session.commit()
