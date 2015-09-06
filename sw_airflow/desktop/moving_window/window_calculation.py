@@ -56,7 +56,7 @@ traffic_distro = DockerBashOperator(
     task_id='traffic_distro',
     dag=temp_dag,
     docker_name="{{ params.default_docker }}",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ ds }} -m window -mt last-28 -p export_traffic_distro_from_hbase'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ ds }} -m window -mt last-28 -p traffic_distro -p traffic_distro_to_hbase -p export_traffic_distro_from_hbase'
 )
 
 traffic_distro.set_upstream(site_country_special_referrer_distribution)
