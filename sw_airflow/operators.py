@@ -1,4 +1,4 @@
-from airflow.models import TaskInstance, Log
+from airflow.models import TaskInstance, Log, BaseOperator
 from airflow.operators.python_operator import PythonOperator
 import logging
 from subprocess import PIPE, STDOUT, Popen
@@ -7,7 +7,7 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import BaseSensorOperator
 from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
-from airflow import settings
+from airflow import settings, utils
 
 
 class BashSensor(BaseSensorOperator):
@@ -161,6 +161,7 @@ class SuccedOrSkipOperator(PythonOperator):
             ti.end_date = datetime.now()
             if task.task_id in skip_list:
                 ti.state = State.SKIPPED
+                session.add(Log(State.SKIPPED, ti))
             else:
                 ti.state = State.SUCCESS
                 session.add(Log(State.SUCCESS, ti))
@@ -169,3 +170,18 @@ class SuccedOrSkipOperator(PythonOperator):
         session.commit()
         session.close()
         logging.info("Done.")
+
+    def run(self, start_date=None, end_date=None, ignore_dependencies=False, force=False, mark_success=False):
+        """
+        Run a set of task instances for a date range.
+        """
+        start_date = start_date or self.start_date
+        end_date = end_date or self.end_date or datetime.now()
+
+        # We mark our own successes if needed. Run in "test" mode
+        for dt in utils.date_range(start_date, end_date, self.schedule_interval):
+            TaskInstance(self, dt).run(
+                mark_success=False,
+                ignore_dependencies=ignore_dependencies,
+                test_mode=True,
+                force=force, )

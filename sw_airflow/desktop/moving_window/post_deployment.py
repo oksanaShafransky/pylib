@@ -3,6 +3,8 @@ __author__ = 'jeniag'
 from sw_airflow.desktop.moving_window.deployment import *
 
 # Cleanup
+#TODO: create mrp-hbp1/mrp-hbp2 dockers
+
 cleanup_all = DummyOperator(task_id="cleanup_all", dag=temp_dag)
 cleanup_stage_all = DummyOperator(task_id="cleanup_stage_all", dag=temp_dag)
 cleanup_prod_all = DummyOperator(task_id="cleanup_prod_all", dag=temp_dag)
