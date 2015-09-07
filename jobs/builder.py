@@ -266,8 +266,8 @@ class JobBuilder:
 
         return self
 
-    def set_property(self, prop_name, prop_value, condition=lambda: True):
-        if condition():
+    def set_property(self, prop_name, prop_value, condition=True):
+        if condition:
             self.args += [('--%s' % prop_name), prop_value]
         return self
 
