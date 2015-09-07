@@ -137,6 +137,9 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
 
 
 class EtcdSetOperator(BaseOperator):
+    ui_color = '#00BFFF'
+    template_fields = ('path', 'value')
+
     DEFAULT_CLUSTER = (('etcd-a01', 4001), ('etcd-a02', 4001), ('etcd-a03', 4001))
 
     @apply_defaults
@@ -144,8 +147,8 @@ class EtcdSetOperator(BaseOperator):
         super(EtcdSetOperator, self).__init__(*args, **kwargs)
         from etcd import Client
         self.client = Client(etcd_cluster)
-        self.key = '/%s/%s' % (root, path)
-        self.val = value
+        self.path = '/%s/%s' % (root, path)
+        self.value = value
 
     def execute(self, context):
-        self.client.set(self.key, self.val)
+        self.client.set(self.path, self.value)
