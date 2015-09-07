@@ -2,6 +2,7 @@ import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
 
+from airflow.models import BaseOperator
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import BaseSensorOperator
 from airflow.utils import TemporaryDirectory, apply_defaults
@@ -133,3 +134,18 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
                                                             'target_cluster': target_cluster,
                                                             'table_name': table_name_template}
         super(CopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
+
+
+class EtcdSetOperator(BaseOperator):
+    DEFAULT_CLUSTER = (('etcd-a01', 4001), ('etcd-a02', 4001), ('etcd-a03', 4001))
+
+    @apply_defaults
+    def __init__(self, path='', value='success', root='v1', etcd_cluster=DEFAULT_CLUSTER, *args, **kwargs):
+        super(EtcdSetOperator, self).__init__(*args, **kwargs)
+        from etcd import Client
+        self.client = Client(etcd_cluster)
+        self.key = '/%s/%s' % (root, path)
+        self.val = value
+
+    def execute(self, context):
+        self.client.set(self.key, self.val)
