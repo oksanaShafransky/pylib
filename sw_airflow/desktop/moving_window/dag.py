@@ -13,8 +13,11 @@ dag_args = {
     'schedule_interval': timedelta(minutes=5),
 }
 
-dag_template_params = {'execution_dir': MASTER_EXECUTION_DIR, 'docker_gate': 'docker-a01.sg.internal',
+dag_template_params = {'execution_dir': CDH5_EXECUTION_DIR, 'docker_gate': 'docker-a01.sg.internal',
+                       'default_docker': 'mrp',
                        'base_hdfs_dir': '/similargroup/data/analytics',
-                       'transients': ''}
-window_dag = DAG(dag_id='moving_window', default_args=dag_args, params=dag_template_params)
+                       'transients': '',
+                       'deploy_prod': False,
+                       'deploy_stage': True}
 
+temp_dag = DAG(dag_id='moving_window', default_args=dag_args, params=dag_template_params)

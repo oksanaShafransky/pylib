@@ -47,7 +47,7 @@ should_copy_stats = DockerBashSensor(
 should_run_window = DockerBashSensor(
     task_id='should_run_window',
     dag=dag,
-    docker_name="op-hbs2",
+    docker_name="{{ params.default_docker }}",
     bash_command='''{{ params.execution_dir }}/analytics/scripts/checks/should_run_window.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }}'''
 )
 

@@ -1,12 +1,18 @@
+from airflow.models import TaskInstance, Log
+from airflow.operators.python_operator import PythonOperator
 import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
+<<<<<<< HEAD
 
 from airflow.models import BaseOperator
+=======
+>>>>>>> ef12597e958a2e81d2dfe4959f408fbe1752630b
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import BaseSensorOperator
-from airflow.utils import TemporaryDirectory, apply_defaults
+from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
+from airflow import settings
 
 
 class BashSensor(BaseSensorOperator):
@@ -71,6 +77,7 @@ class BashSensor(BaseSensorOperator):
 
 class DockerBashOperator(BashOperator):
     ui_color = '#FFFF66'
+    template_fields = ('bash_command', 'docker_name')
     cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
 -v /etc/localtime:/etc/localtime:ro                           \
@@ -90,13 +97,15 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
 
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
+        self.docker_name = docker_name
         random_string = str(datetime.utcnow().strftime('%s'))
-        docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': docker_name,
-                                                        'bash_command': bash_command}
+        docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': self.docker_name,
+                                                            'bash_command': bash_command}
         super(DockerBashOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
 
 class DockerBashSensor(BashSensor):
+    template_fields = ('bash_command', 'docker_name')
     cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
 -v /etc/localtime:/etc/localtime:ro                           \
@@ -116,9 +125,10 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
 
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
+        self.docker_name = docker_name
         random_string = str(datetime.utcnow().strftime('%s'))
         docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': docker_name,
-                                                        'bash_command': bash_command}
+                                                            'bash_command': bash_command}
         super(DockerBashSensor, self).__init__(bash_command=docker_command, *args, **kwargs)
 
 
@@ -131,11 +141,12 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
     @apply_defaults
     def __init__(self, source_cluster, target_cluster, table_name_template, *args, **kwargs):
         docker_command = CopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
-                                                            'target_cluster': target_cluster,
-                                                            'table_name': table_name_template}
+                                                                'target_cluster': target_cluster,
+                                                                'table_name': table_name_template}
         super(CopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
 
+<<<<<<< HEAD
 class EtcdSetOperator(BaseOperator):
     ui_color = '#00BFFF'
     template_fields = ('path', 'value')
@@ -152,3 +163,33 @@ class EtcdSetOperator(BaseOperator):
 
     def execute(self, context):
         self.client.set(self.path, self.value)
+=======
+class SuccedOrSkipOperator(PythonOperator):
+    ui_color = '#CC6699'
+
+    def execute(self, context):
+        logging.info('Task params: ' + str((self.op_args, self.op_kwargs)))
+        skip_list, success_list = super(SuccedOrSkipOperator, self).execute(context)
+
+        logging.info("Skipping taks: " + str(skip_list))
+        logging.info("Marking success for: " + str(success_list))
+        session = settings.Session()
+
+        for task in self.get_flat_relatives():
+            if task.task_id not in (skip_list + success_list):
+                continue
+            ti = TaskInstance(
+                task, execution_date=context['ti'].execution_date)
+            ti.start_date = datetime.now()
+            ti.end_date = datetime.now()
+            if task.task_id in skip_list:
+                ti.state = State.SKIPPED
+            else:
+                ti.state = State.SUCCESS
+                session.add(Log(State.SUCCESS, ti))
+            session.merge(ti)
+
+        session.commit()
+        session.close()
+        logging.info("Done.")
+>>>>>>> ef12597e958a2e81d2dfe4959f408fbe1752630b
