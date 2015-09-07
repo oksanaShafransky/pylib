@@ -88,98 +88,98 @@ def run_hive(cmd):
 
     if CAN_REPORT is False:
         warnings.warn('Cannot update db8. Python packages (mysqldb, lxml, gelfclient) missing')
-        return
-    try:
-        end_time = datetime.now()
-        hostname = socket.gethostname()
+    else:
+        try:
+            end_time = datetime.now()
+            hostname = socket.gethostname()
 
-        tmp_path = None
-        if not stderrdata:
-            return
-        for line in stderrdata.split('\n'):
-            if 'Hive history file' in line:
-                tmp_path = line.split('=', 1)[-1]
-                break
-        log_data = file(tmp_path, 'rb').read()
-        job_ids = re.findall('TASK_HADOOP_ID="(job_\d+_\d+)"', log_data)
-        job_ids = list(set(job_ids))
+            tmp_path = None
+            if stderrdata:
+                for line in stderrdata.split('\n'):
+                    if 'Hive history file' in line:
+                        tmp_path = line.split('=', 1)[-1]
+                        break
+                log_data = file(tmp_path, 'rb').read()
+                job_ids = re.findall('TASK_HADOOP_ID="(job_\d+_\d+)"', log_data)
+                job_ids = list(set(job_ids))
 
-        for job_id in job_ids:
-            counters, config, config_xml = get_job_stats(job_id)
-            counters_str = '\n'.join(counters)
-            counters_dict = dict([line.split('=', 1) for line in counters])
-            number_of_input_records = int(counters_dict['Map-Reduce Framework.Map input records'])
-            number_of_output_records = int(counters_dict.get('Map-Reduce Framework.Reduce output records', 0))
-            number_of_mappers = int(counters_dict['Job Counters.Launched map tasks'])
-            number_of_reducers = int(counters_dict.get('Job Counters.Launched reduce tasks', 0))
-            job_name = config['mapred.job.name']
-            mapper_class = config.get('mapred.mapper.class', 'no mapper')
-            reducer_class = config.get('mapred.reducer.class', 'no reducer')
-            if p.returncode != 0 or counters_dict.get('Job Counters.Failed reduce tasks') or counters_dict.get(
-                    'Job Counters.Failed map tasks'):
-                job_success = 0
-            else:
-                job_success = 1
-            if number_of_mappers:
-                average_mapper_time = int(float(counters_dict[
-                    'Job Counters.Total time spent by all maps in occupied slots (ms)']) / number_of_mappers / 1000)
-            if number_of_reducers:
-                average_reducer_time = int(float(counters_dict[
-                    'Job Counters.Total time spent by all reduces in occupied slots (ms)']) / number_of_reducers / 1000)
-            else:
-                average_reducer_time = 0
-            # Write to MySQL
-            mysql_cmd = '''INSERT INTO hadoop.job_stats (job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers, number_of_reducers, average_mapper_time, average_reducer_time, submit_host, number_of_input_records, number_of_output_records, counters, config, fail_message)
-                           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                        '''
-            params = (
-            job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers,
-            number_of_reducers, average_mapper_time, average_reducer_time, hostname, number_of_input_records,
-            number_of_output_records, counters_str, config_xml, None)
-            conn = MySQLdb.connect(host='db8', user='root', passwd='SimilarWeb123',
-                                   db='hadoop')  # TODO: actual password
-            cursor = conn.cursor()
-            cursor.execute(mysql_cmd, params)
-            conn.commit()
-            conn.close()
+                for job_id in job_ids:
+                    counters, config, config_xml = get_job_stats(job_id)
+                    counters_str = '\n'.join(counters)
+                    counters_dict = dict([line.split('=', 1) for line in counters])
+                    number_of_input_records = int(counters_dict['Map-Reduce Framework.Map input records'])
+                    number_of_output_records = int(counters_dict.get('Map-Reduce Framework.Reduce output records', 0))
+                    number_of_mappers = int(counters_dict['Job Counters.Launched map tasks'])
+                    number_of_reducers = int(counters_dict.get('Job Counters.Launched reduce tasks', 0))
+                    job_name = config['mapred.job.name']
+                    mapper_class = config.get('mapred.mapper.class', 'no mapper')
+                    reducer_class = config.get('mapred.reducer.class', 'no reducer')
+                    if p.returncode != 0 or counters_dict.get('Job Counters.Failed reduce tasks') or counters_dict.get(
+                            'Job Counters.Failed map tasks'):
+                        job_success = 0
+                    else:
+                        job_success = 1
+                    if number_of_mappers:
+                        average_mapper_time = int(float(counters_dict[
+                            'Job Counters.Total time spent by all maps in occupied slots (ms)']) / number_of_mappers / 1000)
+                    if number_of_reducers:
+                        average_reducer_time = int(float(counters_dict[
+                            'Job Counters.Total time spent by all reduces in occupied slots (ms)']) / number_of_reducers / 1000)
+                    else:
+                        average_reducer_time = 0
+                    # Write to MySQL
+                    mysql_cmd = '''INSERT INTO hadoop.job_stats (job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers, number_of_reducers, average_mapper_time, average_reducer_time, submit_host, number_of_input_records, number_of_output_records, counters, config, fail_message)
+                                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                                '''
+                    params = (
+                    job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers,
+                    number_of_reducers, average_mapper_time, average_reducer_time, hostname, number_of_input_records,
+                    number_of_output_records, counters_str, config_xml, None)
+                    conn = MySQLdb.connect(host='db8', user='root', passwd='SimilarWeb123',
+                                           db='hadoop')  # TODO: actual password
+                    cursor = conn.cursor()
+                    cursor.execute(mysql_cmd, params)
+                    conn.commit()
+                    conn.close()
 
-            #Write to Gelf
-            import gelfclient
+                    #Write to Gelf
+                    import gelfclient
 
-            param_dict = {"job_id": job_id,
-                          "job_name": job_name,
-                          "result": '',
-                          "mapper_class": mapper_class,
-                          "reducer_class": reducer_class,
-                          "start_time": start_time.strftime('%d/%m/%Y %H:%M:%S'),
-                          "start_time_ts": time.mktime(start_time.timetuple()) * 1000 + start_time.microsecond / 1000,
-                          "end_time": end_time.strftime('%d/%m/%Y %H:%M:%S'),
-                          "end_time_ts": time.mktime(start_time.timetuple()) * 1000 + start_time.microsecond / 1000,
-                          "num_reducers_set": number_of_reducers,
-                          "submit_host": hostname,
-                          "failures": 0,
-                          "avg_map_time": average_mapper_time,
-                          "avg_reduce_time": average_reducer_time,
-                          "input_records": number_of_input_records,
-                          "output_records": number_of_output_records,
-                          "num_mappers": number_of_mappers,
-                          "num_reducers": number_of_reducers}
-            for counter_name, counter_value in counters_dict.items():
-                param_dict['Counters_%s' % counter_name] = counter_value
+                    param_dict = {"job_id": job_id,
+                                  "job_name": job_name,
+                                  "result": '',
+                                  "mapper_class": mapper_class,
+                                  "reducer_class": reducer_class,
+                                  "start_time": start_time.strftime('%d/%m/%Y %H:%M:%S'),
+                                  "start_time_ts": time.mktime(start_time.timetuple()) * 1000 + start_time.microsecond / 1000,
+                                  "end_time": end_time.strftime('%d/%m/%Y %H:%M:%S'),
+                                  "end_time_ts": time.mktime(start_time.timetuple()) * 1000 + start_time.microsecond / 1000,
+                                  "num_reducers_set": number_of_reducers,
+                                  "submit_host": hostname,
+                                  "failures": 0,
+                                  "avg_map_time": average_mapper_time,
+                                  "avg_reduce_time": average_reducer_time,
+                                  "input_records": number_of_input_records,
+                                  "output_records": number_of_output_records,
+                                  "num_mappers": number_of_mappers,
+                                  "num_reducers": number_of_reducers}
+                    for counter_name, counter_value in counters_dict.items():
+                        param_dict['Counters_%s' % counter_name] = counter_value
 
-            gelf_host = os.environ.get('GELF_HOST', 'localhost')
-            gelf = gelfclient.UdpClient(gelf_host)
-            gelf.log(param_dict)
+                    gelf_host = os.environ.get('GELF_HOST', 'localhost')
+                    gelf = gelfclient.UdpClient(gelf_host)
+                    gelf.log(param_dict)
+        except:
+            import traceback
+            warnings.warn('Cannot update db8. Exception during excecution:\n %s' % traceback.format_exc())
 
-    except:
-        import traceback
-
-        warnings.warn('Cannot update db8. Exception during excecution:\n %s' % traceback.format_exc())
     if p.returncode != 0:
         print 'Hive return code was: %s!' % p.returncode
         print 'Hive stdout: %s' % stdoutdata
         print 'Hive stderr: %s' % stderrdata
         raise subprocess.CalledProcessError(p.returncode, cmd)
+
+    return stdoutdata
 
 
 def run_hive_job(hql, job_name, num_of_reducers, calc_pool='calculation', sync=True, compression='gz'):
