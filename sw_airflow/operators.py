@@ -3,11 +3,9 @@ from airflow.operators.python_operator import PythonOperator
 import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
-<<<<<<< HEAD
 
 from airflow.models import BaseOperator
-=======
->>>>>>> ef12597e958a2e81d2dfe4959f408fbe1752630b
+
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import BaseSensorOperator
 from airflow.utils import TemporaryDirectory, apply_defaults, State
@@ -146,7 +144,6 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
         super(CopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
 
-<<<<<<< HEAD
 class EtcdSetOperator(BaseOperator):
     ui_color = '#00BFFF'
     template_fields = ('path', 'value')
@@ -159,11 +156,13 @@ class EtcdSetOperator(BaseOperator):
         from etcd import Client
         self.client = Client(etcd_cluster)
         self.path = '/%s/%s' % (root, path)
-        self.value = value
+        self.value = str(value)
 
     def execute(self, context):
-        self.client.set(self.path, self.value)
-=======
+        logging.info('etcd path is %s, value is %s' % (self.path, self.value))
+        self.client.set(str(self.path), str(self.value))
+
+
 class SuccedOrSkipOperator(PythonOperator):
     ui_color = '#CC6699'
 
@@ -192,4 +191,3 @@ class SuccedOrSkipOperator(PythonOperator):
         session.commit()
         session.close()
         logging.info("Done.")
->>>>>>> ef12597e958a2e81d2dfe4959f408fbe1752630b
