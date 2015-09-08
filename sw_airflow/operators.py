@@ -7,7 +7,7 @@ from tempfile import NamedTemporaryFile, gettempdir
 from airflow.models import BaseOperator
 
 from airflow.operators.bash_operator import BashOperator
-from airflow.operators.sensors import BaseSensorOperator
+from airflow.operators.sensors import BaseSensorOperator, BaseSensorOperator
 from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
 from airflow import settings
@@ -156,11 +156,85 @@ class EtcdSetOperator(BaseOperator):
         from etcd import Client
         self.client = Client(etcd_cluster)
         self.path = '/%s/%s' % (root, path)
-        self.value = str(value)
+        self.value = value
 
     def execute(self, context):
         logging.info('etcd path is %s, value is %s' % (self.path, self.value))
         self.client.set(str(self.path), str(self.value))
+
+
+class EtcdSensor(BaseSensorOperator):
+
+    # Pass desired_value as None if you wish to merely make sure a key exists
+
+    ui_color = '#00BFFF'
+    template_fields = ('path', 'desired_value')
+
+    DEFAULT_CLUSTER = (('etcd-a01', 4001), ('etcd-a02', 4001), ('etcd-a03', 4001))
+
+    @apply_defaults
+    def __init__(self, path='', desired_value='success', root='v1', etcd_cluster=DEFAULT_CLUSTER, *args, **kwargs):
+        super(EtcdSensor, self).__init__(*args, **kwargs)
+        from etcd import Client
+        self.client = Client(etcd_cluster)
+        self.path = '/%s/%s' % (root, path)
+        self.desired_value = desired_value
+
+    def poke(self, context):
+        logging.info('testing etcd path %s' % self.path)
+        try:
+            val = self.client.get(str(self.path))
+            return True if self.desired_value is None else val.value == self.desired_value
+        except Exception:
+            # this means the key is not present
+            return False
+
+
+class EtcdDeleteOperator(BaseOperator):
+    ui_color = '#00BFFF'
+    template_fields = ('path',)
+
+    DEFAULT_CLUSTER = (('etcd-a01', 4001), ('etcd-a02', 4001), ('etcd-a03', 4001))
+
+    @apply_defaults
+    def __init__(self, path='', root='v1', etcd_cluster=DEFAULT_CLUSTER, *args, **kwargs):
+        super(EtcdDeleteOperator, self).__init__(*args, **kwargs)
+        from etcd import Client
+        self.client = Client(etcd_cluster)
+        self.path = '/%s/%s' % (root, path)
+
+    def execute(self, context):
+        logging.info('etcd path to delete is %s' % self.path)
+        self.client.delete(str(self.path))
+
+
+class EtcdPromoteOperator(BaseOperator):
+    # sets the given value only if it is greater than the existing value at the key
+
+    ui_color = '#00BFFF'
+    template_fields = ('path', 'value')
+
+    DEFAULT_CLUSTER = (('etcd-a01', 4001), ('etcd-a02', 4001), ('etcd-a03', 4001))
+
+    @apply_defaults
+    def __init__(self, path='', value='success', root='v1', value_parser=lambda x:x, etcd_cluster=DEFAULT_CLUSTER, *args, **kwargs):
+        super(EtcdPromoteOperator, self).__init__(*args, **kwargs)
+        from etcd import Client
+        self.client = Client(etcd_cluster)
+        self.path = '/%s/%s' % (root, path)
+        self.value = value
+        self.parser = value_parser
+
+    def execute(self, context):
+        logging.info('etcd path is %s, value is %s' % (self.path, self.value))
+        try:
+            curr = self.client.get(str(self.path))
+            curr_value = self.parser(curr.value)
+            logging.info('retrieved existing value %s' % str(curr_value))
+            if self.value > curr_value:
+                self.client.set(str(self.path), str(self.value))
+        except Exception:
+            self.client.set(str(self.path), str(self.value))
 
 
 class SuccedOrSkipOperator(PythonOperator):
