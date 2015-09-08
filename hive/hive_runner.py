@@ -13,6 +13,7 @@ import os
 try:
     from lxml.etree import HTML
     import gelfclient
+
     CAN_REPORT = True
 except ImportError:
     HTML = gelfclient = None
@@ -112,7 +113,7 @@ def run_hive(cmd):
             number_of_output_records = int(counters_dict.get('Map-Reduce Framework.Reduce output records', 0))
             number_of_mappers = int(counters_dict['Job Counters.Launched map tasks'])
             number_of_reducers = int(counters_dict.get('Job Counters.Launched reduce tasks', 0))
-            job_name = config['mapred.job.name']
+            job_name = config['mapreduce.job.name']
             mapper_class = config.get('mapred.mapper.class', 'no mapper')
             reducer_class = config.get('mapred.reducer.class', 'no reducer')
             if p.returncode != 0 or counters_dict.get('Job Counters.Failed reduce tasks') or counters_dict.get(
@@ -195,18 +196,18 @@ def run_hive_job(hql, job_name, num_of_reducers, calc_pool='calculation', sync=T
         raise ValueError('Unknown compression type %s' % compression)
 
     cmd = ["hive", "-S", "-e", '"%s"' % hql,
-           "-hiveconf", "mapred.job.name=" + job_name,
-           "-hiveconf", "mapred.reduce.tasks=" + str(num_of_reducers),
-           "-hiveconf", "mapred.fairscheduler.pool=" + calc_pool,
+           "-hiveconf", "mapreduce.job.name=" + job_name,
+           "-hiveconf", "mapreduce.job.reduces=" + str(num_of_reducers),
+           "-hiveconf", "mapreduce.job.queuename=" + calc_pool,
            "-hiveconf", "hive.exec.compress.output=" + compress,
            "-hiveconf", "io.seqfile.compression=BLOCK",
            "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
            "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
            "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
-           "-hiveconf", "mapred.max.split.size=134217728"
+           "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728"
            ]
     if codec:
-        cmd += ["-hiveconf", "mapred.output.compression.codec=" + codec]
+        cmd += ["-hiveconf", "mapreduce.output.fileoutputformat.compress.codec=" + codec]
     if sync:
         return run_hive(cmd)
     else:
