@@ -6,7 +6,8 @@ from sw_airflow.desktop.moving_window.dag import dag_template_params as dag_para
 
 # Copy tables to production
 
-
+PRODUCTION_ETCD_PREFIX = 'production_mrp'
+STAGING_ETCD_PREFIX = 'dev'
 
 copy_to_prod = DummyOperator(task_id='copy_to_prod', dag=temp_dag)
 deploy_prod_done = DummyOperator(task_id='deploy_prod_done', dag=temp_dag)
@@ -88,7 +89,7 @@ dynamic_settings_stage = DockerBashOperator(
     task_id='dynamic_settings_stage',
     dag=temp_dag,
     docker_name="{{ params.default_docker }}",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_pro -p update_special_referrers_stage'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et %s -p update_pro -p update_special_referrers_stage' % STAGING_ETCD_PREFIX
 )
 
 dynamic_settings_stage.set_upstream(can_deploy_stage)
@@ -101,7 +102,7 @@ dynamic_settings_hbp1 = DockerBashOperator(
     task_id='dynamic_settings_hbp1',
     dag=temp_dag,
     docker_name="op-hbp1",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et production -p update_pro'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et %s -p update_pro' % PRODUCTION_ETCD_PREFIX
 )
 
 dynamic_settings_hbp1.set_upstream(copy_to_prod)
@@ -119,7 +120,7 @@ dynamic_settings_sr_prod = DockerBashOperator(
     task_id='dynamic_settings_sr_prod',
     dag=temp_dag,
     docker_name="op-hbp1",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et production -p update_special_referrers_prod'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et %s -p update_special_referrers_prod' % PRODUCTION_ETCD_PREFIX
 )
 
 dynamic_settings_sr_prod.set_upstream(copy_to_prod)
@@ -156,7 +157,7 @@ dynamic_settings_cross_stage = DockerBashOperator(
     task_id='dynamic_settings_cross_stage',
     dag=temp_dag,
     docker_name="{{ params.default_docker }}",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_cross_cache'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et %s -p update_cross_cache' % STAGING_ETCD_PREFIX
 )
 
 dynamic_settings_cross_stage.set_upstream(cross_cache_stage)
@@ -165,7 +166,7 @@ cross_cache_prod = DockerBashOperator(
     task_id='cross_cache_prod',
     dag=temp_dag,
     docker_name="{{ params.default_docker }}",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_bucket'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -et production -p update_bucket'
 )
 
 cross_cache_prod.set_upstream(calculate_cross_cache)
@@ -177,7 +178,7 @@ dynamic_settings_cross_hbp1 = DockerBashOperator(
     task_id='dynamic_settings_cross_hbp1',
     dag=temp_dag,
     docker_name="op-hbp1",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et production -p update_cross_cache'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ ds }} -m window -mt last-28 -et %s -p update_cross_cache' % PRODUCTION_ETCD_PREFIX
 )
 
 dynamic_settings_cross_hbp1.set_upstream(cross_cache_prod)
