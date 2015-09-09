@@ -163,7 +163,8 @@ def run_hive(cmd):
                           "input_records": number_of_input_records,
                           "output_records": number_of_output_records,
                           "num_mappers": number_of_mappers,
-                          "num_reducers": number_of_reducers}
+                          "num_reducers": number_of_reducers,
+                          "type": "hadoop_hive_mr"}
             for counter_name, counter_value in counters_dict.items():
                 param_dict['Counters_%s' % counter_name] = counter_value
 
