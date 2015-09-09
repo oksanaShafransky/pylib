@@ -1,10 +1,9 @@
 from airflow.models import TaskInstance, Log, BaseOperator
 from airflow.operators.python_operator import PythonOperator
+from airflow.plugins_manager import AirflowPlugin
 import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
-
-from airflow.models import BaseOperator
 
 from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import BaseSensorOperator
@@ -144,25 +143,6 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
         super(CopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
 
-class EtcdSetOperator(BaseOperator):
-    ui_color = '#00BFFF'
-    template_fields = ('path', 'value')
-
-    DEFAULT_CLUSTER = (('etcd-a01', 4001), ('etcd-a02', 4001), ('etcd-a03', 4001))
-
-    @apply_defaults
-    def __init__(self, path='', value='success', root='v1', etcd_cluster=DEFAULT_CLUSTER, *args, **kwargs):
-        super(EtcdSetOperator, self).__init__(*args, **kwargs)
-        from etcd import Client
-        self.client = Client(etcd_cluster)
-        self.path = '/%s/%s' % (root, path)
-        self.value = str(value)
-
-    def execute(self, context):
-        logging.info('etcd path is %s, value is %s' % (self.path, self.value))
-        self.client.set(str(self.path), str(self.value))
-
-
 class SuccedOrSkipOperator(PythonOperator):
     ui_color = '#CC6699'
 
@@ -207,3 +187,10 @@ class SuccedOrSkipOperator(PythonOperator):
                 ignore_dependencies=ignore_dependencies,
                 test_mode=True,
                 force=force, )
+
+
+class SWAAirflowPluginManager(AirflowPlugin):
+
+    name = 'SWOperators'
+
+    operators = [BashSensor, DockerBashOperator, DockerBashSensor, CopyHbaseTableOperator, SuccedOrSkipOperator]
