@@ -73,7 +73,7 @@ def get_job_stats(job_id):
     return counters, config, config_xml
 
 
-def run_hive(cmd):
+def run_hive(cmd, log_path=None):
     start_time = datetime.now()
     err_temp = tempfile.TemporaryFile()
     out_temp = tempfile.TemporaryFile()
@@ -101,7 +101,9 @@ def run_hive(cmd):
             if 'Hive history file' in line:
                 tmp_path = line.split('=', 1)[-1]
                 break
-        log_data = file(tmp_path, 'rb').read()
+        if tmp_path is None:
+            return
+        log_data = file(log_path, 'rb').read()
         job_ids = re.findall('TASK_HADOOP_ID="(job_\d+_\d+)"', log_data)
         job_ids = list(set(job_ids))
 
@@ -183,7 +185,7 @@ def run_hive(cmd):
         raise subprocess.CalledProcessError(p.returncode, cmd)
 
 
-def run_hive_job(hql, job_name, num_of_reducers, calc_pool='calculation', sync=True, compression='gz'):
+def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation', sync=True, compression='gz'):
     if compression is None or compression == "none":
         compress = "false"
         codec = None
@@ -203,6 +205,8 @@ def run_hive_job(hql, job_name, num_of_reducers, calc_pool='calculation', sync=T
            "-hiveconf", "hive.exec.compress.output=" + compress,
            "-hiveconf", "io.seqfile.compression=BLOCK",
            "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
+           "-hiveconf", "hive.log.dir=" + log_dir,
+           "-hiveconf", "hive.log.file=hive.log",
            "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
            "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
            "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728"
@@ -210,7 +214,7 @@ def run_hive_job(hql, job_name, num_of_reducers, calc_pool='calculation', sync=T
     if codec:
         cmd += ["-hiveconf", "mapreduce.output.fileoutputformat.compress.codec=" + codec]
     if sync:
-        return run_hive(cmd)
+        return run_hive(cmd, log_path=log_dir + "/hive.log")
     else:
         return subprocess.Popen(cmd)
 
