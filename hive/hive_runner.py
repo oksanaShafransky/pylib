@@ -205,7 +205,7 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
            "-hiveconf", "hive.exec.compress.output=" + compress,
            "-hiveconf", "io.seqfile.compression=BLOCK",
            "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
-           "-hiveconf", 'hive.log.dir"%s"' % log_dir,
+           "-hiveconf", 'hive.log.dir="%s"' % log_dir,
            "-hiveconf", "hive.log.file=hive.log",
            "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
            "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",

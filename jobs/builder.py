@@ -30,14 +30,15 @@ DFS_BLOCK_SIZE = 128
 
 def get_zookeeper_host():
     from lxml.etree import XML
+
     xml_data = file('/etc/hbase/conf/hbase-site.xml', 'rb').read()
     for host in XML(xml_data).xpath("//property[name='hbase.zookeeper.quorum']/value")[0].text.split(','):
         return host
 
 
-
 def get_region_servers():
     from kazoo.client import KazooClient
+
     zk = KazooClient(hosts=get_zookeeper_host(), read_only=True)
     try:
         zk.start()
@@ -87,13 +88,17 @@ class JobBuilder:
         # refactor laster to add jars normally
         self.input_type = 'avro'
         self.args += ['--hadoop-arg', '-libjars']
-        self.args += ['--hadoop-arg',
-                      '%s/lib/avro-1.7.3.jar,%s/avro-mapred-1.7.3-hadoop2.jar' % (HADOOP_JAR_HOME, lib_path)]
+        self.args += ['--hadoop-arg', '/usr/lib/avro/avro-mapred-hadoop2.jar']
         return self
 
     def with_sequence_file_input(self):
-        #self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
+        # self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
         # refactor laster to add jars normally
+        core_lib_path = '/usr/lib/hadoop-0.20-mapreduce/hadoop-core-mr1.jar'
+        if not os.path.exists(core_lib_path):
+            core_lib_path = '/usr/lib/hadoop-0.20-mapreduce/hadoop-core.jar'
+        self.args += ['--hadoop-arg', '-libjars']
+        self.args += ['--hadoop-arg', core_lib_path]
         self.input_type = 'sequence'
         return self
 
@@ -273,7 +278,6 @@ class JobBuilder:
 
         return True, 'OK'
 
-
     def get_job(self, job_cls, runner='hadoop', **kwargs):
 
         check, msg = self.do_checks()
@@ -284,12 +288,16 @@ class JobBuilder:
             self.args += ['-r', runner]
 
         if runner == 'hadoop' or runner == 'dry':
+            #Streaming jars are named differently in different CDH versions
+            streaming_jar_path ='%s/contrib/streaming/hadoop-streaming-mr1.jar' % HADOOP_JAR_HOME
+            if not os.path.exists(streaming_jar_path):
+                streaming_jar_path ='%s/contrib/streaming/hadoop-streaming.jar' % HADOOP_JAR_HOME
 
             hadoop_home = kwargs['hadoop_home'] if 'hadoop_home' in kwargs else std_hadoop_home
             os.environ['HADOOP_HOME'] = hadoop_home
             self.args += ['--hadoop-bin', hadoop_home]
             self.args += ['--hadoop-streaming-jar',
-                          '%s/contrib/streaming/hadoop-streaming.jar' % HADOOP_JAR_HOME]
+                          streaming_jar_path]
 
             log_dir = None
 
@@ -347,7 +355,6 @@ class Job(MRJob):
         log_to_stream(logger_name)
         self._logger = logging.getLogger(logger_name)
         return self._logger
-
 
     def post_exec(self, **kwargs):
         for follow_up in self.follow_ups:
