@@ -15,7 +15,7 @@ dag_args = {
 dag_template_params = {'execution_dir': CDH5_EXECUTION_DIR, 'docker_gate': 'docker-a01.sg.internal',
                        'default_docker': 'mrp',
                        'base_hdfs_dir': '/similargroup/data/analytics',
-                       'transients': '',
+                       'transients': '--dryrun',
                        'deploy_prod': False,
                        'deploy_stage': True,
                        }
