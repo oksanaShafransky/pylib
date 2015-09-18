@@ -141,10 +141,13 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
                                                                 'target_cluster': target_cluster,
                                                                 'table_name': table_name_template}
         super(CopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
+        # Add echo to everything if we have dryrun in request
+        if self.dag.params and '--dryrun' in self.dag.params.get('transients', ''):
+            logging.info("Dry rub requested. Don't really copy table")
+            self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
 
 
 class SuccedOrSkipOperator(PythonOperator):
-
     ui_color = '#CC6699'
 
     def execute(self, context):
@@ -173,7 +176,8 @@ class SuccedOrSkipOperator(PythonOperator):
         session.commit()
         session.close()
         if self.task_id not in success_list:
-            raise ValueError("Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
+            raise ValueError(
+                "Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
         logging.info("Done.")
 
     def run(self, start_date=None, end_date=None, ignore_dependencies=False, force=False, mark_success=False):
