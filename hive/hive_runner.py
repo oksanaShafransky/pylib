@@ -88,7 +88,7 @@ def run_hive(cmd, log_path=None):
     out_temp.close()
 
     if CAN_REPORT is False:
-        warnings.warn('Cannot update db8. Python packages (lxml, gelfclient) missing')
+        warnings.warn('Cannot update auxdb. Python packages (lxml, gelfclient) missing')
         return
     try:
         end_time = datetime.now()
