@@ -139,7 +139,7 @@ def run_hive(cmd, log_path=None):
             # job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers,
             # number_of_reducers, average_mapper_time, average_reducer_time, hostname, number_of_input_records,
             # number_of_output_records, counters_str, config_xml, None)
-            # conn = MySQLdb.connect(host='db8', user='root', passwd='SimilarWeb123',
+            # conn = MySQLdb.connect(host='auxdb.service.production', user='root', passwd='letmein!23',
             #                        db='hadoop')  # TODO: actual password
             # cursor = conn.cursor()
             # cursor.execute(mysql_cmd, params)
