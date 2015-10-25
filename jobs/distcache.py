@@ -11,6 +11,8 @@ CACHE_FILES_ENV = 'cached_files'
 
 
 def find_files(path):
+    dir_name = path.split('/')[-1:][0]
+
     ls_cmd = ['hadoop', 'fs', '-ls', path]
     ls = check_output(ls_cmd)
 
@@ -19,13 +21,14 @@ def find_files(path):
         if path in line:
             file_name = line.split(' ')[-1:][0]
             if not os.path.basename(file_name).startswith('_'):
-                files += [file_name]
+                files += ['%s/%s' % (dir_name, file_name.split('/')[-1:][0])]
 
+    print 'files to cache for path %s: %s' % (path, files)
     return files
 
 
 def cache_files_cmd(files, key=''):
-    return 'export %s_%s=%s' % (CACHE_FILES_ENV, key, ','.join(['%s_%s' % (key, cached_file.split('/')[-1:][0]) for cached_file in files]))
+    return 'export %s_%s=%s' % (CACHE_FILES_ENV, key, ','.join(files))
 
 
 def get_cached_files(key=''):

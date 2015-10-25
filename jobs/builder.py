@@ -180,6 +180,13 @@ class JobBuilder:
 
     def with_task_memory(self, megabytes, task_type='all'):
         self.args += ['--jobconf', ('mapred.child.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
+
+        if task_type == 'all' or task_type == 'map':
+            self.args += ['--jobconf', 'mapreduce.map.memory.mb=%d' % megabytes]
+
+        if task_type == 'all' or task_type == 'reduce':
+            self.args += ['--jobconf', 'mapreduce.reduce.memory.mb=%d' % megabytes]
+
         return self
 
     def with_io_memory(self, megabytes, task_type='all'):
@@ -197,8 +204,7 @@ class JobBuilder:
     def cache_files_keyed(self, key, path):
         files_to_cache = find_files(path)
 
-        for cache_file in files_to_cache:
-            self.args += ['--file', 'hdfs://%s' % cache_file]
+        self.args += ['--file', 'hdfs://%s' % path]
 
         self.args += ['--setup', cache_files_cmd(files_to_cache, key)]
         return self
@@ -261,8 +267,9 @@ class JobBuilder:
 
         return self
 
-    def set_property(self, prop_name, prop_value):
-        self.args += [('--%s' % prop_name), prop_value]
+    def set_property(self, prop_name, prop_value, condition=True):
+        if condition:
+            self.args += [('--%s' % prop_name), prop_value]
         return self
 
     def set_job_conf(self, key, value):

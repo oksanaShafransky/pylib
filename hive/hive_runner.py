@@ -207,6 +207,7 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
            "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
            "-hiveconf", 'hive.log.dir="%s"' % log_dir,
            "-hiveconf", "hive.log.file=hive.log",
+           "-hiveconf", "hive.exec.scratchdir=/tmp/hive-prod",
            "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
            "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
            "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728"
