@@ -1,4 +1,3 @@
-
 import sys
 import re
 import xml.etree.ElementTree as ET
@@ -14,9 +13,29 @@ hadoop_user_log_dir_template = '/user/%s/tmp/mrjob/%s/output/_logs/history/'
 conf_file_suffix = '_conf.xml'
 
 
+class Tee:
+    def __init__(self, _fd1, _fd2):
+        self.fd1 = _fd1
+        self.fd2 = _fd2
+
+    def __del__(self):
+        if self.fd1 != sys.stdout and self.fd1 != sys.stderr:
+            self.fd1.close()
+        if self.fd2 != sys.stdout and self.fd2 != sys.stderr:
+            self.fd2.close()
+
+    def write(self, text):
+        self.fd1.write(text)
+        self.fd2.write(text)
+
+    def flush(self):
+        self.fd1.flush()
+        self.fd2.flush()
+
+
 def run(job):
     out_log = NamedTemporaryFile(delete=False)
-    sys.stderr = out_log
+    sys.stderr = Tee(out_log, sys.stderr)
     util.log_to_stream(debug=False)
 
     with job.make_runner() as runner:
@@ -47,5 +66,6 @@ def _get_namenode():
     root = conf.getroot()
 
     # should only be 1
-    fs_prop = [elem.find('value').text for elem in root.findall('property') if elem.find('name').text == 'fs.defaultFS'][0]
+    fs_prop = \
+    [elem.find('value').text for elem in root.findall('property') if elem.find('name').text == 'fs.defaultFS'][0]
     return fs_prop[len('hdfs://'):].split(':')

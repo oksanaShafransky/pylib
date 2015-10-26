@@ -281,7 +281,7 @@ def getPartitionString(mode, mode_type, year, month, day, **kwargs):
     if mode == "window" or mode_type == "weekly":
         partition_parts = "year=%s, month=%02d, day=%02d, type='%s'" % (year, month, day, mode_type)
     else:
-        partition_parts = "year=%s, month=%02d,  type='%s'" % (year, month, mode_type)
+        partition_parts = "year=%s, month=%02d, type='%s'" % (year, month, mode_type)
 
     for key, value in kwargs.iteritems():
         if value:
@@ -292,11 +292,19 @@ def getPartitionString(mode, mode_type, year, month, day, **kwargs):
     return '(%s)' % partition_parts
 
 
-def getDatePartitionString(year, month, day=None):
+def getDatePartitionString(year, month, day=None, **kwargs):
     if day:
-        return '(year=%02d, month=%02d, day=%02d)' % (year, month, day)
+        partition_parts = "year=%s, month=%02d, day=%02d" % (year, month, day)
     else:
-        return '(year=%02d, month=%02d)' % (year, month)
+        partition_parts = "year=%s, month=%02d" % (year, month)
+
+    for key, value in kwargs.iteritems():
+        if value:
+            partition_parts += ', %s=%s' % (key, value)
+        else:
+            partition_parts += ', %s' % key
+
+    return '(%s)' % partition_parts
 
 
 def getWhereString(table_prefix, mode, mode_type, year, month, day):
