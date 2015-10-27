@@ -184,6 +184,8 @@ def run_hive(cmd, log_path=None):
         print 'Hive stderr: %s' % stderrdata
         raise subprocess.CalledProcessError(p.returncode, cmd)
 
+    # TODO: check if need to return stdoutdata here
+
 
 def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation', sync=True, compression='gz'):
     if compression is None or compression == "none":
@@ -198,6 +200,7 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
     else:
         raise ValueError('Unknown compression type %s' % compression)
 
+    # TODO: check if need "-hiveconf", "hive.exec.dynamic.partition.mode=nonstrict", probably not
     cmd = ["hive", "-S", "-e", '"%s"' % hql,
            "-hiveconf", "mapreduce.job.name=" + job_name,
            "-hiveconf", "mapreduce.job.reduces=" + str(num_of_reducers),
