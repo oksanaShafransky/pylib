@@ -1,4 +1,4 @@
-from airflow.models import TaskInstance, Log, BaseOperator
+from airflow.models import TaskInstance, Log
 from airflow.operators.python_operator import PythonOperator
 from airflow.plugins_manager import AirflowPlugin
 import logging

@@ -2,7 +2,7 @@ __author__ = 'jeniag'
 
 from airflow.operators.dummy_operator import DummyOperator
 
-from sw_airflow.operators import DockerBashOperator, DockerBashSensor
+from sw_airflow.common.operators import DockerBashOperator, DockerBashSensor
 from sw_airflow.desktop.moving_window.dag import temp_dag
 
 should_run_window = DockerBashSensor(
