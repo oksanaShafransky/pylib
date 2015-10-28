@@ -146,6 +146,45 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
             logging.info("Dry rub requested. Don't really copy table")
             self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
 
+class DockerCopyHbaseTableOperator(BashOperator):
+    ui_color = '#0099FF'
+    cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh
+hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
+    '''
+
+    template_fields = ('bash_command', 'docker_name')
+    dock_cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
+-v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
+-v /etc/localtime:/etc/localtime:ro                           \
+-v /tmp/logs:/tmp/logs                                        \
+-v /var/lib/sss:/var/lib/sss                                  \
+-v /etc/localtime:/etc/localtime:ro                           \
+-v /usr/bin:/opt/old_bin                                      \
+-v /var/run/similargroup:/var/run/similargroup                \
+--rm                                                          \
+--sig-proxy=false                                             \
+--user=`id -u`                                                \
+-e DOCKER_GATE={{ params.docker_gate }}                           \
+-e GELF_HOST="runsrv2.sg.internal"                            \
+-e HOME=/tmp                                                  \
+runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
+    '''
+
+    @apply_defaults
+    def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, *args, **kwargs):
+        self.docker_name = docker_name
+        bash_cmd = DockerCopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
+                                                                'target_cluster': target_cluster,
+                                                                'table_name': table_name_template}
+        random_string = str(datetime.utcnow().strftime('%s'))
+        docker_command = DockerCopyHbaseTableOperator.dock_cmd_template % {'random': random_string, 'docker': docker_name,
+                                                                           'bash_command': bash_cmd}
+        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
+
+        # Add echo to everything if we have dryrun in request
+        if self.dag.params and '--dryrun' in self.dag.params.get('transients', ''):
+            logging.info("Dry rub requested. Don't really copy table")
+            self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
 
 class SuccedOrSkipOperator(PythonOperator):
     ui_color = '#CC6699'
