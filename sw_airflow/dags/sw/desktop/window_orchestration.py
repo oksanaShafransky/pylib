@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from airflow.models import DAG
 
-from sw.common.operators import DockerBashSensor, DockerBashOperator
+from sw.airflow.operators import DockerBashSensor, DockerBashOperator
 
 dag_args = {
     'owner': 'similarweb',

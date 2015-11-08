@@ -1,3 +1,4 @@
+from airflow import settings, utils
 from airflow.models import TaskInstance, Log
 from airflow.operators.python_operator import PythonOperator
 from airflow.plugins_manager import AirflowPlugin
@@ -9,7 +10,6 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.sensors import BaseSensorOperator
 from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
-from airflow import settings, utils
 
 
 class BashSensor(BaseSensorOperator):
@@ -146,6 +146,7 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
             logging.info("Dry rub requested. Don't really copy table")
             self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
 
+
 class DockerCopyHbaseTableOperator(BashOperator):
     ui_color = '#0099FF'
     cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh
@@ -177,7 +178,8 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
                                                                 'target_cluster': target_cluster,
                                                                 'table_name': table_name_template}
         random_string = str(datetime.utcnow().strftime('%s'))
-        docker_command = DockerCopyHbaseTableOperator.dock_cmd_template % {'random': random_string, 'docker': docker_name,
+        docker_command = DockerCopyHbaseTableOperator.dock_cmd_template % {'random': random_string,
+                                                                           'docker': docker_name,
                                                                            'bash_command': bash_cmd}
         super(DockerCopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
@@ -185,6 +187,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         if self.dag.params and '--dryrun' in self.dag.params.get('transients', ''):
             logging.info("Dry rub requested. Don't really copy table")
             self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
+
 
 class SuccedOrSkipOperator(PythonOperator):
     ui_color = '#CC6699'

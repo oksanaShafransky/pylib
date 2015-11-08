@@ -1,11 +1,14 @@
 __author__ = 'Felix'
 
+from datetime import datetime, timedelta
+
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
+
 from airflow.operators.sensors import HdfsSensor
-from datetime import datetime, timedelta
-from sw.common.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
-from sw.common.operators import DockerBashOperator, DockerCopyHbaseTableOperator
+
+from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
+from sw.airflow.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/mrpprod'
 BASE_DIR = '/similargroup/data/mobile-analytics'
