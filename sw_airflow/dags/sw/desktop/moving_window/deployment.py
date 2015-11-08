@@ -1,8 +1,8 @@
 __author__ = 'jeniag'
 
-from sw_airflow.dags.common.operators import CopyHbaseTableOperator, SuccedOrSkipOperator
-from sw_airflow.dags.desktop.moving_window.window_calculation import *
-from sw_airflow.dags.desktop.moving_window.dag import dag_template_params as dag_params
+from sw.common.operators import CopyHbaseTableOperator, SuccedOrSkipOperator
+from sw.desktop.moving_window.window_calculation import *
+from sw.desktop.moving_window.dag import dag_template_params as dag_params
 
 # Copy tables to production
 
@@ -25,11 +25,13 @@ def prod_switch_function(params):
         success_list = ['deploy_prod_done']
     return skip_list, success_list
 
+
 can_deploy_prod = SuccedOrSkipOperator(task_id='can_deploy_prod',
                                        dag=temp_dag,
                                        python_callable=prod_switch_function,
                                        op_args=[dag_params])
 can_deploy_prod.set_upstream(calculation_done)
+
 
 def stage_switch_function(params):
     if params['deploy_stage']:
@@ -40,10 +42,11 @@ def stage_switch_function(params):
         skip_list = ['can_deploy_stage']
     return skip_list, success_list
 
+
 can_deploy_stage = SuccedOrSkipOperator(task_id='can_deploy_stage',
-                                       dag=temp_dag,
-                                       python_callable=stage_switch_function,
-                                       op_args=[dag_params])
+                                        dag=temp_dag,
+                                        python_callable=stage_switch_function,
+                                        op_args=[dag_params])
 can_deploy_stage.set_upstream(calculation_done)
 
 
@@ -96,7 +99,6 @@ dynamic_settings_stage.set_upstream(can_deploy_stage)
 dynamic_settings_stage.set_upstream(calculation_done)
 deploy_stage_done.set_upstream(dynamic_settings_stage)
 
-
 dynamic_settings_prod = DummyOperator(task_id='dynamic_settings_prod', dag=temp_dag)
 dynamic_settings_hbp1 = DockerBashOperator(
     task_id='dynamic_settings_hbp1',
@@ -147,7 +149,6 @@ cross_cache_stage = DockerBashOperator(
     docker_name="{{ params.default_docker }}",
     bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ ds }} -m window -mt last-28 -et staging -p update_bucket -bd {{ params.base_hdfs_dir }} {{ params.transients }}'
 )
-
 
 cross_cache_stage.set_upstream(calculate_cross_cache)
 cross_cache_stage.set_upstream(dynamic_settings_stage)

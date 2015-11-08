@@ -1,11 +1,10 @@
-from sw_airflow.dags.common.operators import DockerBashOperator, DockerCopyHbaseTableOperator
-
 __author__ = 'lajonat'
 
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from datetime import datetime
 from monthdelta import *
+from sw.common.operators import DockerBashOperator, DockerCopyHbaseTableOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/mrpprod'
 BASE_DIR = '/similargroup/data/mobile-analytics'
