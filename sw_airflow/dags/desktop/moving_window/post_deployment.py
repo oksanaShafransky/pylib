@@ -1,6 +1,6 @@
 __author__ = 'jeniag'
 
-from sw_airflow.desktop.moving_window.deployment import *
+from sw_airflow.dags.desktop.moving_window.deployment import *
 
 # Cleanup
 #TODO: create mrp-hbp1/mrp-hbp2 dockers

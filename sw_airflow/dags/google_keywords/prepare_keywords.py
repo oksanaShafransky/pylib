@@ -1,8 +1,10 @@
+from sw_airflow.dags.common.operators import DockerBashOperator, DockerCopyHbaseTableOperator
+
 __author__ = 'lajonat'
 
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from datetime import datetime, timedelta
+from datetime import datetime
 from monthdelta import *
 
 DEFAULT_EXECUTION_DIR = '/similargroup/mrpprod'
@@ -19,26 +21,28 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 10, 31),
     'depends_on_past': False,
-    'email': ['felixv@similarweb.com', 'jonathan@similarweb.com','yotamg@similarweb.com'],
+    'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5)
 }
 
-dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER, 'hdfs': DEFAULT_HDFS, 'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
+dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER, 'hdfs': DEFAULT_HDFS,
+                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='PrepareGoogleKeywords', default_args=dag_args, params=dag_template_params, schedule_interval=monthdelta(1))
+dag = DAG(dag_id='PrepareGoogleKeywords', default_args=dag_args, params=dag_template_params,
+          schedule_interval=monthdelta(1))
 
 
 
 # define jobs
 
 splits = DockerBashOperator(task_id='GetKeywordSplits',
-                          dag=dag,
-                          docker_name=DEFAULT_DOCKER,
-                          bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p get_keyword_splits'''
-)
+                            dag=dag,
+                            docker_name=DEFAULT_DOCKER,
+                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p get_keyword_splits'''
+                            )
 
 init = DockerBashOperator(task_id='InitResources',
                           dag=dag,
@@ -56,20 +60,19 @@ deploy_prod_done = DummyOperator(task_id='deploy_prod_done', dag=dag)
 deploy_prod_done.set_upstream(deploy_prod)
 deploy_prod_done.set_downstream(wrap_up)
 
-
 get_next_keywords = DockerBashOperator(task_id='GetNewKeywords',
-                                  dag=dag,
-                                  docker_name=DEFAULT_DOCKER,
-                                  bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p calculate_top_sites,calculate_keywords,save_keywords'''
-                                  )
+                                       dag=dag,
+                                       docker_name=DEFAULT_DOCKER,
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p calculate_top_sites,calculate_keywords,save_keywords'''
+                                       )
 get_next_keywords.set_downstream(wrap_up)
 get_next_keywords.set_upstream(init)
 
 process = DockerBashOperator(task_id='ProcessKeywords',
-                                       dag=dag,
-                                       docker_name=DEFAULT_DOCKER,
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p process'''
-)
+                             dag=dag,
+                             docker_name=DEFAULT_DOCKER,
+                             bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p process'''
+                             )
 process.set_downstream(deploy_prod)
 process.set_upstream(init)
 
@@ -95,8 +98,8 @@ if DEPLOY_TO_PROD:
 #################################################
 
 register_success = DockerBashOperator(task_id='RegisterSuccessOnETCD',
-                                   dag=dag,
-                                   docker_name=DEFAULT_DOCKER,
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p set_success'''
-                                   )
+                                      dag=dag,
+                                      docker_name=DEFAULT_DOCKER,
+                                      bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p set_success'''
+                                      )
 register_success.set_upstream(wrap_up)

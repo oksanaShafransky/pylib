@@ -1,8 +1,8 @@
 __author__ = 'jeniag'
 
-from sw_airflow.common.operators import CopyHbaseTableOperator, SuccedOrSkipOperator
-from sw_airflow.desktop.moving_window.window_calculation import *
-from sw_airflow.desktop.moving_window.dag import dag_template_params as dag_params
+from sw_airflow.dags.common.operators import CopyHbaseTableOperator, SuccedOrSkipOperator
+from sw_airflow.dags.desktop.moving_window.window_calculation import *
+from sw_airflow.dags.desktop.moving_window.dag import dag_template_params as dag_params
 
 # Copy tables to production
 

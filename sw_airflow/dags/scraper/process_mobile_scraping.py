@@ -4,7 +4,8 @@ from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import HdfsSensor
 from datetime import datetime, timedelta
-from sw_airflow.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
+from sw_airflow.dags.common.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
+from sw_airflow.dags.common.operators import DockerBashOperator, DockerCopyHbaseTableOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/mrpprod'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -21,14 +22,16 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 10, 19),
     'depends_on_past': False,
-    'email': ['felixv@similarweb.com', 'jonathan@similarweb.com','yotamg@similarweb.com'],
+    'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 1,
     'retry_delay': timedelta(minutes=5)
 }
 
-dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER, 'hdfs': DEFAULT_HDFS, 'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER, 'problem_num': CHECK_DATA_PROBLEM_NUM}
+dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER, 'hdfs': DEFAULT_HDFS,
+                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
+                       'problem_num': CHECK_DATA_PROBLEM_NUM}
 
 dag = DAG(dag_id='ProcessMobileScraping', default_args=dag_args, params=dag_template_params)
 
@@ -60,14 +63,14 @@ ps_ranks_exp = DockerBashOperator(task_id='ExportPlaystoreRanks',
                                   docker_name=DEFAULT_DOCKER,
                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/ranks.sh -d {{ ds }} -p export_playstore -fd'''
                                   )
-#ps_ranks_exp.set_downstream(wrap_up)
+# ps_ranks_exp.set_downstream(wrap_up)
 
 it_ranks_exp = DockerBashOperator(task_id='ExportiTunesRanks',
                                   dag=dag,
                                   docker_name=DEFAULT_DOCKER,
                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/ranks.sh -d {{ ds }} -p export_itunes -fd'''
                                   )
-#it_ranks_exp.set_downstream(wrap_up)
+# it_ranks_exp.set_downstream(wrap_up)
 
 ps_rank_hist = DockerBashOperator(task_id='AssemblePlaystoreRanksHistory',
                                   dag=dag,
@@ -93,28 +96,28 @@ store_cat_ranks = DockerBashOperator(task_id='StoreCategoryRanks',
                                      dag=dag,
                                      docker_name=DEFAULT_DOCKER,
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/ranks.sh -d {{ ds }} -p store_cat_ranks'''
-                                    )
+                                     )
 store_cat_ranks.set_upstream(init)
 store_cat_ranks.set_upstream(ps_ranks_exp)
 store_cat_ranks.set_upstream(it_ranks_exp)
 store_cat_ranks.set_downstream(deploy_prod)
 
 trends_7_days = DockerBashOperator(task_id='7DayTrends',
-                                     dag=dag,
-                                     docker_name=DEFAULT_DOCKER,
-                                     bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/trends.sh -d {{ ds }} -td 7''',
-                                     priority_weight=2
-                                    )
+                                   dag=dag,
+                                   docker_name=DEFAULT_DOCKER,
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/trends.sh -d {{ ds }} -td 7''',
+                                   priority_weight=2
+                                   )
 trends_7_days.set_upstream(init)
 trends_7_days.set_upstream(ps_ranks_exp)
 trends_7_days.set_upstream(it_ranks_exp)
 trends_7_days.set_downstream(deploy_prod)
 
 trends_28_days = DockerBashOperator(task_id='28DayTrends',
-                                     dag=dag,
-                                     docker_name=DEFAULT_DOCKER,
-                                     bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/trends.sh -d {{ ds }} -td 28''',
-                                     priority_weight=2
+                                    dag=dag,
+                                    docker_name=DEFAULT_DOCKER,
+                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/trends.sh -d {{ ds }} -td 28''',
+                                    priority_weight=2
                                     )
 trends_28_days.set_upstream(init)
 trends_28_days.set_upstream(ps_ranks_exp)
@@ -132,7 +135,7 @@ ps_info = DockerBashOperator(task_id='GatherPlaystoreInfo',
                              docker_name=DEFAULT_DOCKER,
                              bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/app_info.sh -d {{ ds }} -p export_playstore -fd'''
                              )
-#ps_info.set_downstream(wrap_up)
+# ps_info.set_downstream(wrap_up)
 ps_info.set_downstream(store_cat_ranks)
 
 it_info = DockerBashOperator(task_id='GatheriTunesInfo',
@@ -140,7 +143,7 @@ it_info = DockerBashOperator(task_id='GatheriTunesInfo',
                              docker_name=DEFAULT_DOCKER,
                              bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/app_info.sh -d {{ ds }} -p export_itunes -fd'''
                              )
-#it_info.set_downstream(wrap_up)
+# it_info.set_downstream(wrap_up)
 it_info.set_downstream(store_cat_ranks)
 
 if DEPLOY_TO_PROD:
@@ -156,11 +159,11 @@ if DEPLOY_TO_PROD:
     export_app_info.set_downstream(wrap_up)
 
 export_app_info_stage = DockerBashOperator(task_id='ExportAppInfoStage',
-                                     dag=dag,
-                                     docker_name=DEFAULT_DOCKER,
-                                     bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/app_info.sh -d {{ ds }} \
+                                           dag=dag,
+                                           docker_name=DEFAULT_DOCKER,
+                                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/app_info.sh -d {{ ds }} \
                                                         -p export_couchbase,export_elastic,export_hbase -et STAGE'''
-)
+                                           )
 export_app_info_stage.set_upstream(init)
 export_app_info_stage.set_upstream(ps_info)
 export_app_info_stage.set_upstream(it_info)
@@ -248,20 +251,20 @@ link.set_downstream(deploy_prod)
 
 if DEPLOY_TO_PROD:
     link_prod = DockerBashOperator(task_id='ExportLink',
-                              dag=dag,
-                              docker_name=DEFAULT_DOCKER,
-                              bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/link.sh -d {{ ds }}  -p export_site_apps -et {{ params.run_environment }}'''
-    )
+                                   dag=dag,
+                                   docker_name=DEFAULT_DOCKER,
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/link.sh -d {{ ds }}  -p export_site_apps -et {{ params.run_environment }}'''
+                                   )
     link_prod.set_upstream(init)
     link_prod.set_upstream(ps_info)
     link_prod.set_upstream(it_info)
     link_prod.set_downstream(deploy_prod)
 
 link_stage = DockerBashOperator(task_id='LinkAppsWithSitesStage',
-                          dag=dag,
-                          docker_name=DEFAULT_DOCKER,
-                          bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/link.sh -d {{ ds }} -p export_site_apps -et STAGE'''
-)
+                                dag=dag,
+                                docker_name=DEFAULT_DOCKER,
+                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/link.sh -d {{ ds }} -p export_site_apps -et STAGE'''
+                                )
 link_stage.set_upstream(init)
 link_stage.set_upstream(ps_info)
 link_stage.set_upstream(it_info)
@@ -302,10 +305,10 @@ lite_kw.set_downstream(deploy_prod)
 #################################################
 
 check_data = DockerBashOperator(task_id='CheckDataBeforeProd',
-                             dag=dag,
-                             docker_name=DEFAULT_DOCKER,
-                             bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/checkScrapeDataBeforeProd.sh -d {{ ds }} {{ params.problem_num }}'''
-                             )
+                                dag=dag,
+                                docker_name=DEFAULT_DOCKER,
+                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/checkScrapeDataBeforeProd.sh -d {{ ds }} {{ params.problem_num }}'''
+                                )
 
 check_data.set_upstream(deploy_prod)
 check_data.set_downstream(deploy_prod_done)
@@ -407,14 +410,14 @@ if DEPLOY_TO_PROD:
                                               dag=dag,
                                               docker_name=DEFAULT_DOCKER,
                                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/elastic.sh -d {{ ds }} -et {{ params.run_environment }}'''
-    )
+                                              )
     update_elastic_alias.set_upstream(wrap_up)
 
 update_elastic_alias_stage = DockerBashOperator(task_id='UpdateElasticAliasStage',
                                                 dag=dag,
                                                 docker_name=DEFAULT_DOCKER,
                                                 bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/elastic.sh -d {{ ds }} -et STAGE'''
-)
+                                                )
 update_elastic_alias_stage.set_upstream(wrap_up)
 update_elastic_alias_stage.set_downstream(register_success)
 update_elastic_alias_stage.set_downstream(update_latest_date)
@@ -426,7 +429,7 @@ update_elastic_alias_stage.set_downstream(register_available)
 
 
 cleanup_interval_start = 10
-cleanup_interval_end = 3 # this is effectively the retention policy, in days
+cleanup_interval_end = 3  # this is effectively the retention policy, in days
 
 # it may be necessary to separate retention policies for different data components, which is supported by the underlying script
 # for now, keep everything the same
