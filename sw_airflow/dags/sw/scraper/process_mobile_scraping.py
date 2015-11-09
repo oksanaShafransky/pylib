@@ -321,62 +321,61 @@ check_data.set_downstream(deploy_prod_done)
 #################################################
 ###    Deploy                                  #
 #################################################
-if DEPLOY_TO_PROD:
-    for target_cluster in ('hbp1',):
-        copy_app_details = DockerCopyHbaseTableOperator(
-            task_id='copy_app_details_%s' % target_cluster,
-            dag=dag,
-            docker_name=DEFAULT_DOCKER,
-            source_cluster=DEFAULT_CLUSTER,
-            target_cluster=target_cluster,
-            table_name_template="app_details_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-        )
-        copy_app_details.set_upstream(deploy_prod)
-        copy_app_details.set_downstream(deploy_prod_done)
+for target_cluster in ('hbp1',):
+    copy_app_details = DockerCopyHbaseTableOperator(
+        task_id='copy_app_details_%s' % target_cluster,
+        dag=dag,
+        docker_name=DEFAULT_DOCKER,
+        source_cluster=DEFAULT_CLUSTER,
+        target_cluster=target_cluster,
+        table_name_template="app_details_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
+    )
+    copy_app_details.set_upstream(deploy_prod)
+    copy_app_details.set_downstream(deploy_prod_done)
 
-        copy_app_top_list = DockerCopyHbaseTableOperator(
-            task_id='copy_app_top_list_%s' % target_cluster,
-            dag=dag,
-            docker_name=DEFAULT_DOCKER,
-            source_cluster=DEFAULT_CLUSTER,
-            target_cluster=target_cluster,
-            table_name_template="app_top_list_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-        )
-        copy_app_top_list.set_upstream(deploy_prod)
-        copy_app_top_list.set_downstream(deploy_prod_done)
+    copy_app_top_list = DockerCopyHbaseTableOperator(
+        task_id='copy_app_top_list_%s' % target_cluster,
+        dag=dag,
+        docker_name=DEFAULT_DOCKER,
+        source_cluster=DEFAULT_CLUSTER,
+        target_cluster=target_cluster,
+        table_name_template="app_top_list_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
+    )
+    copy_app_top_list.set_upstream(deploy_prod)
+    copy_app_top_list.set_downstream(deploy_prod_done)
 
-        copy_app_cat_rank = DockerCopyHbaseTableOperator(
-            task_id='copy_app_cat_rank_%s' % target_cluster,
-            dag=dag,
-            docker_name=DEFAULT_DOCKER,
-            source_cluster=DEFAULT_CLUSTER,
-            target_cluster=target_cluster,
-            table_name_template="app_cat_rank_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-        )
-        copy_app_cat_rank.set_upstream(deploy_prod)
-        copy_app_cat_rank.set_downstream(deploy_prod_done)
+    copy_app_cat_rank = DockerCopyHbaseTableOperator(
+        task_id='copy_app_cat_rank_%s' % target_cluster,
+        dag=dag,
+        docker_name=DEFAULT_DOCKER,
+        source_cluster=DEFAULT_CLUSTER,
+        target_cluster=target_cluster,
+        table_name_template="app_cat_rank_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
+    )
+    copy_app_cat_rank.set_upstream(deploy_prod)
+    copy_app_cat_rank.set_downstream(deploy_prod_done)
 
-        copy_mobile_app_keyword_positions = DockerCopyHbaseTableOperator(
-            task_id='copy_mobile_app_keyword_positions_%s' % target_cluster,
-            dag=dag,
-            docker_name=DEFAULT_DOCKER,
-            source_cluster=DEFAULT_CLUSTER,
-            target_cluster=target_cluster,
-            table_name_template="mobile_app_keyword_positions_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-        )
-        copy_mobile_app_keyword_positions.set_upstream(deploy_prod)
-        copy_mobile_app_keyword_positions.set_downstream(deploy_prod_done)
+    copy_mobile_app_keyword_positions = DockerCopyHbaseTableOperator(
+        task_id='copy_mobile_app_keyword_positions_%s' % target_cluster,
+        dag=dag,
+        docker_name=DEFAULT_DOCKER,
+        source_cluster=DEFAULT_CLUSTER,
+        target_cluster=target_cluster,
+        table_name_template="mobile_app_keyword_positions_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
+    )
+    copy_mobile_app_keyword_positions.set_upstream(deploy_prod)
+    copy_mobile_app_keyword_positions.set_downstream(deploy_prod_done)
 
-        copy_app_lite = DockerCopyHbaseTableOperator(
-            task_id='copy_app_lite_%s' % target_cluster,
-            dag=dag,
-            docker_name=DEFAULT_DOCKER,
-            source_cluster=DEFAULT_CLUSTER,
-            target_cluster=target_cluster,
-            table_name_template="app_lite_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-        )
-        copy_app_lite.set_upstream(deploy_prod)
-        copy_app_lite.set_downstream(deploy_prod_done)
+    copy_app_lite = DockerCopyHbaseTableOperator(
+        task_id='copy_app_lite_%s' % target_cluster,
+        dag=dag,
+        docker_name=DEFAULT_DOCKER,
+        source_cluster=DEFAULT_CLUSTER,
+        target_cluster=target_cluster,
+        table_name_template="app_lite_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
+    )
+    copy_app_lite.set_upstream(deploy_prod)
+    copy_app_lite.set_downstream(deploy_prod_done)
 
 
 
