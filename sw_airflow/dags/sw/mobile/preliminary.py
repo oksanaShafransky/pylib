@@ -48,7 +48,7 @@ should_run = CompoundDateEtcdSensor(task_id='RawDataReady',
 
 group_raw_files = DockerBashOperator(task_id='GroupRawDataByUser',
                                      dag=dag,
-                                     docker_name=DOCKER_MANAGER,
+                                     docker_name='''{{ params.cluster }}''',
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/group_raw.sh -d {{ ds }} -p group -rt 2101 -rmem 1536'''
                                      )
 group_raw_files.set_upstream(should_run)
@@ -56,7 +56,7 @@ group_raw_files.set_upstream(should_run)
 
 merge_outliers = DockerBashOperator(task_id='MergeOutlierFiles',
                                     dag=dag,
-                                    docker_name=DOCKER_MANAGER,
+                                    docker_name=DEFAULT_CLUSTER,
                                     bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/group_raw.sh -d {{ ds }} -p merge_outliers'''
                                     )
 merge_outliers.set_upstream(group_raw_files)
@@ -64,7 +64,7 @@ merge_outliers.set_upstream(group_raw_files)
 
 report_outliers = DockerBashOperator(task_id='OutliersReport',
                                      dag=dag,
-                                     docker_name=DOCKER_MANAGER,
+                                     docker_name=DEFAULT_CLUSTER,
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/group_raw.sh -d {{ ds }} -p outlier_report'''
                                      )
 report_outliers.set_upstream(merge_outliers)
@@ -74,7 +74,7 @@ report_outliers.set_upstream(merge_outliers)
 
 blocked_ips = DockerBashOperator(task_id='BlockedIPs',
                                  dag=dag,
-                                 docker_name=DOCKER_MANAGER,
+                                 docker_name=DEFAULT_CLUSTER,
                                  bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p blocked -mmem 1536'''
                                  )
 blocked_ips.set_upstream(group_raw_files)
@@ -82,7 +82,7 @@ blocked_ips.set_upstream(group_raw_files)
 
 detect_sysapps = DockerBashOperator(task_id='SystemAppDetection',
                                     dag=dag,
-                                    docker_name=DOCKER_MANAGER,
+                                    docker_name=DEFAULT_CLUSTER,
                                     bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p sysapps -mmem 1536'''
                                     )
 detect_sysapps.set_upstream(group_raw_files)
@@ -90,7 +90,7 @@ detect_sysapps.set_upstream(group_raw_files)
 
 combine_sysapps = DockerBashOperator(task_id='CombineSystemApps',
                                      dag=dag,
-                                     docker_name=DOCKER_MANAGER,
+                                     docker_name=DEFAULT_CLUSTER,
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p combine_sysapps'''
                                      )
 combine_sysapps.set_upstream(detect_sysapps)
@@ -98,7 +98,7 @@ combine_sysapps.set_upstream(detect_sysapps)
 
 daily_agg = DockerBashOperator(task_id='DailyAggregation',
                                dag=dag,
-                               docker_name=DOCKER_MANAGER,
+                               docker_name=DEFAULT_CLUSTER,
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 637 -mmem 2560 -rmem 1536'''
                                )
 daily_agg.set_upstream(blocked_ips)
