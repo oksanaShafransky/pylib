@@ -17,7 +17,7 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime.now() - timedelta(days=1),
+    'start_date': datetime(15, 11, 10),
     'depends_on_past': False,
     'email': ['felixv@similarweb.com'],
     'email_on_failure': True,
