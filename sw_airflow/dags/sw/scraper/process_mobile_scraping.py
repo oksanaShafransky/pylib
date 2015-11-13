@@ -10,9 +10,9 @@ from airflow.operators.sensors import HdfsSensor
 from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
 from sw.airflow.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/mrpprod'
+DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
-DOCKER_MANAGER = 'docker-a01.sg.internal'
+DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_DOCKER = 'mrp'
 DEFAULT_HDFS = 'mrp'
 DEFAULT_CLUSTER = 'mrp'
