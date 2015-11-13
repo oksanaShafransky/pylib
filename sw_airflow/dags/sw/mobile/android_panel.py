@@ -38,7 +38,7 @@ dag = DAG(dag_id='AndroidDailyPanelReport', default_args=dag_args, params=dag_te
 group_files_base = '/similargroup/data/stats-mobile/raw'
 should_run = HdfsSensor(task_id='GroupFilesReady',
                         dag=dag,
-                        hdfs_conn_id='''hdfs_{{ params.cluster }}''',
+                        hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
                         filepath='''%s/{{ macros.date_partition(macros.ds_add(ds, 1)) }}/_SUCCESS''' % group_files_base,
                         execution_timeout=timedelta(minutes=240)
                         )
