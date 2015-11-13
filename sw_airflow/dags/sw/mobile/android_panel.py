@@ -39,7 +39,7 @@ group_files_base = '/similargroup/data/stats-mobile/raw'
 should_run = HdfsSensor(task_id='GroupFilesReady',
                         dag=dag,
                         hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                        filepath='''%s/{{ macros.date_partition(macros.ds_add(ds, 1)) }}/_SUCCESS''' % group_files_base,
+                        filepath='''%s/{{ macros.date_partition(ds) }}/_SUCCESS''' % group_files_base,
                         execution_timeout=timedelta(minutes=240)
                         )
 
