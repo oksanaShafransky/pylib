@@ -19,7 +19,7 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(15, 11, 10),
     'depends_on_past': False,
-    'email': ['felixv@similarweb.com'],
+    'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 2,
