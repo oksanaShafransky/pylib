@@ -16,7 +16,7 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(12, 11, 15),
+    'start_date': datetime(15, 11, 12),
     'depends_on_past': False,
     'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,

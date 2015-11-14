@@ -51,7 +51,7 @@ def get_region_servers():
 class JobBuilder:
     GZ_COUNTER = 0
 
-    max_map_fail_percentage = 90
+    max_map_fail_percentage = 0
     max_map_task_fails = 4
     max_reduce_task_fails = 8
 
