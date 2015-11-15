@@ -48,14 +48,14 @@ should_run = CompoundDateEtcdSensor(task_id='RawDataReady',
 user_report = DockerBashOperator(task_id='CollectUserData',
                                  dag=dag,
                                  docker_name='''{{ params.cluster }}''',
-                                 bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/ios.sh -s {{ ds }}  -e {{ ds }} -p collect_user_data'''
+                                 bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/ios.sh -s {{ ds }} -e {{ ds }} -p collect_user_data'''
                                  )
 user_report.set_upstream(should_run)
 
 construct_report = DockerBashOperator(task_id='BuildReport',
                                       dag=dag,
                                       docker_name='''{{ params.cluster }}''',
-                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/ios.sh -s {{ ds }}  -e {{ ds }} -p daily_stats_report,merge_users_table,daily_activity_report,daily_joined_report'''
+                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/ios.sh -s {{ ds }} -e {{ ds }} -p daily_stats_report,merge_users_table,daily_activity_report,daily_joined_report'''
                                       )
 construct_report.set_upstream(user_report)
 
