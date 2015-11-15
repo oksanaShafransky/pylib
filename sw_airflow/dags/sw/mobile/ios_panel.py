@@ -63,7 +63,7 @@ construct_report.set_upstream(user_report)
 store = DockerBashOperator(task_id='StoreSql',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/ios.sh -d {{ ds }} -p reports_to_sql'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/ios.sh -s {{ ds }} -e {{ ds }} -p reports_to_sql'''
                            )
 store.set_upstream(construct_report)
 
@@ -71,7 +71,7 @@ store.set_upstream(construct_report)
 notify = DockerBashOperator(task_id='NotifyParties',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/ios.sh -d {{ ds }} -p mail'''
+                            bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/ios.sh -s {{ ds }} -e {{ ds }} -p mail'''
                             )
 notify.set_upstream(store)
 
