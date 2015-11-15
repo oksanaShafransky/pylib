@@ -19,7 +19,7 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(15, 10, 18),
+    'start_date': datetime(15, 8, 18),
     'depends_on_past': False,
     'email': ['felixv@similarweb.com'],
     'email_on_failure': True,
@@ -31,7 +31,7 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='MobileDailyEstimation', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='MobileDailyEstimation_RecoverAppEngagement', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
 # define stages
 
