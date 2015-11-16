@@ -22,7 +22,7 @@ dag_args = {
     'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 2,
+    'retries': 8,
     'retry_delay': timedelta(minutes=15)
 }
 
