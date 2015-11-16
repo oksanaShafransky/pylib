@@ -35,20 +35,29 @@ dag = DAG(dag_id='DesktopDailyPanelReport', default_args=dag_args, params=dag_te
 # define stages
 
 group_files_base = '/similargroup/data/stats'
-should_run = HdfsSensor(task_id='GroupFilesReady',
-                        dag=dag,
-                        hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                        filepath='''%s/{{ macros.date_partition(ds) }}/_SUCCESS''' % group_files_base,
-                        execution_timeout=timedelta(minutes=240)
-                        )
+group_files_ready = HdfsSensor(task_id='GroupFilesReady',
+                               dag=dag,
+                               hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
+                               filepath='''%s/{{ macros.date_partition(ds) }}/_SUCCESS''' % group_files_base,
+                               execution_timeout=timedelta(minutes=240)
+                               )
 
+
+blocked_ips_base = '/similargroup/data/analytics/daily/blocked_ips'
+blocked_ips_ready = HdfsSensor(task_id='BlockedIpsReady',
+                               dag=dag,
+                               hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
+                               filepath='''%s/{{ macros.date_partition(ds) }}/_SUCCESS''' % blocked_ips_base,
+                               execution_timeout=timedelta(minutes=240)
+                               )
 
 panel_report = DockerBashOperator(task_id='PanelStats',
                                   dag=dag,
                                   docker_name='''{{ params.cluster }}''',
                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/panel/panelReports.sh -d {{ ds }}'''
                                   )
-panel_report.set_upstream(should_run)
+panel_report.set_upstream(group_files_ready)
+panel_report.set_upstream(blocked_ips_ready)
 
 
 
