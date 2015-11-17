@@ -60,30 +60,40 @@ def generate_dags(mode):
 
     mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                                   dag=dag,
-                                                  task_id="MobilDailyEstimation",
+                                                  task_id="MobileDailyEstimation",
                                                   external_task_id='FinishProcess')
+
+    #######################
+    # Prepare Hive Tables #
+    #######################
 
     prepare_hive_tables = \
         DockerBashOperator(task_id='AppSourceWeightCalculation',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/start-process.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p tables'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p tables'''
                            )
 
     prepare_hive_tables.set_upstream(mobile_daily_estimation)
+
+    #####################
+    # App Usage Pattern #
+    #####################
 
     usage_pattern_calculation = \
         DockerBashOperator(task_id='AppsUsagePatternCalculation',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p calculation'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p calculation'''
                            )
+
+    usage_pattern_calculation.set_upstream(mobile_daily_estimation)
 
     app_usage_pattern_store = \
         DockerBashOperator(task_id='AppsUsagePatternStore',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p app_store'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p app_store'''
                            )
 
     app_usage_pattern_store.set_upstream([usage_pattern_calculation,
@@ -94,7 +104,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='UsageRawTotals',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p raw_totals'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p raw_totals'''
                            )
 
     # dependency on usage_store is important since this job writes to the same cf and usage_calc checks if it is populated
@@ -105,7 +115,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='CategoryUsage',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p category_store'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p category_store'''
                            )
 
     category_usage.set_upstream([prepare_hive_tables,
@@ -115,25 +125,31 @@ def generate_dags(mode):
         DockerBashOperator(task_id='UsagePatternCategoryLeaders',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p category_leaders'''
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p category_leaders'''
                     )
 
     usage_pattern_category_leaders.set_upstream([prepare_hive_tables,
                                                  app_usage_pattern_store,
                                                  usage_raw_totals])
 
+    #####################
+    # App Retention #
+    #####################
+
     app_retention_calculation = \
         DockerBashOperator(task_id='AppRetentionCalculation',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p calc_apps'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p calc_apps'''
                            )
+
+    app_retention_calculation.set_upstream(mobile_daily_estimation)
 
     app_churn_calculation = \
         DockerBashOperator(task_id='AppChurnCalculation',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p churn_calc'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p churn_calc'''
                            )
 
     app_churn_calculation.set_upstream(app_retention_calculation)
@@ -142,17 +158,25 @@ def generate_dags(mode):
         DockerBashOperator(task_id='SmoothAppRetention',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p smooth_retention'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p smooth_retention'''
                            )
 
     smooth_app_retention.set_upstream(app_churn_calculation)
 
-
-
-    retention_precalc = DummyOperator(task_id='retention_precalc',
+    app_retention_precalculation = DummyOperator(task_id='AppRetentionPrecalculation',
                                       dag=dag
                                       )
-    retention_precalc.set_upstream(smooth_app_retention)
+    app_retention_precalculation.set_upstream(smooth_app_retention)
+
+    if is_window_dag():
+        check_app_and_country_retention_estimation = \
+            DockerBashOperator(task_id='CheckAppAndCountryRetentionEstimation',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/qa/app-retention/qa/checkAppAndCountryRetentionEstimation.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p check'''
+                               )
+
+        check_app_and_country_retention_estimation.set_upstream(app_retention_precalculation)
 
     return dag
 
