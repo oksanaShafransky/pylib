@@ -10,9 +10,9 @@ from airflow.operators.sensors import HdfsSensor
 from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
 from sw.airflow.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/mrpprod'
+DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
-DOCKER_MANAGER = 'docker-a01.sg.internal'
+DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_DOCKER = 'mrp'
 DEFAULT_HDFS = 'mrp'
 DEFAULT_CLUSTER = 'mrp'
@@ -28,8 +28,8 @@ dag_args = {
     'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5)
+    'retries': 8,
+    'retry_delay': timedelta(minutes=15)
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER, 'hdfs': DEFAULT_HDFS,
