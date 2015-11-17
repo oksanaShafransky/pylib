@@ -64,17 +64,17 @@ def generate_dags(mode):
                                                   external_task_id='FinishProcess')
 
     #######################
-    # Prepare Hive Tables #
+    # Prepare HBase Tables #
     #######################
 
-    prepare_hive_tables = \
-        DockerBashOperator(task_id='AppSourceWeightCalculation',
+    prepare_hbase_tables = \
+        DockerBashOperator(task_id='PrepareHBaseTables',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p tables'''
                            )
 
-    prepare_hive_tables.set_upstream(mobile_daily_estimation)
+    prepare_hbase_tables.set_upstream(mobile_daily_estimation)
 
     #####################
     # App Usage Pattern #
@@ -97,7 +97,7 @@ def generate_dags(mode):
                            )
 
     app_usage_pattern_store.set_upstream([usage_pattern_calculation,
-                                          prepare_hive_tables])
+                                          prepare_hbase_tables])
 
 
     usage_raw_totals = \
@@ -118,7 +118,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p category_store'''
                            )
 
-    category_usage.set_upstream([prepare_hive_tables,
+    category_usage.set_upstream([prepare_hbase_tables,
                                  usage_pattern_calculation])
 
     usage_pattern_category_leaders = \
@@ -128,7 +128,7 @@ def generate_dags(mode):
                        bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p category_leaders'''
                     )
 
-    usage_pattern_category_leaders.set_upstream([prepare_hive_tables,
+    usage_pattern_category_leaders.set_upstream([prepare_hbase_tables,
                                                  app_usage_pattern_store,
                                                  usage_raw_totals])
 
@@ -166,7 +166,6 @@ def generate_dags(mode):
     app_retention_precalculation = DummyOperator(task_id='AppRetentionPrecalculation',
                                       dag=dag
                                       )
-    app_retention_precalculation.set_upstream(smooth_app_retention)
 
     if is_window_dag():
         check_app_and_country_retention_estimation = \
@@ -175,8 +174,56 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/qa/app-retention/qa/checkAppAndCountryRetentionEstimation.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p check'''
                                )
+        check_app_and_country_retention_estimation.set_upstream(smooth_app_retention)
+        app_retention_precalculation.set_upstream(check_app_and_country_retention_estimation)
+    else:
+        app_retention_precalculation.set_upstream(smooth_app_retention)
 
-        check_app_and_country_retention_estimation.set_upstream(app_retention_precalculation)
+    app_retention_categories_calculation = \
+        DockerBashOperator(task_id='AppRetentionCategoriesCalculation',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p calc_cats'''
+                           )
+
+    app_retention_categories_calculation.set_upstream(app_retention_precalculation)
+
+    app_retention_aggregate_categories = \
+        DockerBashOperator(task_id='AppRetentionAggregateCategories',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p agg_cats'''
+                           )
+
+    app_retention_aggregate_categories.set_upstream(app_retention_categories_calculation)
+
+    app_retention_categories = DummyOperator(task_id='AppRetentionCategories',
+                                                 dag=dag
+                                                 )
+    app_retention_categories.set_upstream(app_retention_aggregate_categories)
+
+    app_retention_store = \
+        DockerBashOperator(task_id='AppRetentionStore',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p store_apps'''
+                           )
+
+    app_retention_store.set_upstream([prepare_hbase_tables,app_retention_precalculation])
+
+    category_retention_store = \
+        DockerBashOperator(task_id='CategoryRetentionStore',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p store_cats'''
+                           )
+
+    category_retention_store.set_upstream([prepare_hbase_tables,app_retention_categories])
+
+    retention_store = DummyOperator(task_id='RetentionStore',
+                                                 dag=dag
+                                                 )
+    retention_store.set_upstream([app_retention_store,category_retention_store])
 
     return dag
 
