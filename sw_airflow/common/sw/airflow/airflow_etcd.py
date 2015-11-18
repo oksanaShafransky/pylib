@@ -23,6 +23,11 @@ class EtcdHook(BaseHook):
         client = Client(tuple((conn.host, conn.port) for conn in connections))
         return client
 
+    def get_record(self, root, path):
+        full_path = '/%s/%s' % (root, path)
+        client = self.get_conn()
+        return client.get(full_path).value
+
 
 class EtcdSetOperator(BaseOperator):
     ui_color = '#00BFFF'
