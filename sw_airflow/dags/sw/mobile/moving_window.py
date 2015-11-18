@@ -63,9 +63,9 @@ def generate_dags(mode):
                                                   task_id="MobileDailyEstimation",
                                                   external_task_id='FinishProcess')
 
-    #######################
+    ########################
     # Prepare HBase Tables #
-    #######################
+    ########################
 
     prepare_hbase_tables = \
         DockerBashOperator(task_id='PrepareHBaseTables',
@@ -132,9 +132,9 @@ def generate_dags(mode):
                                                  app_usage_pattern_store,
                                                  usage_raw_totals])
 
-    #####################
+    #################
     # App Retention #
-    #####################
+    #################
 
     app_retention_calculation = \
         DockerBashOperator(task_id='AppRetentionCalculation',
@@ -224,6 +224,30 @@ def generate_dags(mode):
                                                  dag=dag
                                                  )
     retention_store.set_upstream([app_retention_store,category_retention_store])
+
+    retention_leaders_calculation = \
+        DockerBashOperator(task_id='RetentionLeadersCalculation',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p leaders_calc'''
+                           )
+
+    retention_leaders_calculation.set_upstream([prepare_hbase_tables,retention_store])
+
+    retention_leaders_store = \
+        DockerBashOperator(task_id='RetentionLeadersStore',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ mode }} -mt {{ mode_type }} -p leaders_store'''
+                           )
+
+    retention_leaders_store.set_upstream(retention_leaders_calculation)
+
+    retention_leaders = DummyOperator(task_id='RetentionLeaders',
+                                   dag=dag
+                                   )
+    retention_leaders.set_upstream(retention_leaders_store)
+
 
     return dag
 

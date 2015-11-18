@@ -1,14 +1,11 @@
 __author__ = 'Iddo Aviram'
 
 from datetime import datetime, timedelta
-
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
-
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
-
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -31,14 +28,14 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='MobileDailyEstimation', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='MobileDailyEstimation', default_args=dag_args, params=dag_template_params,
+          schedule_interval=timedelta(days=1))
 
-# define stages
 
 mobile_daily_preliminary = ExternalTaskSensor(external_dag_id='MobileDailyPreliminary',
-                                    dag=dag,
-                                    task_id="EstimationPreliminary",
-                                    external_task_id='FinishProcess')
+                                              dag=dag,
+                                              task_id="EstimationPreliminary",
+                                              external_task_id='FinishProcess')
 #########################
 # Apps engagement score #
 #########################
@@ -63,7 +60,7 @@ app_source_weight_smoothing_calculation.set_upstream(app_source_weight_calculati
 
 app_source_quality_score = \
     DummyOperator(task_id='AppSourceQualityScore',
-                    dag=dag
+                  dag=dag
                   )
 
 app_source_quality_score.set_upstream(app_source_weight_smoothing_calculation)
@@ -84,7 +81,7 @@ app_engagement_estimate = \
                        bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/app_engagement_daily.sh -f -d {{ ds }} -bd {{ base_hdfs_dir }} -env all_countries -p estimate'''
                        )
 
-app_engagement_estimate.set_upstream([app_engagement_prior,app_source_quality_score])
+app_engagement_estimate.set_upstream([app_engagement_prior, app_source_quality_score])
 
 app_engagement_daily_check = \
     DockerBashOperator(task_id='AppEngagementDailyCheck',
@@ -114,7 +111,6 @@ mobile_web_main_sums = \
                        )
 
 mobile_web_main_sums.set_upstream(mobile_daily_preliminary)
-
 
 mobile_web_main_estimation = \
     DockerBashOperator(task_id='MobileWebMainEstimation',
@@ -186,15 +182,29 @@ mobile_web_daily_cut = \
                   dag=dag
                   )
 
-mobile_web_daily_cut.set_upstream([mobile_web_daily_cut_weights,mobile_web_daily_cut_estimation_check])
+mobile_web_daily_cut.set_upstream([mobile_web_daily_cut_weights, mobile_web_daily_cut_estimation_check])
 
-###########################
-# Mobile Daily Estimation #
-###########################
+##############################
+# Mobile Daily Usage Pattern #
+##############################
+
+mobile_daily_usage_pattern = \
+    DockerBashOperator(task_id='MobileDailyUsagePattern',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/daily_est.sh -d {{ ds }} -bd {{ base_hdfs_dir }}'''
+                       )
+
+mobile_daily_usage_pattern.set_upstream(mobile_daily_preliminary)
+
+###########
+# Wrap-up #
+###########
 
 mobile_daily_estimation = \
     DummyOperator(task_id='MobilDailyEstimation',
                   dag=dag
                   )
 
-mobile_daily_estimation.set_upstream([mobile_web_daily_cut,mobile_web_main,app_engagement_daily])
+mobile_daily_estimation.set_upstream(
+    [mobile_web_daily_cut, mobile_web_main, app_engagement_daily, mobile_daily_usage_pattern])
