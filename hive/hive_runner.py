@@ -200,7 +200,13 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
     else:
         raise ValueError('Unknown compression type %s' % compression)
 
-    # TODO: check if need "-hiveconf", "hive.exec.dynamic.partition.mode=nonstrict", probably not
+    # TODO: check if thses are needed:
+    #"-hiveconf", "hive.exec.max.created.files=2000000",
+    #"-hiveconf", "mapreduce.child.java.opts=-Xmx4096m -Xms4096m",
+    #"-hiveconf", "mapreduce.reduce.memory.mb=5320",
+    #"-hiveconf", "mapreduce.map.memory.mb=5320"
+    #for mw referrals
+
     cmd = ["hive", "-S", "-e", '"%s"' % hql,
            "-hiveconf", "mapreduce.job.name=" + job_name,
            "-hiveconf", "mapreduce.job.reduces=" + str(num_of_reducers),
@@ -213,17 +219,12 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
            "-hiveconf", "hive.exec.scratchdir=/tmp/hive-prod",
            "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
            "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
-           "-hiveconf", "hive.exec.max.created.files=2000000",
            "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728",
+           "-hiveconf", "hive.exec.max.created.files=2000000",
            "-hiveconf", "mapreduce.child.java.opts=-Xmx4096m -Xms4096m",
            "-hiveconf", "mapreduce.reduce.memory.mb=5320",
-           "-hiveconf", "mapreduce.map.memory.mb=5320",
-           #"-hiveconf", "mapred.job.shuffle.input.buffer.percent=0.2",
-           #"-hiveconf", "mapreduce.reduce.shuffle.input.buffer.percent=0.2",
+           "-hiveconf", "mapreduce.map.memory.mb=5320"
            ]
-
-            # TODO: try reducing pct.
-
     if codec:
         cmd += ["-hiveconf", "mapreduce.output.fileoutputformat.compress.codec=" + codec]
     if sync:
