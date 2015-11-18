@@ -382,8 +382,8 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/web/first_stage_agg.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m window -mt last-28'''
                            )
     if is_snapshot_dag():
-        mobile_web_compare_est_to_qc.set_downstream(mobile_web_first_stage_agg)
-        mobile_web_train_model.set_downstream(mobile_web_first_stage_agg)
+        mobile_web_train_model.set_upstream(mobile_web_first_stage_agg)
+        mobile_web_compare_est_to_qc.set_upstream(mobile_web_first_stage_agg)
 
     # TODO configure parallelsim setting for this task, which is heavier (10 slots)
     mobile_web_first_stage_agg.set_upstream(mobile_daily_estimation)
