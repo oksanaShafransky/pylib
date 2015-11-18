@@ -219,11 +219,7 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
            "-hiveconf", "hive.exec.scratchdir=/tmp/hive-prod",
            "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
            "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
-           "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728",
-           "-hiveconf", "hive.exec.max.created.files=2000000",
-           "-hiveconf", "mapreduce.child.java.opts=-Xmx4096m -Xms4096m",
-           "-hiveconf", "mapreduce.reduce.memory.mb=5320",
-           "-hiveconf", "mapreduce.map.memory.mb=5320"
+           "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728"
            ]
     if codec:
         cmd += ["-hiveconf", "mapreduce.output.fileoutputformat.compress.codec=" + codec]
