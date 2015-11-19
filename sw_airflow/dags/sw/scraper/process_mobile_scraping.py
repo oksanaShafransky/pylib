@@ -17,9 +17,9 @@ DEFAULT_DOCKER = 'mrp'
 DEFAULT_HDFS = 'mrp'
 DEFAULT_CLUSTER = 'mrp'
 CHECK_DATA_PROBLEM_NUM = '20'
-DEPLOY_TO_PROD = False
+DEPLOY_TO_PROD = True
 
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production-mrp'}
+ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
