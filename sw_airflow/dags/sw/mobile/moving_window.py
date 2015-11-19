@@ -2,8 +2,8 @@ __author__ = 'Iddo Aviram'
 
 from datetime import datetime, timedelta
 from airflow.models import DAG
+from airflow.macros import ds_add
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import BranchPythonOperator
 from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
@@ -389,20 +389,62 @@ def generate_dags(mode):
     mobile_web_first_stage_agg.set_upstream(mobile_daily_estimation)
 
     # TODO I should verify: is the task ID right? should we concatenate the date?
+    # TODO configure parallelsim setting for this task, which is heavier (10 slots)
     mobile_web_adjust_calc_intermediate = \
         DockerBashOperator(task_id='MobileWebAdjustCalcIntermediate',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/web/adjust_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -wenv daily-cut -m window -mt last-28 -p prepare_data,predict'''
                            )
-    # TODO configure parallelsim setting for this task, which is heavier (10 slots)
     if is_snapshot_dag():
         mobile_web_adjust_calc_intermediate.set_upstream([mobile_web_train_model, mobile_web_first_stage_agg])
     else:
         mobile_web_adjust_calc_intermediate.set_upstream(mobile_web_first_stage_agg)
 
+    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    mobile_web_adjust_calc = \
+        DockerBashOperator(task_id='MobileWebAdjustCalc',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/adjust_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -wenv daily-cut -m window -mt last-28 -p redist'''
+                           )
+    mobile_web_adjust_calc.set_upstream([mobile_web_gaps_filler,mobile_web_adjust_calc_intermediate])
 
+    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    mobile_web_check_daily_estimations = \
+        DockerBashOperator(task_id='MobileWebCheckDailyEstimations',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/check_daily_estimations.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p redist'''
+                           )
+    mobile_web_check_daily_estimations.set_upstream(mobile_web_adjust_calc)
 
+    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    mobile_web_calc_subdomains = \
+        DockerBashOperator(task_id='MobileWebCalcSubdomains',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/calc_subdomains.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                           )
+    mobile_web_calc_subdomains.set_upstream(mobile_web_adjust_calc)
+
+    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    mobile_web_popular_pages = \
+        DockerBashOperator(task_id='MobileWebPopularPages',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/popular_pages.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                           )
+    mobile_web_popular_pages.set_upstream(prepare_hbase_tables)
+
+    for i in range(0, 31):
+        sum_ww_day_i = \
+            DockerBashOperator(task_id='SumWwDay_DT-%s' % i,
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/popular_pages.sh -d {{ macros.ds_add(ds,-1) }} -bd {{ params.base_hdfs_dir }} -env main -m daily -mt {{ params.mode_type }} -x {{ macros.dss_in_same_month(ds, macros.ds_add(ds,-%s)) }} ''' % i
+                               )
+        sum_ww_day_i.set_upstream(mobile_web_adjust_calc)
 
     return dag
 
