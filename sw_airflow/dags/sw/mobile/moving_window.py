@@ -2,12 +2,12 @@ __author__ = 'Iddo Aviram'
 
 from datetime import datetime, timedelta
 from airflow.models import DAG
-from airflow.macros import ds_add
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 from sw.airflow.airflow_etcd import EtcdHook
+from airflow.operators.python_operator import BranchPythonOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -437,14 +437,54 @@ def generate_dags(mode):
                            )
     mobile_web_popular_pages.set_upstream(prepare_hbase_tables)
 
+    sum_ww_done = DummyOperator(task_id='SumWWDone',
+                                dag=dag
+                                )
+
     for i in range(0, 31):
+
+        def branching_logic(**kwargs):
+            task = kwargs['task']
+            i=kwargs['params']['i']
+            is_valid_day = \
+                task.render_template('''{{ macros.dss_in_same_month(ds,macros.ds_add(ds,-%s))}}''' % i,
+                                     kwargs)=='True'
+            branch ='SumWwDay_DT-%s' % i if is_valid_day else 'SumWwDay_DT-%s_Sentinel' % i
+            return branch
+
+        sum_ww_day_i_check = \
+            BranchPythonOperator(
+                task_id='SumWwDay_DT-%s_Check' % i,
+                dag=dag,
+                provide_context=True,
+                params={'i': i},
+                python_callable= branching_logic
+            )
+
         sum_ww_day_i = \
             DockerBashOperator(task_id='SumWwDay_DT-%s' % i,
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/web/popular_pages.sh -d {{ macros.ds_add(ds,-1) }} -bd {{ params.base_hdfs_dir }} -env main -m daily -mt {{ params.mode_type }} -x {{ macros.dss_in_same_month(ds, macros.ds_add(ds,-%s)) }} ''' % i
                                )
-        sum_ww_day_i.set_upstream(mobile_web_adjust_calc)
+
+        sum_ww_day_i_sentinel = \
+            DummyOperator(task_id='SumWwDay_DT-%s_Sentinel' % i,
+                          dag=dag
+                          )
+
+
+        sum_ww_day_i_done = DummyOperator(task_id='SumWwDay_DT-%s_Done' % i,
+                                dag=dag,
+                                trigger_rule='one_success'
+                                )
+
+        sum_ww_day_i_check.set_upstream(mobile_web_adjust_calc)
+        sum_ww_day_i.set_upstream(sum_ww_day_i_check)
+        sum_ww_day_i_sentinel.set_upstream(sum_ww_day_i_check)
+        sum_ww_day_i_done.set_upstream(sum_ww_day_i)
+        sum_ww_day_i_done.set_upstream(sum_ww_day_i_sentinel)
+        sum_ww_done.set_upstream(sum_ww_day_i_done)
 
     return dag
 
