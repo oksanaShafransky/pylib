@@ -112,14 +112,14 @@ def generate_dags(mode):
     # so inversing this order may cause usage_calc to decide not to run
     usage_raw_totals.set_upstream(app_usage_pattern_store)
 
-    category_usage = \
+    usage_pattern_categories = \
         DockerBashOperator(task_id='CategoryUsage',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p category_store'''
                            )
 
-    category_usage.set_upstream([prepare_hbase_tables,
+    usage_pattern_categories.set_upstream([prepare_hbase_tables,
                                  usage_pattern_calculation])
 
     usage_pattern_category_leaders = \
@@ -430,7 +430,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/web/calc_subdomains.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
-    mobile_web_calc_subdomains.set_upstream(mobile_web_adjust_calc)
+    mobile_web_calc_subdomains.set_upstream([mobile_web_adjust_calc, prepare_hbase_tables])
 
     # TODO configure parallelsim setting for this task, which is heavier (20 slots)
     mobile_web_popular_pages = \
@@ -657,26 +657,16 @@ def generate_dags(mode):
                                             )
 
     #TODO check why is it configured on local docker
-    if is_window_dag():
-        copy_to_prod_mobile_web_hbp1_window = \
-            DockerBashOperator(task_id='CopyToProdMobileWebHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''hbasecopy mrp hbp1 mobile_web_stats_{{ params.mode_type }}_{{ds_format(ds, "%Y-%m-%d", "%yy_%mm-%dd")}}'''
-                               )
-        copy_to_prod_mobile_web.set_upstream(copy_to_prod_mobile_web_hbp1_window)
-        copy_to_prod_mobile_web_hbp1_window.set_upstream(mobile_web)
-
-    #TODO check why is it configured on local docker
-    if is_snapshot_dag():
-        copy_to_prod_mobile_web_hbp1_snapshot = \
-            DockerBashOperator(task_id='CopyToProdMobileWebHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''hbasecopy mrp hbp1 mobile_web_stats_{{ds_format(ds, "%Y-%m-", "%yy_%mm-%dd")}}'''
-                               )
-        copy_to_prod_mobile_web.set_upstream(copy_to_prod_mobile_web_hbp1_snapshot)
-        copy_to_prod_mobile_web_hbp1_snapshot.set_upstream(mobile_web)
+    copy_to_prod_mobile_web_hbp1 = \
+        DockerBashOperator(task_id='CopyToProdMobileWebHbp1',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='hbasecopy mrp hbp1 mobile_web_stats_' +
+                                        ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
+                                        '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
+                           )
+    copy_to_prod_mobile_web.set_upstream(copy_to_prod_mobile_web_hbp1)
+    copy_to_prod_mobile_web_hbp1.set_upstream(mobile_web)
 
 
     ####################
@@ -687,7 +677,7 @@ def generate_dags(mode):
     apps = DummyOperator(task_id='Apps',
                          dag=dag
                          )
-    apps.set_upstream([app_engagement,app_affinity,retention_store,app_retention_categories,retention_leaders,app_usage_pattern_store,category_usage,usage_pattern_category_leaders,usage_ranks,export_ranks,trends])
+    apps.set_upstream([app_engagement,app_affinity,retention_store,app_retention_categories,retention_leaders,app_usage_pattern_store,usage_pattern_categories,usage_pattern_category_leaders,usage_ranks,export_ranks,trends])
 
 
     update_dynamic_settings = \
@@ -757,10 +747,144 @@ def generate_dags(mode):
     # Local Availability Dates #
     ############################
 
+    #TODO check why is it configured on local docker
+    update_usage_ranks_date_stage = \
+        DockerBashOperator(task_id='UpdateUsageRanksDateStage',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p usage_ranks -pn UsageRanksStage -um success'''
+                       )
+    update_usage_ranks_date_stage.set_upstream(usage_ranks)
 
+
+    ################
+    # Cleanup Prod #
+    ################
+
+    if is_prod_env():
+        if is_window_dag():
+
+            cleanup_prod = DummyOperator(task_id='CleanupProd',
+                                 dag=dag
+                                 )
+
+            for i in range(3,8):
+                #TODO check why is it configured to use this specific docker; extract reference to configuration
+                cleanup_hbp1_ds_minus_i = \
+                    DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
+                                       dag=dag,
+                                       docker_name='hbp1-hbp1',
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p drop_hbase_tables''' % i
+                                       )
+                cleanup_hbp1_ds_minus_i.set_upstream(apps)
+
+                ranks_etcd_prod_cleanup_ds_minus_i = \
+                    DockerBashOperator(task_id='RanksEtcdProdCleanup_DS-%s' % i,
+                                       dag=dag,
+                                       docker_name='hbp1-hbp1',
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
+                                       )
+                ranks_etcd_prod_cleanup_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
+                cleanup_prod.set_upstream(ranks_etcd_prod_cleanup_ds_minus_i)
+
+    #####################
+    # Copy to Prod Apps #
+    #####################
+
+    hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
+                        '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
+
+    if is_prod_env():
+        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        copy_to_prod_app_sdk_hbp1 = \
+            DockerBashOperator(task_id='CopyToProdAppSdkHbp1',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='hbasecopy mrp hbp1 app_sdk_stats_' + hbase_suffix_template
+                           )
+
+        copy_to_prod_app_sdk_hbp1.set_upstream([app_engagement,app_affinity,retention_store,app_usage_pattern_store])
+
+        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        copy_to_prod_cats_hbp1 = \
+            DockerBashOperator(task_id='CopyToProdCatsHbp1',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='hbasecopy mrp hbp1 app_sdk_category_stats_' + hbase_suffix_template
+                               )
+
+        copy_to_prod_cats_hbp1.set_upstream([app_engagement,category_retention_store,usage_pattern_categories])
+
+        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        copy_to_prod_leaders_hbp1 = \
+            DockerBashOperator(task_id='CopyToProdLeadersHbp1',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='hbasecopy mrp hbp1 app_sdk_category_lead_' + hbase_suffix_template
+                               )
+
+        copy_to_prod_leaders_hbp1.set_upstream([app_engagement,retention_leaders,usage_pattern_category_leaders])
+
+        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        copy_to_prod_engage_hbp1 = \
+            DockerBashOperator(task_id='CopyToProdEngageHbp1',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='hbasecopy mrp hbp1 app_eng_rank_' + hbase_suffix_template
+                               )
+
+        copy_to_prod_engage_hbp1.set_upstream(usage_ranks)
+
+        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        copy_to_prod_rank_hbp1 = \
+            DockerBashOperator(task_id='CopyToProdRankHbp1',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='hbasecopy mrp hbp1 cat_mod_app_rank_' + hbase_suffix_template
+                               )
+
+        copy_to_prod_rank_hbp1.set_upstream([usage_ranks,trends])
+
+        copy_to_prod_apps = DummyOperator(task_id='CopyToProdApps',
+                             dag=dag
+                             )
+
+        copy_to_prod_apps.set_upstream([copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
+                                        copy_to_prod_engage_hbp1,copy_to_prod_rank_hbp1])
+
+
+    #########################
+    # Dynamic Settings Apps #
+    #########################
+
+    if is_prod_env():
+        if is_window_dag():
+            update_dyn_set_apps_prod = \
+                DockerBashOperator(task_id='UpdateDynSetAppsProd',
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP'''
+                                   )
+
+            update_dyn_set_apps_prod.set_upstream([copy_to_prod_apps,apps])
+
+
+    #############################
+    # Update Availability Dates #
+    #############################
+
+    if is_prod_env():
+        #TODO check why is it configured on local docker
+        update_usage_ranks_date_prod = \
+            DockerBashOperator(task_id='UpdateUsageRanksDateProd',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP -p usage_ranks -pn UsageRanksProd -um success'''
+                               )
+
+        update_usage_ranks_date_prod.set_upstream(copy_to_prod_rank_hbp1)
 
     return dag
-
 
 
 
