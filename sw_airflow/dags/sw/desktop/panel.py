@@ -43,7 +43,7 @@ group_files_ready = HdfsSensor(task_id='GroupFilesReady',
                                )
 
 
-blocked_ips_base = '/similargroup/data/analytics/daily/blocked_ips'
+blocked_ips_base = '/similargroup/data/analytics/daily/blockedips'
 blocked_ips_ready = HdfsSensor(task_id='BlockedIpsReady',
                                dag=dag,
                                hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
@@ -54,7 +54,7 @@ blocked_ips_ready = HdfsSensor(task_id='BlockedIpsReady',
 panel_report = DockerBashOperator(task_id='PanelStats',
                                   dag=dag,
                                   docker_name='''{{ params.cluster }}''',
-                                  bash_command='''{{ params.execution_dir }}/analytics/scripts/panel/panelReports.sh -d {{ ds }}'''
+                                  bash_command='''{{ params.execution_dir }}/analytics/scripts/panel/panelReports.sh -s {{ ds }} -e {{ ds }}'''
                                   )
 panel_report.set_upstream(group_files_ready)
 panel_report.set_upstream(blocked_ips_ready)
