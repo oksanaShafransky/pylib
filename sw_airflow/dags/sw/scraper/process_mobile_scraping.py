@@ -28,7 +28,7 @@ dag_args = {
     'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 8,
+    'retries': 4,
     'retry_delay': timedelta(minutes=15)
 }
 
