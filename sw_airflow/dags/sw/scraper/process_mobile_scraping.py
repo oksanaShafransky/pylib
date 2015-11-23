@@ -10,16 +10,16 @@ from airflow.operators.sensors import HdfsSensor
 from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
 from sw.airflow.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
+DEFAULT_EXECUTION_DIR = '/similargroup/scraperprod'
 BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_DOCKER = 'mrp'
 DEFAULT_HDFS = 'mrp'
 DEFAULT_CLUSTER = 'mrp'
 CHECK_DATA_PROBLEM_NUM = '20'
-DEPLOY_TO_PROD = False
+DEPLOY_TO_PROD = True
 
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production-mrp'}
+ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
@@ -28,7 +28,7 @@ dag_args = {
     'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 8,
+    'retries': 4,
     'retry_delay': timedelta(minutes=15)
 }
 
