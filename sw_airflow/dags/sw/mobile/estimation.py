@@ -90,14 +90,14 @@ app_engagement_daily_check = \
                        bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/checkAppAndCountryEngagementEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p check_daily'''
                        )
 
-app_engagement_daily_check.set_upstream([app_engagement_estimate])
+app_engagement_daily_check.set_upstream(app_engagement_estimate)
 
 app_engagement_daily = \
     DummyOperator(task_id='AppEngagementDaily',
                   dag=dag
                   )
 
-app_engagement_daily.set_upstream(app_engagement_daily_check)
+app_engagement_daily.set_upstream(app_engagement_estimate)
 
 ###################
 # Mobile Web Main #
@@ -135,7 +135,7 @@ mobile_web_main = \
                   dag=dag
                   )
 
-mobile_web_main.set_upstream(mobile_web_main_estimation_check)
+mobile_web_main.set_upstream(mobile_web_main_estimation)
 
 ########################
 # Mobile Web Daily Cut #
@@ -177,12 +177,21 @@ mobile_web_daily_cut_weights = \
 
 mobile_web_daily_cut_weights.set_upstream(mobile_web_daily_cut_estimation)
 
+mobile_web_daily_cut_weights_check = \
+    DockerBashOperator(task_id='MobileWebDailyCutWeightsCheck',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/check_weight_calculations.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env daily-cut'''
+                       )
+
+mobile_web_daily_cut_weights_check.set_upstream(mobile_web_daily_cut_weights)
+
 mobile_web_daily_cut = \
     DummyOperator(task_id='MobileWebDailyCut',
                   dag=dag
                   )
 
-mobile_web_daily_cut.set_upstream([mobile_web_daily_cut_weights, mobile_web_daily_cut_estimation_check])
+mobile_web_daily_cut.set_upstream(mobile_web_daily_cut_weights)
 
 ##############################
 # Mobile Daily Usage Pattern #
@@ -202,7 +211,7 @@ mobile_daily_usage_pattern.set_upstream(mobile_daily_preliminary)
 ###########
 
 mobile_daily_estimation = \
-    DummyOperator(task_id='MobilDailyEstimation',
+    DummyOperator(task_id='MobileDailyEstimation',
                   dag=dag
                   )
 
