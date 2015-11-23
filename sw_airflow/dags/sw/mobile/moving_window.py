@@ -902,5 +902,5 @@ def generate_dags(mode):
 
 
 
-globals()['dag_apps_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
-globals()['dag_apps_moving_window_daily'] = generate_dags(WINDOW_MODE)
+#globals()['dag_apps_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
+#globals()['dag_apps_moving_window_daily'] = generate_dags(WINDOW_MODE)
