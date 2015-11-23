@@ -6,6 +6,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
+from sw.airflow.operators import DockerBashSensor
 from sw.airflow.airflow_etcd import EtcdHook
 from airflow.operators.python_operator import BranchPythonOperator
 
@@ -22,7 +23,6 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(15, 11, 10),
     'depends_on_past': False,
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
@@ -46,6 +46,12 @@ def generate_dags(mode):
     def is_prod_env():
         return True
 
+    if is_window_dag():
+        dag_args.update({'start_date': datetime(2015, 11, 10)})
+
+    if is_snapshot_dag():
+        dag_args.update({'start_date': datetime(2015, 9, 30)})
+
     dag_template_params_for_mode = dag_template_params.copy()
     mode_dag_template_params = {}
 
@@ -58,12 +64,19 @@ def generate_dags(mode):
     dag_template_params_for_mode.update(mode_dag_template_params)
 
     dag = DAG(dag_id='MobileAppsMovingWindow_' + mode, default_args=dag_args, params=dag_template_params_for_mode,
-              schedule_interval=timedelta(days=1))
+              schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
 
     mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                                  dag=dag,
                                                  task_id="MobileDailyEstimation",
                                                  external_task_id='FinishProcess')
+
+    should_run_mw_window = DockerBashSensor(dag=dag,
+                                            task_id="ShouldRunMwWindow",
+                                            docker_name='''{{ params.cluster }}''',
+                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/should_run_mw_window.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                                            )
+    should_run_mw_window.set_upstream(mobile_daily_estimation)
 
     ########################
     # Prepare HBase Tables #
@@ -76,7 +89,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
                            )
 
-    prepare_hbase_tables.set_upstream(mobile_daily_estimation)
+    prepare_hbase_tables.set_upstream(should_run_mw_window)
 
     #####################
     # App Usage Pattern #
@@ -89,7 +102,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculation'''
                            )
 
-    usage_pattern_calculation.set_upstream(mobile_daily_estimation)
+    usage_pattern_calculation.set_upstream(should_run_mw_window)
 
     app_usage_pattern_store = \
         DockerBashOperator(task_id='AppsUsagePatternStore',
@@ -144,7 +157,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calc_apps'''
                            )
 
-    app_retention_calculation.set_upstream(mobile_daily_estimation)
+    app_retention_calculation.set_upstream(should_run_mw_window)
 
     app_churn_calculation = \
         DockerBashOperator(task_id='AppChurnCalculation',
@@ -268,7 +281,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-affinity/affinity.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} {{ params.affinity_country_filter }} -p app_panel_preparation'''
                            )
 
-    app_affinity_app_precalculation.set_upstream(mobile_daily_estimation)
+    app_affinity_app_precalculation.set_upstream(should_run_mw_window)
 
     # TODO configure parallelsim setting for this task, which is heavier (5 slots)
     app_affinity_country_precalculation = \
@@ -278,7 +291,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-affinity/affinity.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} {{ params.affinity_country_filter }} -p country_panel_preparation'''
                            )
 
-    app_affinity_country_precalculation.set_upstream(mobile_daily_estimation)
+    app_affinity_country_precalculation.set_upstream(should_run_mw_window)
 
     app_affinity_precalculation = DummyOperator(task_id='AppAffinityPrecalculation',
                                                 dag=dag
@@ -331,7 +344,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/web/second_stage_tests.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -wenv daily-cut -m {{ params.mode }} -mt {{ params.mode_type }} -p prepare_total_device_count'''
                                )
-        mobile_web_predict_validate_preparation.set_upstream(mobile_daily_estimation)
+        mobile_web_predict_validate_preparation.set_upstream(should_run_mw_window)
 
         # TODO configure parallelsim setting for this task, which is heavier (20 slots)
         mobile_web_predict_validate = \
@@ -375,7 +388,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/web/mobile_web_gaps_filler.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
-    mobile_web_gaps_filler.set_upstream(mobile_daily_estimation)
+    mobile_web_gaps_filler.set_upstream(should_run_mw_window)
 
     # TODO I should verify: is the task ID right? should we concatenate the date?
     # TODO configure parallelsim setting for this task, which is heavier (10 slots)
@@ -390,7 +403,7 @@ def generate_dags(mode):
         mobile_web_compare_est_to_qc.set_upstream(mobile_web_first_stage_agg)
 
     # TODO configure parallelsim setting for this task, which is heavier (10 slots)
-    mobile_web_first_stage_agg.set_upstream(mobile_daily_estimation)
+    mobile_web_first_stage_agg.set_upstream(should_run_mw_window)
 
     # TODO I should verify: is the task ID right? should we concatenate the date?
     # TODO configure parallelsim setting for this task, which is heavier (10 slots)
@@ -728,11 +741,12 @@ def generate_dags(mode):
     # Apps Clean-Up Stage #
     #######################
 
-    apps_cleanup_stage = DummyOperator(task_id='AppsCleanupStage',
-                                       dag=dag
-                                       )
-
     if is_window_dag():
+
+        apps_cleanup_stage = DummyOperator(task_id='AppsCleanupStage',
+                                           dag=dag
+                                           )
+
         for i in range(3,8):
             apps_cleanup_stage_dt_minus_i = \
                 DockerBashOperator(task_id='AppsCleanupStage_DT-%s' % i,
