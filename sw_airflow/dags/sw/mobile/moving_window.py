@@ -787,7 +787,7 @@ def generate_dags(mode):
                 cleanup_hbp1_ds_minus_i = \
                     DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
                                        dag=dag,
-                                       docker_name='hbp1-hbp1',
+                                       docker_name='mrp-hbp1',
                                        bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p drop_hbase_tables''' % i
                                        )
                 cleanup_hbp1_ds_minus_i.set_upstream(apps)
@@ -795,7 +795,7 @@ def generate_dags(mode):
                 ranks_etcd_prod_cleanup_ds_minus_i = \
                     DockerBashOperator(task_id='RanksEtcdProdCleanup_DS-%s' % i,
                                        dag=dag,
-                                       docker_name='hbp1-hbp1',
+                                       docker_name='mrp-hbp1',
                                        bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
                                        )
                 ranks_etcd_prod_cleanup_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
