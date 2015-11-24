@@ -217,3 +217,10 @@ mobile_daily_estimation = \
 
 mobile_daily_estimation.set_upstream(
     [mobile_web_daily_cut, mobile_web_main, app_engagement_daily, mobile_daily_usage_pattern])
+
+register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
+                                   dag=dag,
+                                   path='''services/mobile-daily-est/daily/{{ ds }}''',
+                                   root=ETCD_ENV_ROOT['PRODUCTION']
+                                   )
+register_success.set_upstream(mobile_daily_estimation)
