@@ -35,11 +35,11 @@ retention_targets = [
     ['/similargroup/data/raw-stats-japan', 1000]
     ]
 
-for entry in retention_targets:
-    path, retention_period = entry
+for i in range(0, len(retention_targets)):
+    path, retention_period = retention_targets[i]
 
     backup_and_retention_op = \
-        DockerBashOperator(task_id='HdfsBackupAndRetentionTask_path=%s' % (path),
+        DockerBashOperator(task_id='HdfsBackupAndRetentionTask-%s' % (i),
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''python {{ params.execution_dir }}/utils/scripts/backup_and_retention.py --path %s --retention_days %s --log_level %s --dryrun %s''' % (path, retention_period, 'DEBUG', 'True')
