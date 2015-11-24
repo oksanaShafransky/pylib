@@ -273,7 +273,7 @@ def generate_dags(mode):
 
     dag_template_params_for_mode.update({'affinity_country_filter': affinity_country_filter})
 
-    # TODO configure parallelsim setting for this task, which is heavier (5 slots)
+    # TODO configure parallelism setting for this task, which is heavier (5 slots)
     app_affinity_app_precalculation = \
         DockerBashOperator(task_id='AppAffinityAppPrecalculation',
                            dag=dag,
@@ -283,7 +283,7 @@ def generate_dags(mode):
 
     app_affinity_app_precalculation.set_upstream(should_run_mw_window)
 
-    # TODO configure parallelsim setting for this task, which is heavier (5 slots)
+    # TODO configure parallelism setting for this task, which is heavier (5 slots)
     app_affinity_country_precalculation = \
         DockerBashOperator(task_id='AppAffinityCountryPrecalculation',
                            dag=dag,
@@ -298,7 +298,7 @@ def generate_dags(mode):
                                                 )
     app_affinity_precalculation.set_upstream([app_affinity_app_precalculation, app_affinity_country_precalculation])
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     app_affinity_pairs = \
         DockerBashOperator(task_id='AppAffinityPairs',
                            dag=dag,
@@ -337,7 +337,7 @@ def generate_dags(mode):
 
     mobile_web_train_model = None
     if is_snapshot_dag():
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_predict_validate_preparation = \
             DockerBashOperator(task_id='MobileWebPredictValidatePreparation',
                                dag=dag,
@@ -346,7 +346,7 @@ def generate_dags(mode):
                                )
         mobile_web_predict_validate_preparation.set_upstream(should_run_mw_window)
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_predict_validate = \
             DockerBashOperator(task_id='MobileWebPredictValidate',
                                dag=dag,
@@ -357,7 +357,7 @@ def generate_dags(mode):
         # TODO add dependency on mobile_web_adjust_calc
         mobile_web_predict_validate.set_upstream([mobile_web_predict_validate_preparation])
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_compare_est_to_qc = \
             DockerBashOperator(task_id='MobileWebCompareEstToQC',
                                dag=dag,
@@ -365,7 +365,7 @@ def generate_dags(mode):
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/web/compare_estimations_to_qc.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -sm -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_train_model = \
             DockerBashOperator(task_id='MobileWebTrainModel',
                                dag=dag,
@@ -373,7 +373,7 @@ def generate_dags(mode):
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/web/train_mobile_web_model.sh -d {{ ds }} -fd {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_model_validate = \
             DockerBashOperator(task_id='MobileWebModelValidate',
                                dag=dag,
@@ -391,7 +391,7 @@ def generate_dags(mode):
     mobile_web_gaps_filler.set_upstream(should_run_mw_window)
 
     # TODO I should verify: is the task ID right? should we concatenate the date?
-    # TODO configure parallelsim setting for this task, which is heavier (10 slots)
+    # TODO configure parallelism setting for this task, which is heavier (10 slots)
     mobile_web_first_stage_agg = \
         DockerBashOperator(task_id='MobileWebFirstStageAgg',
                            dag=dag,
@@ -402,11 +402,11 @@ def generate_dags(mode):
         mobile_web_train_model.set_upstream(mobile_web_first_stage_agg)
         mobile_web_compare_est_to_qc.set_upstream(mobile_web_first_stage_agg)
 
-    # TODO configure parallelsim setting for this task, which is heavier (10 slots)
+    # TODO configure parallelism setting for this task, which is heavier (10 slots)
     mobile_web_first_stage_agg.set_upstream(should_run_mw_window)
 
     # TODO I should verify: is the task ID right? should we concatenate the date?
-    # TODO configure parallelsim setting for this task, which is heavier (10 slots)
+    # TODO configure parallelism setting for this task, which is heavier (10 slots)
     mobile_web_adjust_calc_intermediate = \
         DockerBashOperator(task_id='MobileWebAdjustCalcIntermediate',
                            dag=dag,
@@ -418,7 +418,7 @@ def generate_dags(mode):
     else:
         mobile_web_adjust_calc_intermediate.set_upstream(mobile_web_first_stage_agg)
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_adjust_calc = \
         DockerBashOperator(task_id='MobileWebAdjustCalc',
                            dag=dag,
@@ -427,7 +427,7 @@ def generate_dags(mode):
                            )
     mobile_web_adjust_calc.set_upstream([mobile_web_gaps_filler,mobile_web_adjust_calc_intermediate])
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_check_daily_estimations = \
         DockerBashOperator(task_id='MobileWebCheckDailyEstimations',
                            dag=dag,
@@ -436,7 +436,7 @@ def generate_dags(mode):
                            )
     mobile_web_check_daily_estimations.set_upstream(mobile_web_adjust_calc)
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_calc_subdomains = \
         DockerBashOperator(task_id='MobileWebCalcSubdomains',
                            dag=dag,
@@ -445,7 +445,7 @@ def generate_dags(mode):
                            )
     mobile_web_calc_subdomains.set_upstream([mobile_web_adjust_calc, prepare_hbase_tables])
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_popular_pages = \
         DockerBashOperator(task_id='MobileWebPopularPages',
                            dag=dag,
@@ -512,7 +512,7 @@ def generate_dags(mode):
             sum_ww_day_i.set_upstream(mobile_web_adjust_calc)
             sum_ww_all.set_upstream(sum_ww_day_i)
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_adjust_store = \
         DockerBashOperator(task_id='MobileWebAdjustStore',
                            dag=dag,
@@ -629,7 +629,7 @@ def generate_dags(mode):
                                  )
 
     if is_window_dag():
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         trends_28_days = \
             DockerBashOperator(task_id='Trends28Days',
                                dag=dag,
@@ -638,7 +638,7 @@ def generate_dags(mode):
                                )
         trends_28_days.set_upstream([usage_ranks])
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         trends_7_days = \
             DockerBashOperator(task_id='Trends7Days',
                                dag=dag,
@@ -809,7 +809,7 @@ def generate_dags(mode):
                         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
 
     if is_prod_env():
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_app_sdk_hbp1 = \
             DockerBashOperator(task_id='CopyToProdAppSdkHbp1',
                            dag=dag,
@@ -819,7 +819,7 @@ def generate_dags(mode):
 
         copy_to_prod_app_sdk_hbp1.set_upstream([app_engagement,app_affinity,retention_store,app_usage_pattern_store])
 
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_cats_hbp1 = \
             DockerBashOperator(task_id='CopyToProdCatsHbp1',
                                dag=dag,
@@ -829,7 +829,7 @@ def generate_dags(mode):
 
         copy_to_prod_cats_hbp1.set_upstream([app_engagement,category_retention_store,usage_pattern_categories])
 
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_leaders_hbp1 = \
             DockerBashOperator(task_id='CopyToProdLeadersHbp1',
                                dag=dag,
@@ -839,7 +839,7 @@ def generate_dags(mode):
 
         copy_to_prod_leaders_hbp1.set_upstream([app_engagement,retention_leaders,usage_pattern_category_leaders])
 
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_engage_hbp1 = \
             DockerBashOperator(task_id='CopyToProdEngageHbp1',
                                dag=dag,
@@ -849,7 +849,7 @@ def generate_dags(mode):
 
         copy_to_prod_engage_hbp1.set_upstream(usage_ranks)
 
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
+        # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_rank_hbp1 = \
             DockerBashOperator(task_id='CopyToProdRankHbp1',
                                dag=dag,
