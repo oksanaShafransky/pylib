@@ -29,35 +29,35 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
                        'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE}
 
-# dag = DAG(dag_id='DailyAppRanksPrecalculation', default_args=dag_args, params=dag_template_params,
-#           schedule_interval=timedelta(days=1))
-#
-# mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
-#                                              dag=dag,
-#                                              task_id="MobileDailyEstimation",
-#                                              external_task_id='FinishProcess')
-#
-# suppl_eng = \
-#     DockerBashOperator(task_id='SupplEng',
-#                        dag=dag,
-#                        docker_name='''{{ params.cluster }}''',
-#                        bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -eo -p aggregate'''
-#                        )
-#
-# suppl_eng.set_upstream(mobile_daily_estimation)
-#
-# suppl_ranks = \
-#     DockerBashOperator(task_id='SupplRanks',
-#                        dag=dag,
-#                        docker_name='''{{ params.cluster }}''',
-#                        bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -p join_scores_info,cat_ranks'''
-#                        )
-#
-# suppl_ranks.set_upstream(suppl_eng)
-#
-# daily_app_ranks_suppl = \
-#     DummyOperator(task_id='DailyAppRanksSuppl',
-#                   dag=dag
-#                   )
-#
-# daily_app_ranks_suppl.set_upstream(suppl_ranks)
+dag = DAG(dag_id='DailyAppRanksPrecalculation', default_args=dag_args, params=dag_template_params,
+       schedule_interval=timedelta(days=1))
+
+mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
+                                          dag=dag,
+                                          task_id="MobileDailyEstimation",
+                                          external_task_id='FinishProcess')
+
+suppl_eng = \
+ DockerBashOperator(task_id='SupplEng',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -eo -p aggregate'''
+                    )
+
+suppl_eng.set_upstream(mobile_daily_estimation)
+
+suppl_ranks = \
+ DockerBashOperator(task_id='SupplRanks',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -p join_scores_info,cat_ranks'''
+                    )
+
+suppl_ranks.set_upstream(suppl_eng)
+
+daily_app_ranks_suppl = \
+ DummyOperator(task_id='DailyAppRanksSuppl',
+               dag=dag
+               )
+
+daily_app_ranks_suppl.set_upstream(suppl_ranks)
