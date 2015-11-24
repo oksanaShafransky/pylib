@@ -87,7 +87,7 @@ app_engagement_daily_check = \
     DockerBashOperator(task_id='AppEngagementDailyCheck',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/checkAppAndCountryEngagementEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p check_daily'''
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/qa/checkAppAndCountryEngagementEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p check_daily'''
                        )
 
 app_engagement_daily_check.set_upstream(app_engagement_estimate)
