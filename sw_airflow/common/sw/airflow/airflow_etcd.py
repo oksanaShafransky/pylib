@@ -20,7 +20,7 @@ class EtcdHook(BaseHook):
 
     def get_conn(self):
         connections = self.get_connections(self.etcd_conn_id)
-        client = Client(connections[0].host, connections[0].port)
+        client = Client(tuple((conn.host, conn.port) for conn in connections))
         return client
 
     def get_record(self, root, path):
