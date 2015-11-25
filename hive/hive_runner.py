@@ -207,6 +207,10 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
     #"-hiveconf", "mapreduce.map.memory.mb=5320"
     #"-hiveconf", "hive.stats.autogather=false",
     #"-hiveconf", "hive.enforce.bucketing=true",
+
+    #Can use:
+    #export HIVE_OPTS="$HIVE_OPTS -hiveconf mapreduce.map.memory.mb=4096 -hiveconf mapreduce.reduce.memory.mb=5120"
+
     #for mw referrals
 
     cmd = ["hive", "-S", "-e", '"%s"' % hql,
