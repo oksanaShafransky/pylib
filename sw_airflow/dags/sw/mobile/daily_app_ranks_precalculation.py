@@ -17,12 +17,12 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(15, 11, 10),
-    'depends_on_past': False,
+    'depends_on_past': True,
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
-    'email_on_retry': False,
-    'retries': 2,
-    'retry_delay': timedelta(minutes=15)
+    'email_on_retry': True,
+    'retries': 20,
+    'retry_delay': timedelta(minutes=30)
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,

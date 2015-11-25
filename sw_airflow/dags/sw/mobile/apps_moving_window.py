@@ -28,7 +28,7 @@ dag_args = {
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 2,
+    'retries': 3,
     'retry_delay': timedelta(minutes=15)
 }
 
@@ -463,15 +463,6 @@ def generate_dags(mode):
     apps.set_upstream([app_engagement,app_affinity,retention_store,app_retention_categories,retention_leaders,app_usage_pattern_store,usage_pattern_categories,usage_pattern_category_leaders,usage_ranks,export_ranks,trends])
 
 
-    update_dynamic_settings = \
-        DockerBashOperator(task_id='UpdateDynamicSettings',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p apps_sdk,apps_cross'''
-                           )
-    update_dynamic_settings.set_upstream(apps)
-
-
     #######################
     # Top Apps for Sanity #
     #######################
@@ -492,19 +483,19 @@ def generate_dags(mode):
 
     if is_window_dag():
 
-        apps_cleanup_stage = DummyOperator(task_id='AppsCleanupStage',
+        cleanup_stage = DummyOperator(task_id='CleanupStage',
                                            dag=dag
                                            )
 
         for i in range(3,8):
-            apps_cleanup_stage_dt_minus_i = \
-                DockerBashOperator(task_id='AppsCleanupStage_DT-%s' % i,
+            cleanup_stage_dt_minus_i = \
+                DockerBashOperator(task_id='CleanupStage_DT-%s' % i,
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i
                                    )
-            apps_cleanup_stage_dt_minus_i.set_upstream(apps)
-            apps_cleanup_stage.set_upstream(apps_cleanup_stage_dt_minus_i)
+            cleanup_stage_dt_minus_i.set_upstream(apps)
+            cleanup_stage.set_upstream(cleanup_stage_dt_minus_i)
 
     ############################
     # Local Availability Dates #
@@ -521,37 +512,8 @@ def generate_dags(mode):
 
 
     ################
-    # Cleanup Prod #
+    # Copy to Prod #
     ################
-
-    if is_prod_env():
-        if is_window_dag():
-
-            cleanup_prod = DummyOperator(task_id='CleanupProd',
-                                 dag=dag
-                                 )
-
-            for i in range(3,8):
-                cleanup_hbp1_ds_minus_i = \
-                    DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
-                                       dag=dag,
-                                       docker_name='''{{ params.hbase_cluster }}''',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
-                                       )
-                cleanup_hbp1_ds_minus_i.set_upstream(apps)
-
-                ranks_etcd_prod_cleanup_ds_minus_i = \
-                    DockerBashOperator(task_id='RanksEtcdProdCleanup_DS-%s' % i,
-                                       dag=dag,
-                                       docker_name='''{{ params.hbase_cluster }}''',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
-                                       )
-                ranks_etcd_prod_cleanup_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
-                cleanup_prod.set_upstream(ranks_etcd_prod_cleanup_ds_minus_i)
-
-    #####################
-    # Copy to Prod Apps #
-    #####################
 
     hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
                         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
@@ -607,28 +569,66 @@ def generate_dags(mode):
 
         copy_to_prod_rank_hbp1.set_upstream([usage_ranks,trends])
 
-        copy_to_prod_apps = DummyOperator(task_id='CopyToProdApps',
+        copy_to_prod = DummyOperator(task_id='CopyToProd',
                              dag=dag
                              )
 
-        copy_to_prod_apps.set_upstream([copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
+        copy_to_prod.set_upstream([copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
                                         copy_to_prod_engage_hbp1,copy_to_prod_rank_hbp1])
+
+
+    ################
+    # Cleanup Prod #
+    ################
+
+    if is_prod_env():
+        if is_window_dag():
+
+            cleanup_prod = DummyOperator(task_id='CleanupProd',
+                                         dag=dag
+                                         )
+
+            for i in range(3,8):
+                cleanup_hbp1_ds_minus_i = \
+                    DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
+                                       dag=dag,
+                                       docker_name='''{{ params.hbase_cluster }}''',
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
+                                       )
+                cleanup_hbp1_ds_minus_i.set_upstream([apps,copy_to_prod])
+
+                cleanup_ranks_etcd_prod_ds_minus_i = \
+                    DockerBashOperator(task_id='CleanupRanksEtcdProd_DS-%s' % i,
+                                       dag=dag,
+                                       docker_name='''{{ params.hbase_cluster }}''',
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
+                                       )
+                cleanup_ranks_etcd_prod_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
+                cleanup_prod.set_upstream(cleanup_ranks_etcd_prod_ds_minus_i)
 
 
     #########################
     # Dynamic Settings Apps #
     #########################
 
+    update_dynamic_settings_stage = \
+        DockerBashOperator(task_id='UpdateDynamicSettingsStage',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p apps_sdk,apps_cross'''
+                           )
+    update_dynamic_settings_stage.set_upstream(apps)
+
     if is_prod_env():
         if is_window_dag():
-            update_dyn_set_apps_prod = \
-                DockerBashOperator(task_id='UpdateDynSetAppsProd',
+            update_dynamic_settings_prod = \
+                DockerBashOperator(task_id='UpdateDynamicSettingsProd',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP'''
                                    )
 
-            update_dyn_set_apps_prod.set_upstream([copy_to_prod_apps,apps])
+            update_dynamic_settings_prod.set_upstream([copy_to_prod,apps])
 
 
     #############################
