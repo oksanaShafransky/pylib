@@ -18,6 +18,7 @@ WINDOW_MODE = 'window'
 SNAPHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
+DEFAULT_HBASE_CLUSTER = 'mrp-hbp1'
 
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
@@ -32,7 +33,8 @@ dag_args = {
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
+                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION',
+                       'cluster': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER}
 
 
 def generate_dags(mode):
@@ -530,19 +532,18 @@ def generate_dags(mode):
                                  )
 
             for i in range(3,8):
-                #TODO check why is it configured to use this specific docker; extract reference to configuration
                 cleanup_hbp1_ds_minus_i = \
                     DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
                                        dag=dag,
-                                       docker_name='mrp-hbp1',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p drop_hbase_tables''' % i
+                                       docker_name='''{{ params.hbase_cluster }}''',
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
                                        )
                 cleanup_hbp1_ds_minus_i.set_upstream(apps)
 
                 ranks_etcd_prod_cleanup_ds_minus_i = \
                     DockerBashOperator(task_id='RanksEtcdProdCleanup_DS-%s' % i,
                                        dag=dag,
-                                       docker_name='mrp-hbp1',
+                                       docker_name='''{{ params.hbase_cluster }}''',
                                        bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
                                        )
                 ranks_etcd_prod_cleanup_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
