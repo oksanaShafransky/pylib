@@ -45,7 +45,7 @@ for i in range(0, len(retention_targets)):
         DockerBashOperator(task_id='HdfsBackupAndRetentionTask-%s' % (i),
                            dag=dag,
                            docker_name='''{{ params.docker_image }}''',
-                           bash_command='''python {{ params.execution_dir }}/utils/scripts/backup_and_retention.py --path %s --backup_required %s --retention_days %s --log_level %s --dryrun %s''' % (path, retention_period, backup_required, 'DEBUG', 'False')
+                           bash_command='''python {{ params.execution_dir }}/utils/scripts/backup_and_retention.py --path %s --backup_required %s --retention_days %s --log_level %s --dryrun %s''' % (path, backup_required, retention_period, 'DEBUG', 'False')
                            )
 
 
