@@ -261,6 +261,7 @@ if DEPLOY_TO_PROD:
     link_prod.set_upstream(init)
     link_prod.set_upstream(ps_info)
     link_prod.set_upstream(it_info)
+    link_prod.set_upstream(link)
     link_prod.set_downstream(deploy_prod)
 
 link_stage = DockerBashOperator(task_id='LinkAppsWithSitesStage',
