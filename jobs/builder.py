@@ -194,7 +194,7 @@ class JobBuilder:
         return self
 
     def pool(self, pool):
-        self.args += ['--jobconf', ('mapred.fairscheduler.pool=%s' % pool)]
+        self.args += ['--jobconf', ('mapreduce.job.queuename=%s' % pool)]
         return self
 
     def num_reducers(self, reducers):
