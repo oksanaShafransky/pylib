@@ -61,7 +61,7 @@ app_source_weight_smoothing_calculation = \
     DockerBashOperator(task_id='AppSourceWeightSmoothingCalculation',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/app_engagement_daily.sh -f -d {{ ds }} -bd {{ base_hdfs_dir }} -env android_fix -p sqs_weight_smoothing_calc'''
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/app_engagement_daily.sh -f -d {{ ds }} -bd {{ base_hdfs_dir }} -env android_fix_source -p sqs_weight_smoothing_calc'''
                        )
 
 app_source_weight_smoothing_calculation.set_upstream(app_source_weight_calculation)
@@ -86,7 +86,7 @@ app_engagement_estimate = \
     DockerBashOperator(task_id='AppEngagementEstimate',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/app_engagement_daily.sh -f -d {{ ds }} -bd {{ base_hdfs_dir }} -env android_fix -p estimate'''
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/app_engagement_daily.sh -f -d {{ ds }} -bd {{ base_hdfs_dir }} -env android_fix_source -p estimate'''
                        )
 
 app_engagement_estimate.set_upstream([app_engagement_prior,app_source_quality_score])
