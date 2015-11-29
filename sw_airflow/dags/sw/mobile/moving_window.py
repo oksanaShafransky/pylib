@@ -562,9 +562,9 @@ def generate_dags(mode):
     # App Ranks #
     #############
 
-    daily_app_ranks_precalculation = ExternalTaskSensor(external_dag_id='DailyAppRanksPrecalculation',
+    daily_app_ranks_precalculation = ExternalTaskSensor(external_dag_id='DailyAppRanksBackfill',
                                                  dag=dag,
-                                                 task_id="DailyAppRanksPrecalculation",
+                                                 task_id="DailyAppRanksBackfill",
                                                  external_task_id='DailyAppRanksSuppl')
 
     usage_ranks_main = \
@@ -669,7 +669,6 @@ def generate_dags(mode):
                                             dag=dag
                                             )
 
-    #TODO check why is it configured on local docker
     copy_to_prod_mobile_web_hbp1 = \
         DockerBashOperator(task_id='CopyToProdMobileWebHbp1',
                            dag=dag,
@@ -761,7 +760,6 @@ def generate_dags(mode):
     # Local Availability Dates #
     ############################
 
-    #TODO check why is it configured on local docker
     update_usage_ranks_date_stage = \
         DockerBashOperator(task_id='UpdateUsageRanksDateStage',
                        dag=dag,
@@ -888,7 +886,6 @@ def generate_dags(mode):
     #############################
 
     if is_prod_env():
-        #TODO check why is it configured on local docker
         update_usage_ranks_date_prod = \
             DockerBashOperator(task_id='UpdateUsageRanksDateProd',
                                dag=dag,
