@@ -7,6 +7,7 @@ from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 from sw.airflow.operators import DockerBashSensor
+from sw.airflow.operators import  DockerCopyHbaseTableOperator
 from sw.airflow.airflow_etcd import EtcdHook
 from airflow.operators.python_operator import BranchPythonOperator
 
@@ -134,7 +135,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='UsagePatternCategoryLeaders',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p category_leaders'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p category_leaders'''
                            )
 
     usage_pattern_category_leaders.set_upstream([prepare_hbase_tables,
@@ -344,7 +345,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='AppEngagementSanityCheck',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/qa/checkAppAndCountryEngagementEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main  -m {{ params.mode }} -mt {{ params.mode_type }} -p check_window'''
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/qa/checkAppAndCountryEngagementEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p check_window'''
                                )
         app_engagement_sanity_check.set_upstream(app_engagement)
 
@@ -353,10 +354,10 @@ def generate_dags(mode):
     # App Ranks #
     #############
 
-    daily_app_ranks_precalculation = ExternalTaskSensor(external_dag_id='DailyAppRanksPrecalculation',
+    daily_app_ranks_backfill = ExternalTaskSensor(external_dag_id='DailyAppRanksBackfill',
                                                  dag=dag,
-                                                 task_id="DailyAppRanksPrecalculation",
-                                                 external_task_id='DailyAppRanksSuppl')
+                                                 task_id="DailyAppRanksBackfill",
+                                                 external_task_id='DailyAppRanksBackfill')
 
     usage_ranks_main = \
         DockerBashOperator(task_id='UsageRanksMain',
@@ -364,7 +365,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
-    usage_ranks_main.set_upstream([daily_app_ranks_precalculation,app_engagement])
+    usage_ranks_main.set_upstream([daily_app_ranks_backfill,app_engagement])
 
     usage_ranks = DummyOperator(task_id='UsageRanks',
                               dag=dag
@@ -518,54 +519,67 @@ def generate_dags(mode):
                         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
 
     if is_prod_env():
+
+
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_app_sdk_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdAppSdkHbp1',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='hbasecopy mrp hbp1 app_sdk_stats_' + hbase_suffix_template
-                           )
-
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdAppSdkHbp1',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster='hbp1',
+                table_name_template= 'app_sdk_stats_' + hbase_suffix_template
+            )
         copy_to_prod_app_sdk_hbp1.set_upstream([app_engagement,app_affinity,retention_store,app_usage_pattern_store])
 
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_cats_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdCatsHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 app_sdk_category_stats_' + hbase_suffix_template
-                               )
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdCatsHbp1',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster='hbp1',
+                table_name_template= 'app_sdk_category_stats_' + hbase_suffix_template
+            )
 
         copy_to_prod_cats_hbp1.set_upstream([app_engagement,category_retention_store,usage_pattern_categories])
 
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_leaders_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdLeadersHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 app_sdk_category_lead_' + hbase_suffix_template
-                               )
-
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdLeadersHbp1',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster='hbp1',
+                table_name_template= 'app_sdk_category_lead_' + hbase_suffix_template
+            )
         copy_to_prod_leaders_hbp1.set_upstream([app_engagement,retention_leaders,usage_pattern_category_leaders])
 
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_engage_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdEngageHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 app_eng_rank_' + hbase_suffix_template
-                               )
-
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdEngageHbp1',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster='hbp1',
+                table_name_template= 'app_eng_rank_' + hbase_suffix_template
+            )
         copy_to_prod_engage_hbp1.set_upstream(usage_ranks)
 
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_rank_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdRankHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 cat_mod_app_rank_' + hbase_suffix_template
-                               )
-
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdRankHbp1',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster='hbp1',
+                table_name_template= 'cat_mod_app_rank_' + hbase_suffix_template
+            )
         copy_to_prod_rank_hbp1.set_upstream([usage_ranks,trends])
 
         copy_to_prod = DummyOperator(task_id='CopyToProd',
