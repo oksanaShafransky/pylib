@@ -49,7 +49,7 @@ def generate_dags(mode):
         return True
 
     if is_window_dag():
-        dag_args.update({'start_date': datetime(2015, 11, 30)})
+        dag_args.update({'start_date': datetime(2015, 11, 29)})
 
     if is_snapshot_dag():
         dag_args.update({'start_date': datetime(2015, 11, 30)})
