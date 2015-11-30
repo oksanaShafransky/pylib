@@ -35,7 +35,7 @@ dag = DAG(dag_id='DailyAppRanksBackfill', default_args=dag_args, params=dag_temp
 mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                           dag=dag,
                                           task_id="MobileDailyEstimation",
-                                          external_task_id='FinishProcess')
+                                          external_task_id='MobileDailyEstimation')
 
 suppl_eng = \
  DockerBashOperator(task_id='SupplEng',
