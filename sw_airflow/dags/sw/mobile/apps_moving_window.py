@@ -18,6 +18,7 @@ WINDOW_MODE = 'window'
 SNAPHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
+DEFAULT_HBASE_CLUSTER = 'mrp-hbp1'
 
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
@@ -27,12 +28,13 @@ dag_args = {
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 2,
+    'retries': 3,
     'retry_delay': timedelta(minutes=15)
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
+                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION',
+                       'cluster': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER}
 
 
 def generate_dags(mode):
@@ -47,10 +49,10 @@ def generate_dags(mode):
         return True
 
     if is_window_dag():
-        dag_args.update({'start_date': datetime(2015, 11, 10)})
+        dag_args.update({'start_date': datetime(2015, 11, 30)})
 
     if is_snapshot_dag():
-        dag_args.update({'start_date': datetime(2015, 9, 30)})
+        dag_args.update({'start_date': datetime(2015, 11, 30)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     mode_dag_template_params = {}
@@ -71,13 +73,6 @@ def generate_dags(mode):
                                                  task_id="MobileDailyEstimation",
                                                  external_task_id='FinishProcess')
 
-    should_run_mw_window = DockerBashSensor(dag=dag,
-                                            task_id="ShouldRunMwWindow",
-                                            docker_name='''{{ params.cluster }}''',
-                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/should_run_mw_window.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                                            )
-    should_run_mw_window.set_upstream(mobile_daily_estimation)
-
     ########################
     # Prepare HBase Tables #
     ########################
@@ -86,10 +81,10 @@ def generate_dags(mode):
         DockerBashOperator(task_id='PrepareHBaseTables',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p tables'''
                            )
 
-    prepare_hbase_tables.set_upstream(should_run_mw_window)
+    prepare_hbase_tables.set_upstream(mobile_daily_estimation)
 
     #####################
     # App Usage Pattern #
@@ -102,7 +97,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculation'''
                            )
 
-    usage_pattern_calculation.set_upstream(should_run_mw_window)
+    usage_pattern_calculation.set_upstream(mobile_daily_estimation)
 
     app_usage_pattern_store = \
         DockerBashOperator(task_id='AppsUsagePatternStore',
@@ -157,7 +152,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calc_apps'''
                            )
 
-    app_retention_calculation.set_upstream(should_run_mw_window)
+    app_retention_calculation.set_upstream(mobile_daily_estimation)
 
     app_churn_calculation = \
         DockerBashOperator(task_id='AppChurnCalculation',
@@ -281,7 +276,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-affinity/affinity.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} {{ params.affinity_country_filter }} -p app_panel_preparation'''
                            )
 
-    app_affinity_app_precalculation.set_upstream(should_run_mw_window)
+    app_affinity_app_precalculation.set_upstream(mobile_daily_estimation)
 
     # TODO configure parallelism setting for this task, which is heavier (5 slots)
     app_affinity_country_precalculation = \
@@ -291,7 +286,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-affinity/affinity.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} {{ params.affinity_country_filter }} -p country_panel_preparation'''
                            )
 
-    app_affinity_country_precalculation.set_upstream(should_run_mw_window)
+    app_affinity_country_precalculation.set_upstream(mobile_daily_estimation)
 
     app_affinity_precalculation = DummyOperator(task_id='AppAffinityPrecalculation',
                                                 dag=dag
@@ -331,210 +326,6 @@ def generate_dags(mode):
                                  )
     app_affinity.set_upstream(app_affinity_store)
 
-    ##############
-    # Mobile Web #
-    ##############
-
-    mobile_web_train_model = None
-    if is_snapshot_dag():
-        # TODO configure parallelism setting for this task, which is heavier (20 slots)
-        mobile_web_predict_validate_preparation = \
-            DockerBashOperator(task_id='MobileWebPredictValidatePreparation',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/second_stage_tests.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -wenv daily-cut -m {{ params.mode }} -mt {{ params.mode_type }} -p prepare_total_device_count'''
-                               )
-        mobile_web_predict_validate_preparation.set_upstream(should_run_mw_window)
-
-        # TODO configure parallelism setting for this task, which is heavier (20 slots)
-        mobile_web_predict_validate = \
-            DockerBashOperator(task_id='MobileWebPredictValidate',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/second_stage_tests.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -wenv daily-cut -m {{ params.mode }} -mt {{ params.mode_type }} -p prepare_predictions_for_test,verify_predictions'''
-                               )
-
-        # TODO add dependency on mobile_web_adjust_calc
-        mobile_web_predict_validate.set_upstream([mobile_web_predict_validate_preparation])
-
-        # TODO configure parallelism setting for this task, which is heavier (20 slots)
-        mobile_web_compare_est_to_qc = \
-            DockerBashOperator(task_id='MobileWebCompareEstToQC',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/compare_estimations_to_qc.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -sm -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                               )
-
-        # TODO configure parallelism setting for this task, which is heavier (20 slots)
-        mobile_web_train_model = \
-            DockerBashOperator(task_id='MobileWebTrainModel',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/train_mobile_web_model.sh -d {{ ds }} -fd {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                               )
-
-        # TODO configure parallelism setting for this task, which is heavier (20 slots)
-        mobile_web_model_validate = \
-            DockerBashOperator(task_id='MobileWebModelValidate',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/second_stage_tests.sh -d {{ ds }} -fd {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -wenv daily-cut -m {{ params.mode }} -mt {{ params.mode_type }} -p check_model'''
-                               )
-        mobile_web_model_validate.set_upstream(mobile_web_train_model)
-
-    mobile_web_gaps_filler = \
-        DockerBashOperator(task_id='MobileWebGapsFiller',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/mobile_web_gaps_filler.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                           )
-    mobile_web_gaps_filler.set_upstream(should_run_mw_window)
-
-    # TODO I should verify: is the task ID right? should we concatenate the date?
-    # TODO configure parallelism setting for this task, which is heavier (10 slots)
-    mobile_web_first_stage_agg = \
-        DockerBashOperator(task_id='MobileWebFirstStageAgg',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/first_stage_agg.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m window -mt last-28'''
-                           )
-    if is_snapshot_dag():
-        mobile_web_train_model.set_upstream(mobile_web_first_stage_agg)
-        mobile_web_compare_est_to_qc.set_upstream(mobile_web_first_stage_agg)
-
-    # TODO configure parallelism setting for this task, which is heavier (10 slots)
-    mobile_web_first_stage_agg.set_upstream(should_run_mw_window)
-
-    # TODO I should verify: is the task ID right? should we concatenate the date?
-    # TODO configure parallelism setting for this task, which is heavier (10 slots)
-    mobile_web_adjust_calc_intermediate = \
-        DockerBashOperator(task_id='MobileWebAdjustCalcIntermediate',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/adjust_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -wenv daily-cut -m window -mt last-28 -p prepare_data,predict'''
-                           )
-    if is_snapshot_dag():
-        mobile_web_adjust_calc_intermediate.set_upstream([mobile_web_train_model, mobile_web_first_stage_agg])
-    else:
-        mobile_web_adjust_calc_intermediate.set_upstream(mobile_web_first_stage_agg)
-
-    # TODO configure parallelism setting for this task, which is heavier (20 slots)
-    mobile_web_adjust_calc = \
-        DockerBashOperator(task_id='MobileWebAdjustCalc',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/adjust_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -wenv daily-cut -m window -mt last-28 -p redist'''
-                           )
-    mobile_web_adjust_calc.set_upstream([mobile_web_gaps_filler,mobile_web_adjust_calc_intermediate])
-
-    # TODO configure parallelism setting for this task, which is heavier (20 slots)
-    mobile_web_check_daily_estimations = \
-        DockerBashOperator(task_id='MobileWebCheckDailyEstimations',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/check_daily_estimations.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p redist'''
-                           )
-    mobile_web_check_daily_estimations.set_upstream(mobile_web_adjust_calc)
-
-    # TODO configure parallelism setting for this task, which is heavier (20 slots)
-    mobile_web_calc_subdomains = \
-        DockerBashOperator(task_id='MobileWebCalcSubdomains',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/calc_subdomains.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                           )
-    mobile_web_calc_subdomains.set_upstream([mobile_web_adjust_calc, prepare_hbase_tables])
-
-    # TODO configure parallelism setting for this task, which is heavier (20 slots)
-    mobile_web_popular_pages = \
-        DockerBashOperator(task_id='MobileWebPopularPages',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/popular_pages.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                           )
-    mobile_web_popular_pages.set_upstream(prepare_hbase_tables)
-
-    sum_ww_all = DummyOperator(task_id='SumWWAll',
-                                dag=dag
-                                )
-    days_to_compute_back = 31
-    if is_window_dag():
-        days_to_compute_back = int(WINDOW_MODE_TYPE.split('-')[1])
-
-    for i in range(0, days_to_compute_back):
-
-        def branching_logic(**kwargs):
-            task = kwargs['task']
-            i=kwargs['params']['i']
-            is_valid_day = \
-                task.render_template('''{{ macros.dss_in_same_month(ds,macros.ds_add(ds,-%s))}}''' % i,
-                                     kwargs)=='True'
-            branch ='SumWwDay_DT-%s' % i if is_valid_day else 'SumWwDay_DT-%s_Sentinel' % i
-            return branch
-
-        if is_snapshot_dag():
-
-            sum_ww_day_i_check = \
-                BranchPythonOperator(
-                    task_id='SumWwDay_DT-%s_Check' % i,
-                    dag=dag,
-                    provide_context=True,
-                    params={'i': i},
-                    python_callable= branching_logic
-                )
-
-            sum_ww_day_i_sentinel = \
-                DummyOperator(task_id='SumWwDay_DT-%s_Sentinel' % i,
-                              dag=dag
-                              )
-
-
-            sum_ww_day_i_done = DummyOperator(task_id='SumWwDay_DT-%s_Done' % i,
-                                          dag=dag,
-                                          trigger_rule='one_success'
-                                          )
-
-        sum_ww_day_i = \
-            DockerBashOperator(task_id='SumWwDay_DT-%s' % i,
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/popular_pages.sh -d {{ macros.ds_add(ds,-1) }} -bd {{ params.base_hdfs_dir }} -env main -m daily -mt {{ params.mode_type }} -x {{ macros.dss_in_same_month(ds, macros.ds_add(ds,-%s)) }} ''' % i
-                               )
-
-        if is_snapshot_dag():
-            sum_ww_day_i_check.set_upstream(mobile_web_adjust_calc)
-            sum_ww_day_i.set_upstream(sum_ww_day_i_check)
-            sum_ww_day_i_sentinel.set_upstream(sum_ww_day_i_check)
-            sum_ww_day_i_done.set_upstream(sum_ww_day_i)
-            sum_ww_day_i_done.set_upstream(sum_ww_day_i_sentinel)
-            sum_ww_all.set_upstream(sum_ww_day_i_done)
-        else:
-            sum_ww_day_i.set_upstream(mobile_web_adjust_calc)
-            sum_ww_all.set_upstream(sum_ww_day_i)
-
-    # TODO configure parallelism setting for this task, which is heavier (20 slots)
-    mobile_web_adjust_store = \
-        DockerBashOperator(task_id='MobileWebAdjustStore',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/popular_pages.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }} -p store'''
-                           )
-    mobile_web_adjust_store.set_upstream(sum_ww_all)
-
-    mobile_web_pre = DummyOperator(task_id='MobileWebPre',
-                               dag=dag
-                               )
-    if is_snapshot_dag():
-        mobile_web_pre.set_upstream([mobile_web_compare_est_to_qc,mobile_web_adjust_calc,mobile_web_calc_subdomains,mobile_web_popular_pages,mobile_web_predict_validate_preparation,mobile_web_model_validate,mobile_web_predict_validate,mobile_web_check_daily_estimations])
-    else:
-        mobile_web_pre.set_upstream([mobile_web_adjust_calc,mobile_web_calc_subdomains,mobile_web_popular_pages,mobile_web_check_daily_estimations])
-
-
-    mobile_web = DummyOperator(task_id='MobileWeb',
-                                   dag=dag
-                                   )
-
-    mobile_web.set_upstream([sum_ww_all,mobile_web_pre,mobile_web_adjust_store])
 
     ##################
     # App Engagement #
@@ -562,9 +353,9 @@ def generate_dags(mode):
     # App Ranks #
     #############
 
-    daily_app_ranks_precalculation = ExternalTaskSensor(external_dag_id='DailyAppRanksBackfill',
+    daily_app_ranks_precalculation = ExternalTaskSensor(external_dag_id='DailyAppRanksPrecalculation',
                                                  dag=dag,
-                                                 task_id="DailyAppRanksBackfill",
+                                                 task_id="DailyAppRanksPrecalculation",
                                                  external_task_id='DailyAppRanksSuppl')
 
     usage_ranks_main = \
@@ -661,26 +452,6 @@ def generate_dags(mode):
         trends.set_upstream(trends_1_month)
 
 
-    ###########################
-    # Copy to Prod Mobile Web #
-    ###########################
-
-    copy_to_prod_mobile_web = DummyOperator(task_id='CopyToProdMobileWeb',
-                                            dag=dag
-                                            )
-
-    copy_to_prod_mobile_web_hbp1 = \
-        DockerBashOperator(task_id='CopyToProdMobileWebHbp1',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='hbasecopy mrp hbp1 mobile_web_stats_' +
-                                        ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
-                                        '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
-                           )
-    copy_to_prod_mobile_web.set_upstream(copy_to_prod_mobile_web_hbp1)
-    copy_to_prod_mobile_web_hbp1.set_upstream(mobile_web)
-
-
     ####################
     # Dynamic Settings #
     ####################
@@ -690,36 +461,6 @@ def generate_dags(mode):
                          dag=dag
                          )
     apps.set_upstream([app_engagement,app_affinity,retention_store,app_retention_categories,retention_leaders,app_usage_pattern_store,usage_pattern_categories,usage_pattern_category_leaders,usage_ranks,export_ranks,trends])
-
-
-    update_dynamic_settings = \
-        DockerBashOperator(task_id='UpdateDynamicSettings',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p apps_sdk,apps_cross'''
-                           )
-    update_dynamic_settings.set_upstream(apps)
-
-    ###############################
-    # Dynamic Settings Mobile Web #
-    ###############################
-
-    update_dynamic_settings_mobile_web = \
-        DockerBashOperator(task_id='UpdateDynamicSettingsMobileWeb',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p mobile_web'''
-                           )
-    update_dynamic_settings_mobile_web.set_upstream(mobile_web)
-
-    if is_window_dag():
-        update_dynamic_settings_prod_mobile_web = \
-            DockerBashOperator(task_id='UpdateDynamicSettingsProdMobileWeb',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p mobile_web'''
-                               )
-        update_dynamic_settings_prod_mobile_web.set_upstream([mobile_web,copy_to_prod_mobile_web])
 
 
     #######################
@@ -742,19 +483,19 @@ def generate_dags(mode):
 
     if is_window_dag():
 
-        apps_cleanup_stage = DummyOperator(task_id='AppsCleanupStage',
+        cleanup_stage = DummyOperator(task_id='CleanupStage',
                                            dag=dag
                                            )
 
         for i in range(3,8):
-            apps_cleanup_stage_dt_minus_i = \
-                DockerBashOperator(task_id='AppsCleanupStage_DT-%s' % i,
+            cleanup_stage_dt_minus_i = \
+                DockerBashOperator(task_id='CleanupStage_DT-%s' % i,
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p delete_files -p drop_hbase_tables''' % i
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i
                                    )
-            apps_cleanup_stage_dt_minus_i.set_upstream(apps)
-            apps_cleanup_stage.set_upstream(apps_cleanup_stage_dt_minus_i)
+            cleanup_stage_dt_minus_i.set_upstream(apps)
+            cleanup_stage.set_upstream(cleanup_stage_dt_minus_i)
 
     ############################
     # Local Availability Dates #
@@ -770,38 +511,8 @@ def generate_dags(mode):
 
 
     ################
-    # Cleanup Prod #
+    # Copy to Prod #
     ################
-
-    if is_prod_env():
-        if is_window_dag():
-
-            cleanup_prod = DummyOperator(task_id='CleanupProd',
-                                 dag=dag
-                                 )
-
-            for i in range(3,8):
-                #TODO check why is it configured to use this specific docker; extract reference to configuration
-                cleanup_hbp1_ds_minus_i = \
-                    DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
-                                       dag=dag,
-                                       docker_name='mrp-hbp1',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p drop_hbase_tables''' % i
-                                       )
-                cleanup_hbp1_ds_minus_i.set_upstream(apps)
-
-                ranks_etcd_prod_cleanup_ds_minus_i = \
-                    DockerBashOperator(task_id='RanksEtcdProdCleanup_DS-%s' % i,
-                                       dag=dag,
-                                       docker_name='mrp-hbp1',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
-                                       )
-                ranks_etcd_prod_cleanup_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
-                cleanup_prod.set_upstream(ranks_etcd_prod_cleanup_ds_minus_i)
-
-    #####################
-    # Copy to Prod Apps #
-    #####################
 
     hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
                         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
@@ -857,28 +568,66 @@ def generate_dags(mode):
 
         copy_to_prod_rank_hbp1.set_upstream([usage_ranks,trends])
 
-        copy_to_prod_apps = DummyOperator(task_id='CopyToProdApps',
+        copy_to_prod = DummyOperator(task_id='CopyToProd',
                              dag=dag
                              )
 
-        copy_to_prod_apps.set_upstream([copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
+        copy_to_prod.set_upstream([copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
                                         copy_to_prod_engage_hbp1,copy_to_prod_rank_hbp1])
+
+
+    ################
+    # Cleanup Prod #
+    ################
+
+    if is_prod_env():
+        if is_window_dag():
+
+            cleanup_prod = DummyOperator(task_id='CleanupProd',
+                                         dag=dag
+                                         )
+
+            for i in range(3,8):
+                cleanup_hbp1_ds_minus_i = \
+                    DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
+                                       dag=dag,
+                                       docker_name='''{{ params.hbase_cluster }}''',
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
+                                       )
+                cleanup_hbp1_ds_minus_i.set_upstream([apps,copy_to_prod])
+
+                cleanup_ranks_etcd_prod_ds_minus_i = \
+                    DockerBashOperator(task_id='CleanupRanksEtcdProd_DS-%s' % i,
+                                       dag=dag,
+                                       docker_name='''{{ params.hbase_cluster }}''',
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
+                                       )
+                cleanup_ranks_etcd_prod_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
+                cleanup_prod.set_upstream(cleanup_ranks_etcd_prod_ds_minus_i)
 
 
     #########################
     # Dynamic Settings Apps #
     #########################
 
+    update_dynamic_settings_stage = \
+        DockerBashOperator(task_id='UpdateDynamicSettingsStage',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p apps_sdk,apps_cross'''
+                           )
+    update_dynamic_settings_stage.set_upstream(apps)
+
     if is_prod_env():
         if is_window_dag():
-            update_dyn_set_apps_prod = \
-                DockerBashOperator(task_id='UpdateDynSetAppsProd',
+            update_dynamic_settings_prod = \
+                DockerBashOperator(task_id='UpdateDynamicSettingsProd',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP'''
                                    )
 
-            update_dyn_set_apps_prod.set_upstream([copy_to_prod_apps,apps])
+            update_dynamic_settings_prod.set_upstream([copy_to_prod,apps])
 
 
     #############################
@@ -898,6 +647,5 @@ def generate_dags(mode):
     return dag
 
 
-
-#globals()['dag_apps_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
-#globals()['dag_apps_moving_window_daily'] = generate_dags(WINDOW_MODE)
+globals()['dag_apps_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
+globals()['dag_apps_moving_window_daily'] = generate_dags(WINDOW_MODE)
