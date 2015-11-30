@@ -506,7 +506,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='UpdateUsageRanksDateStage',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p usage_ranks -pn UsageRanksStage -um success''' % i
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p usage_ranks -pn UsageRanksStage -um success'''
                        )
     update_usage_ranks_date_stage.set_upstream(usage_ranks)
 
