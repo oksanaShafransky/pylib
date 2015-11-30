@@ -493,7 +493,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='CleanupStage_DT-%s' % i,
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup-settings.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i
                                    )
             cleanup_stage_dt_minus_i.set_upstream(apps)
             cleanup_stage.set_upstream(cleanup_stage_dt_minus_i)
@@ -606,7 +606,7 @@ def generate_dags(mode):
                     DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
                                        dag=dag,
                                        docker_name='''{{ params.hbase_cluster }}''',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
                                        )
                 cleanup_hbp1_ds_minus_i.set_upstream([copy_to_prod])
 
@@ -614,7 +614,7 @@ def generate_dags(mode):
                     DockerBashOperator(task_id='CleanupRanksEtcdProd_DS-%s' % i,
                                        dag=dag,
                                        docker_name='''{{ params.hbase_cluster }}''',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
                                        )
                 cleanup_ranks_etcd_prod_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
                 cleanup_prod.set_upstream(cleanup_ranks_etcd_prod_ds_minus_i)
