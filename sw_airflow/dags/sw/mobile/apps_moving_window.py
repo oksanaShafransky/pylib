@@ -19,7 +19,7 @@ WINDOW_MODE = 'window'
 SNAPHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
-DEFAULT_HBASE_CLUSTER = 'mrp-hbp1'
+DEFAULT_HBASE_CLUSTER = 'hbp1'
 
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
@@ -493,7 +493,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='CleanupStage_DS-%s' % i,
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup-settings.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i
                                    )
             cleanup_stage_ds_minus_i.set_upstream(apps)
             cleanup_stage.set_upstream(cleanup_stage_ds_minus_i)
