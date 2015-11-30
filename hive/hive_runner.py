@@ -200,19 +200,6 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
     else:
         raise ValueError('Unknown compression type %s' % compression)
 
-    # TODO: check if thses are needed:
-    #"-hiveconf", "hive.exec.max.created.files=2000000",
-    #"-hiveconf", "mapreduce.child.java.opts=-Xmx4096m -Xms4096m",
-    #"-hiveconf", "mapreduce.reduce.memory.mb=5320",
-    #"-hiveconf", "mapreduce.map.memory.mb=5320"
-    #"-hiveconf", "hive.stats.autogather=false",
-    #"-hiveconf", "hive.enforce.bucketing=true",
-
-    #Can use:
-    #export HIVE_OPTS="$HIVE_OPTS -hiveconf mapreduce.map.memory.mb=4096 -hiveconf mapreduce.reduce.memory.mb=5120"
-
-    #for mw referrals
-
     cmd = ["hive", "-S", "-e", '"%s"' % hql,
        "-hiveconf", "mapreduce.job.name=" + job_name,
        "-hiveconf", "mapreduce.job.reduces=" + str(num_of_reducers),
