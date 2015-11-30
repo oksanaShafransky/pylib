@@ -7,6 +7,7 @@ from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 from sw.airflow.operators import DockerBashSensor
+from sw.airflow.operators import  DockerCopyHbaseTableOperator
 from sw.airflow.airflow_etcd import EtcdHook
 from airflow.operators.python_operator import BranchPythonOperator
 
@@ -518,14 +519,18 @@ def generate_dags(mode):
                         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
 
     if is_prod_env():
+
+
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
         copy_to_prod_app_sdk_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdAppSdkHbp1',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='hbasecopy mrp hbp1 app_sdk_stats_' + hbase_suffix_template
-                           )
-
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdAppSdkHbp1',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster='hbp1',
+                table_name_template= 'app_sdk_stats_' + hbase_suffix_template
+            )
         copy_to_prod_app_sdk_hbp1.set_upstream([app_engagement,app_affinity,retention_store,app_usage_pattern_store])
 
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
