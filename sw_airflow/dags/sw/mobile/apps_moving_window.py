@@ -572,7 +572,7 @@ def generate_dags(mode):
                              dag=dag
                              )
 
-        copy_to_prod.set_upstream([copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
+        copy_to_prod.set_upstream([apps,copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
                                         copy_to_prod_engage_hbp1,copy_to_prod_rank_hbp1])
 
 
@@ -594,7 +594,7 @@ def generate_dags(mode):
                                        docker_name='''{{ params.hbase_cluster }}''',
                                        bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
                                        )
-                cleanup_hbp1_ds_minus_i.set_upstream([apps,copy_to_prod])
+                cleanup_hbp1_ds_minus_i.set_upstream([copy_to_prod])
 
                 cleanup_ranks_etcd_prod_ds_minus_i = \
                     DockerBashOperator(task_id='CleanupRanksEtcdProd_DS-%s' % i,
@@ -627,7 +627,7 @@ def generate_dags(mode):
                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP'''
                                    )
 
-            update_dynamic_settings_prod.set_upstream([copy_to_prod,apps])
+            update_dynamic_settings_prod.set_upstream(copy_to_prod)
 
 
     #############################
@@ -641,8 +641,22 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP -p usage_ranks -pn UsageRanksProd -um success'''
                                )
+        update_usage_ranks_date_prod.set_upstream(copy_to_prod)
 
-        update_usage_ranks_date_prod.set_upstream(copy_to_prod_rank_hbp1)
+
+    ###########
+    # Wrap-up #
+    ###########
+
+    if is_prod_env():
+
+        register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
+                                           dag=dag,
+                                           path='''services/MobileMovingWindow/daily/MobileMovingWindow/{{ params.mode }}''',
+                                           root=ETCD_ENV_ROOT['PRODUCTION']
+                                           )
+        register_success.set_upstream(update_usage_ranks_date_prod)
+
 
     return dag
 
