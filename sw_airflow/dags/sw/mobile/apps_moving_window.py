@@ -344,7 +344,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='AppEngagementSanityCheck',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/qa/checkAppAndCountryEngagementEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main  -m {{ params.mode }} -mt {{ params.mode_type }} -p check_window'''
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/qa/checkAppAndCountryEngagementEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p check_window'''
                                )
         app_engagement_sanity_check.set_upstream(app_engagement)
 
