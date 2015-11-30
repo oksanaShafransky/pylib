@@ -184,7 +184,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CheckAppAndCountryRetentionEstimation',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/qa/app-retention/qa/checkAppAndCountryRetentionEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p check'''
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/qa/checkAppAndCountryRetentionEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p check'''
                                )
         check_app_and_country_retention_estimation.set_upstream(app_retention_precalculation)
 
