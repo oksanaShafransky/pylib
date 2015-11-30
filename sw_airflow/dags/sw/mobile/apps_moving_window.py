@@ -353,10 +353,10 @@ def generate_dags(mode):
     # App Ranks #
     #############
 
-    daily_app_ranks_precalculation = ExternalTaskSensor(external_dag_id='DailyAppRanksPrecalculation',
+    daily_app_ranks_backfill = ExternalTaskSensor(external_dag_id='DailyAppRanksBackfill',
                                                  dag=dag,
-                                                 task_id="DailyAppRanksPrecalculation",
-                                                 external_task_id='DailyAppRanksSuppl')
+                                                 task_id="DailyAppRanksBackfill",
+                                                 external_task_id='DailyAppRanksBackfill')
 
     usage_ranks_main = \
         DockerBashOperator(task_id='UsageRanksMain',
@@ -364,7 +364,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
-    usage_ranks_main.set_upstream([daily_app_ranks_precalculation,app_engagement])
+    usage_ranks_main.set_upstream([daily_app_ranks_backfill,app_engagement])
 
     usage_ranks = DummyOperator(task_id='UsageRanks',
                               dag=dag
