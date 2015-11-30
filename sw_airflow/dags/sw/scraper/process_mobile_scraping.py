@@ -492,7 +492,7 @@ for days_back in range(cleanup_interval_start, cleanup_interval_end, -1):
                                               path='''services/process_mobile_scraping/data-available/{{ macros.ds_add(ds, -%d) }}''' % days_back,
                                               root=ETCD_ENV_ROOT['STAGE']
     )
-    unregister_available_stage.set_upstream(cleanups[idx])
+    unregister_available_stage.set_upstream(cleanups_stage[idx])
 
     idx += 1
 
