@@ -69,7 +69,8 @@ def generate_dags(mode):
     dag = DAG(dag_id='MobileAppsMovingWindow_' + mode, default_args=dag_args, params=dag_template_params_for_mode,
               #schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
               #Following is temporary hack until we upgrade to Airflow 1.6.x or later
-              schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 30 12 *')
+              schedule_interval=timedelta(days=1))
+
 
     mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                                  dag=dag,
