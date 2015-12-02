@@ -67,7 +67,9 @@ def generate_dags(mode):
     dag_template_params_for_mode.update(mode_dag_template_params)
 
     dag = DAG(dag_id='MobileAppsMovingWindow_' + mode, default_args=dag_args, params=dag_template_params_for_mode,
-              schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
+              #schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
+              #Following is temporary hack until we upgrade to Airflow 1.6.x or later
+              schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 30 12 *')
 
     mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                                  dag=dag,
@@ -358,6 +360,12 @@ def generate_dags(mode):
                                                  dag=dag,
                                                  task_id="DailyAppRanksBackfill",
                                                  external_task_id='DailyAppRanksBackfill')
+
+    if is_snapshot_dag():
+        daily_app_ranks_backfill = ExternalTaskSensor(external_dag_id='DailyAppRanksBackfill',
+                                                  dag=dag,
+                                                  task_id="DailyAppRanksBackfill",
+                                                  external_task_id='DailyAppRanksBackfill')
 
     usage_ranks_main = \
         DockerBashOperator(task_id='UsageRanksMain',
