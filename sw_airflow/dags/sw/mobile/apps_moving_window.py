@@ -53,7 +53,7 @@ def generate_dags(mode):
         dag_args.update({'start_date': datetime(2015, 11, 29)})
 
     if is_snapshot_dag():
-        dag_args.update({'start_date': datetime(2015, 11, 30)})
+        dag_args.update({'start_date': datetime(2015, 11, 30), 'end_date': datetime(2015, 11, 30)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     mode_dag_template_params = {}
