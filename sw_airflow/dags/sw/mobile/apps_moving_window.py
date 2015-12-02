@@ -361,12 +361,6 @@ def generate_dags(mode):
                                                  task_id="DailyAppRanksBackfill",
                                                  external_task_id='DailyAppRanksBackfill')
 
-    if is_snapshot_dag():
-        daily_app_ranks_backfill = ExternalTaskSensor(external_dag_id='DailyAppRanksBackfill',
-                                                  dag=dag,
-                                                  task_id="DailyAppRanksBackfill",
-                                                  external_task_id='DailyAppRanksBackfill')
-
     usage_ranks_main = \
         DockerBashOperator(task_id='UsageRanksMain',
                            dag=dag,
