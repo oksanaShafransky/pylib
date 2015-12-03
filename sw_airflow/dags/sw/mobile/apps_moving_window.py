@@ -49,21 +49,13 @@ def generate_dags(mode):
     def is_prod_env():
         return True
 
-    if is_window_dag():
-        dag_args.update({'start_date': datetime(2015, 11, 29)})
-
-    if is_snapshot_dag():
-        dag_args.update({'start_date': datetime(2015, 11, 30), 'end_date': datetime(2015, 11, 30)})
-
     dag_template_params_for_mode = dag_template_params.copy()
     mode_dag_template_params = {}
-
     if is_window_dag():
-        mode_dag_template_params = {'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE}
+        mode_dag_template_params = {'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE, 'start_date': datetime(2015, 11, 29)}
 
     if is_snapshot_dag():
-        mode_dag_template_params = {'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE}
-
+        mode_dag_template_params = {'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE, 'start_date': datetime(2015, 11, 30), 'end_date': datetime(2015, 11, 30) }
     dag_template_params_for_mode.update(mode_dag_template_params)
 
     dag = DAG(dag_id='MobileAppsMovingWindow_' + mode, default_args=dag_args, params=dag_template_params_for_mode,
