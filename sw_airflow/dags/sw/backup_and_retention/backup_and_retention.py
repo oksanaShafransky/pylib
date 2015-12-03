@@ -30,23 +30,12 @@ dag = DAG(dag_id='HdfsBackupAndRetentionDag', default_args=dag_args, params=dag_
 
 
 # define stages
-
-# list of: path, number of retention days, is backup required (if false, we just delete)
-retention_targets = [
-    ['/similargroup/data/analytics/daily/estimation/temp-sqs-output', 1, False],
-    ['/similargroup/data/analytics/daily/post-estimate/estimate=intermediate-values', 1, False],
-    ['/similargroup/data/analytics/daily/post-estimate/estimate=ratios/', 1, False]
-    ]
-
-for i in range(0, len(retention_targets)):
-    path, retention_period, backup_required = retention_targets[i]
-
-    backup_and_retention_op = \
-        DockerBashOperator(task_id='HdfsBackupAndRetentionTask-%s' % (i),
-                           dag=dag,
-                           docker_name='''{{ params.docker_image }}''',
-                           bash_command='''python {{ params.execution_dir }}/utils/scripts/backup_and_retention.py --path %s --backup_required %s --retention_days %s --log_level %s --dryrun %s''' % (path, backup_required, retention_period, 'DEBUG', 'False')
-                           )
+backup_and_retention_op = \
+    DockerBashOperator(task_id='HdfsBackupAndRetentionTask',
+                       dag=dag,
+                       docker_name='''{{ params.docker_image }}''',
+                       bash_command='''python {{ params.execution_dir }}/utils/scripts/backup_and_retention.py --log_level %s --dry_run %s''' % ('DEBUG', 'False')
+                       )
 
 
 
