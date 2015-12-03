@@ -669,7 +669,7 @@ def generate_dags(mode):
 
         register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
                                            dag=dag,
-                                           path='''services/MobileMovingWindow/daily/MobileMovingWindow/{{ params.mode }}''',
+                                           path='''services/mobile_moving_window/{{ params.mode }}/{{ ds }}''',
                                            root=ETCD_ENV_ROOT['PRODUCTION']
                                            )
         register_success.set_upstream(update_usage_ranks_date_prod)
