@@ -53,7 +53,7 @@ def generate_dags(mode):
         dag_args.update({'start_date': datetime(2015, 11, 29)})
 
     if is_snapshot_dag():
-        dag_args.update({'start_date': datetime(2015, 11, 30)})
+        dag_args.update({'start_date': datetime(2015, 11, 30), 'end_date': datetime(2015, 11, 30)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     mode_dag_template_params = {}
@@ -67,7 +67,10 @@ def generate_dags(mode):
     dag_template_params_for_mode.update(mode_dag_template_params)
 
     dag = DAG(dag_id='MobileAppsMovingWindow_' + mode, default_args=dag_args, params=dag_template_params_for_mode,
-              schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
+              #schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
+              #Following is temporary hack until we upgrade to Airflow 1.6.x or later
+              schedule_interval=timedelta(days=1))
+
 
     mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                                  dag=dag,
@@ -653,7 +656,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='UpdateUsageRanksDateProd',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP -p usage_ranks -pn UsageRanksProd -um success'''
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um success'''
                                )
         update_usage_ranks_date_prod.set_upstream(copy_to_prod)
 
@@ -666,10 +669,10 @@ def generate_dags(mode):
 
         register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
                                            dag=dag,
-                                           path='''services/MobileMovingWindow/daily/MobileMovingWindow/{{ params.mode }}''',
+                                           path='''services/mobile_moving_window/{{ params.mode }}/{{ ds }}''',
                                            root=ETCD_ENV_ROOT['PRODUCTION']
                                            )
-        register_success.set_upstream(update_usage_ranks_date_prod)
+        register_success.set_upstream([copy_to_prod,update_usage_ranks_date_prod])
 
 
     return dag
