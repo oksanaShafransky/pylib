@@ -658,7 +658,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um success'''
                                )
-        update_usage_ranks_date_prod.set_upstream(update_usage_ranks_date_prod)
+        update_usage_ranks_date_prod.set_upstream(copy_to_prod)
 
 
     ###########
