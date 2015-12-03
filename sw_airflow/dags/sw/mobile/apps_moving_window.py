@@ -39,6 +39,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 
 
 def generate_dags(mode):
+    print 1
     def is_window_dag():
         return mode == WINDOW_MODE
 
@@ -49,16 +50,21 @@ def generate_dags(mode):
     def is_prod_env():
         return True
 
-    dag_template_params_for_mode = dag_template_params.copy()
-    mode_dag_template_params = {}
+    dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        mode_dag_template_params = {'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE, 'start_date': datetime(2015, 11, 29)}
+        dag_args_for_mode.update({'start_date': datetime(2015, 11, 29)})
 
     if is_snapshot_dag():
-        mode_dag_template_params = {'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE, 'start_date': datetime(2015, 11, 30), 'end_date': datetime(2015, 11, 30) }
-    dag_template_params_for_mode.update(mode_dag_template_params)
+        dag_args_for_mode.update({'start_date': datetime(2015, 11, 30), 'end_date': datetime(2015, 11, 30) })
 
-    dag = DAG(dag_id='MobileAppsMovingWindow_' + mode, default_args=dag_args, params=dag_template_params_for_mode,
+    dag_template_params_for_mode = dag_template_params.copy()
+    if is_window_dag():
+        dag_template_params_for_mode.update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
+
+    if is_snapshot_dag():
+        dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE })
+
+    dag = DAG(dag_id='MobileAppsMovingWindow_' + mode, default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               #schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
               #Following is temporary hack until we upgrade to Airflow 1.6.x or later
               schedule_interval=timedelta(days=1))
