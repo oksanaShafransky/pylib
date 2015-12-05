@@ -99,7 +99,7 @@ combine_sysapps.set_upstream(detect_sysapps)
 daily_agg = DockerBashOperator(task_id='DailyAggregation',
                                dag=dag,
                                docker_name=DEFAULT_CLUSTER,
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 637 -mmem 2560 -rmem 1536'''
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 2560 -rmem 1536'''
                                )
 daily_agg.set_upstream(blocked_ips)
 daily_agg.set_upstream(combine_sysapps)
