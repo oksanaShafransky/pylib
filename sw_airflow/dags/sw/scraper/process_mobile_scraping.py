@@ -19,7 +19,7 @@ DEFAULT_CLUSTER = 'mrp'
 CHECK_DATA_PROBLEM_NUM = '20'
 DEPLOY_TO_PROD = True
 
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
+ETCD_ENV_ROOT = {'STAGE': 'v1/staging', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
