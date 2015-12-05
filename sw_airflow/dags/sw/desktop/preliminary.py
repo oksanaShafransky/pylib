@@ -59,3 +59,24 @@ blocked_ips = DockerBashOperator(task_id='BlockedIPs',
                                  )
 blocked_ips.set_upstream(group_raw)
 
+daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
+                                       dag=dag,
+                                       docker_name='''{{ params.cluster }}''',
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -p aggregate'''
+                                 )
+daily_aggregation.set_upstream(group_raw, blocked_ips)
+
+repair_tables = DockerBashOperator(task_id='RepairDailyTables',
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -p repair'''
+                                   )
+repair_tables.set_upstream(daily_aggregation)
+
+register_available = EtcdSetOperator(task_id='MarkDataAvailability',
+                                     dag=dag,
+                                     path='''services/aggregation/data-available/{{ ds }}''',
+                                     root=ETCD_ENV_ROOT[dag_template_params['run_environment']]
+                                     )
+register_available.set_upstream(daily_aggregation)
+
