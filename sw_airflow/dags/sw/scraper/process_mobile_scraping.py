@@ -322,7 +322,7 @@ check_data.set_downstream(deploy_prod_done)
 #################################################
 ###    Deploy                                  #
 #################################################
-for target_cluster in ('hbp1',):
+for target_cluster in ('hbp1','hbp2'):
     copy_app_details = DockerCopyHbaseTableOperator(
         task_id='copy_app_details_%s' % target_cluster,
         dag=dag,
