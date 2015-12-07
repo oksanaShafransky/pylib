@@ -54,7 +54,7 @@ def generate_dags(mode):
         dag_args_for_mode.update({'start_date': datetime(2015, 11, 29)})
 
     if is_snapshot_dag():
-        dag_args_for_mode.update({'start_date': datetime(2015, 11, 30), 'end_date': datetime(2015, 11, 30) })
+        dag_args_for_mode.update({'start_date': datetime(2015, 10, 31), 'end_date': datetime(2015, 10, 31) })
 
     dag_template_params_for_mode = dag_template_params.copy()
     if is_window_dag():
@@ -63,7 +63,7 @@ def generate_dags(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE })
 
-    dag = DAG(dag_id='FixNovemberSnapshotEngagement', default_args=dag_args_for_mode, params=dag_template_params_for_mode,
+    dag = DAG(dag_id='FixOctoberSnapshotEngagement', default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               #schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
               #Following is temporary hack until we upgrade to Airflow 1.6.x or later
               schedule_interval=timedelta(days=1))
@@ -100,9 +100,9 @@ def generate_dags(mode):
     #############
 
     daily_app_ranks_backfill = ExternalTaskSensor(external_dag_id='DailyAppRanksBackfill',
-                                                 dag=dag,
-                                                 task_id="DailyAppRanksBackfill",
-                                                 external_task_id='DailyAppRanksBackfill')
+                                                  dag=dag,
+                                                  task_id="DailyAppRanksBackfill",
+                                                  external_task_id='DailyAppRanksBackfill')
 
     usage_ranks_main = \
         DockerBashOperator(task_id='UsageRanksMain',
@@ -113,8 +113,8 @@ def generate_dags(mode):
     usage_ranks_main.set_upstream([daily_app_ranks_backfill,app_engagement])
 
     usage_ranks = DummyOperator(task_id='UsageRanks',
-                              dag=dag
-                              )
+                                dag=dag
+                                )
 
     usage_ranks.set_upstream(usage_ranks_main)
 
@@ -148,8 +148,8 @@ def generate_dags(mode):
         ranks_export_prod.set_upstream(prepare_ranks)
 
     export_ranks = DummyOperator(task_id='ExportRanks',
-                               dag=dag
-                               )
+                                 dag=dag
+                                 )
 
     if is_prod_env():
         export_ranks.set_upstream([ranks_export_prod,ranks_export_stage,prepare_ranks])
@@ -162,8 +162,8 @@ def generate_dags(mode):
     ##########
 
     trends = DummyOperator(task_id='Trends',
-                                 dag=dag
-                                 )
+                           dag=dag
+                           )
 
     if is_window_dag():
         # TODO configure parallelism setting for this task, which is heavier (20 slots)
@@ -230,8 +230,8 @@ def generate_dags(mode):
     if is_window_dag():
 
         cleanup_stage = DummyOperator(task_id='CleanupStage',
-                                           dag=dag
-                                           )
+                                      dag=dag
+                                      )
 
         for i in range(3,8):
             cleanup_stage_ds_minus_i = \
@@ -249,10 +249,10 @@ def generate_dags(mode):
 
     update_usage_ranks_date_stage = \
         DockerBashOperator(task_id='UpdateUsageRanksDateStage',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p usage_ranks -pn UsageRanksStage -um success -f'''
-                       )
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p usage_ranks -pn UsageRanksStage -um success -f'''
+                           )
     update_usage_ranks_date_stage.set_upstream(usage_ranks)
 
 
@@ -261,7 +261,7 @@ def generate_dags(mode):
     ################
 
     hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
-                        '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
+                             '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
 
     if is_prod_env():
 
@@ -328,11 +328,11 @@ def generate_dags(mode):
         copy_to_prod_rank_hbp1.set_upstream([usage_ranks,trends])
 
         copy_to_prod = DummyOperator(task_id='CopyToProd',
-                             dag=dag
-                             )
+                                     dag=dag
+                                     )
 
         copy_to_prod.set_upstream([apps,copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
-                                        copy_to_prod_engage_hbp1,copy_to_prod_rank_hbp1])
+                                   copy_to_prod_engage_hbp1,copy_to_prod_rank_hbp1])
 
 
     ################
