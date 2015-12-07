@@ -14,7 +14,7 @@ DOCKER_IMAGE = 'mrp-retention'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(23, 11, 15),
+    'start_date': datetime(2015, 12, 7),
     'depends_on_past': False,
     'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,
