@@ -444,7 +444,7 @@ def delete_path(path):
     subprocess.call(("hadoop", "fs", "-rm", "-r", path))
 
 
-def temp_table_cmds(orig_table_name, temp_root):
+def temp_table_cmds_internal(orig_table_name, temp_root):
     table_name = '%s_temp_%s' % (orig_table_name, random.randint(10000, 99999))
     drop_cmd = '\nDROP TABLE IF EXISTS %s;\n' % table_name
     create_cmd = '''\n
@@ -460,6 +460,24 @@ def temp_table_cmds(orig_table_name, temp_root):
                        'db_name': table_name.split('.')[0],
                        'short_table_name': table_name.split('.')[-1]}
     return table_name, drop_cmd, create_cmd
+
+
+def should_create_external_table(location):
+    ans = True
+    for prod_reserved_location_prefix in ['/similargroup/data/mobile-analytics', '/similargroup/data/analytics']:
+        if location.startswith(prod_reserved_location_prefix):
+            ans = False
+    return ans
+
+
+def temp_table_cmds(orig_table_name, root):
+    logger.info("Checking whether to create external table %s in location %s:" % (orig_table_name, root))
+    if should_create_external_table(root):
+        logger.info("Writing to an external table in the given location.")
+        return temp_table_cmds_internal(orig_table_name, root)
+    else:
+        logger.info("Writing to the original table in place. The location which was passed is being discarded.")
+        return orig_table_name, '', ''
 
 
 def dedent(s):
