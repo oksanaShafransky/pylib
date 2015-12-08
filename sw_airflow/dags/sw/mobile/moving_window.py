@@ -736,6 +736,10 @@ def generate_dags(mode):
 
         top_apps_for_sanity.set_upstream(usage_ranks)
 
+
+    cleanup_from = 8
+    cleanup_to = 3
+
     #######################
     # Apps Clean-Up Stage #
     #######################
@@ -746,7 +750,7 @@ def generate_dags(mode):
                                            dag=dag
                                            )
 
-        for i in range(3,8):
+        for i in range(cleanup_to, cleanup_from):
             apps_cleanup_stage_dt_minus_i = \
                 DockerBashOperator(task_id='AppsCleanupStage_DT-%s' % i,
                                    dag=dag,
@@ -769,6 +773,9 @@ def generate_dags(mode):
     update_usage_ranks_date_stage.set_upstream(usage_ranks)
 
 
+    prod_targets = ['hbp1', 'hbp2']
+
+
     ################
     # Cleanup Prod #
     ################
@@ -780,24 +787,26 @@ def generate_dags(mode):
                                  dag=dag
                                  )
 
-            for i in range(3,8):
+            for i in range(cleanup_to, cleanup_from):
                 #TODO check why is it configured to use this specific docker; extract reference to configuration
-                cleanup_hbp1_ds_minus_i = \
-                    DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
-                                       dag=dag,
-                                       docker_name='mrp-hbp1',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p drop_hbase_tables''' % i
-                                       )
-                cleanup_hbp1_ds_minus_i.set_upstream(apps)
+                for target in prod_targets:
+                    cleanup_day = \
+                        DockerBashOperator(task_id='Cleanup%s_DS-%s' % (target, i),
+                                           dag=dag,
+                                           docker_name='mrp-%s' % target,
+                                           bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p drop_hbase_tables''' % i
+                                           )
+                    cleanup_day.set_upstream(apps)
 
-                ranks_etcd_prod_cleanup_ds_minus_i = \
+                ranks_etcd_cleanup_day = \
                     DockerBashOperator(task_id='RanksEtcdProdCleanup_DS-%s' % i,
                                        dag=dag,
                                        docker_name='mrp-hbp1',
                                        bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
                                        )
-                ranks_etcd_prod_cleanup_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
-                cleanup_prod.set_upstream(ranks_etcd_prod_cleanup_ds_minus_i)
+                # TODO couple etcd env with target and define dependency of etcd cleanup on data cleanup
+                ranks_etcd_cleanup_day.set_upstream(apps)
+                cleanup_prod.set_upstream(ranks_etcd_cleanup_day)
 
     #####################
     # Copy to Prod Apps #
@@ -807,62 +816,63 @@ def generate_dags(mode):
                         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
 
     if is_prod_env():
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_app_sdk_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdAppSdkHbp1',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='hbasecopy mrp hbp1 app_sdk_stats_' + hbase_suffix_template
-                           )
+        for target in prod_targets:
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_app_sdk = \
+                DockerBashOperator(task_id='CopyToProdAppSdk%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp %s app_sdk_stats_' % target + hbase_suffix_template
+                                   )
 
-        copy_to_prod_app_sdk_hbp1.set_upstream([app_engagement,app_affinity,retention_store,app_usage_pattern_store])
+            copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store])
 
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_cats_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdCatsHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 app_sdk_category_stats_' + hbase_suffix_template
-                               )
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_cats = \
+                DockerBashOperator(task_id='CopyToProdCats%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp %s app_sdk_category_stats_' % target + hbase_suffix_template
+                                   )
 
-        copy_to_prod_cats_hbp1.set_upstream([app_engagement,category_retention_store,usage_pattern_categories])
+            copy_to_prod_cats.set_upstream([app_engagement, category_retention_store, usage_pattern_categories])
 
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_leaders_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdLeadersHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 app_sdk_category_lead_' + hbase_suffix_template
-                               )
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_leaders = \
+                DockerBashOperator(task_id='CopyToProdLeaders%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp %s app_sdk_category_lead_' % target + hbase_suffix_template
+                                   )
 
-        copy_to_prod_leaders_hbp1.set_upstream([app_engagement,retention_leaders,usage_pattern_category_leaders])
+            copy_to_prod_leaders.set_upstream([app_engagement, retention_leaders, usage_pattern_category_leaders])
 
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_engage_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdEngageHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 app_eng_rank_' + hbase_suffix_template
-                               )
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_engage = \
+                DockerBashOperator(task_id='CopyToProdEngage%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp %s app_eng_rank_' % target + hbase_suffix_template
+                                   )
 
-        copy_to_prod_engage_hbp1.set_upstream(usage_ranks)
+            copy_to_prod_engage.set_upstream(usage_ranks)
 
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_rank_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdRankHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 cat_mod_app_rank_' + hbase_suffix_template
-                               )
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_rank = \
+                DockerBashOperator(task_id='CopyToProdRank%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp hbp1 cat_mod_app_rank_' + hbase_suffix_template
+                                   )
 
-        copy_to_prod_rank_hbp1.set_upstream([usage_ranks,trends])
+            copy_to_prod_rank.set_upstream([usage_ranks, trends])
 
-        copy_to_prod_apps = DummyOperator(task_id='CopyToProdApps',
-                             dag=dag
-                             )
+            copy_to_prod_apps = DummyOperator(task_id='CopyToProdApps%s' % target,
+                                              dag=dag
+                                              )
 
-        copy_to_prod_apps.set_upstream([copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
-                                        copy_to_prod_engage_hbp1,copy_to_prod_rank_hbp1])
+            copy_to_prod_apps.set_upstream([copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders,
+                                            copy_to_prod_engage, copy_to_prod_rank])
 
 
     #########################
