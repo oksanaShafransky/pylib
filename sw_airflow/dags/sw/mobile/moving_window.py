@@ -880,15 +880,14 @@ def generate_dags(mode):
     #########################
 
     if is_prod_env():
-        if is_window_dag():
-            update_dyn_set_apps_prod = \
-                DockerBashOperator(task_id='UpdateDynSetAppsProd',
-                                   dag=dag,
-                                   docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP'''
-                                   )
+        update_dyn_set_apps_prod = \
+            DockerBashOperator(task_id='UpdateDynSetAppsProd',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP'''
+                               )
 
-            update_dyn_set_apps_prod.set_upstream([copy_to_prod_apps,apps])
+        update_dyn_set_apps_prod.set_upstream([copy_to_prod_apps,apps])
 
 
     #############################
