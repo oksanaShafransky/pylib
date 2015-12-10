@@ -273,7 +273,7 @@ def generate_dags(mode):
 
     dag_template_params_for_mode.update({'affinity_country_filter': affinity_country_filter})
 
-    # TODO configure parallelsim setting for this task, which is heavier (5 slots)
+    # TODO configure parallelism setting for this task, which is heavier (5 slots)
     app_affinity_app_precalculation = \
         DockerBashOperator(task_id='AppAffinityAppPrecalculation',
                            dag=dag,
@@ -283,7 +283,7 @@ def generate_dags(mode):
 
     app_affinity_app_precalculation.set_upstream(should_run_mw_window)
 
-    # TODO configure parallelsim setting for this task, which is heavier (5 slots)
+    # TODO configure parallelism setting for this task, which is heavier (5 slots)
     app_affinity_country_precalculation = \
         DockerBashOperator(task_id='AppAffinityCountryPrecalculation',
                            dag=dag,
@@ -298,7 +298,7 @@ def generate_dags(mode):
                                                 )
     app_affinity_precalculation.set_upstream([app_affinity_app_precalculation, app_affinity_country_precalculation])
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     app_affinity_pairs = \
         DockerBashOperator(task_id='AppAffinityPairs',
                            dag=dag,
@@ -337,7 +337,7 @@ def generate_dags(mode):
 
     mobile_web_train_model = None
     if is_snapshot_dag():
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_predict_validate_preparation = \
             DockerBashOperator(task_id='MobileWebPredictValidatePreparation',
                                dag=dag,
@@ -346,7 +346,7 @@ def generate_dags(mode):
                                )
         mobile_web_predict_validate_preparation.set_upstream(should_run_mw_window)
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_predict_validate = \
             DockerBashOperator(task_id='MobileWebPredictValidate',
                                dag=dag,
@@ -357,7 +357,7 @@ def generate_dags(mode):
         # TODO add dependency on mobile_web_adjust_calc
         mobile_web_predict_validate.set_upstream([mobile_web_predict_validate_preparation])
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_compare_est_to_qc = \
             DockerBashOperator(task_id='MobileWebCompareEstToQC',
                                dag=dag,
@@ -365,7 +365,7 @@ def generate_dags(mode):
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/web/compare_estimations_to_qc.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -sm -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_train_model = \
             DockerBashOperator(task_id='MobileWebTrainModel',
                                dag=dag,
@@ -373,7 +373,7 @@ def generate_dags(mode):
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/web/train_mobile_web_model.sh -d {{ ds }} -fd {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         mobile_web_model_validate = \
             DockerBashOperator(task_id='MobileWebModelValidate',
                                dag=dag,
@@ -391,7 +391,7 @@ def generate_dags(mode):
     mobile_web_gaps_filler.set_upstream(should_run_mw_window)
 
     # TODO I should verify: is the task ID right? should we concatenate the date?
-    # TODO configure parallelsim setting for this task, which is heavier (10 slots)
+    # TODO configure parallelism setting for this task, which is heavier (10 slots)
     mobile_web_first_stage_agg = \
         DockerBashOperator(task_id='MobileWebFirstStageAgg',
                            dag=dag,
@@ -402,11 +402,11 @@ def generate_dags(mode):
         mobile_web_train_model.set_upstream(mobile_web_first_stage_agg)
         mobile_web_compare_est_to_qc.set_upstream(mobile_web_first_stage_agg)
 
-    # TODO configure parallelsim setting for this task, which is heavier (10 slots)
+    # TODO configure parallelism setting for this task, which is heavier (10 slots)
     mobile_web_first_stage_agg.set_upstream(should_run_mw_window)
 
     # TODO I should verify: is the task ID right? should we concatenate the date?
-    # TODO configure parallelsim setting for this task, which is heavier (10 slots)
+    # TODO configure parallelism setting for this task, which is heavier (10 slots)
     mobile_web_adjust_calc_intermediate = \
         DockerBashOperator(task_id='MobileWebAdjustCalcIntermediate',
                            dag=dag,
@@ -418,7 +418,7 @@ def generate_dags(mode):
     else:
         mobile_web_adjust_calc_intermediate.set_upstream(mobile_web_first_stage_agg)
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_adjust_calc = \
         DockerBashOperator(task_id='MobileWebAdjustCalc',
                            dag=dag,
@@ -427,7 +427,7 @@ def generate_dags(mode):
                            )
     mobile_web_adjust_calc.set_upstream([mobile_web_gaps_filler,mobile_web_adjust_calc_intermediate])
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_check_daily_estimations = \
         DockerBashOperator(task_id='MobileWebCheckDailyEstimations',
                            dag=dag,
@@ -436,7 +436,7 @@ def generate_dags(mode):
                            )
     mobile_web_check_daily_estimations.set_upstream(mobile_web_adjust_calc)
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_calc_subdomains = \
         DockerBashOperator(task_id='MobileWebCalcSubdomains',
                            dag=dag,
@@ -445,7 +445,7 @@ def generate_dags(mode):
                            )
     mobile_web_calc_subdomains.set_upstream([mobile_web_adjust_calc, prepare_hbase_tables])
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_popular_pages = \
         DockerBashOperator(task_id='MobileWebPopularPages',
                            dag=dag,
@@ -512,7 +512,7 @@ def generate_dags(mode):
             sum_ww_day_i.set_upstream(mobile_web_adjust_calc)
             sum_ww_all.set_upstream(sum_ww_day_i)
 
-    # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+    # TODO configure parallelism setting for this task, which is heavier (20 slots)
     mobile_web_adjust_store = \
         DockerBashOperator(task_id='MobileWebAdjustStore',
                            dag=dag,
@@ -562,9 +562,9 @@ def generate_dags(mode):
     # App Ranks #
     #############
 
-    daily_app_ranks_precalculation = ExternalTaskSensor(external_dag_id='DailyAppRanksPrecalculation',
+    daily_app_ranks_precalculation = ExternalTaskSensor(external_dag_id='DailyAppRanksBackfill',
                                                  dag=dag,
-                                                 task_id="DailyAppRanksPrecalculation",
+                                                 task_id="DailyAppRanksBackfill",
                                                  external_task_id='DailyAppRanksSuppl')
 
     usage_ranks_main = \
@@ -629,7 +629,7 @@ def generate_dags(mode):
                                  )
 
     if is_window_dag():
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         trends_28_days = \
             DockerBashOperator(task_id='Trends28Days',
                                dag=dag,
@@ -638,7 +638,7 @@ def generate_dags(mode):
                                )
         trends_28_days.set_upstream([usage_ranks])
 
-        # TODO configure parallelsim setting for this task, which is heavier (20 slots)
+        # TODO configure parallelism setting for this task, which is heavier (20 slots)
         trends_7_days = \
             DockerBashOperator(task_id='Trends7Days',
                                dag=dag,
@@ -669,7 +669,6 @@ def generate_dags(mode):
                                             dag=dag
                                             )
 
-    #TODO check why is it configured on local docker
     copy_to_prod_mobile_web_hbp1 = \
         DockerBashOperator(task_id='CopyToProdMobileWebHbp1',
                            dag=dag,
@@ -737,6 +736,10 @@ def generate_dags(mode):
 
         top_apps_for_sanity.set_upstream(usage_ranks)
 
+
+    cleanup_from = 8
+    cleanup_to = 3
+
     #######################
     # Apps Clean-Up Stage #
     #######################
@@ -747,7 +750,7 @@ def generate_dags(mode):
                                            dag=dag
                                            )
 
-        for i in range(3,8):
+        for i in range(cleanup_to, cleanup_from):
             apps_cleanup_stage_dt_minus_i = \
                 DockerBashOperator(task_id='AppsCleanupStage_DT-%s' % i,
                                    dag=dag,
@@ -761,7 +764,6 @@ def generate_dags(mode):
     # Local Availability Dates #
     ############################
 
-    #TODO check why is it configured on local docker
     update_usage_ranks_date_stage = \
         DockerBashOperator(task_id='UpdateUsageRanksDateStage',
                        dag=dag,
@@ -769,6 +771,9 @@ def generate_dags(mode):
                        bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p usage_ranks -pn UsageRanksStage -um success'''
                        )
     update_usage_ranks_date_stage.set_upstream(usage_ranks)
+
+
+    prod_targets = ['hbp1', 'hbp2']
 
 
     ################
@@ -782,24 +787,26 @@ def generate_dags(mode):
                                  dag=dag
                                  )
 
-            for i in range(3,8):
+            for i in range(cleanup_to, cleanup_from):
                 #TODO check why is it configured to use this specific docker; extract reference to configuration
-                cleanup_hbp1_ds_minus_i = \
-                    DockerBashOperator(task_id='CleanupHbp1_DS-%s' % i,
-                                       dag=dag,
-                                       docker_name='mrp-hbp1',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p drop_hbase_tables''' % i
-                                       )
-                cleanup_hbp1_ds_minus_i.set_upstream(apps)
+                for target in prod_targets:
+                    cleanup_day = \
+                        DockerBashOperator(task_id='Cleanup%s_DS-%s' % (target, i),
+                                           dag=dag,
+                                           docker_name='mrp-%s' % target,
+                                           bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p drop_hbase_tables''' % i
+                                           )
+                    cleanup_day.set_upstream(apps)
 
-                ranks_etcd_prod_cleanup_ds_minus_i = \
+                ranks_etcd_cleanup_day = \
                     DockerBashOperator(task_id='RanksEtcdProdCleanup_DS-%s' % i,
                                        dag=dag,
                                        docker_name='mrp-hbp1',
                                        bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
                                        )
-                ranks_etcd_prod_cleanup_ds_minus_i.set_upstream(cleanup_hbp1_ds_minus_i)
-                cleanup_prod.set_upstream(ranks_etcd_prod_cleanup_ds_minus_i)
+                # TODO couple etcd env with target and define dependency of etcd cleanup on data cleanup
+                ranks_etcd_cleanup_day.set_upstream(apps)
+                cleanup_prod.set_upstream(ranks_etcd_cleanup_day)
 
     #####################
     # Copy to Prod Apps #
@@ -809,62 +816,63 @@ def generate_dags(mode):
                         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
 
     if is_prod_env():
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
-        copy_to_prod_app_sdk_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdAppSdkHbp1',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='hbasecopy mrp hbp1 app_sdk_stats_' + hbase_suffix_template
-                           )
+        for target in prod_targets:
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_app_sdk = \
+                DockerBashOperator(task_id='CopyToProdAppSdk%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp %s app_sdk_stats_' % target + hbase_suffix_template
+                                   )
 
-        copy_to_prod_app_sdk_hbp1.set_upstream([app_engagement,app_affinity,retention_store,app_usage_pattern_store])
+            copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store])
 
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
-        copy_to_prod_cats_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdCatsHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 app_sdk_category_stats_' + hbase_suffix_template
-                               )
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_cats = \
+                DockerBashOperator(task_id='CopyToProdCats%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp %s app_sdk_category_stats_' % target + hbase_suffix_template
+                                   )
 
-        copy_to_prod_cats_hbp1.set_upstream([app_engagement,category_retention_store,usage_pattern_categories])
+            copy_to_prod_cats.set_upstream([app_engagement, category_retention_store, usage_pattern_categories])
 
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
-        copy_to_prod_leaders_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdLeadersHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 app_sdk_category_lead_' + hbase_suffix_template
-                               )
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_leaders = \
+                DockerBashOperator(task_id='CopyToProdLeaders%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp %s app_sdk_category_lead_' % target + hbase_suffix_template
+                                   )
 
-        copy_to_prod_leaders_hbp1.set_upstream([app_engagement,retention_leaders,usage_pattern_category_leaders])
+            copy_to_prod_leaders.set_upstream([app_engagement, retention_leaders, usage_pattern_category_leaders])
 
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
-        copy_to_prod_engage_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdEngageHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 app_eng_rank_' + hbase_suffix_template
-                               )
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_engage = \
+                DockerBashOperator(task_id='CopyToProdEngage%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp %s app_eng_rank_' % target + hbase_suffix_template
+                                   )
 
-        copy_to_prod_engage_hbp1.set_upstream(usage_ranks)
+            copy_to_prod_engage.set_upstream(usage_ranks)
 
-        # TODO configure parallelsim setting for this task, which is heavier (30 slots)
-        copy_to_prod_rank_hbp1 = \
-            DockerBashOperator(task_id='CopyToProdRankHbp1',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='hbasecopy mrp hbp1 cat_mod_app_rank_' + hbase_suffix_template
-                               )
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_rank = \
+                DockerBashOperator(task_id='CopyToProdRank%s' % target,
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='hbasecopy mrp hbp1 cat_mod_app_rank_' + hbase_suffix_template
+                                   )
 
-        copy_to_prod_rank_hbp1.set_upstream([usage_ranks,trends])
+            copy_to_prod_rank.set_upstream([usage_ranks, trends])
 
-        copy_to_prod_apps = DummyOperator(task_id='CopyToProdApps',
-                             dag=dag
-                             )
+            copy_to_prod_apps = DummyOperator(task_id='CopyToProdApps%s' % target,
+                                              dag=dag
+                                              )
 
-        copy_to_prod_apps.set_upstream([copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
-                                        copy_to_prod_engage_hbp1,copy_to_prod_rank_hbp1])
+            copy_to_prod_apps.set_upstream([copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders,
+                                            copy_to_prod_engage, copy_to_prod_rank])
 
 
     #########################
@@ -872,15 +880,14 @@ def generate_dags(mode):
     #########################
 
     if is_prod_env():
-        if is_window_dag():
-            update_dyn_set_apps_prod = \
-                DockerBashOperator(task_id='UpdateDynSetAppsProd',
-                                   dag=dag,
-                                   docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP'''
-                                   )
+        update_dyn_set_apps_prod = \
+            DockerBashOperator(task_id='UpdateDynSetAppsProd',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION_MRP'''
+                               )
 
-            update_dyn_set_apps_prod.set_upstream([copy_to_prod_apps,apps])
+        update_dyn_set_apps_prod.set_upstream([copy_to_prod_apps,apps])
 
 
     #############################
@@ -888,7 +895,6 @@ def generate_dags(mode):
     #############################
 
     if is_prod_env():
-        #TODO check why is it configured on local docker
         update_usage_ranks_date_prod = \
             DockerBashOperator(task_id='UpdateUsageRanksDateProd',
                                dag=dag,
