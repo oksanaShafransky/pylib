@@ -522,6 +522,7 @@ def generate_dags(mode):
         copy_to_prod = DummyOperator(task_id='CopyToProd',
                                      dag=dag
                                      )
+        copy_to_prod.set_upstream(apps)
 
         for target in deploy_targets:
             copy_to_prod_app_sdk = \
@@ -579,7 +580,7 @@ def generate_dags(mode):
                 )
             copy_to_prod_rank.set_upstream([usage_ranks, trends])
 
-            copy_to_prod.set_upstream([apps, copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders, copy_to_prod_engage, copy_to_prod_rank])
+            copy_to_prod.set_upstream([copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders, copy_to_prod_engage, copy_to_prod_rank])
 
     ################
     # Cleanup Prod #
