@@ -261,14 +261,6 @@ def generate_dags(mode):
     # Application Affinity #
     ########################
 
-    if is_window_dag():
-        affinity_country_filter = '-c ' + EtcdHook().get_record(ETCD_ENV_ROOT['PRODUCTION'],
-                                                                'services/app-affinity/window/countries')
-    else:
-        affinity_country_filter = ''
-
-    dag_template_params_for_mode.update({'affinity_country_filter': affinity_country_filter})
-
     # TODO configure parallelism setting for this task, which is heavier (5 slots)
     app_affinity_app_precalculation = \
         DockerBashOperator(task_id='AppAffinityAppPrecalculation',
