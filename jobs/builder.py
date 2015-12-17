@@ -50,8 +50,7 @@ def get_region_servers():
 class JobBuilder:
     GZ_COUNTER = 0
 
-    # needed by some jobs, TODO: move to per job basis
-    max_map_fail_percentage = 1
+    max_map_fail_percentage = 0
     max_map_task_fails = 4
     max_reduce_task_fails = 8
 
@@ -194,7 +193,7 @@ class JobBuilder:
         return self
 
     def pool(self, pool):
-        self.args += ['--jobconf', ('mapred.fairscheduler.pool=%s' % pool)]
+        self.args += ['--jobconf', ('mapreduce.job.queuename=%s' % pool)]
         return self
 
     def num_reducers(self, reducers):

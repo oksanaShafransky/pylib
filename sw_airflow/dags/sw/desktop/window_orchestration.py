@@ -2,18 +2,16 @@ MASTER_EXECUTION_DIR = '/home/jeniag/similargroup_master'
 CDH5_EXECUTION_DIR = '/home/jeniag/similargroup_cdh5_test'
 __author__ = 'jeniag'
 
-
+from datetime import datetime, timedelta
 
 from airflow.models import DAG
-from datetime import datetime, timedelta
-from sw_airflow.operators import DockerBashSensor, DockerBashOperator
 
-
+from sw.airflow.operators import DockerBashSensor, DockerBashOperator
 
 dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 7, 29),
-    'schedule_interval': timedelta(minutes=5),
+    'schedule_interval': timedelta(minutes=15),
 }
 
 dag_template_params = {'execution_dir': MASTER_EXECUTION_DIR, 'docker_gate': 'docker-a01.sg.internal',

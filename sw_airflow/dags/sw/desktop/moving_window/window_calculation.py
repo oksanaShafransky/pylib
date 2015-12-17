@@ -1,7 +1,8 @@
 __author__ = 'jeniag'
 
 from daily_calculation import *
-from sw_airflow.desktop.moving_window.dag import temp_dag
+from sw.desktop.moving_window.dag import temp_dag
+from sw.airflow.operators import DockerBashOperator
 
 # Create tables in HBase
 hbase_tables = DockerBashOperator(
