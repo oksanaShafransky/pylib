@@ -17,7 +17,7 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(10, 11, 15),
+    'start_date': datetime(2015, 12, 1),
     'depends_on_past': False,
     'email': ['amitr@similarweb.com'],
     'email_on_failure': True,
@@ -32,16 +32,10 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 dag = DAG(dag_id='MobileWebReferralsDailyPreliminary', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
 
-# TODO: define sensor for new opera raw data is ready
-should_run = CompoundDateEtcdSensor(task_id='RawDataReady',
+opera_raw_data_ready = EtcdSensor(task_id='OperaRawDataReady',
                                     dag=dag,
                                     root=ETCD_ENV_ROOT[dag_template_params['run_environment']],
-                                    key_list_path='services/copy_logs_daily/trackers/',
-                                    list_separator=';',
-                                    desired_date='''{{ ds }}''',
-                                    key_root='services/data-ingestion/trackers/mobile',
-                                    key_suffix='.sg.internal',
-                                    execution_timeout=timedelta(minutes=240)
+                                    path='''services/opera-mini-s3/daily/{{ ds }}'''
 )
 
 
@@ -50,7 +44,7 @@ filter_malformed_events = DockerBashOperator(task_id='FilterMalformedEvents',
                                      docker_name='''{{ params.cluster }}''',
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/preliminary.sh -d {{ ds }} -p filter_malformed_events -env main'''
 )
-filter_malformed_events.set_upstream(should_run)
+filter_malformed_events.set_upstream(opera_raw_data_ready)
 
 
 extract_invalid_users = DockerBashOperator(task_id='ExtractInvalidUsers',
@@ -61,9 +55,9 @@ extract_invalid_users = DockerBashOperator(task_id='ExtractInvalidUsers',
 extract_invalid_users.set_upstream(filter_malformed_events)
 
 
-filter_invalid_users_from_events = DockerBashOperator(task_id='FilterInvalidUsers',
+filter_invalid_users = DockerBashOperator(task_id='FilterInvalidUsers',
                                      dag=dag,
                                      docker_name=DEFAULT_CLUSTER,
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/preliminary.sh -d {{ ds }} -p filter_invalid_users_from_events -env main'''
 )
-filter_invalid_users_from_events.set_upstream(extract_invalid_users)
+filter_invalid_users.set_upstream(extract_invalid_users)
