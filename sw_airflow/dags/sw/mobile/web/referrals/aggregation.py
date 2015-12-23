@@ -36,12 +36,12 @@ aggregation_preliminary = ExternalTaskSensor(external_dag_id='MobileWebReferrals
                                               dag=dag,
                                               task_id="AggregationPreliminary",
                                               external_task_id='FinishProcess')
-# TODO: fix when ready
+
 # daily adjustment
-daily_adjustment = ExternalTaskSensor(external_dag_id='MobileWebMovingWindow',
+daily_adjustment = ExternalTaskSensor(external_dag_id='MobileAppsMovingWindow_window',
                                              dag=dag,
                                              task_id="DailyAdjustment",
-                                             external_task_id='DailyRedistribution')
+                                             external_task_id='MobileWebAdjustCalc')
 
 # daily weights
 daily_weights = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
