@@ -149,9 +149,8 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
 
 class DockerCopyHbaseTableOperator(BashOperator):
     ui_color = '#0099FF'
-    cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh
-hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
-    '''
+    cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh &&
+                      hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s'''
 
     template_fields = ('bash_command', 'docker_name')
     dock_cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
