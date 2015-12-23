@@ -281,7 +281,8 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=target,
-                    table_name_template= 'app_sdk_stats_' + hbase_suffix_template
+                    table_name_template= 'app_sdk_stats_' + hbase_suffix_template,
+                    is_forced=True
                 )
             copy_to_prod_app_sdk.set_upstream([app_engagement])
 
@@ -293,7 +294,8 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=target,
-                    table_name_template= 'app_sdk_category_stats_' + hbase_suffix_template
+                    table_name_template= 'app_sdk_category_stats_' + hbase_suffix_template,
+                    is_forced=True
                 )
 
             copy_to_prod_cats.set_upstream([app_engagement])
@@ -306,7 +308,8 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=target,
-                    table_name_template= 'app_sdk_category_lead_' + hbase_suffix_template
+                    table_name_template= 'app_sdk_category_lead_' + hbase_suffix_template,
+                    is_forced=True
                 )
             copy_to_prod_leaders.set_upstream([app_engagement])
 
@@ -318,7 +321,8 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=target,
-                    table_name_template= 'app_eng_rank_' + hbase_suffix_template
+                    table_name_template= 'app_eng_rank_' + hbase_suffix_template,
+                    is_forced=True
                 )
             copy_to_prod_engage.set_upstream(usage_ranks)
 
@@ -330,7 +334,8 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=target,
-                    table_name_template= 'cat_mod_app_rank_' + hbase_suffix_template
+                    table_name_template= 'cat_mod_app_rank_' + hbase_suffix_template,
+                    is_forced=True
                 )
             copy_to_prod_rank.set_upstream([usage_ranks,trends])
 
