@@ -121,3 +121,6 @@ estimate_site_pvs = DockerBashOperator(task_id='EstimateSitePVs',
 
 estimate_site_pvs.set_upstream(calculate_site_pvs_shares)
 estimate_site_pvs.set_upstream(daily_adjustment)
+
+wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
+wrap_up.set_upstream(estimate_site_pvs)
