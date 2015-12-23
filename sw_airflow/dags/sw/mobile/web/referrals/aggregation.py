@@ -31,14 +31,23 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 
 dag = DAG(dag_id='MobileWebReferralsDailyAggregation', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
+# preliminary
+aggregation_preliminary = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyPreliminary',
+                                              dag=dag,
+                                              task_id="AggregationPreliminary",
+                                              external_task_id='FinishProcess')
+# TODO: fix when ready
+# daily adjustment
+daily_adjustment = ExternalTaskSensor(external_dag_id='MobileWebMovingWindow',
+                                             dag=dag,
+                                             task_id="DailyAdjustment",
+                                             external_task_id='DailyRedistribution')
 
-# TODO: sensor for preliminary done
-# optimize parallel
-preliminary_data_ready = EtcdSensor(task_id='OperaRawDataReady',
-                                    dag=dag,
-                                    root=ETCD_ENV_ROOT[dag_template_params['run_environment']],
-                                    path='''services/opera-mini-s3/daily/{{ ds }}'''
-)
+# daily weights
+daily_weights = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
+                                      dag=dag,
+                                      task_id="DailyWeights",
+                                      external_task_id='MobileWebDailyCut')
 
 
 build_user_transitions = DockerBashOperator(task_id='BuildUserTransitions',
@@ -46,14 +55,14 @@ build_user_transitions = DockerBashOperator(task_id='BuildUserTransitions',
                                      docker_name='''{{ params.cluster }}''',
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p build_user_transitions -env main'''
 )
-build_user_transitions.set_upstream(preliminary_data_ready)
+build_user_transitions.set_upstream(aggregation_preliminary)
 
 count_user_domain_pvs = DockerBashOperator(task_id='CountUserDomainPVs',
                                             dag=dag,
                                             docker_name='''{{ params.cluster }}''',
                                             bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p count_user_domain_pvs -env main'''
 )
-count_user_domain_pvs.set_upstream(preliminary_data_ready)
+count_user_domain_pvs.set_upstream(aggregation_preliminary)
 
 count_user_site2_events = DockerBashOperator(task_id='CountUserSiteSite2Events',
                                            dag=dag,
@@ -84,7 +93,7 @@ adjust_direct_pvs = DockerBashOperator(task_id='AdjustDirectPVs',
                                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p adjust_direct_pvs -env main'''
 )
 adjust_direct_pvs.set_upstream(build_user_transitions)
-# TODO: daily adjustment should be dependency
+adjust_direct_pvs.set_upstream(daily_adjustment)
 
 prepare_site_estimated_pvs = DockerBashOperator(task_id='PrepareSiteEstimatedPVs',
                                        dag=dag,
@@ -92,7 +101,7 @@ prepare_site_estimated_pvs = DockerBashOperator(task_id='PrepareSiteEstimatedPVs
                                        bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p prepare_site_estimated_pvs -env main -wenv daily-cut'''
 )
 
-# TODO: daily weights should be dependency
+prepare_site_estimated_pvs.set_upstream(daily_weights)
 
 calculate_site_pvs_shares = DockerBashOperator(task_id='CalculateSitePVsShares',
                                                 dag=dag,
@@ -111,4 +120,4 @@ estimate_site_pvs = DockerBashOperator(task_id='EstimateSitePVs',
 
 
 estimate_site_pvs.set_upstream(calculate_site_pvs_shares)
-# TODO: daily adjustment should be dependency
+estimate_site_pvs.set_upstream(daily_adjustment)

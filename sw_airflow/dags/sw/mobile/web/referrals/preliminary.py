@@ -61,3 +61,6 @@ filter_invalid_users = DockerBashOperator(task_id='FilterInvalidUsers',
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/preliminary.sh -d {{ ds }} -p filter_invalid_users_from_events -env main'''
 )
 filter_invalid_users.set_upstream(extract_invalid_users)
+
+wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
+wrap_up.set_upstream(filter_invalid_users)
