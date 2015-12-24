@@ -68,11 +68,15 @@ def generate_dags(mode):
               #Following is temporary hack until we upgrade to Airflow 1.6.x or later
               schedule_interval=timedelta(days=1))
 
-
     mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                                  dag=dag,
-                                                 task_id="MobileDailyEstimation",
+                                                 task_id='MobileAppsDailyEstimation',
                                                  external_task_id='MobileDailyEstimation')
+
+    mobile_daily_aggregation = ExternalTaskSensor(external_dag_id='MobileDailyPreliminary',
+                                                  dag=dag,
+                                                  task_id='DailyAggregation',
+                                                  external_task_id='MobileDailyEstimation')
 
     ########################
     # Prepare HBase Tables #
@@ -84,8 +88,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p tables'''
                            )
-
-    prepare_hbase_tables.set_upstream(mobile_daily_estimation)
 
     #####################
     # App Usage Pattern #
@@ -127,9 +129,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p category_store'''
                            )
-
-    usage_pattern_categories.set_upstream([prepare_hbase_tables,
-                                 usage_pattern_calculation])
+    usage_pattern_categories.set_upstream([prepare_hbase_tables, usage_pattern_calculation])
 
     usage_pattern_category_leaders = \
         DockerBashOperator(task_id='UsagePatternCategoryLeaders',
@@ -138,9 +138,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p category_leaders'''
                            )
 
-    usage_pattern_category_leaders.set_upstream([prepare_hbase_tables,
-                                                 app_usage_pattern_store,
-                                                 usage_raw_totals])
+    usage_pattern_category_leaders.set_upstream([prepare_hbase_tables, app_usage_pattern_store, usage_raw_totals])
 
     #################
     # App Retention #
@@ -152,8 +150,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calc_apps'''
                            )
-
-    app_retention_calculation.set_upstream(mobile_daily_estimation)
+    app_retention_calculation.set_upstream(mobile_daily_aggregation)
 
     app_churn_calculation = \
         DockerBashOperator(task_id='AppChurnCalculation',
@@ -161,7 +158,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p churn_calc'''
                            )
-
     app_churn_calculation.set_upstream(app_retention_calculation)
 
     smooth_app_retention = \
@@ -170,13 +166,11 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p smooth_retention'''
                            )
-
     smooth_app_retention.set_upstream(app_churn_calculation)
 
     app_retention_precalculation = DummyOperator(task_id='AppRetentionPrecalculation',
                                                  dag=dag
                                                  )
-
     app_retention_precalculation.set_upstream(smooth_app_retention)
 
     if is_window_dag():
@@ -194,7 +188,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calc_cats'''
                            )
-
     app_retention_categories_calculation.set_upstream(app_retention_precalculation)
 
     app_retention_aggregate_categories = \
@@ -203,7 +196,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p agg_cats'''
                            )
-
     app_retention_aggregate_categories.set_upstream(app_retention_categories_calculation)
 
     app_retention_categories = DummyOperator(task_id='AppRetentionCategories',
@@ -226,7 +218,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p store_cats'''
                            )
-
     category_retention_store.set_upstream([prepare_hbase_tables, app_retention_categories])
 
     retention_store = DummyOperator(task_id='RetentionStore',
@@ -240,7 +231,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p leaders_calc'''
                            )
-
     retention_leaders_calculation.set_upstream([prepare_hbase_tables, retention_store])
 
     retention_leaders_store = \
@@ -249,7 +239,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-retention/retention.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p leaders_store'''
                            )
-
     retention_leaders_store.set_upstream(retention_leaders_calculation)
 
     retention_leaders = DummyOperator(task_id='RetentionLeaders',
@@ -268,8 +257,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-affinity/affinity.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} {{ params.affinity_country_filter }} -p app_panel_preparation'''
                            )
-
-    app_affinity_app_precalculation.set_upstream(mobile_daily_estimation)
+    app_affinity_app_precalculation.set_upstream(mobile_daily_aggregation)
 
     # TODO configure parallelism setting for this task, which is heavier (5 slots)
     app_affinity_country_precalculation = \
@@ -278,7 +266,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-affinity/affinity.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} {{ params.affinity_country_filter }} -p country_panel_preparation'''
                            )
-
     app_affinity_country_precalculation.set_upstream(mobile_daily_estimation)
 
     app_affinity_precalculation = DummyOperator(task_id='AppAffinityPrecalculation',
@@ -293,7 +280,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-affinity/affinity.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} {{ params.affinity_country_filter }} -p calc_affinity'''
                            )
-
     app_affinity_pairs.set_upstream(app_affinity_precalculation)
 
     app_affinity_store = \
@@ -302,7 +288,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-affinity/affinity.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p store_affinity'''
                            )
-
     app_affinity_store.set_upstream([prepare_hbase_tables, app_affinity_pairs])
 
     if is_window_dag():
@@ -319,7 +304,6 @@ def generate_dags(mode):
                                  )
     app_affinity.set_upstream(app_affinity_store)
 
-
     ##################
     # App Engagement #
     ##################
@@ -330,7 +314,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
-    app_engagement.set_upstream(prepare_hbase_tables)
+    app_engagement.set_upstream(mobile_daily_estimation, prepare_hbase_tables)
 
     if is_window_dag():
         app_engagement_sanity_check = \
@@ -347,9 +331,10 @@ def generate_dags(mode):
     #############
 
     daily_app_ranks_backfill = ExternalTaskSensor(external_dag_id='DailyAppRanksBackfill',
-                                                 dag=dag,
-                                                 task_id="DailyAppRanksBackfill",
-                                                 external_task_id='DailyAppRanksBackfill')
+                                                  dag=dag,
+                                                  task_id="DailyAppRanksBackfill",
+                                                  external_task_id='DailyAppRanksBackfill'
+                                                  )
 
     usage_ranks_main = \
         DockerBashOperator(task_id='UsageRanksMain',
@@ -357,11 +342,11 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
-    usage_ranks_main.set_upstream([daily_app_ranks_backfill,app_engagement])
+    usage_ranks_main.set_upstream([daily_app_ranks_backfill, app_engagement])
 
     usage_ranks = DummyOperator(task_id='UsageRanks',
-                              dag=dag
-                              )
+                                dag=dag
+                                )
 
     usage_ranks.set_upstream(usage_ranks_main)
 
@@ -371,7 +356,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/cross_cache.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }} -p prepare_app_rank_export'''
                            )
-
     prepare_ranks.set_upstream(usage_ranks)
 
     ranks_export_stage = \
@@ -380,7 +364,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/cross_cache.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p export'''
                            )
-
     ranks_export_stage.set_upstream(prepare_ranks)
 
     #TODO add check that this is indeed prod environment
@@ -391,25 +374,24 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/cross_cache.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p export'''
                                )
-
         ranks_export_prod.set_upstream(prepare_ranks)
 
     export_ranks = DummyOperator(task_id='ExportRanks',
-                               dag=dag
-                               )
+                                 dag=dag
+                                 )
 
     if is_prod_env():
-        export_ranks.set_upstream([ranks_export_prod,ranks_export_stage,prepare_ranks])
+        export_ranks.set_upstream([ranks_export_prod, ranks_export_stage, prepare_ranks])
     else:
-        export_ranks.set_upstream([ranks_export_stage,prepare_ranks])
+        export_ranks.set_upstream([ranks_export_stage, prepare_ranks])
 
     ##########
     # Trends #
     ##########
 
     trends = DummyOperator(task_id='Trends',
-                                 dag=dag
-                                 )
+                           dag=dag
+                           )
 
     if is_window_dag():
         # TODO configure parallelism setting for this task, which is heavier (20 slots)
@@ -429,8 +411,7 @@ def generate_dags(mode):
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/trends.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -td 7'''
                                )
         trends_7_days.set_upstream([usage_ranks])
-
-        trends.set_upstream([trends_28_days,trends_7_days])
+        trends.set_upstream([trends_28_days, trends_7_days])
 
     if is_snapshot_dag():
         trends_1_month = \
@@ -440,7 +421,6 @@ def generate_dags(mode):
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/trends.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -td 1'''
                                )
         trends_1_month.set_upstream([usage_ranks])
-
         trends.set_upstream(trends_1_month)
 
     ####################
@@ -450,7 +430,8 @@ def generate_dags(mode):
     apps = DummyOperator(task_id='Apps',
                          dag=dag
                          )
-    apps.set_upstream([app_engagement,app_affinity,retention_store,app_retention_categories,retention_leaders,app_usage_pattern_store,usage_pattern_categories,usage_pattern_category_leaders,usage_ranks,export_ranks,trends])
+    apps.set_upstream([app_engagement, app_affinity, retention_store, app_retention_categories, retention_leaders, app_usage_pattern_store, usage_pattern_categories, usage_pattern_category_leaders,
+                       usage_ranks, export_ranks, trends])
 
     #######################
     # Top Apps for Sanity #
@@ -463,7 +444,6 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/qaTopApps.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }}'''
                                )
-
         top_apps_for_sanity.set_upstream(usage_ranks)
 
     cleanup_from_days = 8
@@ -507,7 +487,7 @@ def generate_dags(mode):
     ################
 
     hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
-                             '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
+                             '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
 
     if is_prod_env():
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
