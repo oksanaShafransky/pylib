@@ -76,7 +76,7 @@ def generate_dags(mode):
     mobile_daily_aggregation = ExternalTaskSensor(external_dag_id='MobileDailyPreliminary',
                                                   dag=dag,
                                                   task_id='DailyAggregation',
-                                                  external_task_id='MobileDailyEstimation')
+                                                  external_task_id='DailyAggregation')
 
     ########################
     # Prepare HBase Tables #
