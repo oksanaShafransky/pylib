@@ -11,7 +11,7 @@ from sw.airflow.operators import DockerBashOperator
 DEFAULT_EXECUTION_DIR = '/home/iddoa/similargroup_SIM-6508_ios_user_grouping_job'
 BASE_DIR = '/user/iddoa/ios_testing'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
-DEFAULT_CLUSTER = 'mrp_iddo_a'
+DEFAULT_CLUSTER = 'mrp-ios'
 
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
@@ -36,5 +36,5 @@ app_affinity_app_precalculation = \
     DockerBashOperator(task_id='ios_user_grouping',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/user_grouping user_grouping'''
+                       bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/user_grouping user_grouping -d {{ ds }}'''
                        )
