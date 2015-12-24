@@ -496,63 +496,62 @@ def generate_dags(mode):
                                      )
         copy_to_prod.set_upstream(apps)
 
-        for target in deploy_targets:
-            copy_to_prod_app_sdk = \
-                DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdAppSdk%s' % target,
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=target,
-                    table_name_template='app_sdk_stats_' + hbase_suffix_template
-                )
-            copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store])
+        copy_to_prod_app_sdk = \
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdAppSdk',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='app_sdk_stats_' + hbase_suffix_template
+            )
+        copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store])
 
-            copy_to_prod_cats = \
-                DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdCats%s' % target,
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=target,
-                    table_name_template='app_sdk_category_stats_' + hbase_suffix_template
+        copy_to_prod_cats = \
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdCats',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='app_sdk_category_stats_' + hbase_suffix_template
                 )
-            copy_to_prod_cats.set_upstream([app_engagement, category_retention_store, usage_pattern_categories])
+        copy_to_prod_cats.set_upstream([app_engagement, category_retention_store, usage_pattern_categories])
 
-            copy_to_prod_leaders = \
-                DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdLeaders%s' % target,
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=target,
-                    table_name_template='app_sdk_category_lead_' + hbase_suffix_template
-                )
-            copy_to_prod_leaders.set_upstream([app_engagement, retention_leaders, usage_pattern_category_leaders])
+        copy_to_prod_leaders = \
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdLeaders',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='app_sdk_category_lead_' + hbase_suffix_template
+            )
+        copy_to_prod_leaders.set_upstream([app_engagement, retention_leaders, usage_pattern_category_leaders])
 
-            copy_to_prod_engage = \
-                DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdEngage%s' % target,
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=target,
-                    table_name_template='app_eng_rank_' + hbase_suffix_template
-                )
-            copy_to_prod_engage.set_upstream(usage_ranks)
+        copy_to_prod_engage = \
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdEngage',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='app_eng_rank_' + hbase_suffix_template
+            )
+        copy_to_prod_engage.set_upstream(usage_ranks)
 
-            copy_to_prod_rank = \
-                DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdRank%s' % target,
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=target,
-                    table_name_template='cat_mod_app_rank_' + hbase_suffix_template
-                )
-            copy_to_prod_rank.set_upstream([usage_ranks, trends])
+        copy_to_prod_rank = \
+            DockerCopyHbaseTableOperator(
+                task_id='CopyToProdRank',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='cat_mod_app_rank_' + hbase_suffix_template
+            )
+        copy_to_prod_rank.set_upstream([usage_ranks, trends])
 
-            copy_to_prod.set_upstream([copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders, copy_to_prod_engage, copy_to_prod_rank])
+        copy_to_prod.set_upstream([copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders, copy_to_prod_engage, copy_to_prod_rank])
 
     ################
     # Cleanup Prod #
