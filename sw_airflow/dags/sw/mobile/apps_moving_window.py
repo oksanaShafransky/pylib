@@ -314,7 +314,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
-    app_engagement.set_upstream(mobile_daily_estimation, prepare_hbase_tables)
+    app_engagement.set_upstream([mobile_daily_estimation, prepare_hbase_tables])
 
     if is_window_dag():
         app_engagement_sanity_check = \
@@ -401,7 +401,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/trends.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -td 28'''
                                )
-        trends_28_days.set_upstream([usage_ranks])
+        trends_28_days.set_upstream(usage_ranks)
 
         # TODO configure parallelism setting for this task, which is heavier (20 slots)
         trends_7_days = \
@@ -420,7 +420,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/trends.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -td 1'''
                                )
-        trends_1_month.set_upstream([usage_ranks])
+        trends_1_month.set_upstream(usage_ranks)
         trends.set_upstream(trends_1_month)
 
     ####################
@@ -581,7 +581,7 @@ def generate_dags(mode):
                                            docker_name='''{{ params.hbase_cluster }}''',
                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
                                            )
-                    cleanup_prod_ds_minus_i.set_upstream([copy_to_prod])
+                    cleanup_prod_ds_minus_i.set_upstream(copy_to_prod)
 
                     cleanup_ranks_etcd_prod_ds_minus_i.set_upstream(cleanup_prod_ds_minus_i)
 
@@ -632,7 +632,7 @@ def generate_dags(mode):
                                            path='''services/mobile_moving_window/{{ params.mode }}/{{ ds }}''',
                                            root=ETCD_ENV_ROOT['PRODUCTION']
                                            )
-        register_success.set_upstream([copy_to_prod,update_usage_ranks_date_prod])
+        register_success.set_upstream([copy_to_prod, update_usage_ranks_date_prod])
 
 
     return dag
