@@ -61,7 +61,7 @@ def generate_dags(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-    dag = DAG(dag_id='MobileWebReferralsMovingWindow' + mode, default_args=dag_args_for_mode, params=dag_template_params_for_mode,
+    dag = DAG(dag_id='MobileWebReferralsMovingWindow_' + mode, default_args=dag_args_for_mode, params=dag_template_params_for_mode,
           #schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
           #Following is temporary hack until we upgrade to Airflow 1.6.x or later
           schedule_interval=timedelta(days=1))
@@ -142,7 +142,11 @@ def generate_dags(mode):
     store_site_referrers_with_totals.set_upstream(calculate_site_referrers_with_totals)
     store_site_referrers_with_totals.set_upstream(prepare_hbase_tables)
 
+    wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
+    wrap_up.set_upstream(store_site_referrers_with_totals)
 
+
+    '''
     # same date for all MW (visits & distro)?
     # TODO: cleanup, should copy to prod be joint for MW & referrals?
     # copy just the column family?
@@ -201,6 +205,7 @@ def generate_dags(mode):
                                            root=ETCD_ENV_ROOT['PRODUCTION']
         )
         register_success.set_upstream(copy_to_prod)
+        '''
 
 
     return dag
