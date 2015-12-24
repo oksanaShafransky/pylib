@@ -78,6 +78,16 @@ def generate_dags(mode):
                                                  task_id="DailyAdjustment",
                                                  external_task_id='MobileWebAdjustCalc')
 
+    #########
+    # Logic #
+    #########
+    prepare_hbase_tables = DockerBashOperator(task_id='PrepareHBaseTables',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl mw -p tables'''
+    )
+
+    prepare_hbase_tables.set_upstream(estimation_preliminary)
 
     sum_user_event_rates = DockerBashOperator(task_id='SumUserEventRates',
                                          dag=dag,
@@ -130,12 +140,79 @@ def generate_dags(mode):
                                                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/estimation.sh -d {{ ds }} -p store_site_referrers_with_totals -env main'''
     )
     store_site_referrers_with_totals.set_upstream(calculate_site_referrers_with_totals)
+    store_site_referrers_with_totals.set_upstream(prepare_hbase_tables)
 
-    # TODO: etcd
+
+
+
+
+    # TODO: should copy to prod be joint for MW & referrals?
+
+
+    deploy_targets = ['hbp1', 'hbp2']
+    ################
+    # Copy to Prod #
+    ################
+
+    hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
+                             '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
+
+    if is_prod_env():
+        copy_to_prod = DummyOperator(task_id='CopyToProd',
+                                     dag=dag
+        )
+
+        for target in deploy_targets:
+            copy_to_prod_mw_referrals = \
+                DockerCopyHbaseTableOperator(
+                    task_id='CopyToProdMWReferrals%s' % target,
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=target,
+                    table_name_template='mobile_web_stats_' + hbase_suffix_template
+                )
+            copy_to_prod_mw_referrals.set_upstream(store_site_referrers_with_totals)
+            copy_to_prod.set_upstream(copy_to_prod_mw_referrals)
+
+
+
+
+
+
+    ####################
+    # Dynamic Settings #
+    ####################
+    update_dynamic_settings_stage = DockerBashOperator(task_id='UpdateDynamicSettingsStage',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p mobile_web_referrals'''
+    )
+    update_dynamic_settings_stage.set_upstream(store_site_referrers_with_totals)
+
+    if is_prod_env():
+        if is_window_dag():
+            update_dynamic_settings_prod = DockerBashOperator(task_id='UpdateDynamicSettingsProd',
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p mobile_web_referrals'''
+                )
+
+            update_dynamic_settings_prod.set_upstream(copy_to_prod)
+
+    # TODO: etcd, cleanup, copy to prod
+    if is_prod_env():
+
+        register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
+                                           dag=dag,
+                                           path='''services/mobile-web/moving-window/referrals/{{ params.mode }}/{{ ds }}''',
+                                           root=ETCD_ENV_ROOT['PRODUCTION']
+        )
+        register_success.set_upstream([copy_to_prod,update_usage_ranks_date_prod])
 
     return dag
 
 
 globals()['dag_apps_mw_referrers_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
-#globals()['dag_apps_moving_window_daily'] = generate_dags(WINDOW_MODE)
+#globals()['dag_apps_mw_referrers_moving_window_window'] = generate_dags(WINDOW_MODE)
 
