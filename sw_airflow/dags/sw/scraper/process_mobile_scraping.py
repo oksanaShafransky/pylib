@@ -10,7 +10,7 @@ from airflow.operators.sensors import HdfsSensor
 from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
 from sw.airflow.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/scraperprod'
+DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_DOCKER = 'mrp'
