@@ -70,8 +70,8 @@ def generate_dags(mode):
 
     mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                                  dag=dag,
-                                                 task_id='MobileAppsDailyEstimation',
-                                                 external_task_id='MobileDailyEstimation')
+                                                 task_id='MobileDailyEstimation',
+                                                 external_task_id='MobileAppsDailyEstimation')
 
     mobile_daily_aggregation = ExternalTaskSensor(external_dag_id='MobileDailyPreliminary',
                                                   dag=dag,
@@ -266,7 +266,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-affinity/affinity.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} {{ params.affinity_country_filter }} -p country_panel_preparation'''
                            )
-    app_affinity_country_precalculation.set_upstream(mobile_daily_estimation)
+    app_affinity_country_precalculation.set_upstream(mobile_daily_aggregation)
 
     app_affinity_precalculation = DummyOperator(task_id='AppAffinityPrecalculation',
                                                 dag=dag
