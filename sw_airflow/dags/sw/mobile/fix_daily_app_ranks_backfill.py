@@ -16,7 +16,7 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2015, 10, 1),
+    'start_date': datetime(2015, 10, 6),
     'depends_on_past': False,
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
@@ -29,7 +29,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
                        'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE}
 
-dag = DAG(dag_id='FixDailyAppRanksBackfill', default_args=dag_args, params=dag_template_params,
+dag = DAG(dag_id='FixDailyAppRanksBackfillNew', default_args=dag_args, params=dag_template_params,
        schedule_interval=timedelta(days=1))
 
 suppl_eng = \
