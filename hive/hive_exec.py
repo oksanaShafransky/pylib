@@ -6,7 +6,7 @@ __author__ = 'Felix'
 
 from inspect import isfunction
 
-from common import Stage,logger
+from common import Stage, logger
 import hive_runner
 
 from executer import Executer, Arg, Pool, CONCURRENCY
@@ -18,8 +18,8 @@ class HiveExecuter(Executer):
         date_param = Arg('-d', '--date', 'date', Arg.date_arg, 'Date to use in %Y-%m-%d or %Y-%m format', required=True)
         mode_param = Arg('-m', '--mode', 'mode', ('window', 'snapshot'), 'Job mode', required=True)
         mode_type_param = Arg('-mt', '--mode-type', 'mode_type', (
-        'weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'), 'Mode Type',
-                              required=False, default=None)
+            'weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
+                              'Mode Type', required=False, default=None)
         num_reducers_param = Arg('-n', '--num-of-reducers', 'num_of_reducers', int, 'Number of reducers to use',
                                  required=False, default=250)
         sync_param = Arg('-s', '--sync', 'sync', bool, 'Run in sync mode (wait for completion', required=False,
@@ -109,9 +109,10 @@ class HiveExecuter(Executer):
             logger.info('Action Name:%s' % query_name)
 
         log_dir = tempfile.mkdtemp('_hive_runner')
-        try:
-            job_name = 'Hive. %s' % (' - '.join([query_name] + job_params))
+        logger.info('Hive log is at: %s' % log_dir)
+        job_name = 'Hive. %s' % (' - '.join([query_name] + job_params))
 
+        try:
             hive_runner.run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
                                      sync=args.sync,
                                      log_dir=log_dir, slow_start_ratio=args.slow_start_ratio,
