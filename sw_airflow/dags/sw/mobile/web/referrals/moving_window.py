@@ -145,69 +145,6 @@ def generate_dags(mode):
     wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
     wrap_up.set_upstream(store_site_referrers_with_totals)
 
-
-    '''
-    # same date for all MW (visits & distro)?
-    # TODO: cleanup, should copy to prod be joint for MW & referrals?
-    # copy just the column family?
-
-    ################
-    # Copy to Prod #
-    ################
-
-    if is_prod_env():
-        hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
-                                 '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
-
-        deploy_targets = ['hbp1', 'hbp2']
-
-        copy_to_prod = DummyOperator(task_id='CopyToProd',
-                                     dag=dag
-        )
-
-        copy_to_prod_mw_referrals = DockerCopyHbaseTableOperator(
-                task_id='CopyToProdMWReferrals',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster=','.join(deploy_targets),
-                table_name_template='mobile_web_stats_' + hbase_suffix_template
-        )
-
-        copy_to_prod_mw_referrals.set_upstream(store_site_referrers_with_totals)
-        copy_to_prod.set_upstream(copy_to_prod_mw_referrals)
-
-    #########
-    # ETCD  #
-    #########
-    update_dynamic_settings_stage = DockerBashOperator(task_id='UpdateDynamicSettingsStage',
-                                                       dag=dag,
-                                                       docker_name='''{{ params.cluster }}''',
-                                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p mobile_web_referrals'''
-    )
-    update_dynamic_settings_stage.set_upstream(store_site_referrers_with_totals)
-
-    if is_prod_env():
-        if is_window_dag():
-            update_dynamic_settings_prod = DockerBashOperator(task_id='UpdateDynamicSettingsProd',
-                                                              dag=dag,
-                                                              docker_name='''{{ params.cluster }}''',
-                                                              bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p mobile_web_referrals'''
-            )
-
-            update_dynamic_settings_prod.set_upstream(copy_to_prod)
-
-    if is_prod_env():
-
-        register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
-                                           dag=dag,
-                                           path='''services/mobile-web/moving-window/referrals/{{ params.mode }}/{{ ds }}''',
-                                           root=ETCD_ENV_ROOT['PRODUCTION']
-        )
-        register_success.set_upstream(copy_to_prod)
-        '''
-
-
     return dag
 
 
