@@ -1,12 +1,12 @@
 __author__ = 'Amit Rom'
 
 from datetime import datetime, timedelta
-
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-
+from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
+from sw.airflow.operators import  DockerCopyHbaseTableOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -111,7 +111,7 @@ def generate_dags(mode):
     ################
     # Copy to Prod #
     ################
-
+    deploy_targets = ['hbp1', 'hbp2']
     if is_prod_env():
         hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
                                  '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
@@ -135,7 +135,6 @@ def generate_dags(mode):
     ################
     # Cleanup Prod #
     ################
-    deploy_targets = ['hbp1', 'hbp2']
     if is_prod_env():
         if is_window_dag():
 
