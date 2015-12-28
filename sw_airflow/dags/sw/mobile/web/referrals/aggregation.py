@@ -1,15 +1,14 @@
 __author__ = 'Amit Rom'
 
 from datetime import datetime, timedelta
-
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-
+from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data'
+BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 

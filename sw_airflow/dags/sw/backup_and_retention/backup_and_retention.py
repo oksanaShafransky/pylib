@@ -13,7 +13,7 @@ DOCKER_IMAGE = 'mrp-retention'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2015, 12, 17),
+    'start_date': datetime(2015, 12, 28),
     'depends_on_past': True,
     'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,
@@ -26,7 +26,7 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER, 'docker_image': DOCKER_IMAGE}
 
-dag = DAG(dag_id='HdfsBackupAndRetentionDag', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='RetentionProcessDAG', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
 
 # define stages

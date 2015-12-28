@@ -660,27 +660,6 @@ def generate_dags(mode):
 
         trends.set_upstream(trends_1_month)
 
-
-    ###########################
-    # Copy to Prod Mobile Web #
-    ###########################
-
-    copy_to_prod_mobile_web = DummyOperator(task_id='CopyToProdMobileWeb',
-                                            dag=dag
-                                            )
-
-    copy_to_prod_mobile_web_hbp1 = \
-        DockerBashOperator(task_id='CopyToProdMobileWebHbp1',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='hbasecopy mrp hbp1 mobile_web_stats_' +
-                                        ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
-                                        '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
-                           )
-    copy_to_prod_mobile_web.set_upstream(copy_to_prod_mobile_web_hbp1)
-    copy_to_prod_mobile_web_hbp1.set_upstream(mobile_web)
-
-
     ####################
     # Dynamic Settings #
     ####################
@@ -699,28 +678,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p apps_sdk,apps_cross'''
                            )
     update_dynamic_settings.set_upstream(apps)
-
-    ###############################
-    # Dynamic Settings Mobile Web #
-    ###############################
-
-    update_dynamic_settings_mobile_web = \
-        DockerBashOperator(task_id='UpdateDynamicSettingsMobileWeb',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p mobile_web'''
-                           )
-    update_dynamic_settings_mobile_web.set_upstream(mobile_web)
-
-    if is_window_dag():
-        update_dynamic_settings_prod_mobile_web = \
-            DockerBashOperator(task_id='UpdateDynamicSettingsProdMobileWeb',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p mobile_web'''
-                               )
-        update_dynamic_settings_prod_mobile_web.set_upstream([mobile_web,copy_to_prod_mobile_web])
-
 
     #######################
     # Top Apps for Sanity #
