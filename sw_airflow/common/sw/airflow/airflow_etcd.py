@@ -66,7 +66,7 @@ class EtcdSensor(BaseSensorOperator):
         if hasattr(desired_value, '__call__'):
             self.cmp_criteria = desired_value
         elif desired_value is not None:
-            self.cmp_criteria = lambda x: x == self.desired_value
+            self.cmp_criteria = lambda x: x == desired_value
         else:
             self.cmp_criteria = lambda x: True
 
