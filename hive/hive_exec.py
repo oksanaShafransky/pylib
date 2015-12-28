@@ -1,15 +1,15 @@
 import shutil
 import tempfile
+import traceback
 
 __author__ = 'Felix'
 
 from inspect import isfunction
 
-import common
+from common import Stage, logger
 import hive_runner
 
-from executer import Executer
-from executer import Arg
+from executer import Executer, Arg, Pool, CONCURRENCY
 
 
 class HiveExecuter(Executer):
@@ -18,8 +18,8 @@ class HiveExecuter(Executer):
         date_param = Arg('-d', '--date', 'date', Arg.date_arg, 'Date to use in %Y-%m-%d or %Y-%m format', required=True)
         mode_param = Arg('-m', '--mode', 'mode', ('window', 'snapshot'), 'Job mode', required=True)
         mode_type_param = Arg('-mt', '--mode-type', 'mode_type', (
-        'weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'), 'Mode Type',
-                              required=False, default=None)
+            'weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
+                              'Mode Type', required=False, default=None)
         num_reducers_param = Arg('-n', '--num-of-reducers', 'num_of_reducers', int, 'Number of reducers to use',
                                  required=False, default=250)
         sync_param = Arg('-s', '--sync', 'sync', bool, 'Run in sync mode (wait for completion', required=False,
@@ -34,9 +34,12 @@ class HiveExecuter(Executer):
                          default='calculation')
         compression_param = Arg('-cm', '--compression', 'compression', ('gz', 'bz2', 'none'), 'Compression type to use',
                                 required=False, default='gz')
+        slow_start_param = Arg('-sscmr', '--slow-start-rate', 'slow_start_ratio', str,
+                               'mapreduce.job.reduce.slowstart.completedmaps',
+                               required=False, default=None)
 
         return [date_param, mode_param, mode_type_param, num_reducers_param, sync_param, dry_run_param,
-                output_table_param, check_out_param, pool_param, compression_param]
+                output_table_param, check_out_param, pool_param, compression_param, slow_start_param]
 
     def get_arg_dependencies(self):
 
@@ -61,9 +64,9 @@ class HiveExecuter(Executer):
         self.report_results()
 
         if 'failure' in self.results.values():
-            exit(1)
+            return (1)
 
-        exit(0)
+        return (0)
 
     def run_query_helper(self, arg_tuple):
         self.run_query(*arg_tuple)
@@ -72,7 +75,7 @@ class HiveExecuter(Executer):
         try:
             if isfunction(stage):
                 if args.dry_run:
-                    common.logger.info('DryRun, Was meant to execute %s' % stage.__name__)
+                    logger.info('DryRun, Was meant to execute %s' % stage.__name__)
                 else:
                     stage()
             elif isinstance(stage, basestring):
@@ -86,7 +89,9 @@ class HiveExecuter(Executer):
                 stage_args = [(name, query_str, args) for name, query_str in stage.queries.items()]
                 p.map(self.run_query_helper, stage_args)
         except:
-            common.logger.info('Error! Stage failed.')
+            self.results[str(stage)] = 'failure'
+            logger.error('Error! Stage failed.')
+            traceback.print_exc()
 
     def run_query(self, query_name, query_str, args):
 
@@ -97,25 +102,29 @@ class HiveExecuter(Executer):
             job_params.append(args.type)
 
         if args.dry_run:
-            common.logger.info('DryRun:\n%s' % query_str)
+            logger.info('DryRun:\n%s' % query_str)
+            logger.info('Query is:\n%s' % query_str)
             return
         else:
-            common.logger.info('Exec:\n%s' % query_str)
+            logger.info('Action Name:%s' % query_name)
 
         log_dir = tempfile.mkdtemp('_hive_runner')
-        try:
-            job_name = 'Hive. %s' % (' - '.join([query_name] + job_params))
+        logger.info('Hive log is at: %s' % log_dir)
+        job_name = 'Hive. %s' % (' - '.join([query_name] + job_params))
 
+        try:
             hive_runner.run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
                                      sync=args.sync,
-                                     log_dir=log_dir, calc_pool=args.calc_pool, compression=args.compression)
+                                     log_dir=log_dir, slow_start_ratio=args.slow_start_ratio,
+                                     calc_pool=args.calc_pool, compression=args.compression)
             self.results[query_name] = 'success'
         except:
             self.results[query_name] = 'failure'
+            traceback.print_exc()
         finally:
             shutil.rmtree(log_dir)
 
     def report_results(self):
-        common.logger.info('reporting execution summary\n')
+        logger.info('reporting execution summary\n')
         for key in self.results:
-            common.logger.info('%s: %s' % (key, self.results[key]))
+            logger.info('%s: %s' % (key, self.results[key]))
