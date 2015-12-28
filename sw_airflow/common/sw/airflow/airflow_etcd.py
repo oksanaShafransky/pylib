@@ -56,7 +56,7 @@ class EtcdSensor(BaseSensorOperator):
     # Pass desired_value as None if you wish to merely make sure a key exists
 
     ui_color = '#00BFFF'
-    template_fields = ('path')
+    template_fields = ('path',)
 
     @apply_defaults
     def __init__(self, etcd_conn_id='etcd_default', path='', desired_value='success', root='v1', *args, **kwargs):
