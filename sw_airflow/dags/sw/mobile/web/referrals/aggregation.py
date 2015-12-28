@@ -123,3 +123,6 @@ estimate_site_pvs.set_upstream(daily_adjustment)
 
 wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
 wrap_up.set_upstream(estimate_site_pvs)
+wrap_up.set_upstream(adjust_direct_pvs)
+wrap_up.set_upstream(calculate_user_event_transitions)
+wrap_up.set_upstream(calculate_user_event_rates)
