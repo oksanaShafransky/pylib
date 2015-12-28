@@ -54,7 +54,7 @@ def generate_dags(mode):
         dag_args_for_mode.update({'start_date': datetime(2015, 12, 11)})
 
     if is_snapshot_dag():
-        dag_args_for_mode.update({'start_date': datetime(2015, 10, 31), 'end_date': datetime(2015, 10, 31)})
+        dag_args_for_mode.update({'start_date': datetime(2015, 8, 31), 'end_date': datetime(2015, 8, 31)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     if is_window_dag():
@@ -63,7 +63,7 @@ def generate_dags(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-    dag = DAG(dag_id='AndroidFixOctoberMobileAppsMovingWindow_' + mode, default_args=dag_args_for_mode, params=dag_template_params_for_mode,
+    dag = DAG(dag_id='AndroidFixAugustMobileAppsMovingWindow_' + mode, default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               #schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
               #Following is temporary hack until we upgrade to Airflow 1.6.x or later
               schedule_interval=timedelta(days=1))
@@ -284,4 +284,4 @@ def generate_dags(mode):
     return dag
 
 
-globals()['android_fix_dag_october_apps_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
+globals()['android_fix_dag_august_apps_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
