@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 from airflow.models import DAG
-from airflow.operators.dummy_operator import DummyOperator
 
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
@@ -15,7 +14,7 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 12, 28),
     'depends_on_past': True,
-    'email': ['bigdata@similarweb.com'],
+    'email': ['kfire@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 0,
