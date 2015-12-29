@@ -34,7 +34,7 @@ backup_and_retention_op = \
     DockerBashOperator(task_id='HdfsBackupAndRetentionTask',
                        dag=dag,
                        docker_name='''{{ params.docker_image }}''',
-                       bash_command='''python {{ params.execution_dir }}/utils/scripts/backup_and_retention.py --hadoop_cluster_namenode active.hdfs-namenode-{{ params.cluster }}.service.production --s3_key_prefix mrp --log_level %s --dry_run %s''' % ('DEBUG', 'False')
+                       bash_command='''python {{ params.execution_dir }}/utils/scripts/backup_and_retention.py --hadoop_cluster_namenode active.hdfs-namenode-{{ params.cluster }}.service.production --s3_key_prefix /mrp --log_level %s --dry_run %s''' % ('DEBUG', 'False')
                        )
 
 
