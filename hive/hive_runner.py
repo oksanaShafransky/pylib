@@ -1,5 +1,6 @@
 import subprocess
 import re
+import common
 
 import tempfile
 from urllib2 import urlopen
@@ -73,27 +74,10 @@ def get_job_stats(job_id):
     return counters, config, config_xml
 
 
-def run_hive(cmd, log_path=None):
-    start_time = datetime.now()
-    err_temp = tempfile.TemporaryFile()
-    out_temp = tempfile.TemporaryFile()
-    p = subprocess.Popen(cmd, stderr=err_temp.fileno(), stdout=out_temp.fileno())
-    p.wait()
-
-    err_temp.seek(0)
-    out_temp.seek(0)
-    stderrdata = err_temp.read()
-    stdoutdata = out_temp.read()
-    err_temp.close()
-    out_temp.close()
-
-    if CAN_REPORT is False:
-        warnings.warn('Cannot update auxdb. Python packages (lxml, gelfclient) missing')
-        return
+def report(proc, log_path, stderrdata, start_time):
     try:
         end_time = datetime.now()
         hostname = socket.gethostname()
-
         tmp_path = None
         if not stderrdata:
             return
@@ -103,11 +87,13 @@ def run_hive(cmd, log_path=None):
                 break
         if tmp_path is None:
             return
+
         log_data = file(log_path, 'rb').read()
-        job_ids = re.findall('TASK_HADOOP_ID="(job_\d+_\d+)"', log_data)
+        job_ids = re.findall('"(job_\d+_\d+)"', log_data)
         job_ids = list(set(job_ids))
 
         for job_id in job_ids:
+            common.logger.info('Reporting %s' % job_id)
             counters, config, config_xml = get_job_stats(job_id)
             counters_str = '\n'.join(counters)
             counters_dict = dict([line.split('=', 1) for line in counters])
@@ -118,19 +104,17 @@ def run_hive(cmd, log_path=None):
             job_name = config['mapreduce.job.name']
             mapper_class = config.get('mapred.mapper.class', 'no mapper')
             reducer_class = config.get('mapred.reducer.class', 'no reducer')
-            if p.returncode != 0 or counters_dict.get('Job Counters.Failed reduce tasks') or counters_dict.get(
-                    'Job Counters.Failed map tasks'):
+            if proc.returncode != 0 or counters_dict.get('Job Counters.Failed reduce tasks') or counters_dict.get('Job Counters.Failed map tasks'):
                 job_success = 0
             else:
                 job_success = 1
             if number_of_mappers:
-                average_mapper_time = int(float(counters_dict[
-                                                    'Job Counters.Total time spent by all maps in occupied slots (ms)']) / number_of_mappers / 1000)
+                average_mapper_time = int(float(counters_dict['Job Counters.Total time spent by all maps in occupied slots (ms)']) / number_of_mappers / 1000)
             if number_of_reducers:
-                average_reducer_time = int(float(counters_dict[
-                                                     'Job Counters.Total time spent by all reduces in occupied slots (ms)']) / number_of_reducers / 1000)
+                average_reducer_time = int(float(counters_dict['Job Counters.Total time spent by all reduces in occupied slots (ms)']) / number_of_reducers / 1000)
             else:
                 average_reducer_time = 0
+
             # # Write to MySQL
             # mysql_cmd = '''INSERT INTO hadoop.job_stats (job_id, job_success, start_time, end_time, job_name, mapper_class, reducer_class, number_of_mappers, number_of_reducers, average_mapper_time, average_reducer_time, submit_host, number_of_input_records, number_of_output_records, counters, config, fail_message)
             #                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -176,8 +160,32 @@ def run_hive(cmd, log_path=None):
 
     except:
         import traceback
+        warnings.warn('Cannot update Kibana. Exception during execution:\n %s' % traceback.format_exc())
 
-        warnings.warn('Cannot update Kibana. Exception during excecution:\n %s' % traceback.format_exc())
+
+def run_hive(cmd, log_path=None):
+    start_time = datetime.now()
+    err_temp = tempfile.TemporaryFile()
+    out_temp = tempfile.TemporaryFile()
+    p = subprocess.Popen(cmd, stderr=err_temp.fileno(), stdout=out_temp.fileno())
+    p.wait()
+
+    err_temp.seek(0)
+    out_temp.seek(0)
+
+    stderrdata = err_temp.read()
+    stdoutdata = out_temp.read()
+
+    err_temp.close()
+    out_temp.close()
+
+    if not CAN_REPORT:
+        warnings.warn('Cannot update auxdb. Python packages (lxml, gelfclient) missing')
+    else:
+        report(p, log_path, stderrdata, start_time)
+
+    print 'finishing'
+    print 'ret code is %d' % p.returncode
     if p.returncode != 0:
         print 'Hive return code was: %s!' % p.returncode
         print 'Hive stdout: %s' % stdoutdata
@@ -187,7 +195,8 @@ def run_hive(cmd, log_path=None):
     # TODO: check if need to return stdoutdata here
 
 
-def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation', sync=True, compression='gz'):
+def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation', sync=True,
+                 compression='gz'):
     if compression is None or compression == "none":
         compress = "false"
         codec = None
@@ -217,6 +226,11 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
 
     if codec:
         cmd += ["-hiveconf", "mapreduce.output.fileoutputformat.compress.codec=" + codec]
+    if slow_start_ratio:
+        cmd += ["-hiveconf", "mapreduce.job.reduce.slowstart.completedmaps=" + slow_start_ratio]
+
+    common.logger.info('CMD:\n%s' % ' '.join(cmd))
+
     if sync:
         return run_hive(cmd, log_path=log_dir + "/hive.log")
     else:

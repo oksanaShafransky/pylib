@@ -10,7 +10,7 @@ from airflow.operators.sensors import HdfsSensor
 from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
 from sw.airflow.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/scraperprod'
+DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_DOCKER = 'mrp'
@@ -322,6 +322,7 @@ check_data.set_downstream(deploy_prod_done)
 #################################################
 ###    Deploy                                  #
 #################################################
+last_deploy_step = None
 for target_cluster in ('hbp1','hbp2'):
     copy_app_details = DockerCopyHbaseTableOperator(
         task_id='copy_app_details_%s' % target_cluster,
@@ -333,6 +334,8 @@ for target_cluster in ('hbp1','hbp2'):
     )
     copy_app_details.set_upstream(deploy_prod)
     copy_app_details.set_downstream(deploy_prod_done)
+    if last_deploy_step is not None:
+        copy_app_details.set_upstream(last_deploy_step)
 
     copy_app_top_list = DockerCopyHbaseTableOperator(
         task_id='copy_app_top_list_%s' % target_cluster,
@@ -344,6 +347,8 @@ for target_cluster in ('hbp1','hbp2'):
     )
     copy_app_top_list.set_upstream(deploy_prod)
     copy_app_top_list.set_downstream(deploy_prod_done)
+    if last_deploy_step is not None:
+        copy_app_top_list.set_upstream(last_deploy_step)
 
     copy_app_cat_rank = DockerCopyHbaseTableOperator(
         task_id='copy_app_cat_rank_%s' % target_cluster,
@@ -355,6 +360,8 @@ for target_cluster in ('hbp1','hbp2'):
     )
     copy_app_cat_rank.set_upstream(deploy_prod)
     copy_app_cat_rank.set_downstream(deploy_prod_done)
+    if last_deploy_step is not None:
+        copy_app_cat_rank.set_upstream(last_deploy_step)
 
     copy_mobile_app_keyword_positions = DockerCopyHbaseTableOperator(
         task_id='copy_mobile_app_keyword_positions_%s' % target_cluster,
@@ -366,6 +373,8 @@ for target_cluster in ('hbp1','hbp2'):
     )
     copy_mobile_app_keyword_positions.set_upstream(deploy_prod)
     copy_mobile_app_keyword_positions.set_downstream(deploy_prod_done)
+    if last_deploy_step is not None:
+        copy_mobile_app_keyword_positions.set_upstream(last_deploy_step)
 
     copy_app_lite = DockerCopyHbaseTableOperator(
         task_id='copy_app_lite_%s' % target_cluster,
@@ -377,7 +386,16 @@ for target_cluster in ('hbp1','hbp2'):
     )
     copy_app_lite.set_upstream(deploy_prod)
     copy_app_lite.set_downstream(deploy_prod_done)
+    if last_deploy_step is not None:
+        copy_app_lite.set_upstream(last_deploy_step)
 
+    last_deploy_step = DummyOperator(task_id='deploy_step_%s' % target_cluster, dag=dag)
+    last_deploy_step.set_upstream(copy_app_details)
+    last_deploy_step.set_upstream(copy_app_top_list)
+    last_deploy_step.set_upstream(copy_app_cat_rank)
+    last_deploy_step.set_upstream(copy_mobile_app_keyword_positions)
+    last_deploy_step.set_upstream(copy_app_lite)
+    last_deploy_step.set_downstream(deploy_prod_done)
 
 
 
