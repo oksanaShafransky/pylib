@@ -7,6 +7,7 @@ import calendar
 from datetime import *
 from os.path import isfile, join
 from os import listdir
+from urlparse import urlparse
 
 from dateutil.relativedelta import relativedelta
 import sys
@@ -434,7 +435,8 @@ def wait_on_processes(processes):
 
 
 def table_location(table):
-    output = subprocess.check_output(['hive', '-e', '"describe formatted %s;"' % table])
+    cmd = ['hive', '-e', '"describe formatted %s;"' % table]
+    output, _ = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
     for line in output.split("\n"):
         if "Location:" in line:
             return line.split("\t")[1]
@@ -462,12 +464,13 @@ def temp_table_cmds_internal(orig_table_name, temp_root):
     return table_name, drop_cmd, create_cmd
 
 
-def should_create_external_table(location):
-    ans = True
-    for prod_reserved_location_prefix in ['/similargroup/data/mobile-analytics', '/similargroup/data/analytics']:
-        if location.startswith(prod_reserved_location_prefix):
-            ans = False
-    return ans
+def should_create_external_table(orig_table_name, location):
+    # Remove hdfs:// where needed for comparison
+    if 'hdfs://' in location:
+        location = urlparse(location).path
+    table_loc = table_location(orig_table_name)
+    table_loc = urlparse(table_loc).path
+    return table_loc != location
 
 
 def temp_table_cmds(orig_table_name, root):
