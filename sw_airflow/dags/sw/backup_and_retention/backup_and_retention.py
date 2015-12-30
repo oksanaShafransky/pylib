@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 
 from airflow.models import DAG
-from airflow.operators.dummy_operator import DummyOperator
 
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
@@ -15,7 +14,7 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 12, 28),
     'depends_on_past': True,
-    'email': ['bigdata@similarweb.com'],
+    'email': ['kfire@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 0,
@@ -34,7 +33,7 @@ backup_and_retention_op = \
     DockerBashOperator(task_id='HdfsBackupAndRetentionTask',
                        dag=dag,
                        docker_name='''{{ params.docker_image }}''',
-                       bash_command='''python {{ params.execution_dir }}/utils/scripts/backup_and_retention.py --hadoop_cluster_namenode active.hdfs-namenode-{{ params.cluster }}.service.production --s3_key_prefix mrp --log_level %s --dry_run %s''' % ('DEBUG', 'False')
+                       bash_command='''python {{ params.execution_dir }}/utils/scripts/backup_and_retention.py --hadoop_cluster_namenode active.hdfs-namenode-{{ params.cluster }}.service.production --s3_key_prefix /mrp --log_level %s --dry_run %s''' % ('DEBUG', 'False')
                        )
 
 

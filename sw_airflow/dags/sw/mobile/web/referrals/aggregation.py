@@ -68,7 +68,7 @@ count_user_site2_events = DockerBashOperator(task_id='CountUserSiteSite2Events',
                                            docker_name='''{{ params.cluster }}''',
                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p count_user_site2_events -env main'''
 )
-count_user_domain_pvs.set_upstream(build_user_transitions)
+count_user_site2_events.set_upstream(build_user_transitions)
 
 calculate_user_event_rates = DockerBashOperator(task_id='CalculateUserEventRates',
                                              dag=dag,
@@ -123,3 +123,6 @@ estimate_site_pvs.set_upstream(daily_adjustment)
 
 wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
 wrap_up.set_upstream(estimate_site_pvs)
+wrap_up.set_upstream(adjust_direct_pvs)
+wrap_up.set_upstream(calculate_user_event_transitions)
+wrap_up.set_upstream(calculate_user_event_rates)

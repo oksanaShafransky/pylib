@@ -56,7 +56,7 @@ class EtcdSensor(BaseSensorOperator):
     # Pass desired_value as None if you wish to merely make sure a key exists
 
     ui_color = '#00BFFF'
-    template_fields = ('path')
+    template_fields = ('path',)
 
     @apply_defaults
     def __init__(self, etcd_conn_id='etcd_default', path='', desired_value='success', root='v1', *args, **kwargs):
@@ -66,7 +66,7 @@ class EtcdSensor(BaseSensorOperator):
         if hasattr(desired_value, '__call__'):
             self.cmp_criteria = desired_value
         elif desired_value is not None:
-            self.cmp_criteria = lambda x: x == self.desired_value
+            self.cmp_criteria = lambda x: x == desired_value
         else:
             self.cmp_criteria = lambda x: True
 

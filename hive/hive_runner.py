@@ -1,5 +1,6 @@
 import subprocess
 import re
+import common
 
 import tempfile
 from urllib2 import urlopen
@@ -88,10 +89,11 @@ def report(proc, log_path, stderrdata, start_time):
             return
 
         log_data = file(log_path, 'rb').read()
-        job_ids = re.findall('TASK_HADOOP_ID="(job_\d+_\d+)"', log_data)
+        job_ids = re.findall('"(job_\d+_\d+)"', log_data)
         job_ids = list(set(job_ids))
 
         for job_id in job_ids:
+            common.logger.info('Reporting %s' % job_id)
             counters, config, config_xml = get_job_stats(job_id)
             counters_str = '\n'.join(counters)
             counters_dict = dict([line.split('=', 1) for line in counters])
@@ -193,7 +195,8 @@ def run_hive(cmd, log_path=None):
     # TODO: check if need to return stdoutdata here
 
 
-def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation', sync=True, compression='gz'):
+def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation', sync=True,
+                 compression='gz'):
     if compression is None or compression == "none":
         compress = "false"
         codec = None
@@ -223,6 +226,11 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, calc_pool='calculation
 
     if codec:
         cmd += ["-hiveconf", "mapreduce.output.fileoutputformat.compress.codec=" + codec]
+    if slow_start_ratio:
+        cmd += ["-hiveconf", "mapreduce.job.reduce.slowstart.completedmaps=" + slow_start_ratio]
+
+    common.logger.info('CMD:\n%s' % ' '.join(cmd))
+
     if sync:
         return run_hive(cmd, log_path=log_dir + "/hive.log")
     else:
