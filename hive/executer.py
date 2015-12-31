@@ -138,7 +138,7 @@ class Executer(object):
         action_name = self.args.action
 
         if not action_name in self.actions:
-            parser.error('Action %s is not supported by this executer' % action)
+            self.common_parser.error('Action %s is not supported by this executor' % action_name)
             exit(1)
 
         handler, action = self.actions[action_name]

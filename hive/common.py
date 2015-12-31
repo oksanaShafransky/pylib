@@ -445,7 +445,7 @@ def delete_path(path):
 
 
 def temp_table_cmds(orig_table_name, temp_root):
-    table_name = '%s_temp_%s' % (orig_table_name, random.randint(10000, 99999))
+    table_name = '%s_temp_%s' % (orig_table_name, random.randint(1000000, 9999999))
     drop_cmd = '\nDROP TABLE IF EXISTS %s;\n' % table_name
     create_cmd = '''\n
                     CREATE EXTERNAL TABLE %(table_name)s

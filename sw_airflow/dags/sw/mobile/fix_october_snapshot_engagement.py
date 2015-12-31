@@ -263,76 +263,84 @@ def generate_dags(mode):
     hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
                              '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''');
 
+    prod_targets = ['hbp2']
+
     if is_prod_env():
-
-
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_app_sdk_hbp1 = \
-            DockerCopyHbaseTableOperator(
-                task_id='CopyToProdAppSdkHbp1',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster='hbp1',
-                table_name_template= 'app_sdk_stats_' + hbase_suffix_template
-            )
-        copy_to_prod_app_sdk_hbp1.set_upstream([app_engagement])
-
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_cats_hbp1 = \
-            DockerCopyHbaseTableOperator(
-                task_id='CopyToProdCatsHbp1',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster='hbp1',
-                table_name_template= 'app_sdk_category_stats_' + hbase_suffix_template
-            )
-
-        copy_to_prod_cats_hbp1.set_upstream([app_engagement])
-
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_leaders_hbp1 = \
-            DockerCopyHbaseTableOperator(
-                task_id='CopyToProdLeadersHbp1',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster='hbp1',
-                table_name_template= 'app_sdk_category_lead_' + hbase_suffix_template
-            )
-        copy_to_prod_leaders_hbp1.set_upstream([app_engagement])
-
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_engage_hbp1 = \
-            DockerCopyHbaseTableOperator(
-                task_id='CopyToProdEngageHbp1',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster='hbp1',
-                table_name_template= 'app_eng_rank_' + hbase_suffix_template
-            )
-        copy_to_prod_engage_hbp1.set_upstream(usage_ranks)
-
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod_rank_hbp1 = \
-            DockerCopyHbaseTableOperator(
-                task_id='CopyToProdRankHbp1',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster='hbp1',
-                table_name_template= 'cat_mod_app_rank_' + hbase_suffix_template
-            )
-        copy_to_prod_rank_hbp1.set_upstream([usage_ranks,trends])
 
         copy_to_prod = DummyOperator(task_id='CopyToProd',
                                      dag=dag
                                      )
 
-        copy_to_prod.set_upstream([apps,copy_to_prod_app_sdk_hbp1,copy_to_prod_cats_hbp1,copy_to_prod_leaders_hbp1,
-                                   copy_to_prod_engage_hbp1,copy_to_prod_rank_hbp1])
+        for target in prod_targets:
+
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_app_sdk = \
+                DockerCopyHbaseTableOperator(
+                    task_id='CopyToProdAppSdk%s' % target,
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=target,
+                    table_name_template= 'app_sdk_stats_' + hbase_suffix_template,
+                    is_forced=True
+                )
+            copy_to_prod_app_sdk.set_upstream([app_engagement])
+
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_cats = \
+                DockerCopyHbaseTableOperator(
+                    task_id='CopyToProdCats%s' % target,
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=target,
+                    table_name_template= 'app_sdk_category_stats_' + hbase_suffix_template,
+                    is_forced=True
+                )
+
+            copy_to_prod_cats.set_upstream([app_engagement])
+
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_leaders = \
+                DockerCopyHbaseTableOperator(
+                    task_id='CopyToProdLeaders%s' % target,
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=target,
+                    table_name_template= 'app_sdk_category_lead_' + hbase_suffix_template,
+                    is_forced=True
+                )
+            copy_to_prod_leaders.set_upstream([app_engagement])
+
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_engage = \
+                DockerCopyHbaseTableOperator(
+                    task_id='CopyToProdEngage%s' % target,
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=target,
+                    table_name_template= 'app_eng_rank_' + hbase_suffix_template,
+                    is_forced=True
+                )
+            copy_to_prod_engage.set_upstream(usage_ranks)
+
+            # TODO configure parallelism setting for this task, which is heavier (30 slots)
+            copy_to_prod_rank = \
+                DockerCopyHbaseTableOperator(
+                    task_id='CopyToProdRank%s' % target,
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=target,
+                    table_name_template= 'cat_mod_app_rank_' + hbase_suffix_template,
+                    is_forced=True
+                )
+            copy_to_prod_rank.set_upstream([usage_ranks,trends])
+
+            copy_to_prod.set_upstream([apps,copy_to_prod_app_sdk,copy_to_prod_cats,copy_to_prod_leaders,
+                                   copy_to_prod_engage,copy_to_prod_rank])
 
 
     ################

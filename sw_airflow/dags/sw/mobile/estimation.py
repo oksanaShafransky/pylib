@@ -210,13 +210,23 @@ mobile_daily_usage_pattern.set_upstream(mobile_daily_preliminary)
 # Wrap-up #
 ###########
 
+mobile_apps_daily_estimation = \
+    DummyOperator(task_id='MobileAppsDailyEstimation',
+                  dag=dag
+                  )
+mobile_apps_daily_estimation.set_upstream([app_engagement_daily, mobile_daily_usage_pattern])
+
+mobile_web_daily_estimation = \
+    DummyOperator(task_id='MobileWebDailyEstimation',
+                  dag=dag
+                  )
+mobile_web_daily_estimation.set_upstream([mobile_web_daily_cut, mobile_web_main])
+
 mobile_daily_estimation = \
     DummyOperator(task_id='MobileDailyEstimation',
                   dag=dag
                   )
-
-mobile_daily_estimation.set_upstream(
-    [mobile_web_daily_cut, mobile_web_main, app_engagement_daily, mobile_daily_usage_pattern])
+mobile_daily_estimation.set_upstream([mobile_apps_daily_estimation, mobile_web_daily_estimation])
 
 register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
                                    dag=dag,

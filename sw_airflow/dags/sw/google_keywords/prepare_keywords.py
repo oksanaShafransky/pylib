@@ -8,7 +8,7 @@ from monthdelta import *
 
 from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/mrpprod'
+DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a01.sg.internal'
 DEFAULT_DOCKER = 'mrp'
@@ -81,7 +81,7 @@ process.set_upstream(init)
 ###    Deploy                                  #
 #################################################
 if DEPLOY_TO_PROD:
-    for target_cluster in ('hbp1',):
+    for target_cluster in ('hbp1','hbp2'):
         copy_processed = DockerCopyHbaseTableOperator(
             task_id='copy_sites_scrape_stat_%s' % target_cluster,
             dag=dag,
