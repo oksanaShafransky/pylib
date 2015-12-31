@@ -51,10 +51,10 @@ def generate_dags(mode):
 
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        dag_args_for_mode.update({'start_date': datetime(2015, 12, 11)})
+        dag_args_for_mode.update({'start_date': datetime(2015, 12, 31)})
 
     if is_snapshot_dag():
-        dag_args_for_mode.update({'start_date': datetime(2015, 11, 30), 'end_date': datetime(2015, 11, 30)})
+        dag_args_for_mode.update({'start_date': datetime(2015, 12, 31), 'end_date': datetime(2015, 12, 31)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     if is_window_dag():
