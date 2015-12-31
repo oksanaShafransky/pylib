@@ -65,11 +65,35 @@ def generate_dags(mode):
           #Following is temporary hack until we upgrade to Airflow 1.6.x or later
           schedule_interval=timedelta(days=1))
 
+    # user event rates
+    user_event_rates = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyAggregation',
+                                                  dag=dag,
+                                                  task_id="UserEventRates",
+                                                  external_task_id='CalculateUserEventRates')
+
+    # user event transitions
+    user_event_transitions = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyAggregation',
+                                          dag=dag,
+                                          task_id="UserEventTransitions",
+                                          external_task_id='CalculateUserEventTransitions')
+
+    # site estimated pvs
+    site_estimated_pvs = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyAggregation',
+                                          dag=dag,
+                                          task_id="SiteEstimatedPVs",
+                                          external_task_id='EstimateSitePVs')
+
+    # adjusted direct pvs
+    adjusted_direct_pvs = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyAggregation',
+                                          dag=dag,
+                                          task_id="AdjustedDirectPVs",
+                                          external_task_id='AdjustDirectPVs')
+
     # aggregation
     estimation_preliminary = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyAggregation',
-                                                  dag=dag,
-                                                  task_id="EstimationPreliminary",
-                                                  external_task_id='FinishProcess')
+                                                dag=dag,
+                                                task_id="EstimationPreliminary",
+                                                external_task_id='FinishProcess')
 
     # daily adjustment
     daily_adjustment = ExternalTaskSensor(external_dag_id='MobileAppsMovingWindow_window',
@@ -93,14 +117,15 @@ def generate_dags(mode):
                                          docker_name='''{{ params.cluster }}''',
                                          bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/estimation.sh -d {{ ds }} -p sum_user_event_rates -env main'''
     )
-    sum_user_event_rates.set_upstream(estimation_preliminary)
+    sum_user_event_rates.set_upstream(user_event_rates)
 
     sum_user_event_transitions = DockerBashOperator(task_id='SumUserEventTransitions',
                                               dag=dag,
                                               docker_name='''{{ params.cluster }}''',
                                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/estimation.sh -d {{ ds }} -p sum_user_event_transitions -env main'''
     )
-    sum_user_event_transitions.set_upstream(estimation_preliminary)
+    sum_user_event_transitions.set_upstream(user_event_transitions)
+    sum_user_event_transitions.set_upstream(site_estimated_pvs)
 
     join_event_actions = DockerBashOperator(task_id='JoinEventActions',
                                                     dag=dag,
@@ -123,7 +148,7 @@ def generate_dags(mode):
                                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/estimation.sh -d {{ ds }} -p calculate_site_referrers -env main'''
     )
     calculate_site_referrers.set_upstream(calculate_joint_estimates)
-    calculate_site_referrers.set_upstream(estimation_preliminary)
+    calculate_site_referrers.set_upstream(adjusted_direct_pvs)
     calculate_site_referrers.set_upstream(daily_adjustment)
 
     calculate_site_referrers_with_totals = DockerBashOperator(task_id='CalculateSiteReferrersWithTotals',
