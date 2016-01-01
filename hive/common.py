@@ -7,6 +7,7 @@ import calendar
 from datetime import *
 from os.path import isfile, join
 from os import listdir
+from urlparse import urlparse
 
 from dateutil.relativedelta import relativedelta
 import sys
@@ -434,7 +435,8 @@ def wait_on_processes(processes):
 
 
 def table_location(table):
-    output = subprocess.check_output(['hive', '-e', '"describe formatted %s;"' % table])
+    cmd = ['hive', '-e', '"describe formatted %s;"' % table]
+    output, _ = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
     for line in output.split("\n"):
         if "Location:" in line:
             return line.split("\t")[1]
@@ -444,8 +446,8 @@ def delete_path(path):
     subprocess.call(("hadoop", "fs", "-rm", "-r", path))
 
 
-def temp_table_cmds(orig_table_name, temp_root):
-    table_name = '%s_temp_%s' % (orig_table_name, random.randint(1000000, 9999999))
+def temp_table_cmds_internal(orig_table_name, temp_root):
+    table_name = '%s_temp_%s' % (orig_table_name, random.randint(10000, 99999))
     drop_cmd = '\nDROP TABLE IF EXISTS %s;\n' % table_name
     create_cmd = '''\n
                     CREATE EXTERNAL TABLE %(table_name)s
@@ -460,6 +462,25 @@ def temp_table_cmds(orig_table_name, temp_root):
                        'db_name': table_name.split('.')[0],
                        'short_table_name': table_name.split('.')[-1]}
     return table_name, drop_cmd, create_cmd
+
+
+def should_create_external_table(orig_table_name, location):
+    # Remove hdfs:// where needed for comparison
+    if 'hdfs://' in location:
+        location = urlparse(location).path
+    table_loc = table_location(orig_table_name)
+    table_loc = urlparse(table_loc).path
+    return table_loc != location
+
+
+def temp_table_cmds(orig_table_name, root):
+    logger.info("Checking whether to create external table %s in location %s:" % (orig_table_name, root))
+    if should_create_external_table(root):
+        logger.info("Writing to an external table in the given location.")
+        return temp_table_cmds_internal(orig_table_name, root)
+    else:
+        logger.info("Writing to the original table in place. The location which was passed is being discarded.")
+        return orig_table_name, '', ''
 
 
 def dedent(s):
