@@ -474,7 +474,8 @@ def temp_table_cmds(orig_table_name, root):
         return temp_table_cmds_internal(orig_table_name, root)
     else:
         logger.info("Writing to the original table in place. The location which was passed is being discarded.")
-        return orig_table_name, '', ''
+        repair_cmd = 'MSCK REPAIR TABLE %(orig_table_name)s;\n' %orig_table_name
+        return orig_table_name, repair_cmd, ''
 
 
 def dedent(s):
