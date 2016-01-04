@@ -7,6 +7,7 @@ import calendar
 from datetime import *
 from os.path import isfile, join
 from os import listdir
+from urlparse import urlparse
 
 from dateutil.relativedelta import relativedelta
 import sys
@@ -51,6 +52,8 @@ daily_tables = {  # "incoming-data": "analytics.daily_incoming_data",
                   "raw-country-source": "analytics.daily_raw_country_source", "sr-estimate": "analytics.daily_incoming",
                   "estimated-values": "analytics.daily_estimated_values",
                   "special-referrer": "analytics.daily_incoming",
+                  "special-referrer-sum": "analytics.daily_sr",
+                  "estimated-special-referrer": "analytics.daily_estimated_sr",
                   "app-source": "analytics.daily_apps_data"}
 
 daily_table_names = {  # "incoming-data": "analytics.daily_incoming_data",
@@ -88,7 +91,7 @@ snapshot_tables = {  # "incoming-data-with-source": "analytics.snapshot_incoming
                      "raw-site-country-source": "analytics.snapshot_raw_site_country_source",
                      "raw-country-source": "analytics.snapshot_raw_country_source",
                      "estimated-values": "analytics.snapshot_estimated_values",
-                     "sr-estimate": "analytics.snapshot_sr_estimate", "app-source": "analytics.snapshot_app_data",
+                     "sr-estimate": "analytics.snapshot_sr_estimate",
                      "feature-counts": "analytics.snapshot_features_counts",
                      "site-distros": "analytics.sites_distros",
                      "sites-info": "analytics.sitesinfo",
@@ -109,7 +112,6 @@ snapshot_tables_names = {  # "incoming-data-with-source": "analytics.snapshot_in
                            "raw-country-source": "/similargroup/data/analytics/snapshot/aggregation/aggkey=raw-country-source",
                            "estimated-values": "/similargroup/data/analytics/snapshot/post-estimate/aggkey=estimate-values",
                            "sr-estimate": "/similargroup/data/analytics/snapshot/aggregation/aggkey=sr-estimate",
-                           "app-source": "/similargroup/data/analytics/snapshot/aggregation/aggkey=app-source",
                            "feature-counts": "/similargroup/data/analytics/snapshot/mobile-share/features/features-counts",
                            "site-distros": "/similargroup/data/analytics/snapshot/general/sites-distro/type=monthly",
                            "sites-info": "/similargroup/data/analytics/snapshot/general/sitesinfo/type=monthly",
@@ -117,17 +119,6 @@ snapshot_tables_names = {  # "incoming-data-with-source": "analytics.snapshot_in
                            "qc-mobile-counts": "/similargroup/data/analytics/estimation/learningSet/country=ALL",
                            "special-referrer": "/similargroup/data/analytics/snapshot/aggregation/aggkey=special-referrer",
                            "app-source": "/similargroup/data/analytics/snapshot/aggregation/aggkey=app-source"}
-
-mobile_share_tables =  {"feature-counts": {"name": "analytics.snapshot_features_counts", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/features/features-counts"},
-                        "feature-refs": {"name": "analytics.snapshot_features_refs", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/features/refs"},
-                        "feature-refs-ratios": {"name": "analytics.snapshot_features_refs_ratios", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/features/refs-ratios"},
-                        "feature-tos-bounce-monthly": {"name": "analytics.snapshot_features_time_os_and_bounce_monthly", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/features/tos-and-bounce-monthly"},
-                        "feature-tos-bounce": {"name": "analytics.snapshot_features_time_os_and_bounce", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/features/tos-and-bounce"},
-                        "feature-categories": {"name": "analytics.snapshot_features_categories", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/features/main-category"},
-                        "feature-ranks": {"name": "analytics.snapshot_features_ranks", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/features/ranks"},
-                        "target-counts": {"name": "analytics.snapshot_target_counts_monthly", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/response/monthly-target-counts"},
-                        "feature-combined": {"name": "analytics.snapshot_combined_features_table", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/combined-features"},
-                        "combined-features-target": {"name": "analytics.snapshot_combined_feat_target_table", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/combined-features-combined"}}
 
 mobile_share_tables =  {"feature-counts": {"name": "analytics.snapshot_features_counts", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/features/features-counts"},
                         "feature-refs": {"name": "analytics.snapshot_features_refs", "base_path": "/similargroup/data/analytics/snapshot/mobile-share/features/refs"},
@@ -260,8 +251,12 @@ tables_key_cols = {
     "sending-pages": "a.site, a.country, a.refid, a.refflag, a.page", "popular-pages": "a.site, a.country, a.page",
     "raw-site-country-source": "a.site, a.country, a.sourceId", "raw-country-source": "a.country, a.sourceId",
     "sr-estimate": "a.site, a.country, a.refid, a.refflag, a.site2, a.issitereferral",
-    "special-referrer": "a.site, a.country, a.refid, a.refflag", #FIXME: max on refflag is a temporary fix for bad incoming collectors outputing a non paid special ref flag
+    "special-referrer": "a.site, a.country, a.refid, max(a.refflag)", #FIXME: max on refflag is a temporary fix for bad incoming collectors outputing a non paid special ref flag
     "app-source": "a.storetype, a.appid, a.country, a.refid, a.refflag, a.keyword, a.refsite, a.refapp, a.refcategory, a.refchart, a.refrelease, a.refdeveloper"}
+
+tables_group_cols = dict(tables_key_cols)
+tables_group_cols["special-referrer"] = "a.site, a.country, a.refid"
+
 
 tables_count_writables = {"incoming-data-with-source": quality_count_writable,
                           "incoming-keywords": quality_count_writable,
@@ -355,7 +350,7 @@ def get_range_where_clause(year, month, day, mode, mode_type):
     elif mode_type == "quarterly":
         start_date = datetime(int(year), int(month) - ((int(month) - 1) % 3), 1).date()
         end_date = start_date + timedelta(days=63)
-        return '(year=%02d and month <= %02d and month >= %02d' % (end_date.year % 100, str(start_date.month), str(end_date.month))
+        return '(year=%02d and month <= %02d and month >= %02d' % (end_date.year % 100, start_date.month, end_date.month)
     elif mode_type == "annually":
         return " (year = %02d) " % (end_date.year % 100)
 
@@ -388,17 +383,17 @@ def get_month_range_where_clause(end_date, months_back):
     return ' or '.join(['(year=%02d and month=%02d)' % (parse_date(end_date + relativedelta(months=-x))[:2]) for x in range(0, months_back)])
 
 
-def deploy_jar(deploy_path, jar_location):
-    logger.info("copy jars to hdfs, location on hdfs: " + jar_location + " from local path: " + deploy_path)
+def deploy_jar(deploy_path, jar_hdfs_location):
+    logger.info("copy jars to hdfs, location on hdfs: " + jar_hdfs_location + " from local path: " + deploy_path)
     if GLOBAL_DRYRUN:
         'print dryrun set, not actually deploying'
         return
 
-    subprocess.call(["hadoop", "fs", "-rm", "-r", jar_location])
-    subprocess.call(["hadoop", "fs", "-mkdir", "-p", jar_location])
-    subprocess.call(["hadoop", "fs", "-put", deploy_path + "/analytics.jar", jar_location + "/analytics.jar"])
+    subprocess.call(["hadoop", "fs", "-rm", "-r", jar_hdfs_location])
+    subprocess.call(["hadoop", "fs", "-mkdir", "-p", jar_hdfs_location])
+    subprocess.call(["hadoop", "fs", "-put", deploy_path + "/analytics.jar", jar_hdfs_location + "/analytics.jar"])
     subprocess.call(
-        ["hadoop", "fs", "-put", deploy_path + "/lib/common-1.0.jar", jar_location + "/common.jar"])
+        ["hadoop", "fs", "-put", deploy_path + "/lib/common-1.0.jar", jar_hdfs_location + "/common.jar"])
 
 
 # use ['add jar %s' % jar for jar in detect_jars(...) ]
@@ -410,8 +405,8 @@ def detect_jars(deploy_path, lib_path="lib"):
     return lib_jars + main_jars
 
 
-def deploy_all_jars(deploy_path, jar_location, lib_path="lib"):
-    logger.info("copy jars to hdfs, location on hdfs: " + jar_location + " from local path: " + deploy_path)
+def deploy_all_jars(deploy_path, jar_hdfs_location, lib_path="lib"):
+    logger.info("copy jars to hdfs, location on hdfs: " + jar_hdfs_location + " from local path: " + deploy_path)
     if GLOBAL_DRYRUN:
         'print dryrun set, not actually deploying'
         return
@@ -420,10 +415,10 @@ def deploy_all_jars(deploy_path, jar_location, lib_path="lib"):
     full_lib_path = join(deploy_path,lib_path)
     lib_jars = [jar for jar in listdir(full_lib_path) if isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
 
-    subprocess.call(["hadoop", "fs", "-rm", "-r", jar_location])
-    subprocess.call(["hadoop", "fs", "-mkdir", "-p", jar_location])
-    subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (deploy_path, jar_location)])
-    subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (full_lib_path, jar_location)])
+    subprocess.call(["hadoop", "fs", "-rm", "-r", jar_hdfs_location])
+    subprocess.call(["hadoop", "fs", "-mkdir", "-p", jar_hdfs_location])
+    subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (deploy_path, jar_hdfs_location)])
+    subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (full_lib_path, jar_hdfs_location)])
 
     return lib_jars + main_jars
 
@@ -434,7 +429,8 @@ def wait_on_processes(processes):
 
 
 def table_location(table):
-    output = subprocess.check_output(['hive', '-e', '"describe formatted %s;"' % table])
+    cmd = ['hive', '-e', '"describe formatted %s;"' % table]
+    output, _ = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
     for line in output.split("\n"):
         if "Location:" in line:
             return line.split("\t")[1]
@@ -444,7 +440,7 @@ def delete_path(path):
     subprocess.call(("hadoop", "fs", "-rm", "-r", path))
 
 
-def temp_table_cmds(orig_table_name, temp_root):
+def temp_table_cmds_internal(orig_table_name, temp_root):
     table_name = '%s_temp_%s' % (orig_table_name, random.randint(10000, 99999))
     drop_cmd = '\nDROP TABLE IF EXISTS %s;\n' % table_name
     create_cmd = '''\n
@@ -460,6 +456,26 @@ def temp_table_cmds(orig_table_name, temp_root):
                        'db_name': table_name.split('.')[0],
                        'short_table_name': table_name.split('.')[-1]}
     return table_name, drop_cmd, create_cmd
+
+
+def should_create_external_table(orig_table_name, location):
+    # Remove hdfs:// where needed for comparison
+    if 'hdfs://' in location:
+        location = urlparse(location).path
+    table_loc = table_location(orig_table_name)
+    table_loc = urlparse(table_loc).path
+    return table_loc != location
+
+
+def temp_table_cmds(orig_table_name, root):
+    logger.info("Checking whether to create external table %s in location %s:" % (orig_table_name, root))
+    if should_create_external_table(orig_table_name, root):
+        logger.info("Writing to an external table in the given location.")
+        return temp_table_cmds_internal(orig_table_name, root)
+    else:
+        logger.info("Writing to the original table in place. The location which was passed is being discarded.")
+        repair_cmd = 'MSCK REPAIR TABLE %(orig_table_name)s;\n' %orig_table_name
+        return orig_table_name, repair_cmd, ''
 
 
 def dedent(s):
