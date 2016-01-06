@@ -39,11 +39,11 @@ ios_user_grouping = \
                        bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/user_grouping user_grouping -d {{ ds }}'''
                        )
 
-daily_agg = DockerBashOperator(task_id='DailyAggregation',
+daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
                                dag=dag,
                                docker_name=DEFAULT_CLUSTER,
                                bash_command='''echo TBD'''
                                #Android Reference :
                                # '''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 2560 -rmem 1536'''
                                )
-daily_agg.set_upstream(ios_user_grouping)
+daily_aggregation.set_upstream(ios_user_grouping)
