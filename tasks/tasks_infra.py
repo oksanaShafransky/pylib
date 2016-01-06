@@ -19,34 +19,48 @@ class TasksInfra(object):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
     @staticmethod
-    def check_input(directory, max_size_bytes):
+    def is_valid_output_exists(directory, valid_output_min_size_bytes):
         hdfs_client = snakebite.client.Client(MRP_HDFS_NAMENODE_SERVER, MRP_HDFS_NAMENODE_PORT, use_trash=False)
-        ans = False
+        is_valid = False
+        print 'Checking if a valid output dir %s already exists :' % directory
         try:
             space_consumed = hdfs_client.count([directory]).next()['spaceConsumed']
-            print 'Checking input:'
-            ans = space_consumed < max_size_bytes
-            print 'Space consumed is %d - returning %s' % (space_consumed, ans)
+            is_valid = space_consumed > valid_output_min_size_bytes
+            print 'Space consumed by dir is %d' % space_consumed
         except FileNotFoundException:
-            ans = True
-            print 'Dir does not exist - returning True'
+            print 'Dir does not exist'
         finally:
-            assert ans is True, "Input check failed"
+            if is_valid:
+                print 'Output dir already exists'
+            return is_valid
 
     @staticmethod
-    def check_output(directory, min_size_bytes):
+    def assert_input_validity(directory, valid_input_min_size_bytes):
         hdfs_client = snakebite.client.Client(MRP_HDFS_NAMENODE_SERVER, MRP_HDFS_NAMENODE_PORT, use_trash=False)
-        ans = False
-        print 'Checking output:'
+        is_valid = False
+        print 'Asserting input validity for dir %s :' % directory
         try:
             space_consumed = hdfs_client.count([directory]).next()['spaceConsumed']
-            ans = space_consumed > min_size_bytes
-            print 'Space consumed is %d - returning %s' % (space_consumed, ans)
+            is_valid = space_consumed > valid_input_min_size_bytes
+            print 'Space consumed is %d' % space_consumed
         except FileNotFoundException:
-            ans = False
-            print 'Dir does not exist - returning False'
+            print 'Dir does not exist'
         finally:
-            assert ans is True, "Output check failed"
+            assert is_valid is True, "Input dir is valid"
+
+    @staticmethod
+    def assert_output_validity(directory, valid_output_min_size_bytes):
+        hdfs_client = snakebite.client.Client(MRP_HDFS_NAMENODE_SERVER, MRP_HDFS_NAMENODE_PORT, use_trash=False)
+        is_valid = False
+        print 'Asserting output validity for dir %s :' % directory
+        try:
+            space_consumed = hdfs_client.count([directory]).next()['spaceConsumed']
+            is_valid = space_consumed > valid_output_min_size_bytes
+            print 'Space consumed is %d' % space_consumed
+        except FileNotFoundException:
+            print 'Dir does not exist'
+        finally:
+            assert is_valid is True, "Output dir is valid"
 
     @staticmethod
     def load_common_args_to_ctx(ctx, dry_run, force, base_dir, date):
