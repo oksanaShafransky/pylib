@@ -4,6 +4,7 @@ import os
 import datetime
 import snakebite.client
 from snakebite.errors import FileNotFoundException
+import types
 
 MRP_HDFS_NAMENODE_PORT = 8020
 MRP_HDFS_NAMENODE_SERVER = 'active.hdfs-namenode-mrp.service.production'
@@ -87,8 +88,12 @@ class ContextualizedTasksInfra(TasksInfra):
     def compose_hadoop_runner_command(self, task_params):
         ans = self.compose_infra_command('execute hadoopexec %s/mobile mobile.jar com.similargroup.mobile.main.MobileRunner' % execution_dir)
         for key, value in task_params.iteritems():
-            ans += " -%s " % key
-            ans += '"%s"' % value
+            if type(value) == types.BooleanType:
+                if value==True:
+                    ans += " -%s " % key
+            else:
+                ans += " -%s " % key
+                ans += '"%s"' % value if type(value) != types.BooleanType else ""
         return ans
 
     def run_bash(self, command):
