@@ -100,4 +100,4 @@ class ContextualizedTasksInfra(TasksInfra):
     def year_month_day(self):
         d = self.get_common_args()['date']
         year_str = str(d.year)[2:]
-        return 'year=%s/month=%s/day=%s' % (year_str, d.month, d.day)
+        return 'year=%s/month=%s/day=%s' % (year_str, str(d.month).zfill(2), str(d.day).zfill(2))

@@ -1,4 +1,4 @@
-__author__ = 'Felix Vaisman'
+__author__ = 'Iddo Aviram'
 
 from datetime import datetime, timedelta
 
@@ -8,7 +8,7 @@ from airflow.operators.sensors import HdfsSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 
-DEFAULT_EXECUTION_DIR = '/home/iddoa/similargroup_SIM-6508_ios_user_grouping_job'
+DEFAULT_EXECUTION_DIR = '/home/iddoa/similargroup_SIM-6508/feat/ios_reach_collection'
 BASE_DIR = '/user/iddoa/ios_testing'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp-ios'
@@ -32,9 +32,18 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 dag = DAG(dag_id='iOSPreliminary', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
 
-app_affinity_app_precalculation = \
-    DockerBashOperator(task_id='ios_user_grouping',
+ios_user_grouping = \
+    DockerBashOperator(task_id='IosUserGrouping',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
                        bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/user_grouping user_grouping -d {{ ds }}'''
                        )
+
+daily_agg = DockerBashOperator(task_id='DailyAggregation',
+                               dag=dag,
+                               docker_name=DEFAULT_CLUSTER,
+                               bash_command='''echo TBD'''
+                               #Android Reference :
+                               # '''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 2560 -rmem 1536'''
+                               )
+daily_agg.set_upstream(ios_user_grouping)
