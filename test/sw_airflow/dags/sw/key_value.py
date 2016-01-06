@@ -36,5 +36,22 @@ check_success.set_upstream(register_success)
 
 
 # check freestyle value write
+DATE_TEST_KEY_PATH = 'test/key-val/date'
+write_date = KeyValueSetOperator(task_id='WriteDate',
+                                 dag=dag,
+                                 path=SUCCESS_TEST_KEY_PATH,
+                                 value='''{{ ds }}''',
+                                 env='''{{ params.run_environment }}'''
+                                 )
 
 # composite
+should_run = KeyValueCompoundDateSensor(task_id='CheckDate',
+                                    dag=dag,
+                                    root=ETCD_ENV_ROOT[dag_template_params['run_environment']],
+                                    key_list_path='services/copy_logs_daily/trackers/',
+                                    list_separator=';',
+                                    desired_date='''{{ ds }}''',
+                                    key_root='services/data-ingestion/trackers/mobile',
+                                    key_suffix='.sg.internal',
+                                    execution_timeout=timedelta(minutes=240)
+                                    )

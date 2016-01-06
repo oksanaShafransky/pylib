@@ -56,6 +56,26 @@ class KeyValueSetOperator(AggregateOperator):
         return 'setter'
 
 
+class KeyValuePromoteOperator(AggregateOperator):
+    @apply_defaults
+    def __init__(self, *args, **kwargs):
+        super(KeyValuePromoteOperator, self).__init__(*args, **kwargs)
+
+    @staticmethod
+    def get_action():
+        return 'promoter'
+
+
+class KeyValueDeleteOperator(AggregateOperator):
+    @apply_defaults
+    def __init__(self, *args, **kwargs):
+        super(KeyValueDeleteOperator, self).__init__(*args, **kwargs)
+
+    @staticmethod
+    def get_action():
+        return 'eraser'
+
+
 class AggregateSensor(BaseSensorOperator):
     @apply_defaults
     def __init__(self, *args, **kwargs):
@@ -97,7 +117,7 @@ class AggregateSensor(BaseSensorOperator):
         return False
 
 
-class KeyValueSensor(AggregateOperator):
+class KeyValueSensor(AggregateSensor):
     @apply_defaults
     def __init__(self, *args, **kwargs):
         super(KeyValueSensor, self).__init__(*args, **kwargs)
@@ -105,3 +125,23 @@ class KeyValueSensor(AggregateOperator):
     @staticmethod
     def get_action():
         return 'sensor'
+
+
+class KeyValueCompoundSensor(AggregateSensor):
+    @apply_defaults
+    def __init__(self, *args, **kwargs):
+        super(KeyValueCompoundSensor, self).__init__(*args, **kwargs)
+
+    @staticmethod
+    def get_action():
+        return 'compound_sensor'
+
+
+class KeyValueCompoundDateSensor(AggregateSensor):
+    @apply_defaults
+    def __init__(self, *args, **kwargs):
+        super(KeyValueCompoundSensor, self).__init__(*args, **kwargs)
+
+    @staticmethod
+    def get_action():
+        return 'compound_date_sensor'
