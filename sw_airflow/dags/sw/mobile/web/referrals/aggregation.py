@@ -37,9 +37,9 @@ mobile_web_referrals_preliminary = ExternalTaskSensor(external_dag_id='MobileWeb
                                               external_task_id='MobileWebReferralsDailyPreliminary')
 
 # daily adjustment
-daily_adjustment = ExternalTaskSensor(external_dag_id='MobileAppsMovingWindow_window',
+mobile_web_adjust_calc = ExternalTaskSensor(external_dag_id='MobileAppsMovingWindow_window',
                                              dag=dag,
-                                             task_id="DailyAdjustment",
+                                             task_id="MobileWebAdjustCalc",
                                              external_task_id='MobileWebAdjustCalc')
 
 # daily weights
@@ -92,7 +92,7 @@ adjust_direct_pvs = DockerBashOperator(task_id='AdjustDirectPVs',
                                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p adjust_direct_pvs -env main'''
 )
 adjust_direct_pvs.set_upstream(build_user_transitions)
-adjust_direct_pvs.set_upstream(daily_adjustment)
+adjust_direct_pvs.set_upstream(mobile_web_adjust_calc)
 
 prepare_site_estimated_pvs = DockerBashOperator(task_id='PrepareSiteEstimatedPVs',
                                        dag=dag,
@@ -119,7 +119,7 @@ estimate_site_pvs = DockerBashOperator(task_id='EstimateSitePVs',
 
 
 estimate_site_pvs.set_upstream(calculate_site_pvs_shares)
-estimate_site_pvs.set_upstream(daily_adjustment)
+estimate_site_pvs.set_upstream(mobile_web_adjust_calc)
 
 mobile_web_referrals_aggregation = DummyOperator(task_id='MobileWebReferralsDailyAggregation', dag=dag)
 mobile_web_referrals_aggregation.set_upstream(estimate_site_pvs)
