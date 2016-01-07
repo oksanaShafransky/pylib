@@ -47,7 +47,7 @@ class TasksInfra(object):
         except FileNotFoundException:
             print 'Dir does not exist'
         finally:
-            assert is_valid is True, "Input dir is valid"
+            assert is_valid is True, 'Input dir is not valid, given dir is %s' % directory
 
     @staticmethod
     def assert_output_validity(directory, valid_output_min_size_bytes):
@@ -61,7 +61,7 @@ class TasksInfra(object):
         except FileNotFoundException:
             print 'Dir does not exist'
         finally:
-            assert is_valid is True, "Output dir is valid"
+            assert is_valid is True, 'Output dir is not valid, given dir is %s' % directory
 
     @staticmethod
     def load_common_args_to_ctx(ctx, dry_run, force, base_dir, date):

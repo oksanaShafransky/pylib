@@ -27,10 +27,11 @@ dag_args = {
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER, 'mode': 'window', 'mode_type': 'last-28'}
+                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
+                       'mode': 'window', 'mode_type': 'last-28'}
 
-dag = DAG(dag_id='iOSPreliminary', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
-
+dag = DAG(dag_id='iOSPreliminary', default_args=dag_args, params=dag_template_params,
+          schedule_interval=timedelta(days=1))
 
 ios_user_grouping = \
     DockerBashOperator(task_id='IosUserGrouping',
@@ -40,10 +41,8 @@ ios_user_grouping = \
                        )
 
 daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
-                               dag=dag,
-                               docker_name=DEFAULT_CLUSTER,
-                               bash_command='''echo TBD'''
-                               #Android Reference :
-                               # '''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 2560 -rmem 1536'''
-                               )
-daily_aggregation.set_upstream(ios_user_grouping)
+                                       dag=dag,
+                                       docker_name=DEFAULT_CLUSTER,
+                                       bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/daily_aggregation daily_aggregation -d {{ ds }}'''
+                                       )
+#daily_aggregation.set_upstream(ios_user_grouping)
