@@ -139,7 +139,7 @@ class EtcdSensor(BaseSensorOperator):
 
 
 # this sensor fetches a list of keys under a given key, then polls each member under some base key and compares to a desired value
-class CompoundEtcdSensor(BaseSensorOperator):
+class CompoundEtcdSensor(EtcdSensor):
 
     # Pass desired_value as None if you wish to merely make sure a key exists
     template_fields = ('env', 'key_list_path', 'key_root', 'list_separator')
@@ -147,23 +147,32 @@ class CompoundEtcdSensor(BaseSensorOperator):
     @apply_defaults
     def __init__(self, key_list_path='', list_separator=',', key_root='', key_suffix='', env='DEFAULT', *args, **kwargs):
         super(CompoundEtcdSensor, self).__init__(*args, **kwargs)
-        self.key_list_path = '/%s/%s' % (ETCD_ENV_ROOT[env], key_list_path)
+        self.key_list_path = key_list_path
         self.list_separator = list_separator
-        self.key_root = '/%s/%s' % (ETCD_ENV_ROOT[env], key_root)
+        self.env = env
+        self.key_root = key_root
         self.key_suffix = key_suffix
+
+    def get_check_keys_path(self):
+        return '/%s/%s' % (ETCD_ENV_ROOT[self.env], self.key_list_path)
+
+    def get_subkeys_base(self):
+        return '/%s/%s' % (ETCD_ENV_ROOT[self.env], self.key_root)
 
     def poke(self, context):
         try:
-            logging.info('fetching key list from etcd path %s' % self.key_list_path)
-            val_str = self.client.get(str(self.key_list_path)).value
+            key_list_path = self.get_check_keys_path()
+            logging.info('fetching key list from etcd path %s' % key_list_path)
+            val_str = self.client.get(str(key_list_path)).value
             keys_to_check = val_str.split(self.list_separator)
         except Exception as e:
             logging.error('key list path not found')
             raise e
 
         try:
+            key_root = self.get_subkeys_base()
             for key in keys_to_check:
-                key_path = str(self.key_root + '/' + key + self.key_suffix)
+                key_path = str(key_root + '/' + key + self.key_suffix)
                 logging.info('testing path %s' % key_path)
                 if not test_etcd_value(self.client, key_path, self.test_value):
                     logging.info('not ready')

@@ -81,7 +81,7 @@ class AggregateSensor(BaseSensorOperator):
     def __init__(self, *args, **kwargs):
         super(AggregateSensor, self).__init__(*args, **kwargs)
         kwargs.pop('dag')
-        self.operators = [oper(owner='nobody', *args, **kwargs) for oper in self.get_operators()]
+        self.operators = [oper()(owner='nobody', *args, **kwargs) for oper in self.get_operators()]
         self.store_template_fields()
 
     # please override this in each inheriting class, this is defined only for clarity
@@ -111,7 +111,7 @@ class AggregateSensor(BaseSensorOperator):
     def poke(self, context):
         self.assign_template_fields()
         for sub_operator in self.operators:
-            if sub_operator.execute(context):
+            if sub_operator.poke(context):
                 return True
 
         return False
@@ -140,7 +140,7 @@ class KeyValueCompoundSensor(AggregateSensor):
 class KeyValueCompoundDateSensor(AggregateSensor):
     @apply_defaults
     def __init__(self, *args, **kwargs):
-        super(KeyValueCompoundSensor, self).__init__(*args, **kwargs)
+        super(KeyValueCompoundDateSensor, self).__init__(*args, **kwargs)
 
     @staticmethod
     def get_action():
