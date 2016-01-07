@@ -8,7 +8,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 
-from airflow.models import BaseOperator
+from airflow.operators.bash_operator import BashOperator
 from airflow.utils import apply_defaults
 import time
 import logging
@@ -31,19 +31,37 @@ dag_args = {
     'retry_delay': timedelta(minutes=15)
 }
 
-class TestKillOperator(BaseOperator):
-    ui_color = '#00BFFF'
+# amit test
+class CleanableDockerBashOperator(BashOperator):
+    ui_color = '#FFFF66'
+    template_fields = ('bash_command', 'docker_name')
+    cmd_template = '''exec docker -H=tcp://{{ params.docker_gate }}:2375 run       \
+-v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
+-v /etc/localtime:/etc/localtime:ro                           \
+-v /tmp/logs:/tmp/logs                                        \
+-v /var/lib/sss:/var/lib/sss                                  \
+-v /etc/localtime:/etc/localtime:ro                           \
+-v /usr/bin:/opt/old_bin                                      \
+-v /var/run/similargroup:/var/run/similargroup                \
+--rm                                                          \
+--sig-proxy=false                                             \
+--user=`id -u`                                                \
+-e DOCKER_GATE={{ docker_manager }}                           \
+-e GELF_HOST="runsrv2.sg.internal"                            \
+-e HOME=/tmp                                                  \
+runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
+    '''
 
     @apply_defaults
-    def __init__(self, *args, **kwargs):
-        super(TestKillOperator, self).__init__(*args, **kwargs)
+    def __init__(self, docker_name, bash_command, *args, **kwargs):
+        self.docker_name = docker_name
+        random_string = str(datetime.utcnow().strftime('%s'))
+        docker_command = CleanableDockerBashOperator.cmd_template % {'random': random_string, 'docker': self.docker_name,
+                                                            'bash_command': bash_command}
+        super(CleanableDockerBashOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
-    def execute(self, context):
-        logging.info("Sleeping...")
-        time.sleep(60)
+# amit test
 
-    def on_kill(self):
-        logging.info("Help, i'm being killed")
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
@@ -58,8 +76,11 @@ opera_raw_data_ready = EtcdSensor(task_id='OperaRawDataReady',
 )
 
 
-test = TestKillOperator(task_id='TestKillOperator',
-                 dag=dag)
+test = CleanableDockerBashOperator(task_id='TestKillOperator',
+                                             dag=dag,
+                                             docker_name='''{{ params.cluster }}''',
+                                             bash_command='''sleep 5m'''
+                                             )
 
 
 filter_malformed_events = DockerBashOperator(task_id='FilterMalformedEvents',
