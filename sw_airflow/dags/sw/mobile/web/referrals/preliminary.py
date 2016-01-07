@@ -11,6 +11,7 @@ from sw.airflow.operators import DockerBashOperator
 from airflow.models import BaseOperator
 from airflow.utils import apply_defaults
 import time
+import logging
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -38,11 +39,11 @@ class TestKillOperator(BaseOperator):
         super(TestKillOperator, self).__init__(*args, **kwargs)
 
     def execute(self, context):
-        print "Sleeping..."
-        #time.sleep(60)
+        logging.info("Sleeping...")
+        time.sleep(60)
 
     def on_kill(self):
-        print "Help, i'm being killed"
+        logging.info("Help, i'm being killed")
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
