@@ -38,6 +38,7 @@ class TestKillOperator(BaseOperator):
         super(TestKillOperator, self).__init__(*args, **kwargs)
 
     def execute(self, context):
+        print "Sleeping..."
         time.sleep(60)
 
     def on_kill(self):
