@@ -48,7 +48,7 @@ should_run = CompoundDateEtcdSensor(task_id='RawDataReady',
 group_raw = DockerBashOperator(task_id='GroupByUser',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''params.execution_dir/analytics/scripts/daily/preliminaryJobs.sh -d {{ ds }} -p group'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/preliminaryJobs.sh -d {{ ds }} -p group'''
                                )
 group_raw.set_upstream(should_run)
 
