@@ -49,7 +49,7 @@ class CleanableDockerBashOperator(BashOperator):
 -e DOCKER_GATE={{ docker_manager }}                           \
 -e GELF_HOST="runsrv2.sg.internal"                            \
 -e HOME=/tmp                                                  \
--e ti                                                         \
+-ti                                                           \
 runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
