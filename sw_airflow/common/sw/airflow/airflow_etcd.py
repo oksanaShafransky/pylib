@@ -61,7 +61,7 @@ class EtcdSetOperator(EtcdOperator):
         self.client.set(str(path), str(self.value))
 
 
-class EtcdPromoteOperator(BaseOperator):
+class EtcdPromoteOperator(EtcdOperator):
     # sets the given value only if it is greater than the existing value at the key
     template_fields = ('env', 'path', 'value')
 
@@ -83,7 +83,7 @@ class EtcdPromoteOperator(BaseOperator):
             self.client.set(str(self.get_path()), str(self.value))
 
 
-class EtcdDeleteOperator(BaseOperator):
+class EtcdDeleteOperator(EtcdOperator):
     template_fields = ('env', 'path')
 
     @apply_defaults
@@ -106,7 +106,6 @@ def test_etcd_value(client, path, criteria):
 
 
 class EtcdSensor(BaseSensorOperator):
-
     # Pass desired_value as None if you wish to merely make sure a key exists
 
     ui_color = '#00BFFF'
@@ -197,7 +196,6 @@ class CompoundDateEtcdSensor(CompoundEtcdSensor):
     @apply_defaults
     def __init__(self, desired_date, *args, **kwargs):
         super(CompoundDateEtcdSensor, self).__init__(*args, **kwargs)
-        self.cnt = 0
         self.desired_date = desired_date
 
     def test_value(self, dt):
@@ -208,10 +206,12 @@ class SWEtcdAirflowPluginManager(AirflowPlugin):
 
     name = 'SWEtcdOperators'
 
-    operators = [EtcdSetOperator, EtcdPromoteOperator, EtcdDeleteOperator, EtcdSensor]
+    operators = [EtcdSetOperator, EtcdPromoteOperator, EtcdDeleteOperator, EtcdSensor, CompoundEtcdSensor, CompoundDateEtcdSensor]
 
 
 class EtcdKeyValueProvider:
+    def __init__(self):
+        pass
 
     @staticmethod
     def setter():

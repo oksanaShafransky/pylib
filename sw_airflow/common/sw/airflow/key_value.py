@@ -5,7 +5,8 @@ from airflow.operators.sensors import BaseSensorOperator
 from airflow.utils import apply_defaults
 
 from airflow_etcd import EtcdKeyValueProvider
-PROVIDERS = [EtcdKeyValueProvider]
+from airflow_consul import ConsulKeyValueProvider
+PROVIDERS = [ConsulKeyValueProvider, EtcdKeyValueProvider]
 
 
 class AggregateOperator(BaseOperator):
@@ -127,6 +128,7 @@ class KeyValueSensor(AggregateSensor):
         return 'sensor'
 
 
+# this sensor fetches a list of keys under a given key, then polls each member under some base key and compares to a desired value
 class KeyValueCompoundSensor(AggregateSensor):
     @apply_defaults
     def __init__(self, *args, **kwargs):
