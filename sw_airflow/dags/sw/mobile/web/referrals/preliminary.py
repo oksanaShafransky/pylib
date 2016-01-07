@@ -39,7 +39,7 @@ class TestKillOperator(BaseOperator):
 
     def execute(self, context):
         print "Sleeping..."
-        time.sleep(60)
+        #time.sleep(60)
 
     def on_kill(self):
         print "Help, i'm being killed"
