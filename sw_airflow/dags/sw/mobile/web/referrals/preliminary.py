@@ -35,7 +35,7 @@ dag_args = {
 class CleanableDockerBashOperator(BashOperator):
     ui_color = '#FFFF66'
     template_fields = ('bash_command', 'docker_name')
-    cmd_template = '''exec docker -H=tcp://{{ params.docker_gate }}:2375 run       \
+    cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
 -v /etc/localtime:/etc/localtime:ro                           \
 -v /tmp/logs:/tmp/logs                                        \
