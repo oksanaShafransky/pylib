@@ -90,10 +90,10 @@ def generate_dags(mode):
                                           external_task_id='AdjustDirectPVs')
 
     # aggregation
-    estimation_preliminary = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyAggregation',
+    mobile_web_referrals_aggregation = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyAggregation',
                                                 dag=dag,
-                                                task_id="EstimationPreliminary",
-                                                external_task_id='FinishProcess')
+                                                task_id="MobileWebReferralsDailyAggregation",
+                                                external_task_id='MobileWebReferralsDailyAggregation')
 
     # daily adjustment
     daily_adjustment = ExternalTaskSensor(external_dag_id='MobileAppsMovingWindow_window',
@@ -110,7 +110,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl mw -p tables'''
     )
 
-    prepare_hbase_tables.set_upstream(estimation_preliminary)
+    prepare_hbase_tables.set_upstream(mobile_web_referrals_aggregation)
 
     sum_user_event_rates = DockerBashOperator(task_id='SumUserEventRates',
                                          dag=dag,
@@ -166,8 +166,8 @@ def generate_dags(mode):
     store_site_referrers_with_totals.set_upstream(calculate_site_referrers_with_totals)
     store_site_referrers_with_totals.set_upstream(prepare_hbase_tables)
 
-    wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
-    wrap_up.set_upstream(store_site_referrers_with_totals)
+    mobile_web_referrals_mw = DummyOperator(task_id='MobileWebReferralsMovingWindow_' + mode, dag=dag)
+    mobile_web_referrals_mw.set_upstream(store_site_referrers_with_totals)
 
     return dag
 

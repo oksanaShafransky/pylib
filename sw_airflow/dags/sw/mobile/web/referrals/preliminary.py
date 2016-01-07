@@ -62,5 +62,5 @@ filter_invalid_users = DockerBashOperator(task_id='FilterInvalidUsers',
 )
 filter_invalid_users.set_upstream(extract_invalid_users)
 
-wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
-wrap_up.set_upstream(filter_invalid_users)
+mobile_web_referrals_preliminary = DummyOperator(task_id='MobileWebReferralsDailyPreliminary', dag=dag)
+mobile_web_referrals_preliminary.set_upstream(filter_invalid_users)
