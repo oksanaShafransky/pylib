@@ -32,7 +32,7 @@ dag = DAG(dag_id='RecruitDataService', default_args=dag_args, params=dag_templat
 
 # define stages
 
-should_run_desktop = KeyValueCompoundDateSensor(task_id='RawDataReady',
+should_run_desktop = KeyValueCompoundDateSensor(task_id='DesktopDataReady',
                                                 dag=dag,
                                                 env='''{{ params.run_environment }}''',
                                                 key_list_path='services/copy_logs_daily/trackers',
@@ -58,7 +58,7 @@ ship_desktop = DockerBashOperator(task_id='ShipDesktop',
 ship_desktop.set_upstream(slice_desktop)
 
 
-should_run_mobile = KeyValueCompoundDateSensor(task_id='RawDataReady',
+should_run_mobile = KeyValueCompoundDateSensor(task_id='MobileDataReady',
                                                dag=dag,
                                                env='PRODUCTION',
                                                key_list_path='services/copy_logs_daily/trackers',
