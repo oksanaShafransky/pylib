@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 
 from airflow.models import DAG
 
-from sw.airflow.airflow_key_value import *
+from sw.airflow.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
