@@ -33,7 +33,7 @@ dag = DAG(dag_id='iOSDailyPanelReport', default_args=dag_args, params=dag_templa
 
 should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         dag=dag,
-                                        env='''{{ params.run_environment }}''',
+                                        env='PRODUCTION',
                                         key_list_path='services/copy_logs_daily/trackers/',
                                         list_separator=';',
                                         desired_date='''{{ ds }}''',

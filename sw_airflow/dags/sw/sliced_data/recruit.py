@@ -60,7 +60,7 @@ ship_desktop.set_upstream(slice_desktop)
 
 should_run_mobile = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                                dag=dag,
-                                               env='''{{ params.run_environment }}''',
+                                               env='PRODUCTION',
                                                key_list_path='services/copy_logs_daily/trackers/',
                                                list_separator=';',
                                                desired_date='''{{ ds }}''',

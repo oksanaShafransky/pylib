@@ -34,7 +34,7 @@ dag = DAG(dag_id='MobileDailyPreliminary', default_args=dag_args, params=dag_tem
 
 should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         dag=dag,
-                                        env='''{{ params.run_environment }}''',
+                                        env='PRODUCTION',
                                         key_list_path='services/copy_logs_daily/trackers/',
                                         list_separator=';',
                                         desired_date='''{{ ds }}''',
