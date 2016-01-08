@@ -34,7 +34,7 @@ dag = DAG(dag_id='DesktopPreliminary', default_args=dag_args, params=dag_templat
 should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         dag=dag,
                                         env='PRODUCTION',
-                                        key_list_path='services/copy_logs_daily/trackers/',
+                                        key_list_path='services/copy_logs_daily/trackers',
                                         list_separator=';',
                                         desired_date='''{{ ds }}''',
                                         key_root='services/data-ingestion/trackers/mrptracker',

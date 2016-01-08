@@ -48,6 +48,8 @@ class AggregateOperator(BaseOperator):
 
 
 class KeyValueSetOperator(AggregateOperator):
+    ui_color = '#00BFFF'
+
     @apply_defaults
     def __init__(self, *args, **kwargs):
         super(KeyValueSetOperator, self).__init__(*args, **kwargs)
@@ -58,6 +60,8 @@ class KeyValueSetOperator(AggregateOperator):
 
 
 class KeyValuePromoteOperator(AggregateOperator):
+    ui_color = '#00BFFF'
+
     @apply_defaults
     def __init__(self, *args, **kwargs):
         super(KeyValuePromoteOperator, self).__init__(*args, **kwargs)
@@ -68,6 +72,8 @@ class KeyValuePromoteOperator(AggregateOperator):
 
 
 class KeyValueDeleteOperator(AggregateOperator):
+    ui_color = '#00BFFF'
+
     @apply_defaults
     def __init__(self, *args, **kwargs):
         super(KeyValueDeleteOperator, self).__init__(*args, **kwargs)
@@ -112,13 +118,18 @@ class AggregateSensor(BaseSensorOperator):
     def poke(self, context):
         self.assign_template_fields()
         for sub_operator in self.operators:
-            if sub_operator.poke(context):
-                return True
+            try:
+                if sub_operator.poke(context):
+                    return True
+            except:
+                pass
 
         return False
 
 
 class KeyValueSensor(AggregateSensor):
+    ui_color = '#00BFFF'
+
     @apply_defaults
     def __init__(self, *args, **kwargs):
         super(KeyValueSensor, self).__init__(*args, **kwargs)
@@ -130,6 +141,8 @@ class KeyValueSensor(AggregateSensor):
 
 # this sensor fetches a list of keys under a given key, then polls each member under some base key and compares to a desired value
 class KeyValueCompoundSensor(AggregateSensor):
+    ui_color = '#00BFFF'
+
     @apply_defaults
     def __init__(self, *args, **kwargs):
         super(KeyValueCompoundSensor, self).__init__(*args, **kwargs)
@@ -140,6 +153,8 @@ class KeyValueCompoundSensor(AggregateSensor):
 
 
 class KeyValueCompoundDateSensor(AggregateSensor):
+    ui_color = '#00BFFF'
+
     @apply_defaults
     def __init__(self, *args, **kwargs):
         super(KeyValueCompoundDateSensor, self).__init__(*args, **kwargs)
