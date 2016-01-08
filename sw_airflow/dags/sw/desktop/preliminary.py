@@ -75,7 +75,7 @@ repair_tables.set_upstream(daily_aggregation)
 register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          dag=dag,
                                          path='''services/aggregation/data-available/{{ ds }}''',
-                                         env='''{{ params.run_environment' }}'''
+                                         env='''{{ params.run_environment }}'''
                                          )
 register_available.set_upstream(daily_aggregation)
 
