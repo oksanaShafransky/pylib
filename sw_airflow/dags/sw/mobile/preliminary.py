@@ -5,15 +5,13 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 
-from sw.airflow.airflow_etcd import *
+from sw.airflow.airflow_key_value import *
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
@@ -34,16 +32,16 @@ dag = DAG(dag_id='MobileDailyPreliminary', default_args=dag_args, params=dag_tem
 
 # define stages
 
-should_run = CompoundDateEtcdSensor(task_id='RawDataReady',
-                                    dag=dag,
-                                    root=ETCD_ENV_ROOT[dag_template_params['run_environment']],
-                                    key_list_path='services/copy_logs_daily/trackers/',
-                                    list_separator=';',
-                                    desired_date='''{{ ds }}''',
-                                    key_root='services/data-ingestion/trackers/mobile',
-                                    key_suffix='.sg.internal',
-                                    execution_timeout=timedelta(minutes=240)
-                                    )
+should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
+                                        dag=dag,
+                                        env='''{{ params.run_environment }}''',
+                                        key_list_path='services/copy_logs_daily/trackers/',
+                                        list_separator=';',
+                                        desired_date='''{{ ds }}''',
+                                        key_root='services/data-ingestion/trackers/mobile',
+                                        key_suffix='.sg.internal',
+                                        execution_timeout=timedelta(minutes=240)
+                                        )
 
 
 group_raw_files = DockerBashOperator(task_id='GroupRawDataByUser',
@@ -110,19 +108,19 @@ daily_agg.set_upstream(combine_sysapps)
 wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
 wrap_up.set_upstream(daily_agg)
 
-register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
-                                   dag=dag,
-                                   path='''services/mobile-stats/daily/{{ ds }}''',
-                                   root=ETCD_ENV_ROOT['PRODUCTION']
-                                   )
+register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
+                                       dag=dag,
+                                       path='''services/mobile-stats/daily/{{ ds }}''',
+                                       env='PRODUCTION'
+                                       )
 register_success.set_upstream(wrap_up)
 
 
 # for now redundant, we may clean this data up, distinguishing it from mere success
-register_available = EtcdSetOperator(task_id='SetDataAvailableDate',
-                                     dag=dag,
-                                     path='''services/mobile-stats/data-available/{{ ds }}''',
-                                     root=ETCD_ENV_ROOT[dag_template_params['run_environment']]
-                                     )
+register_available = KeyValueSetOperator(task_id='SetDataAvailableDate',
+                                         dag=dag,
+                                         path='''services/mobile-stats/data-available/{{ ds }}''',
+                                         env='''{{ params.run_environment }}'''
+                                         )
 register_available.set_upstream(wrap_up)
 

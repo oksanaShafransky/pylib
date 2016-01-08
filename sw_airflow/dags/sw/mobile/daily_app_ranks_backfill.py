@@ -2,7 +2,7 @@ from datetime import timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
-from sw.airflow.airflow_etcd import *
+
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -11,8 +11,6 @@ DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 WINDOW_MODE = 'window'
 WINDOW_MODE_TYPE = 'last-28'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
