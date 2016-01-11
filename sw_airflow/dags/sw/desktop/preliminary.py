@@ -6,6 +6,7 @@ from airflow.models import DAG
 
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
+from airflow.operators.dummy_operator import DummyOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data'
@@ -78,4 +79,14 @@ register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          env='''{{ params.run_environment }}'''
                                          )
 register_available.set_upstream(daily_aggregation)
+
+###########
+# Wrap-up #
+###########
+
+wrap_up = \
+    DummyOperator(task_id='DesktopPreliminary',
+                  dag=dag
+                  )
+wrap_up.set_upstream([repair_tables, register_available])
 
