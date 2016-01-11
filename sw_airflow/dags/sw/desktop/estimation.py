@@ -74,6 +74,8 @@ daily_incoming = \
                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyIncoming.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                        )
 
+daily_incoming.set_upstream(desktop_daily_preliminary)
+
 incoming_repair = \
     DockerBashOperator(task_id='HiveRepairDailyIncoming',
                        dag=dag,
