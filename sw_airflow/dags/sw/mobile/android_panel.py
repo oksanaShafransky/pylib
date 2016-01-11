@@ -5,15 +5,12 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.sensors import HdfsSensor
 
-from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',

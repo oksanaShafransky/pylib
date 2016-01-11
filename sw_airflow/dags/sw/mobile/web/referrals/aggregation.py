@@ -17,7 +17,7 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 12, 1),
-    'depends_on_past': False,
+    'depends_on_past': True,
     'email': ['amitr@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
@@ -31,15 +31,15 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 dag = DAG(dag_id='MobileWebReferralsDailyAggregation', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
 # preliminary
-aggregation_preliminary = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyPreliminary',
+mobile_web_referrals_preliminary = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyPreliminary',
                                               dag=dag,
-                                              task_id="AggregationPreliminary",
-                                              external_task_id='FinishProcess')
+                                              task_id="MobileWebReferralsDailyPreliminary",
+                                              external_task_id='MobileWebReferralsDailyPreliminary')
 
 # daily adjustment
-daily_adjustment = ExternalTaskSensor(external_dag_id='MobileAppsMovingWindow_window',
+mobile_web_adjust_calc = ExternalTaskSensor(external_dag_id='MobileAppsMovingWindow_window',
                                              dag=dag,
-                                             task_id="DailyAdjustment",
+                                             task_id="MobileWebAdjustCalc",
                                              external_task_id='MobileWebAdjustCalc')
 
 # daily weights
@@ -54,14 +54,14 @@ build_user_transitions = DockerBashOperator(task_id='BuildUserTransitions',
                                      docker_name='''{{ params.cluster }}''',
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p build_user_transitions -env main'''
 )
-build_user_transitions.set_upstream(aggregation_preliminary)
+build_user_transitions.set_upstream(mobile_web_referrals_preliminary)
 
 count_user_domain_pvs = DockerBashOperator(task_id='CountUserDomainPVs',
                                             dag=dag,
                                             docker_name='''{{ params.cluster }}''',
                                             bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p count_user_domain_pvs -env main'''
 )
-count_user_domain_pvs.set_upstream(aggregation_preliminary)
+count_user_domain_pvs.set_upstream(mobile_web_referrals_preliminary)
 
 count_user_site2_events = DockerBashOperator(task_id='CountUserSiteSite2Events',
                                            dag=dag,
@@ -92,7 +92,7 @@ adjust_direct_pvs = DockerBashOperator(task_id='AdjustDirectPVs',
                                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p adjust_direct_pvs -env main'''
 )
 adjust_direct_pvs.set_upstream(build_user_transitions)
-adjust_direct_pvs.set_upstream(daily_adjustment)
+adjust_direct_pvs.set_upstream(mobile_web_adjust_calc)
 
 prepare_site_estimated_pvs = DockerBashOperator(task_id='PrepareSiteEstimatedPVs',
                                        dag=dag,
@@ -119,10 +119,10 @@ estimate_site_pvs = DockerBashOperator(task_id='EstimateSitePVs',
 
 
 estimate_site_pvs.set_upstream(calculate_site_pvs_shares)
-estimate_site_pvs.set_upstream(daily_adjustment)
+estimate_site_pvs.set_upstream(mobile_web_adjust_calc)
 
-wrap_up = DummyOperator(task_id='FinishProcess', dag=dag)
-wrap_up.set_upstream(estimate_site_pvs)
-wrap_up.set_upstream(adjust_direct_pvs)
-wrap_up.set_upstream(calculate_user_event_transitions)
-wrap_up.set_upstream(calculate_user_event_rates)
+mobile_web_referrals_aggregation = DummyOperator(task_id='MobileWebReferralsDailyAggregation', dag=dag)
+mobile_web_referrals_aggregation.set_upstream(estimate_site_pvs)
+mobile_web_referrals_aggregation.set_upstream(adjust_direct_pvs)
+mobile_web_referrals_aggregation.set_upstream(calculate_user_event_transitions)
+mobile_web_referrals_aggregation.set_upstream(calculate_user_event_rates)

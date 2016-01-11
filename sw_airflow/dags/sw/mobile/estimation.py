@@ -4,15 +4,14 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
-from sw.airflow.airflow_etcd import *
+
+from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
@@ -228,9 +227,9 @@ mobile_daily_estimation = \
                   )
 mobile_daily_estimation.set_upstream([mobile_apps_daily_estimation, mobile_web_daily_estimation])
 
-register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
-                                   dag=dag,
-                                   path='''services/mobile-daily-est/daily/{{ ds }}''',
-                                   root=ETCD_ENV_ROOT['PRODUCTION']
-                                   )
+register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
+                                       dag=dag,
+                                       path='''services/mobile-daily-est/daily/{{ ds }}''',
+                                       env='PRODUCTION'
+                                       )
 register_success.set_upstream(mobile_daily_estimation)

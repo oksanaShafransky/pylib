@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
-from sw.airflow.airflow_etcd import *
+from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
 from sw.airflow.operators import DockerBashSensor
 from sw.airflow.operators import  DockerCopyHbaseTableOperator
@@ -20,8 +20,6 @@ SNAPHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
 DEFAULT_HBASE_CLUSTER = 'hbp1'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
@@ -627,10 +625,10 @@ def generate_dags(mode):
 
     if is_prod_env():
 
-        register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
-                                           dag=dag,
-                                           path='''services/mobile_moving_window/{{ params.mode }}/{{ ds }}''',
-                                           root=ETCD_ENV_ROOT['PRODUCTION']
+        register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
+                                               dag=dag,
+                                               path='''services/mobile_moving_window/{{ params.mode }}/{{ ds }}''',
+                                               env='PRODUCTION'
                                            )
         register_success.set_upstream([copy_to_prod, update_usage_ranks_date_prod])
 

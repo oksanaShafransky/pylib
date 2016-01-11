@@ -4,15 +4,13 @@ from datetime import datetime, timedelta
 
 from airflow.models import DAG
 
-from sw.airflow.airflow_etcd import *
+from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
@@ -33,16 +31,16 @@ dag = DAG(dag_id='iOSDailyPanelReport', default_args=dag_args, params=dag_templa
 
 # define stages
 
-should_run = CompoundDateEtcdSensor(task_id='RawDataReady',
-                                    dag=dag,
-                                    root=ETCD_ENV_ROOT[dag_template_params['run_environment']],
-                                    key_list_path='services/copy_logs_daily/trackers/',
-                                    list_separator=';',
-                                    desired_date='''{{ ds }}''',
-                                    key_root='services/data-ingestion/trackers/ios',
-                                    key_suffix='.sg.internal',
-                                    execution_timeout=timedelta(minutes=240)
-                                    )
+should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
+                                        dag=dag,
+                                        env='PRODUCTION',
+                                        key_list_path='services/copy_logs_daily/trackers',
+                                        list_separator=';',
+                                        desired_date='''{{ ds }}''',
+                                        key_root='services/data-ingestion/trackers/ios',
+                                        key_suffix='.sg.internal',
+                                        execution_timeout=timedelta(minutes=240)
+                                        )
 
 
 user_report = DockerBashOperator(task_id='CollectUserData',

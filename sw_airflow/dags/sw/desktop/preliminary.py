@@ -4,15 +4,14 @@ from datetime import datetime, timedelta
 
 from airflow.models import DAG
 
-from sw.airflow.airflow_etcd import *
+from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
+from airflow.operators.dummy_operator import DummyOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
@@ -33,16 +32,16 @@ dag = DAG(dag_id='DesktopPreliminary', default_args=dag_args, params=dag_templat
 
 # define stages
 
-should_run = CompoundDateEtcdSensor(task_id='RawDataReady',
-                                    dag=dag,
-                                    root=ETCD_ENV_ROOT[dag_template_params['run_environment']],
-                                    key_list_path='services/copy_logs_daily/trackers/',
-                                    list_separator=';',
-                                    desired_date='''{{ ds }}''',
-                                    key_root='services/data-ingestion/trackers/mrptracker',
-                                    key_suffix='.sg.internal',
-                                    execution_timeout=timedelta(minutes=240)
-                                    )
+should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
+                                        dag=dag,
+                                        env='PRODUCTION',
+                                        key_list_path='services/copy_logs_daily/trackers',
+                                        list_separator=';',
+                                        desired_date='''{{ ds }}''',
+                                        key_root='services/data-ingestion/trackers/mrptracker',
+                                        key_suffix='.sg.internal',
+                                        execution_timeout=timedelta(minutes=240)
+                                        )
 
 
 group_raw = DockerBashOperator(task_id='GroupByUser',
@@ -74,10 +73,20 @@ repair_tables = DockerBashOperator(task_id='RepairDailyTables',
                                    )
 repair_tables.set_upstream(daily_aggregation)
 
-register_available = EtcdSetOperator(task_id='MarkDataAvailability',
-                                     dag=dag,
-                                     path='''services/aggregation/data-available/{{ ds }}''',
-                                     root=ETCD_ENV_ROOT[dag_template_params['run_environment']]
-                                     )
+register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
+                                         dag=dag,
+                                         path='''services/aggregation/data-available/{{ ds }}''',
+                                         env='''{{ params.run_environment }}'''
+                                         )
 register_available.set_upstream(daily_aggregation)
+
+###########
+# Wrap-up #
+###########
+
+wrap_up = \
+    DummyOperator(task_id='DesktopPreliminary',
+                  dag=dag
+                  )
+wrap_up.set_upstream([repair_tables, register_available])
 

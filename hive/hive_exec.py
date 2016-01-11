@@ -108,7 +108,7 @@ class HiveExecuter(Executer):
         else:
             logger.info('Action Name:%s' % query_name)
 
-        log_dir = tempfile.mkdtemp('_hive_runner')
+        log_dir = tempfile.gettempdir() + '/logs/hive_exec/' + tempfile._get_candidate_names().next()
         logger.info('Hive log is at: %s' % log_dir)
         job_name = 'Hive. %s' % (' - '.join([query_name] + job_params))
 
