@@ -12,8 +12,6 @@ BASE_DIR = '/similargroup/data/analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
-
 dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2016, 1, 10),
@@ -82,6 +80,8 @@ incoming_repair = \
                        docker_name='''{{ params.cluster }}''',
                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyIncoming.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                        )
+
+incoming_repair.set_upstream(daily_incoming)
 
 register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          dag=dag,
