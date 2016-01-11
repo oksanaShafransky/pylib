@@ -64,6 +64,7 @@ register_available = EtcdSetOperator(task_id='MarkDataAvailability',
                                      root=ETCD_ENV_ROOT[dag_template_params['run_environment']]
                                      )
 register_available.set_upstream(estimation)
+register_available.set_upstream(check)
 
 ###########
 # Wrap-up #
