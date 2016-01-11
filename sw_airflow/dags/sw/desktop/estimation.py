@@ -67,8 +67,6 @@ est_repair = \
 
 est_repair.set_upstream(estimation)
 
-estimation.set_upstream(desktop_daily_preliminary)
-
 daily_incoming = \
     DockerBashOperator(task_id='DailyIncoming',
                        dag=dag,
