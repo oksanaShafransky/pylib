@@ -12,6 +12,8 @@ BASE_DIR = '/similargroup/data/analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 
+ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
+
 dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2016, 1, 100),
@@ -56,6 +58,13 @@ check = \
 
 check.set_upstream(estimation)
 
+register_available = EtcdSetOperator(task_id='MarkDataAvailability',
+                                     dag=dag,
+                                     path='''services/estimation/data-available/{{ ds }}''',
+                                     root=ETCD_ENV_ROOT[dag_template_params['run_environment']]
+                                     )
+register_available.set_upstream(estimation)
+
 ###########
 # Wrap-up #
 ###########
@@ -64,4 +73,4 @@ wrap_up = \
     DummyOperator(task_id='DesktopDailyEstimation',
                   dag=dag
                   )
-wrap_up.set_upstream(check)
+wrap_up.set_upstream(register_available)
