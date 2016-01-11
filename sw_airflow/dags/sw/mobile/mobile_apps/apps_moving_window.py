@@ -52,7 +52,7 @@ def generate_dags(mode):
         dag_args_for_mode.update({'start_date': datetime(2015, 12, 30)})
 
     if is_snapshot_dag():
-        dag_args_for_mode.update({'start_date': datetime(2015, 12, 31), 'end_date': datetime(2015, 12, 31)})
+        dag_args_for_mode.update({'start_date': datetime(2015, 12, 31)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     if is_window_dag():
@@ -62,9 +62,7 @@ def generate_dags(mode):
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
     dag = DAG(dag_id='MobileAppsMovingWindow_' + mode, default_args=dag_args_for_mode, params=dag_template_params_for_mode,
-              #schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
-              #Following is temporary hack until we upgrade to Airflow 1.6.x or later
-              schedule_interval=timedelta(days=1))
+              schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
 
     mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                                  dag=dag,
