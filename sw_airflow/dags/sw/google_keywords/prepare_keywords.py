@@ -4,7 +4,6 @@ from datetime import datetime
 
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from monthdelta import *
 
 from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
 
@@ -33,7 +32,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
 dag = DAG(dag_id='PrepareGoogleKeywords', default_args=dag_args, params=dag_template_params,
-          schedule_interval=monthdelta(1))
+          schedule_interval="@monthly")
 
 
 
@@ -81,6 +80,7 @@ process.set_upstream(init)
 ###    Deploy                                  #
 #################################################
 if DEPLOY_TO_PROD:
+    last_deploy_step = None
     for target_cluster in ('hbp1','hbp2'):
         copy_processed = DockerCopyHbaseTableOperator(
             task_id='copy_sites_scrape_stat_%s' % target_cluster,
@@ -92,6 +92,12 @@ if DEPLOY_TO_PROD:
         )
         copy_processed.set_upstream(deploy_prod)
         copy_processed.set_downstream(deploy_prod_done)
+        if last_deploy_step is not None:
+            copy_processed.set_upstream(last_deploy_step)
+
+        last_deploy_step = DummyOperator(task_id='deploy_step_%s' % target_cluster, dag=dag)
+        last_deploy_step.set_upstream(copy_processed)
+        last_deploy_step.set_downstream(deploy_prod_done)
 
 
 #################################################
