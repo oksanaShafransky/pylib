@@ -1,6 +1,6 @@
 __author__ = 'lajonat'
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
