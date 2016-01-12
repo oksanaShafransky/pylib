@@ -221,7 +221,12 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
        "-hiveconf", "hive.exec.scratchdir=/tmp/hive-prod",
        "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
        "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
-       "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728"
+       "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728",
+       "-hiveconf", "hive.merge.mapredfiles=true",
+       "-hiveconf", "hive.vectorized.execution.enabled=true",
+       "-hiveconf", "hive.vectorized.execution.reduce.enabled=true",
+       "-hiveconf", "hive.cbo.enable=true",
+       "-hiveconf", "hive.stats.fetch.column.stats=true"
     ]
 
     if codec:
