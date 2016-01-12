@@ -31,7 +31,7 @@ dag = DAG(dag_id='DesktopDailyEstimation', default_args=dag_args, params=dag_tem
 
 
 desktop_daily_preliminary = ExternalTaskSensor(external_dag_id='DesktopPreliminary',
-                                               external_task_id='DesktopPreliminary',
+                                               external_task_id='DailyAggregation',
                                                dag=dag,
                                                task_id="DesktopPreliminary")
 #########################
@@ -42,7 +42,7 @@ estimation = \
     DockerBashOperator(task_id='Estimation',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p daily_estimation'''
                        )
 
 estimation.set_upstream(desktop_daily_preliminary)
@@ -56,6 +56,24 @@ check = \
 
 check.set_upstream(estimation)
 
+add_totals_est = \
+    DockerBashOperator(task_id='AddTotalsToEstimationValues',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p add_totals_to_keys'''
+                       )
+
+add_totals_est.set_upstream(estimation)
+
+fractions_and_reach = \
+    DockerBashOperator(task_id='CalculateFractionsAndReach',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_fractions_and_reach'''
+                       )
+
+fractions_and_reach.set_upstream(add_totals_est)
+
 est_repair = \
     DockerBashOperator(task_id='HiveRepairDailyEstimation',
                        dag=dag,
@@ -63,7 +81,7 @@ est_repair = \
                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                        )
 
-est_repair.set_upstream(estimation)
+est_repair.set_upstream(fractions_and_reach)
 
 daily_incoming = \
     DockerBashOperator(task_id='DailyIncoming',
@@ -72,7 +90,7 @@ daily_incoming = \
                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyIncoming.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                        )
 
-daily_incoming.set_upstream(desktop_daily_preliminary)
+daily_incoming.set_upstream(estimation)
 
 incoming_repair = \
     DockerBashOperator(task_id='HiveRepairDailyIncoming',
@@ -89,8 +107,9 @@ register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          env='''{{ params.run_environment }}'''
                                          )
 
-register_available.set_upstream(estimation)
+register_available.set_upstream(fractions_and_reach)
 register_available.set_upstream(check)
+register_available.set_upstream(daily_incoming)
 
 ###########
 # Wrap-up #
