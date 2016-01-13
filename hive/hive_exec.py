@@ -116,7 +116,7 @@ class HiveExecuter(Executer):
 
         try:
             hive_runner.run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
-                                     sync=args.sync, consolidate_output=not args.merge_output,
+                                     sync=args.sync, consolidate_output=not args.no_merge_output,
                                      log_dir=log_dir, slow_start_ratio=args.slow_start_ratio,
                                      calc_pool=args.calc_pool, compression=args.compression)
             self.results[query_name] = 'success'
@@ -124,7 +124,10 @@ class HiveExecuter(Executer):
             self.results[query_name] = 'failure'
             traceback.print_exc()
         finally:
-            shutil.rmtree(log_dir)
+            try:
+                shutil.rmtree(log_dir)
+            except:
+                logger.error('failed removing log dir')
 
     def report_results(self):
         logger.info('reporting execution summary\n')
