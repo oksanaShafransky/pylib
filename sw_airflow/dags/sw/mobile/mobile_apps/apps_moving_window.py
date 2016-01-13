@@ -310,7 +310,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='AppEngagement',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
     app_engagement.set_upstream([mobile_daily_estimation, prepare_hbase_tables])
 
@@ -319,7 +319,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='AppEngagementSanityCheck',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/qa/checkAppAndCountryEngagementEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p check_window'''
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/qa/checkAppAndCountryEngagementEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -p check_window'''
                                )
         app_engagement_sanity_check.set_upstream(app_engagement)
 
@@ -334,33 +334,49 @@ def generate_dags(mode):
                                                   external_task_id='DailyAppRanksBackfill'
                                                   )
 
-    usage_ranks_main = \
-        DockerBashOperator(task_id='UsageRanksMain',
+    calc_ranks = \
+        DockerBashOperator(task_id='CalculateUsageRanks',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p join_scores_info,cat_ranks'''
                            )
-    usage_ranks_main.set_upstream([daily_app_ranks_backfill, app_engagement])
+    calc_ranks.set_upstream([daily_app_ranks_backfill, app_engagement])
 
     usage_ranks = DummyOperator(task_id='UsageRanks',
                                 dag=dag
                                 )
 
-    usage_ranks.set_upstream(usage_ranks_main)
+    top_list_store = \
+        DockerBashOperator(task_id='StoreUsageRanks',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p store_cat_ranks'''
+                           )
+    top_list_store.set_upstream(calc_ranks)
+
+    app_ranks_histogram_store = \
+        DockerBashOperator(task_id='RecordAppUsageRanksHistory',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p store_app_ranks'''
+                           )
+    app_ranks_histogram_store.set_upstream(calc_ranks)
+
+    usage_ranks.set_upstream([calc_ranks, top_list_store, app_ranks_histogram_store])
 
     prepare_ranks = \
         DockerBashOperator(task_id='PrepareRanks',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/cross_cache.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }} -p prepare_app_rank_export'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/cross_cache.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p prepare_app_rank_export'''
                            )
-    prepare_ranks.set_upstream(usage_ranks)
+    prepare_ranks.set_upstream(calc_ranks)
 
     ranks_export_stage = \
         DockerBashOperator(task_id='RanksExportStage',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/cross_cache.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p export'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/cross_cache.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -et STAGE -p export'''
                            )
     ranks_export_stage.set_upstream(prepare_ranks)
 
@@ -370,7 +386,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='RanksExportProd',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/cross_cache.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p export'''
+                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/cross_cache.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p export'''
                                )
         ranks_export_prod.set_upstream(prepare_ranks)
 
@@ -399,7 +415,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/trends.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -td 28'''
                                )
-        trends_28_days.set_upstream(usage_ranks)
+        trends_28_days.set_upstream(calc_ranks)
 
         # TODO configure parallelism setting for this task, which is heavier (20 slots)
         trends_7_days = \
@@ -408,7 +424,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/trends.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -td 7'''
                                )
-        trends_7_days.set_upstream([usage_ranks])
+        trends_7_days.set_upstream([calc_ranks])
         trends.set_upstream([trends_28_days, trends_7_days])
 
     if is_snapshot_dag():

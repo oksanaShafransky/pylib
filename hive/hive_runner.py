@@ -195,8 +195,7 @@ def run_hive(cmd, log_path=None):
     # TODO: check if need to return stdoutdata here
 
 
-def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation', sync=True,
-                 compression='gz'):
+def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation', consolidate_output=True, sync=True, compression='gz'):
     if compression is None or compression == "none":
         compress = "false"
         codec = None
@@ -221,7 +220,12 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
        "-hiveconf", "hive.exec.scratchdir=/tmp/hive-prod",
        "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
        "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
-       "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728"
+       "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728",
+       "-hiveconf", "hive.merge.mapredfiles=%s" % ('true' if consolidate_output else 'false'),
+       "-hiveconf", "hive.vectorized.execution.enabled=true",
+       "-hiveconf", "hive.vectorized.execution.reduce.enabled=true",
+       "-hiveconf", "hive.cbo.enable=true",
+       "-hiveconf", "hive.stats.fetch.column.stats=true"
     ]
 
     if codec:

@@ -30,6 +30,8 @@ class HiveExecuter(Executer):
                                  'Output path root (not including the partition path', required=True)
         check_out_param = Arg('-co', '--check-output', 'check_output', bool, 'Return if output already exists',
                               required=False, default=False)
+        merge_out_param = Arg('-dmo', '--dont-merge-output', 'no_merge_output', bool, 'Whether To Merge Output Files',
+                              required=False, default=False)
         pool_param = Arg('-cp', '--calc-pool', 'calc_pool', str, 'Calculation pool to user', required=False,
                          default='calculation')
         compression_param = Arg('-cm', '--compression', 'compression', ('gz', 'bz2', 'none'), 'Compression type to use',
@@ -39,7 +41,7 @@ class HiveExecuter(Executer):
                                required=False, default=None)
 
         return [date_param, mode_param, mode_type_param, num_reducers_param, sync_param, dry_run_param,
-                output_table_param, check_out_param, pool_param, compression_param, slow_start_param]
+                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param]
 
     def get_arg_dependencies(self):
 
@@ -114,7 +116,7 @@ class HiveExecuter(Executer):
 
         try:
             hive_runner.run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
-                                     sync=args.sync,
+                                     sync=args.sync, consolidate_output=not args.merge_output,
                                      log_dir=log_dir, slow_start_ratio=args.slow_start_ratio,
                                      calc_pool=args.calc_pool, compression=args.compression)
             self.results[query_name] = 'success'
