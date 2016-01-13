@@ -12,6 +12,11 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.utils import apply_defaults
 import time
 import logging
+import logging
+import sys
+from subprocess import Popen, STDOUT, PIPE
+from tempfile import gettempdir, NamedTemporaryFile
+
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -45,6 +50,7 @@ class CleanableDockerBashOperator(BashOperator):
 -v /usr/bin:/opt/old_bin                                      \
 -v /var/run/similargroup:/var/run/similargroup                \
 --rm                                                          \
+--name=%(random)s                                             \
 --sig-proxy=false                                             \
 --user=`id -u`                                                \
 -e DOCKER_GATE={{ docker_manager }}                           \
@@ -56,14 +62,23 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
         self.docker_name = docker_name
-        random_string = str(datetime.utcnow().strftime('%s'))
-        docker_command = CleanableDockerBashOperator.cmd_template % {'random': random_string, 'docker': self.docker_name,
+        self.container_name = str(datetime.utcnow().strftime('%s'))
+        docker_command = CleanableDockerBashOperator.cmd_template % {'random': self.container_name, 'docker': self.docker_name,
                                                             'bash_command': bash_command}
         super(CleanableDockerBashOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
     def on_kill(self):
-        logging.info('Amit kill test')
-        #self.sp.terminate()
+
+        logging.info('Amit calling parent')
+        super(CleanableDockerBashOperator, self).on_kill()
+
+        logging.info('Amit killing docker')
+
+        # Amit: should block the kill?
+        subprocess.call(['bash', 'docker rm -f', self.container_name], timeout=5)
+        #sp = Popen(['bash', 'docker rm -f', self.container_name])
+
+        logging.info('Amit done')
 
 # amit test
 
