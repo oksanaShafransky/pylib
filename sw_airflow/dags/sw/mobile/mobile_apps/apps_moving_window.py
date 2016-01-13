@@ -20,6 +20,7 @@ SNAPHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
 DEFAULT_HBASE_CLUSTER = 'hbp1'
+IS_PROD = True
 
 dag_args = {
     'owner': 'similarweb',
@@ -36,23 +37,30 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'cluster': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER}
 
 
-def generate_dags(mode):
+def generate_dag(mode):
+
     def is_window_dag():
         return mode == WINDOW_MODE
 
     def is_snapshot_dag():
         return mode == SNAPHOT_MODE
 
+    def mode_dag_name():
+        if is_window_dag():
+            return 'Window'
+        if is_snapshot_dag():
+            return 'Snapshot'
+
     #TODO insert the real logic here
     def is_prod_env():
-        return True
+        return IS_PROD
 
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        dag_args_for_mode.update({'start_date': datetime(2015, 12, 30)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 1, 13)})
 
     if is_snapshot_dag():
-        dag_args_for_mode.update({'start_date': datetime(2015, 12, 31), 'end_date': datetime(2015, 12, 31)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 1, 1), 'end_date': datetime(2016, 1, 1)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     if is_window_dag():
@@ -61,10 +69,8 @@ def generate_dags(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-    dag = DAG(dag_id='MobileAppsMovingWindow_' + mode, default_args=dag_args_for_mode, params=dag_template_params_for_mode,
-              #schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
-              #Following is temporary hack until we upgrade to Airflow 1.6.x or later
-              schedule_interval=timedelta(days=1))
+    dag = DAG(dag_id='MobileApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
+              schedule_interval="@daily" if is_window_dag() else "@monthly")
 
     mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                                  dag=dag,
@@ -652,5 +658,5 @@ def generate_dags(mode):
     return dag
 
 
-globals()['dag_apps_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
-globals()['dag_apps_moving_window_daily'] = generate_dags(WINDOW_MODE)
+globals()['dag_apps_moving_window_snapshot'] = generate_dag(SNAPHOT_MODE)
+globals()['dag_apps_moving_window_daily'] = generate_dag(WINDOW_MODE)
