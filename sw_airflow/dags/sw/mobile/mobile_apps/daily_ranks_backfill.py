@@ -27,8 +27,8 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
                        'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE}
 
-dag = DAG(dag_id='DailyAppRanksBackfill', default_args=dag_args, params=dag_template_params,
-       schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='MobileApps_DailyRanksBackfill', default_args=dag_args, params=dag_template_params,
+       schedule_interval="@daily")
 
 mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
                                              dag=dag,
