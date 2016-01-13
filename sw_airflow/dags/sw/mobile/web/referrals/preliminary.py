@@ -14,7 +14,7 @@ import time
 import logging
 import logging
 import sys
-from subprocess import Popen, STDOUT, PIPE
+import subprocess
 from tempfile import gettempdir, NamedTemporaryFile
 
 
