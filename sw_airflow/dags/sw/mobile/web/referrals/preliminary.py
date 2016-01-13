@@ -75,7 +75,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         logging.info('Amit killing docker')
 
         # Amit: should block the kill?
-        subprocess.call(['bash', 'docker rm -f', self.container_name], timeout=5)
+        subprocess.call(['bash', 'docker rm -f', self.container_name])
         #sp = Popen(['bash', 'docker rm -f', self.container_name])
 
         logging.info('Amit done')
