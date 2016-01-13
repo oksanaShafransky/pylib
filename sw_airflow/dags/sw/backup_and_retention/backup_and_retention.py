@@ -18,7 +18,7 @@ dag_args = {
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 0,
-    'pool': 'retention',
+    'pool': 'Retention',
     'retry_delay': timedelta(minutes=15)
 }
 

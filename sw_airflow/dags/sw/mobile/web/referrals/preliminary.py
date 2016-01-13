@@ -13,16 +13,6 @@ from airflow.utils import apply_defaults
 import time
 import logging
 
-from builtins import bytes
-import logging
-import sys
-from subprocess import Popen, STDOUT, PIPE
-from tempfile import gettempdir, NamedTemporaryFile
-
-from airflow.utils import AirflowException
-from airflow.models import BaseOperator
-from airflow.utils import apply_defaults, TemporaryDirectory
-
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
@@ -42,8 +32,7 @@ dag_args = {
 }
 
 # amit test
-# cannot run interactive mode since stdin isn't piped
-# assign name & use on_kill to remove docker?
+# assign name & use on_kill to remove docker? yep
 class CleanableDockerBashOperator(BashOperator):
     ui_color = '#FFFF66'
     template_fields = ('bash_command', 'docker_name')
@@ -61,48 +50,8 @@ class CleanableDockerBashOperator(BashOperator):
 -e DOCKER_GATE={{ docker_manager }}                           \
 -e GELF_HOST="runsrv2.sg.internal"                            \
 -e HOME=/tmp                                                  \
--ti                                                           \
 runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
-
-    def execute(self, context):
-        """
-        Execute the bash command in a temporary directory
-        which will be cleaned afterwards
-        """
-        bash_command = self.bash_command
-        logging.info("tmp dir root location: \n" + gettempdir())
-        with TemporaryDirectory(prefix='airflowtmp') as tmp_dir:
-            with NamedTemporaryFile(dir=tmp_dir, prefix=self.task_id) as f:
-
-                f.write(bytes(bash_command, 'utf_8'))
-                f.flush()
-                fname = f.name
-                script_location = tmp_dir + "/" + fname
-                logging.info("Temporary script "
-                             "location :{0}".format(script_location))
-                logging.info("Running command: " + bash_command)
-                sp = Popen(
-                        ['bash', fname],
-                        stdout=PIPE, stderr=STDOUT, stdin=PIPE,
-                        cwd=tmp_dir, env=self.env)
-
-                self.sp = sp
-
-                logging.info("Output:")
-                line = ''
-                for line in iter(sp.stdout.readline, b''):
-                    line = line.decode().strip()
-                    logging.info(line)
-                sp.wait()
-                logging.info("Command exited with "
-                             "return code {0}".format(sp.returncode))
-
-                if sp.returncode:
-                    raise AirflowException("Bash command failed")
-
-        if self.xcom_push:
-            return line
 
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
@@ -111,6 +60,10 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         docker_command = CleanableDockerBashOperator.cmd_template % {'random': random_string, 'docker': self.docker_name,
                                                             'bash_command': bash_command}
         super(CleanableDockerBashOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
+
+    def on_kill(self):
+        logging.info('Amit kill test')
+        #self.sp.terminate()
 
 # amit test
 
