@@ -67,7 +67,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
 
         random = str(datetime.utcnow().strftime('%s'))
 
-        logging.info('Dag id %s, task id %s, date' % self.dag.dag_id, self.task_id, random)
+        logging.info('Dag id %s, task id %s, date %s' % (self.dag.dag_id, self.task_id, random))
 
         self.container_name = '''%(dag_id)s_%(task_id)s_%(date)s''' % {'dag_id': self.dag.dag_id, 'task_id': self.task_id, 'date': random}
 
