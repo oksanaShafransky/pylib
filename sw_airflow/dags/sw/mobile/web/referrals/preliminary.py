@@ -16,6 +16,11 @@ import logging
 import sys
 import subprocess
 from tempfile import gettempdir, NamedTemporaryFile
+from tempfile import gettempdir, NamedTemporaryFile
+
+from airflow.utils import AirflowException
+from airflow.models import BaseOperator
+from airflow.utils import apply_defaults, TemporaryDirectory
 
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -82,8 +87,23 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
     def on_kill(self):
         logging.info('Killing container %s' % self.container_name)
 
-        # Amit: should block the kill?
-        subprocess.call(['bash', '-c', 'docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %s' % self.container_name])
+        with TemporaryDirectory(prefix='airflowtmp') as tmp_dir:
+            with NamedTemporaryFile(dir=tmp_dir, prefix=self.task_id) as f:
+
+                bash_command = 'docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %s' % self.container_name
+
+                f.write(bytes(bash_command, 'utf_8'))
+                f.flush()
+                fname = f.name
+                script_location = tmp_dir + "/" + fname
+                logging.info("Temporary script "
+                             "location :{0}".format(script_location))
+                logging.info("Running command: " + bash_command)
+
+                subprocess.call(['bash', '-c', fname])
+                subprocess.call(['bash', fname])
+
+        #subprocess.call(['bash', '-c', 'docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %s' % self.container_name])
 
         super(CleanableDockerBashOperator, self).on_kill()
 
