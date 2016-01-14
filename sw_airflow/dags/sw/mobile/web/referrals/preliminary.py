@@ -45,7 +45,7 @@ dag_args = {
 # assign name & use on_kill to remove docker? yep
 class CleanableDockerBashOperator(BashOperator):
     ui_color = '#FFFF66'
-    template_fields = ('bash_command', 'docker_name')
+    template_fields = ('bash_command', 'docker_name', 'kill_cmd')
     cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
 -v /etc/localtime:/etc/localtime:ro                           \
@@ -65,6 +65,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
     '''
 
     kill_cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %(container_name)s'''
+    kill_cmd = ''
 
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
@@ -80,16 +81,16 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         docker_command = CleanableDockerBashOperator.cmd_template % {'random': random, 'container_name': self.container_name, 'docker': self.docker_name,
                                                             'bash_command': bash_command}
 
-        self.bash_command=docker_command
+        self.bash_command = docker_command
 
     def on_kill(self):
         logging.info('Killing container %s' % self.container_name)
 
-        kill_cmd = CleanableDockerBashOperator.kill_cmd_template % {'container_name': self.container_name}
+        self.kill_cmd = CleanableDockerBashOperator.kill_cmd_template % {'container_name': self.container_name}
 
-        logging.info('Kill cmd is %s' % kill_cmd)
+        logging.info('Kill cmd is %s' % self.kill_cmd)
 
-        subprocess.call(['bash', '-c', kill_cmd])
+        subprocess.call(['bash', '-c', self.kill_cmd])
 
         super(CleanableDockerBashOperator, self).on_kill()
 
