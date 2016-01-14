@@ -42,7 +42,7 @@ estimation = \
     DockerBashOperator(task_id='Estimation',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p daily_estimation'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p daily_estimation'''
                        )
 
 estimation.set_upstream(desktop_daily_preliminary)
@@ -51,7 +51,7 @@ add_totals_est = \
     DockerBashOperator(task_id='AddTotalsToEstimationValues',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p add_totals_to_keys'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p add_totals_to_keys'''
                        )
 
 add_totals_est.set_upstream(estimation)
@@ -60,7 +60,7 @@ fractions_and_reach = \
     DockerBashOperator(task_id='CalculateFractionsAndReach',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_fractions_and_reach'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p create_fractions_and_reach'''
                        )
 
 fractions_and_reach.set_upstream(add_totals_est)
@@ -69,7 +69,7 @@ check = \
     DockerBashOperator(task_id='Check',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteAndCountryEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -nw 7'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteAndCountryEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -nw 7'''
                        )
 
 check.set_upstream(add_totals_est)
@@ -78,7 +78,7 @@ est_repair = \
     DockerBashOperator(task_id='HiveRepairDailyEstimation',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p repair'''
                        )
 
 est_repair.set_upstream(fractions_and_reach)
