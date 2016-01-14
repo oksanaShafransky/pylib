@@ -95,9 +95,6 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
                 f.write(bytes(bash_command, 'utf_8'))
                 f.flush()
                 fname = f.name
-                script_location = tmp_dir + "/" + fname
-                logging.info("Temporary script "
-                             "location :{0}".format(script_location))
                 logging.info("Running command: " + bash_command)
 
                 #subprocess.call(['bash', '-c', fname])
