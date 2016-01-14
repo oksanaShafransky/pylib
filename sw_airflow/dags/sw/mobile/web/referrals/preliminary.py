@@ -64,6 +64,8 @@ class CleanableDockerBashOperator(BashOperator):
 runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
+    kill_cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %(container_name)s'''
+
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
         super(CleanableDockerBashOperator, self).__init__(bash_command=None, *args, **kwargs)
@@ -83,7 +85,11 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
     def on_kill(self):
         logging.info('Killing container %s' % self.container_name)
 
-        subprocess.call(['bash', '-c', 'docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %s' % self.container_name])
+        kill_cmd = CleanableDockerBashOperator.kill_cmd_template % {'container_name': self.container_name}
+
+        logging.info('Kill cmd is %s' % kill_cmd)
+
+        subprocess.call(['bash', '-c', kill_cmd])
 
         super(CleanableDockerBashOperator, self).on_kill()
 
