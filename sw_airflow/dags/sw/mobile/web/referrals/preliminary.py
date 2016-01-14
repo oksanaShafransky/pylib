@@ -100,7 +100,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
                              "location :{0}".format(script_location))
                 logging.info("Running command: " + bash_command)
 
-                subprocess.call(['bash', '-c', fname])
+                #subprocess.call(['bash', '-c', fname])
                 subprocess.call(['bash', fname])
 
         #subprocess.call(['bash', '-c', 'docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %s' % self.container_name])
