@@ -16,6 +16,11 @@ import logging
 import sys
 import subprocess
 from tempfile import gettempdir, NamedTemporaryFile
+from tempfile import gettempdir, NamedTemporaryFile
+
+from airflow.utils import AirflowException
+from airflow.models import BaseOperator
+from airflow.utils import apply_defaults, TemporaryDirectory
 
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -40,7 +45,7 @@ dag_args = {
 # assign name & use on_kill to remove docker? yep
 class CleanableDockerBashOperator(BashOperator):
     ui_color = '#FFFF66'
-    template_fields = ('bash_command', 'docker_name')
+    template_fields = ('bash_command', 'docker_name', 'kill_cmd')
     cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
 -v /etc/localtime:/etc/localtime:ro                           \
@@ -50,7 +55,7 @@ class CleanableDockerBashOperator(BashOperator):
 -v /usr/bin:/opt/old_bin                                      \
 -v /var/run/similargroup:/var/run/similargroup                \
 --rm                                                          \
---name=%(random)s                                             \
+--name=%(container_name)s                                     \
 --sig-proxy=false                                             \
 --user=`id -u`                                                \
 -e DOCKER_GATE={{ docker_manager }}                           \
@@ -59,26 +64,36 @@ class CleanableDockerBashOperator(BashOperator):
 runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
+    kill_cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %(container_name)s'''
+    kill_cmd = ''
+
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
+        super(CleanableDockerBashOperator, self).__init__(bash_command=None, *args, **kwargs)
+
+        random = str(datetime.utcnow().strftime('%s'))
+
         self.docker_name = docker_name
-        self.container_name = str(datetime.utcnow().strftime('%s'))
-        docker_command = CleanableDockerBashOperator.cmd_template % {'random': self.container_name, 'docker': self.docker_name,
+        self.container_name = '''%(dag_id)s_%(task_id)s_%(date)s''' % {'dag_id': self.dag.dag_id, 'task_id': self.task_id, 'date': random}
+
+        logging.info('Container name is %s' % self.container_name)
+
+        docker_command = CleanableDockerBashOperator.cmd_template % {'random': random, 'container_name': self.container_name, 'docker': self.docker_name,
                                                             'bash_command': bash_command}
-        super(CleanableDockerBashOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
+
+        self.kill_cmd = CleanableDockerBashOperator.kill_cmd_template % {'container_name': self.container_name}
+
+        self.bash_command = docker_command
+
 
     def on_kill(self):
+        logging.info('Killing container %s' % self.container_name)
 
-        logging.info('Amit calling parent')
+        logging.info('Kill cmd is %s' % self.kill_cmd)
+
+        subprocess.call(['bash', '-c', self.kill_cmd])
+
         super(CleanableDockerBashOperator, self).on_kill()
-
-        logging.info('Amit killing docker')
-
-        # Amit: should block the kill?
-        subprocess.call(['bash', 'docker rm -f', self.container_name])
-        #sp = Popen(['bash', 'docker rm -f', self.container_name])
-
-        logging.info('Amit done')
 
 # amit test
 
