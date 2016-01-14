@@ -106,8 +106,6 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         self.docker_name = docker_name
         self.container_name = '''%(dag_id)s_%(task_id)s_%(rand)s''' % {'dag_id': self.dag.dag_id, 'task_id': self.task_id, 'rand': rand}
 
-        logging.info('Container name is %s' % self.container_name)
-
         docker_command = DockerBashOperator.cmd_template % {'random': rand, 'container_name': self.container_name, 'docker': self.docker_name,
                                                                      'bash_command': bash_command}
 
