@@ -68,19 +68,15 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
     def __init__(self, docker_name, bash_command, *args, **kwargs):
         super(CleanableDockerBashOperator, self).__init__(bash_command=None, *args, **kwargs)
 
-        self.docker_name = docker_name
-
         random = str(datetime.utcnow().strftime('%s'))
 
-        logging.info('Dag id %s, task id %s, date %s' % (self.dag.dag_id, self.task_id, random))
-
+        self.docker_name = docker_name
         self.container_name = '''%(dag_id)s_%(task_id)s_%(date)s''' % {'dag_id': self.dag.dag_id, 'task_id': self.task_id, 'date': random}
 
         logging.info('Container name is %s' % self.container_name)
 
         docker_command = CleanableDockerBashOperator.cmd_template % {'random': random, 'container_name': self.container_name, 'docker': self.docker_name,
                                                             'bash_command': bash_command}
-
 
         self.bash_command=docker_command
 
