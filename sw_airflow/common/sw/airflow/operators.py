@@ -104,7 +104,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         rand = str(random.randint(10000, 99999))
 
         self.docker_name = docker_name
-        self.container_name = '''%(dag_id)s_%(task_id)s_%(rand)s''' % {'dag_id': self.dag.dag_id, 'task_id': self.task_id, 'rand': rand}
+        self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id, 'task_id': self.task_id, 'rand': rand}
 
         docker_command = DockerBashOperator.cmd_template % {'random': rand, 'container_name': self.container_name, 'docker': self.docker_name,
                                                                      'bash_command': bash_command}
