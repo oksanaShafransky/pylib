@@ -47,6 +47,12 @@ def generate_dags(mode):
     def is_prod_env():
         return True
 
+    def mode_dag_name():
+        if is_window_dag():
+            return 'Window'
+        if is_snapshot_dag():
+            return 'Snapshot'
+
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
         dag_args_for_mode.update({'start_date': datetime(2015, 12, 01)})
@@ -69,7 +75,7 @@ def generate_dags(mode):
     mobile_web_data_stored = DummyOperator(task_id='MobileWebDataStored', dag=dag)
 
     # mobile web data
-    mobile_web_data = ExternalTaskSensor(external_dag_id='MobileAppsMovingWindow_' + mode,
+    mobile_web_data = ExternalTaskSensor(external_dag_id='MobileApps_' + mode_dag_name(),
                                                   dag=dag,
                                                   task_id="MobileWebData",
                                                   external_task_id='MobileWeb')

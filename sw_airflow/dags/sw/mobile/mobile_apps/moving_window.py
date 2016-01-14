@@ -72,12 +72,12 @@ def generate_dag(mode):
     dag = DAG(dag_id='MobileApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
-    mobile_estimation_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
+    mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Estimation',
                                                  dag=dag,
-                                                 task_id='Mobile_Estimation_DailyEstimation',
-                                                 external_task_id='MobileAppsDailyEstimation')
+                                                 task_id='Mobile_Estimation',
+                                                 external_task_id='Mobile_Estimation')
 
-    mobile_preliminary_daily_aggregation = ExternalTaskSensor(external_dag_id='MobileDailyPreliminary',
+    mobile_preliminary_daily_aggregation = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                                   dag=dag,
                                                   task_id='Mobile_Preliminary_DailyAggregation',
                                                   external_task_id='DailyAggregation')
@@ -104,7 +104,7 @@ def generate_dag(mode):
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/usagepattern.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculation'''
                            )
 
-    usage_pattern_calculation.set_upstream(mobile_estimation_daily_estimation)
+    usage_pattern_calculation.set_upstream(mobile_estimation)
 
     app_usage_pattern_store = \
         DockerBashOperator(task_id='AppsUsagePatternStore',
@@ -318,7 +318,7 @@ def generate_dag(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
-    app_engagement.set_upstream([mobile_estimation_daily_estimation, prepare_hbase_tables])
+    app_engagement.set_upstream([mobile_estimation, prepare_hbase_tables])
 
     if is_window_dag():
         app_engagement_sanity_check = \
