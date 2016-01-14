@@ -55,7 +55,7 @@ suppl_ranks = \
 suppl_ranks.set_upstream(suppl_eng)
 
 daily_app_ranks_backfill = \
- DummyOperator(task_id='DailyAppRanksBackfill',
+ DummyOperator(task_id='DailyRanksBackfill',
                dag=dag
                )
 
