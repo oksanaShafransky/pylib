@@ -61,7 +61,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
 
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
-        super(CleanableDockerBashOperator, self).__init__(*args, **kwargs)
+        super(CleanableDockerBashOperator, self).__init__(bash_command=None, *args, **kwargs)
 
         self.docker_name = docker_name
 
