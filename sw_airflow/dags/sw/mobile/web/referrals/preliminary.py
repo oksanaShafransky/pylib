@@ -10,16 +10,8 @@ from sw.airflow.operators import DockerBashOperator
 
 from airflow.operators.bash_operator import BashOperator
 from airflow.utils import apply_defaults
-import time
 import logging
-import logging
-import sys
 import subprocess
-from tempfile import gettempdir, NamedTemporaryFile
-from tempfile import gettempdir, NamedTemporaryFile
-
-from airflow.utils import AirflowException
-from airflow.models import BaseOperator
 from airflow.utils import apply_defaults, TemporaryDirectory
 
 
@@ -71,10 +63,10 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
     def __init__(self, docker_name, bash_command, *args, **kwargs):
         super(CleanableDockerBashOperator, self).__init__(bash_command=None, *args, **kwargs)
 
-        random = str(datetime.utcnow().strftime('%s'))
+        random = str(random.randint(10000, 99999))
 
         self.docker_name = docker_name
-        self.container_name = '''%(dag_id)s_%(task_id)s_%(date)s''' % {'dag_id': self.dag.dag_id, 'task_id': self.task_id, 'date': random}
+        self.container_name = '''%(dag_id)s_%(task_id)s_%(rand)s''' % {'dag_id': self.dag.dag_id, 'task_id': self.task_id, 'rand': random}
 
         logging.info('Container name is %s' % self.container_name)
 
@@ -88,8 +80,6 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
 
     def on_kill(self):
         logging.info('Killing container %s' % self.container_name)
-
-        logging.info('Kill cmd is %s' % self.kill_cmd)
 
         subprocess.call(['bash', '-c', self.kill_cmd])
 
