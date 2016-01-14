@@ -28,7 +28,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
 dag = DAG(dag_id='Mobile_Estimation', default_args=dag_args, params=dag_template_params,
-          schedule_interval=timedelta(days=1))
+          schedule_interval="@daily")
 
 
 mobile_daily_preliminary = ExternalTaskSensor(external_dag_id='Preliminary',
