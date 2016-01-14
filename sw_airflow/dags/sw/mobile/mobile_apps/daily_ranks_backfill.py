@@ -14,7 +14,7 @@ WINDOW_MODE_TYPE = 'last-28'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2015, 12, 31),
+    'start_date': datetime(2016, 1, 14),
     'depends_on_past': True,
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
