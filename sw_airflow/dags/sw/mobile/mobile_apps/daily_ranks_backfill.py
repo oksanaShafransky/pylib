@@ -14,7 +14,7 @@ WINDOW_MODE_TYPE = 'last-28'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2015, 12, 31),
+    'start_date': datetime(2016, 1, 14),
     'depends_on_past': True,
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
@@ -27,13 +27,13 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
                        'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE}
 
-dag = DAG(dag_id='DailyAppRanksBackfill', default_args=dag_args, params=dag_template_params,
-       schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='MobileApps_DailyRanksBackfill', default_args=dag_args, params=dag_template_params,
+       schedule_interval="@daily")
 
-mobile_daily_estimation = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
+mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Estimation',
                                              dag=dag,
-                                             task_id="MobileDailyEstimation",
-                                             external_task_id='MobileDailyEstimation',
+                                             task_id="Mobile_Estimation",
+                                             external_task_id='Mobile_Estimation',
                                              execution_delta=timedelta(days=1))
 
 suppl_eng = \
@@ -43,7 +43,7 @@ suppl_eng = \
                     bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ yesterday_ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -eo -p aggregate'''
                     )
 
-suppl_eng.set_upstream(mobile_daily_estimation)
+suppl_eng.set_upstream(mobile_estimation)
 
 suppl_ranks = \
  DockerBashOperator(task_id='SupplRanks',
@@ -55,7 +55,7 @@ suppl_ranks = \
 suppl_ranks.set_upstream(suppl_eng)
 
 daily_app_ranks_backfill = \
- DummyOperator(task_id='DailyAppRanksBackfill',
+ DummyOperator(task_id='DailyRanksBackfill',
                dag=dag
                )
 
