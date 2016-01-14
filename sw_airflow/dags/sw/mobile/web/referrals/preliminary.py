@@ -81,12 +81,13 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         docker_command = CleanableDockerBashOperator.cmd_template % {'random': random, 'container_name': self.container_name, 'docker': self.docker_name,
                                                             'bash_command': bash_command}
 
+        self.kill_cmd = CleanableDockerBashOperator.kill_cmd_template % {'container_name': self.container_name}
+
         self.bash_command = docker_command
+
 
     def on_kill(self):
         logging.info('Killing container %s' % self.container_name)
-
-        self.kill_cmd = CleanableDockerBashOperator.kill_cmd_template % {'container_name': self.container_name}
 
         logging.info('Kill cmd is %s' % self.kill_cmd)
 
