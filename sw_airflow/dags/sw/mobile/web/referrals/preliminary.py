@@ -80,12 +80,12 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         self.bash_command=docker_command
 
     def on_kill(self):
-        super(CleanableDockerBashOperator, self).on_kill()
-
         logging.info('Killing container %s' % self.container_name)
 
         # Amit: should block the kill?
         subprocess.call(['bash', '-c', 'docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %s' % self.container_name])
+
+        super(CleanableDockerBashOperator, self).on_kill()
 
 # amit test
 
