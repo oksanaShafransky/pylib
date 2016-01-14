@@ -239,9 +239,3 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
         return run_hive(cmd, log_path=log_dir + "/hive.log")
     else:
         return subprocess.Popen(cmd)
-
-
-if __name__ == '__main__':
-    run_hive_job('select count(*) from analytics.snapshot_estimated_sr where year=14 and month=05 limit 100',
-                 'test job',
-                 20)
