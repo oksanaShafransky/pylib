@@ -33,7 +33,7 @@ dag = DAG(dag_id='MobileApps_DailyRanksBackfill', default_args=dag_args, params=
 mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Estimation',
                                              dag=dag,
                                              task_id="Mobile_Estimation",
-                                             external_task_id='Mobile_Estimation',
+                                             external_task_id='Estimation',
                                              execution_delta=timedelta(days=1))
 
 suppl_eng = \
