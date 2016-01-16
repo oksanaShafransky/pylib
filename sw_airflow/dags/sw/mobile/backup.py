@@ -26,7 +26,7 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Mobile_Backup', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
+dag = DAG(dag_id='Mobile_DataBackup', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
 
 # define stages
