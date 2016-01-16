@@ -334,11 +334,11 @@ def generate_dag(mode):
     # App Ranks #
     #############
 
-    daily_ranks_backfill = ExternalTaskSensor(external_dag_id='DailyRanksBackfill',
-                                                  dag=dag,
-                                                  task_id="DailyRanksBackfill",
-                                                  external_task_id='DailyRanksBackfill'
-                                                  )
+    daily_ranks_backfill = ExternalTaskSensor(external_dag_id='MobileApps_DailyRanksBackfill',
+                                              dag=dag,
+                                              task_id="DailyRanksBackfill",
+                                              external_task_id='DailyRanksBackfill'
+                                              )
 
     calc_ranks = \
         DockerBashOperator(task_id='CalculateUsageRanks',
