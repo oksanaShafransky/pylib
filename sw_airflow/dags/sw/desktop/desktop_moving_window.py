@@ -183,7 +183,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_incoming_keywords,add_totals_to_keys'''
                            )
     keywords_prepare.set_upstream(site_country_special_referrer_distribution)
-    therest_map.set_upstream(keywords_prepare)
 
     keywords_paid = \
         DockerBashOperator(task_id='KeywordsPaid',
