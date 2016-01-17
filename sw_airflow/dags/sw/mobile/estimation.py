@@ -31,7 +31,7 @@ dag = DAG(dag_id='Mobile_Estimation', default_args=dag_args, params=dag_template
           schedule_interval="@daily")
 
 
-mobile_daily_preliminary = ExternalTaskSensor(external_dag_id='Preliminary',
+mobile_daily_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                               dag=dag,
                                               task_id="Preliminary",
                                               external_task_id='Preliminary')

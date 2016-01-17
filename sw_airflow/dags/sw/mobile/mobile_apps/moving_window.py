@@ -73,14 +73,14 @@ def generate_dag(mode):
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
     mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Estimation',
-                                                 dag=dag,
-                                                 task_id='Mobile_Estimation',
-                                                 external_task_id='Mobile_Estimation')
+                                           dag=dag,
+                                           task_id='MobileDailyEstimation',
+                                           external_task_id='Estimation')
 
     mobile_preliminary_daily_aggregation = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
-                                                  dag=dag,
-                                                  task_id='Mobile_Preliminary_DailyAggregation',
-                                                  external_task_id='DailyAggregation')
+                                                              dag=dag,
+                                                              task_id='MobileDailyAggregation',
+                                                              external_task_id='DailyAggregation')
 
     ########################
     # Prepare HBase Tables #
@@ -334,11 +334,11 @@ def generate_dag(mode):
     # App Ranks #
     #############
 
-    daily_ranks_backfill = ExternalTaskSensor(external_dag_id='DailyRanksBackfill',
-                                                  dag=dag,
-                                                  task_id="DailyRanksBackfill",
-                                                  external_task_id='DailyRanksBackfill'
-                                                  )
+    daily_ranks_backfill = ExternalTaskSensor(external_dag_id='MobileApps_DailyRanksBackfill',
+                                              dag=dag,
+                                              task_id="DailyRanksBackfill",
+                                              external_task_id='DailyRanksBackfill'
+                                              )
 
     calc_ranks = \
         DockerBashOperator(task_id='CalculateUsageRanks',
