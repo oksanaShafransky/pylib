@@ -88,7 +88,6 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-process.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
                            )
-    hbase_tables.set_upstream(daily_aggregation)
 
     daily_incoming = \
         DockerBashOperator(task_id='DailyIncoming',
