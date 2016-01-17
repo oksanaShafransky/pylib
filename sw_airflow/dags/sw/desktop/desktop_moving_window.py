@@ -576,6 +576,7 @@ def generate_dags(mode):
                 )
             copy_to_prod_top_app_keywords.set_upstream(mobile)
             copy_to_prod_mobile.set_upstream(copy_to_prod_top_app_keywords)
+            copy_to_prod.set_upstream(copy_to_prod_mobile)
 
             copy_to_prod_snapshot = DummyOperator(task_id='CopyToProdSnapshot',
                                                   dag=dag)
@@ -615,6 +616,7 @@ def generate_dags(mode):
                 )
             copy_to_prod_snapshot_sites_lite.set_upstream(therest_map)
             copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_sites_lite)
+            copy_to_prod.set_upstream(copy_to_prod_snapshot)
 
             dynamic_stage_lite = \
                 DockerBashOperator(task_id='DynamicStageLite',
