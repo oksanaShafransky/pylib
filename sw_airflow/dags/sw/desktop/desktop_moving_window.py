@@ -551,6 +551,7 @@ def generate_dags(mode):
                         table_name_template='mobile_keyword_apps_' + hbase_suffix_template
                 )
             copy_to_prod_mobile_keyword_apps.set_upstream(mobile)
+            copy_to_prod_mobile.set_upstream(copy_to_prod_mobile_keyword_apps)
 
             copy_to_prod_app_stat = \
                 DockerCopyHbaseTableOperator(
@@ -562,6 +563,7 @@ def generate_dags(mode):
                         table_name_template='app_stat_' + hbase_suffix_template
                 )
             copy_to_prod_app_stat.set_upstream(mobile)
+            copy_to_prod_mobile.set_upstream(copy_to_prod_app_stat)
 
             copy_to_prod_top_app_keywords = \
                 DockerCopyHbaseTableOperator(
@@ -573,8 +575,6 @@ def generate_dags(mode):
                         table_name_template='top_app_keywords_' + hbase_suffix_template
                 )
             copy_to_prod_top_app_keywords.set_upstream(mobile)
-            copy_to_prod_mobile.set_upstream(copy_to_prod_mobile_keyword_apps)
-            copy_to_prod_mobile.set_upstream(copy_to_prod_app_stat)
             copy_to_prod_mobile.set_upstream(copy_to_prod_top_app_keywords)
 
             copy_to_prod_snapshot = DummyOperator(task_id='CopyToProdSnapshot',
@@ -590,6 +590,7 @@ def generate_dags(mode):
                         table_name_template='categories_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_industry.set_upstream(ranks)
+            copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_industry)
 
             copy_to_prod_snapshot_sites_scrape_stat = \
                 DockerCopyHbaseTableOperator(
@@ -601,6 +602,7 @@ def generate_dags(mode):
                         table_name_template='sites_scrape_stat_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_sites_scrape_stat.set_upstream(therest_map)
+            copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_sites_scrape_stat)
 
             copy_to_prod_snapshot_sites_lite = \
                 DockerCopyHbaseTableOperator(
@@ -612,9 +614,6 @@ def generate_dags(mode):
                         table_name_template='sites_lite_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_sites_lite.set_upstream(therest_map)
-
-            copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_industry)
-            copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_sites_scrape_stat)
             copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_sites_lite)
 
             dynamic_stage_lite = \
@@ -719,7 +718,7 @@ def generate_dags(mode):
                 else:
                     cleanup_prod_stages = 'drop_crosscache_prod,drop_hbase_tables'
 
-                cleanup_prod_ds_minus_i = DummyOperator(task_id='CleanupProd_DS-%' % i,
+                cleanup_prod_ds_minus_i = DummyOperator(task_id='CleanupProd_DS-%s' % i,
                                              dag=dag)
 
                 for target in deploy_targets:
