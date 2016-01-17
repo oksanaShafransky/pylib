@@ -131,14 +131,6 @@ def generate_dags(mode):
                            )
     traffic_distro.set_upstream(site_country_special_referrer_distribution)
 
-    check_distros = \
-        DockerBashOperator(task_id='CheckDistros',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p export_traffic_distro_from_hbase'''
-                           )
-    check_distros.set_upstream(traffic_distro)
-
     estimate_incoming = \
         DockerBashOperator(task_id='EstimateIncoming',
                            dag=dag,
@@ -336,23 +328,6 @@ def generate_dags(mode):
                                )
         industry_analysis.set_upstream(export_rest)
 
-    if is_window_dag():
-        check_customers_est = \
-            DockerBashOperator(task_id='CheckCustomersEst',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                               )
-        check_customers_est.set_upstream(daily_estimation)
-
-        check_customer_distros = \
-            DockerBashOperator(task_id='CheckCustomerDistros',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                               )
-        check_customer_distros.set_upstream(traffic_distro)
-
     if is_prod_env():
 
         hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(macros.last_interval_day(ds, dag.schedule_interval), "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
@@ -402,6 +377,7 @@ def generate_dags(mode):
         copy_to_prod.set_upstream(copy_to_prod_top_lists)
         copy_to_prod.set_upstream(copy_to_prod_sites_stat)
         copy_to_prod.set_upstream(copy_to_prod_sites_info)
+        copy_to_prod.set_upstream(traffic_distro)
 
         cross_cache_calc = \
             DockerBashOperator(task_id='CrossCacheCalc',
@@ -721,7 +697,30 @@ def generate_dags(mode):
                                )
         repair_social_receiving_tables.set_upstream(repair_tables)
 
+        check_distros = \
+            DockerBashOperator(task_id='CheckDistros',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p export_traffic_distro_from_hbase'''
+                               )
+        check_distros.set_upstream(non_operationals)
+
         if is_window_dag():
+            check_customers_est = \
+                DockerBashOperator(task_id='CheckCustomersEst',
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                                   )
+            check_customers_est.set_upstream(non_operationals)
+
+            check_customer_distros = \
+                DockerBashOperator(task_id='CheckCustomerDistros',
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                                   )
+            check_customer_distros.set_upstream(non_operationals)
 
             cleanup_from_days = 8
             cleanup_to_days = 3
