@@ -698,7 +698,7 @@ def generate_dags(mode):
         # Non Operationals #
         ##################
         non_operationals = \
-            DummyOperator(task_id='NonOperationals' % mode_dag_name(),
+            DummyOperator(task_id='NonOperationals',
                           dag=dag
                           )
         non_operationals.set_upstream(register_success)
