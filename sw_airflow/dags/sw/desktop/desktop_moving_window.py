@@ -437,7 +437,6 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p update_pro,update_special_referrers_stage'''
                                )
-        dynamic_stage.set_upstream(therest_map)
         dynamic_stage.set_upstream(export_rest)
         dynamic_stage.set_upstream(popular_pages)
         dynamic_stage.set_upstream(daily_incoming)
