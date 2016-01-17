@@ -21,7 +21,7 @@ class HiveExecuter(Executer):
             'weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
                               'Mode Type', required=False, default=None)
         num_reducers_param = Arg('-n', '--num-of-reducers', 'num_of_reducers', int, 'Number of reducers to use',
-                                 required=False, default=250)
+                                 required=False, default=32)
         sync_param = Arg('-s', '--sync', 'sync', bool, 'Run in sync mode (wait for completion', required=False,
                          default=False)
         dry_run_param = Arg('-dr', '--dry-run', 'dry_run', bool, 'If set, only output statements without running',
