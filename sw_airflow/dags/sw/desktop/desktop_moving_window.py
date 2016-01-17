@@ -433,10 +433,9 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='DynamicCrossProd_%s' % target,
                                    dag=dag,
                                    docker_name='''{{ params.cluster-%s }}''' % target,
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache''' % target
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache'''
                                    )
             dynamic_cross_prod_per_target.set_upstream(cross_cache_prod)
-            dynamic_cross_prod_per_target.set_upstream('try to resolve dynamic_hbp1/2 by its name')
 
         dynamic_stage = \
             DockerBashOperator(task_id='DynamicStage',
