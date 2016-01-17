@@ -376,7 +376,6 @@ def generate_dags(mode):
                     target_cluster=','.join(DEPLOY_TARGETS),
                     table_name_template='sites_stat_' + hbase_suffix_template
             )
-        copy_to_prod_sites_stat.set_upstream(therest_map)
         copy_to_prod_sites_stat.set_upstream(popular_pages)
         copy_to_prod_sites_stat.set_upstream(export_rest)
         copy_to_prod_sites_stat.set_upstream(daily_incoming)
