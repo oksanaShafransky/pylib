@@ -494,7 +494,6 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                                )
-        repair_ranks_tables.set_upstream(ranks)
         repair_ranks_tables.set_upstream(export_rest)
 
         repair_sr_tables = \
