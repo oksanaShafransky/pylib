@@ -15,9 +15,9 @@ DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2015, 11, 23),
+    'start_date': datetime(2016, 1, 14),
     'depends_on_past': True,
-    'email': ['felixv@similarweb.com'],
+    'email': ['felixv@similarweb.com','iddoav@similarweb.com', 'barakg@similarweb.com','amitr@similarweb.com>'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 2,
@@ -27,14 +27,14 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='MobileDailyEstimation', default_args=dag_args, params=dag_template_params,
-          schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='Mobile_Estimation', default_args=dag_args, params=dag_template_params,
+          schedule_interval="@daily")
 
 
-mobile_daily_preliminary = ExternalTaskSensor(external_dag_id='MobileDailyPreliminary',
+mobile_daily_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                               dag=dag,
-                                              task_id="EstimationPreliminary",
-                                              external_task_id='FinishProcess')
+                                              task_id="Preliminary",
+                                              external_task_id='Preliminary')
 #########################
 # Apps engagement score #
 #########################
@@ -209,27 +209,27 @@ mobile_daily_usage_pattern.set_upstream(mobile_daily_preliminary)
 # Wrap-up #
 ###########
 
-mobile_apps_daily_estimation = \
-    DummyOperator(task_id='MobileAppsDailyEstimation',
+mobile_apps_estimation = \
+    DummyOperator(task_id='MobileAppsEstimation',
                   dag=dag
                   )
-mobile_apps_daily_estimation.set_upstream([app_engagement_daily, mobile_daily_usage_pattern])
+mobile_apps_estimation.set_upstream([app_engagement_daily, mobile_daily_usage_pattern])
 
-mobile_web_daily_estimation = \
-    DummyOperator(task_id='MobileWebDailyEstimation',
+mobile_web_estimation = \
+    DummyOperator(task_id='MobileWebEstimation',
                   dag=dag
                   )
-mobile_web_daily_estimation.set_upstream([mobile_web_daily_cut, mobile_web_main])
-
-mobile_daily_estimation = \
-    DummyOperator(task_id='MobileDailyEstimation',
-                  dag=dag
-                  )
-mobile_daily_estimation.set_upstream([mobile_apps_daily_estimation, mobile_web_daily_estimation])
+mobile_web_estimation.set_upstream([mobile_web_daily_cut, mobile_web_main])
 
 register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
                                        dag=dag,
                                        path='''services/mobile-daily-est/daily/{{ ds }}''',
                                        env='PRODUCTION'
                                        )
-register_success.set_upstream(mobile_daily_estimation)
+register_success.set_upstream([mobile_apps_estimation, mobile_web_estimation])
+
+estimation = \
+    DummyOperator(task_id='Estimation',
+                  dag=dag
+                  )
+estimation.set_upstream(register_success)

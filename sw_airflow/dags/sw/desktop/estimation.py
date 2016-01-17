@@ -4,15 +4,13 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
-from sw.airflow.airflow_etcd import *
+from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
@@ -33,7 +31,7 @@ dag = DAG(dag_id='DesktopDailyEstimation', default_args=dag_args, params=dag_tem
 
 
 desktop_daily_preliminary = ExternalTaskSensor(external_dag_id='DesktopPreliminary',
-                                               external_task_id='DesktopPreliminary',
+                                               external_task_id='DailyAggregation',
                                                dag=dag,
                                                task_id="DesktopPreliminary")
 #########################
@@ -44,30 +42,46 @@ estimation = \
     DockerBashOperator(task_id='Estimation',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p daily_estimation'''
                        )
 
 estimation.set_upstream(desktop_daily_preliminary)
+
+add_totals_est = \
+    DockerBashOperator(task_id='AddTotalsToEstimationValues',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p add_totals_to_keys'''
+                       )
+
+add_totals_est.set_upstream(estimation)
+
+fractions_and_reach = \
+    DockerBashOperator(task_id='CalculateFractionsAndReach',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p create_fractions_and_reach'''
+                       )
+
+fractions_and_reach.set_upstream(add_totals_est)
 
 check = \
     DockerBashOperator(task_id='Check',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteAndCountryEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -nw 7'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteAndCountryEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -nw 7'''
                        )
 
-check.set_upstream(estimation)
+check.set_upstream(add_totals_est)
 
 est_repair = \
     DockerBashOperator(task_id='HiveRepairDailyEstimation',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p repair'''
                        )
 
-est_repair.set_upstream(estimation)
-
-estimation.set_upstream(desktop_daily_preliminary)
+est_repair.set_upstream(fractions_and_reach)
 
 daily_incoming = \
     DockerBashOperator(task_id='DailyIncoming',
@@ -76,6 +90,8 @@ daily_incoming = \
                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyIncoming.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                        )
 
+daily_incoming.set_upstream(add_totals_est)
+
 incoming_repair = \
     DockerBashOperator(task_id='HiveRepairDailyIncoming',
                        dag=dag,
@@ -83,14 +99,17 @@ incoming_repair = \
                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyIncoming.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                        )
 
+incoming_repair.set_upstream(daily_incoming)
+
 register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          dag=dag,
                                          path='''services/estimation/data-available/{{ ds }}''',
                                          env='''{{ params.run_environment }}'''
                                          )
 
-register_available.set_upstream(estimation)
+register_available.set_upstream(fractions_and_reach)
 register_available.set_upstream(check)
+register_available.set_upstream(daily_incoming)
 
 ###########
 # Wrap-up #
