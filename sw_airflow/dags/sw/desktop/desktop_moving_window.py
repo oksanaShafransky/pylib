@@ -147,6 +147,14 @@ def generate_dags(mode):
                            )
     estimate_incoming.set_upstream(site_country_special_referrer_distribution)
 
+    keywords_prepare = \
+        DockerBashOperator(task_id='KeywordsPrepare',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_incoming_keywords,add_totals_to_keys'''
+                           )
+    keywords_prepare.set_upstream(site_country_special_referrer_distribution)
+
     ########################
     # the rest map         #
     ########################
@@ -175,15 +183,6 @@ def generate_dags(mode):
     outgoing.set_upstream(estimate_incoming)
     outgoing.set_upstream(hbase_tables)
     therest_map.set_upstream(outgoing)
-
-    keywords_prepare = \
-        DockerBashOperator(task_id='KeywordsPrepare',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_incoming_keywords,add_totals_to_keys'''
-                           )
-    keywords_prepare.set_upstream(site_country_special_referrer_distribution)
-    therest_map.set_upstream(keywords_prepare)
 
     keywords_paid = \
         DockerBashOperator(task_id='KeywordsPaid',
@@ -280,6 +279,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/popular-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
     popular_pages.set_upstream(hbase_tables)
+    popular_pages.set_upstream(daily_aggregation)
 
     if is_snapshot_dag():
         check_snapshot_est = \
@@ -350,9 +350,6 @@ def generate_dags(mode):
         check_customer_distros.set_upstream(traffic_distro)
 
     if is_prod_env():
-        #######################
-        # Copy to Prod Mobile #
-        #######################
 
         hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(macros.last_interval_day(ds, dag.schedule_interval), "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
                                  '''{{macros.ds_format(macros.last_interval_day(ds, dag.schedule_interval), "%Y-%m-%d", "%y_%m")}}''')
@@ -360,9 +357,6 @@ def generate_dags(mode):
         #######################
         # Copy to Prod        #
         #######################
-
-        copy_to_prod = DummyOperator(task_id='CopyToProd',
-                                     dag=dag)
 
         copy_to_prod_top_lists = \
             DockerCopyHbaseTableOperator(
@@ -374,7 +368,6 @@ def generate_dags(mode):
                     table_name_template='top_list_' + hbase_suffix_template
             )
         copy_to_prod_top_lists.set_upstream(ranks)
-        copy_to_prod.set_upstream(copy_to_prod_top_lists)
 
         copy_to_prod_sites_stat = \
             DockerCopyHbaseTableOperator(
@@ -389,7 +382,6 @@ def generate_dags(mode):
         copy_to_prod_sites_stat.set_upstream(popular_pages)
         copy_to_prod_sites_stat.set_upstream(export_rest)
         copy_to_prod_sites_stat.set_upstream(daily_incoming)
-        copy_to_prod.set_upstream(copy_to_prod_sites_stat)
 
         copy_to_prod_sites_info = \
             DockerCopyHbaseTableOperator(
@@ -401,6 +393,11 @@ def generate_dags(mode):
                     table_name_template='sites_info_' + hbase_suffix_template
             )
         copy_to_prod_sites_info.set_upstream(therest_map)
+
+        copy_to_prod = DummyOperator(task_id='CopyToProd',
+                                     dag=dag)
+        copy_to_prod.set_upstream(copy_to_prod_top_lists)
+        copy_to_prod.set_upstream(copy_to_prod_sites_stat)
         copy_to_prod.set_upstream(copy_to_prod_sites_info)
 
         cross_cache_calc = \
@@ -537,8 +534,6 @@ def generate_dags(mode):
         repair_social_receiving_tables.set_upstream(social_receiving)
 
         if is_snapshot_dag():
-            copy_to_prod_mobile = DummyOperator(task_id='CopyToProdMobile',
-                                                dag=dag)
 
             copy_to_prod_mobile_keyword_apps = \
                 DockerCopyHbaseTableOperator(
@@ -550,7 +545,6 @@ def generate_dags(mode):
                         table_name_template='mobile_keyword_apps_' + hbase_suffix_template
                 )
             copy_to_prod_mobile_keyword_apps.set_upstream(mobile)
-            copy_to_prod_mobile.set_upstream(copy_to_prod_mobile_keyword_apps)
 
             copy_to_prod_app_stat = \
                 DockerCopyHbaseTableOperator(
@@ -562,7 +556,6 @@ def generate_dags(mode):
                         table_name_template='app_stat_' + hbase_suffix_template
                 )
             copy_to_prod_app_stat.set_upstream(mobile)
-            copy_to_prod_mobile.set_upstream(copy_to_prod_app_stat)
 
             copy_to_prod_top_app_keywords = \
                 DockerCopyHbaseTableOperator(
@@ -574,11 +567,13 @@ def generate_dags(mode):
                         table_name_template='top_app_keywords_' + hbase_suffix_template
                 )
             copy_to_prod_top_app_keywords.set_upstream(mobile)
-            copy_to_prod_mobile.set_upstream(copy_to_prod_top_app_keywords)
-            copy_to_prod.set_upstream(copy_to_prod_mobile)
 
-            copy_to_prod_snapshot = DummyOperator(task_id='CopyToProdSnapshot',
-                                                  dag=dag)
+            copy_to_prod_mobile = DummyOperator(task_id='CopyToProdMobile',
+                                                dag=dag)
+            copy_to_prod_mobile.set_upstream(copy_to_prod_mobile_keyword_apps)
+            copy_to_prod_mobile.set_upstream(copy_to_prod_top_app_keywords)
+            copy_to_prod_mobile.set_upstream(copy_to_prod_app_stat)
+            copy_to_prod.set_upstream(copy_to_prod_mobile)
 
             copy_to_prod_snapshot_industry = \
                 DockerCopyHbaseTableOperator(
@@ -590,7 +585,6 @@ def generate_dags(mode):
                         table_name_template='categories_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_industry.set_upstream(ranks)
-            copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_industry)
 
             copy_to_prod_snapshot_sites_scrape_stat = \
                 DockerCopyHbaseTableOperator(
@@ -602,7 +596,6 @@ def generate_dags(mode):
                         table_name_template='sites_scrape_stat_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_sites_scrape_stat.set_upstream(therest_map)
-            copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_sites_scrape_stat)
 
             copy_to_prod_snapshot_sites_lite = \
                 DockerCopyHbaseTableOperator(
@@ -614,6 +607,11 @@ def generate_dags(mode):
                         table_name_template='sites_lite_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_sites_lite.set_upstream(therest_map)
+
+            copy_to_prod_snapshot = DummyOperator(task_id='CopyToProdSnapshot',
+                                                  dag=dag)
+            copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_industry)
+            copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_sites_scrape_stat)
             copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_sites_lite)
             copy_to_prod.set_upstream(copy_to_prod_snapshot)
 
