@@ -621,58 +621,6 @@ def generate_dags(mode):
                                    )
             web_autocomplete.set_upstream(cross_cache_prod)
 
-
-        if is_window_dag():
-
-            cleanup_from_days = 8
-            cleanup_to_days = 3
-
-            cleanup_stage = DummyOperator(task_id='CleanupStage',
-                                          dag=dag)
-            cleanup_stage.set_upstream(cross_cache_stage)
-            cleanup_stage.set_upstream(dynamic_stage)
-
-            for i in range(cleanup_to_days, cleanup_from_days):
-                if i == cleanup_to_days:
-                    cleanup_stage_stages = 'drop_crosscache_stage'
-                else:
-                    cleanup_stage_stages = 'drop_crosscache_stage,delete_files,drop_hbase_tables'
-
-                cleanup_stage_ds_minus_i = \
-                    DockerBashOperator(task_id='CleanupStage_DS-%s' % i,
-                                       dag=dag,
-                                       docker_name='''{{ params.cluster }}''',
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p %s''' % (i, cleanup_stage_stages)
-                                       )
-                cleanup_stage_ds_minus_i.set_upstream(cleanup_stage)
-
-            cleanup_from_days = 12
-            cleanup_to_days = 4
-
-            cleanup_prod = DummyOperator(task_id='CleanupProd',
-                                         dag=dag)
-            cleanup_prod.set_upstream(cross_cache_prod)
-            cleanup_prod.set_upstream(dynamic_prod)
-
-            for i in range(cleanup_to_days, cleanup_from_days):
-                if i == cleanup_to_days:
-                    cleanup_prod_stages = 'drop_crosscache_prod'
-                else:
-                    cleanup_prod_stages = 'drop_crosscache_prod,drop_hbase_tables'
-
-                cleanup_prod_ds_minus_i = DummyOperator(task_id='CleanupProd_DS-%s' % i,
-                                             dag=dag)
-                cleanup_prod_ds_minus_i.set_upstream(cleanup_prod)
-
-                for target in DEPLOY_TARGETS:
-                    cleanup_prod_per_target_ds_minus_i = \
-                        DockerBashOperator(task_id='CleanupProd_%s_DS-%s' % (target, i),
-                                           dag=dag,
-                                           docker_name='''{{ params.cluster-%s }}''' % target,
-                                           bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }}  -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p %s''' % (i, cleanup_prod_stages)
-                                           )
-                    cleanup_prod_per_target_ds_minus_i.set_upstream(cleanup_prod_ds_minus_i)
-
         ###########
         # Wrap-up #
         ###########
@@ -703,13 +651,19 @@ def generate_dags(mode):
                           )
         non_operationals.set_upstream(register_success)
 
+        repair_tables = \
+            DummyOperator(task_id='RepairTables',
+                          dag=dag
+                          )
+        repair_tables.set_upstream(non_operationals)
+
         repair_incoming_tables = \
             DockerBashOperator(task_id='RepairIncomingTables',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                                )
-        repair_incoming_tables.set_upstream(non_operationals)
+        repair_incoming_tables.set_upstream(repair_tables)
 
         repair_outgoing_tables = \
             DockerBashOperator(task_id='RepairOutgoingTables',
@@ -717,7 +671,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                                )
-        repair_outgoing_tables.set_upstream(non_operationals)
+        repair_outgoing_tables.set_upstream(repair_tables)
 
         repair_keywords_tables = \
             DockerBashOperator(task_id='RepairKeywordsTables',
@@ -725,7 +679,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                                )
-        repair_keywords_tables.set_upstream(non_operationals)
+        repair_keywords_tables.set_upstream(repair_tables)
 
         repair_ranks_tables = \
             DockerBashOperator(task_id='RepairRanksTables',
@@ -733,7 +687,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                                )
-        repair_ranks_tables.set_upstream(non_operationals)
+        repair_ranks_tables.set_upstream(repair_tables)
 
         repair_sr_tables = \
             DockerBashOperator(task_id='RepairSrTables',
@@ -741,7 +695,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                                )
-        repair_sr_tables.set_upstream(non_operationals)
+        repair_sr_tables.set_upstream(repair_tables)
 
         repair_sending_pages_tables = \
             DockerBashOperator(task_id='RepairSendingPagesTables',
@@ -749,7 +703,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sending-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                                )
-        repair_sending_pages_tables.set_upstream(non_operationals)
+        repair_sending_pages_tables.set_upstream(repair_tables)
 
         repair_popular_pages_tables = \
             DockerBashOperator(task_id='RepairPopularPagesTables',
@@ -757,7 +711,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/popular-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                                )
-        repair_popular_pages_tables.set_upstream(non_operationals)
+        repair_popular_pages_tables.set_upstream(repair_tables)
 
         repair_social_receiving_tables = \
             DockerBashOperator(task_id='RepairSocialReceivingTables',
@@ -765,7 +719,61 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/social-receiving.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
                                )
-        repair_social_receiving_tables.set_upstream(non_operationals)
+        repair_social_receiving_tables.set_upstream(repair_tables)
+
+        if is_window_dag():
+
+            cleanup_from_days = 8
+            cleanup_to_days = 3
+
+            cleanup_stage = DummyOperator(task_id='CleanupStage',
+                                          dag=dag)
+
+            for i in range(cleanup_to_days, cleanup_from_days):
+                if i == cleanup_to_days:
+                    cleanup_stage_stages = 'drop_crosscache_stage'
+                else:
+                    cleanup_stage_stages = 'drop_crosscache_stage,delete_files,drop_hbase_tables'
+
+                cleanup_stage_ds_minus_i = \
+                    DockerBashOperator(task_id='CleanupStage_DS-%s' % i,
+                                       dag=dag,
+                                       docker_name='''{{ params.cluster }}''',
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p %s''' % (i, cleanup_stage_stages)
+                                       )
+                cleanup_stage_ds_minus_i.set_upstream(cleanup_stage)
+
+            non_operationals.set_upstream(dynamic_cross_stage)
+            cleanup_stage.set_upstream(non_operationals)
+
+            cleanup_from_days = 12
+            cleanup_to_days = 4
+
+            cleanup_prod = DummyOperator(task_id='CleanupProd',
+                                         dag=dag)
+
+            for i in range(cleanup_to_days, cleanup_from_days):
+                if i == cleanup_to_days:
+                    cleanup_prod_stages = 'drop_crosscache_prod'
+                else:
+                    cleanup_prod_stages = 'drop_crosscache_prod,drop_hbase_tables'
+
+                cleanup_prod_ds_minus_i = DummyOperator(task_id='CleanupProd_DS-%s' % i,
+                                                        dag=dag)
+                cleanup_prod_ds_minus_i.set_upstream(cleanup_prod)
+
+                for target in DEPLOY_TARGETS:
+                    cleanup_prod_per_target_ds_minus_i = \
+                        DockerBashOperator(task_id='CleanupProd_%s_DS-%s' % (target, i),
+                                           dag=dag,
+                                           docker_name='''{{ params.cluster-%s }}''' % target,
+                                           bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }}  -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p %s''' % (i, cleanup_prod_stages)
+                                           )
+                    cleanup_prod_per_target_ds_minus_i.set_upstream(cleanup_prod_ds_minus_i)
+
+            non_operationals.set_upstream(dynamic_cross_prod)
+            cleanup_prod.set_upstream(non_operationals)
+
 
     return dag
 
