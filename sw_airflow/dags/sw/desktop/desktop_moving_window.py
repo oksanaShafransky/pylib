@@ -741,7 +741,6 @@ def generate_dags(mode):
                                                env='PRODUCTION'
                                                )
         register_success.set_upstream(copy_to_prod)
-        register_success.set_upstream(dddddddddddddddddd)
 
 
     return dag
