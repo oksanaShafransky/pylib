@@ -21,7 +21,7 @@ WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
 DEFAULT_HBASE_CLUSTER = 'hbp1'
 IS_PROD = True
-deploy_targets = ['hbp1', 'hbp2']
+DEPLOY_TARGETS = ['hbp1', 'hbp2']
 
 dag_args = {
     'owner': 'similarweb',
@@ -57,10 +57,10 @@ def generate_dags(mode):
 
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 2, 1)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 1, 18)})
 
     if is_snapshot_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 2, 1)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 1, 18)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     if is_window_dag():
@@ -241,7 +241,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_info_table'''
                            )
     info.set_upstream(hbase_tables)
-    therest_map.set_upstream(info)
 
     ranks = \
         DockerBashOperator(task_id='Ranks',
@@ -250,7 +249,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_ranks,export_top_lists,topsites_for_testing'''
                            )
     ranks.set_upstream(monthly_sum_estimation_parameters)
-    ranks.set_upstream(hbase_tables)
     ranks.set_upstream(info)
     therest_map.set_upstream(ranks)
 
@@ -364,7 +362,7 @@ def generate_dags(mode):
                     dag=dag,
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
-                    target_cluster=','.join(deploy_targets),
+                    target_cluster=','.join(DEPLOY_TARGETS),
                     table_name_template='top_list_' + hbase_suffix_template
             )
         copy_to_prod_top_lists.set_upstream(ranks)
@@ -375,7 +373,7 @@ def generate_dags(mode):
                     dag=dag,
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
-                    target_cluster=','.join(deploy_targets),
+                    target_cluster=','.join(DEPLOY_TARGETS),
                     table_name_template='sites_stat_' + hbase_suffix_template
             )
         copy_to_prod_sites_stat.set_upstream(therest_map)
@@ -389,7 +387,7 @@ def generate_dags(mode):
                     dag=dag,
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
-                    target_cluster=','.join(deploy_targets),
+                    target_cluster=','.join(DEPLOY_TARGETS),
                     table_name_template='sites_info_' + hbase_suffix_template
             )
         copy_to_prod_sites_info.set_upstream(therest_map)
@@ -424,7 +422,7 @@ def generate_dags(mode):
                                )
         cross_cache_prod.set_upstream(cross_cache_calc)
 
-        for target in deploy_targets:
+        for target in DEPLOY_TARGETS:
             dynamic_cross_prod_per_target = \
                 DockerBashOperator(task_id='DynamicCrossProd_%s' % target,
                                    dag=dag,
@@ -456,7 +454,7 @@ def generate_dags(mode):
         dynamic_prod = DummyOperator(task_id='DynamicProd',
                                      dag=dag)
 
-        for target in deploy_targets:
+        for target in DEPLOY_TARGETS:
             dynamic_prod_per_target = \
                 DockerBashOperator(task_id='DynamicProd_%s' % target,
                                    dag=dag,
@@ -541,7 +539,7 @@ def generate_dags(mode):
                         dag=dag,
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
-                        target_cluster=','.join(deploy_targets),
+                        target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='mobile_keyword_apps_' + hbase_suffix_template
                 )
             copy_to_prod_mobile_keyword_apps.set_upstream(mobile)
@@ -552,7 +550,7 @@ def generate_dags(mode):
                         dag=dag,
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
-                        target_cluster=','.join(deploy_targets),
+                        target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='app_stat_' + hbase_suffix_template
                 )
             copy_to_prod_app_stat.set_upstream(mobile)
@@ -563,7 +561,7 @@ def generate_dags(mode):
                         dag=dag,
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
-                        target_cluster=','.join(deploy_targets),
+                        target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='top_app_keywords_' + hbase_suffix_template
                 )
             copy_to_prod_top_app_keywords.set_upstream(mobile)
@@ -581,7 +579,7 @@ def generate_dags(mode):
                         dag=dag,
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
-                        target_cluster=','.join(deploy_targets),
+                        target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='categories_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_industry.set_upstream(ranks)
@@ -592,7 +590,7 @@ def generate_dags(mode):
                         dag=dag,
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
-                        target_cluster=','.join(deploy_targets),
+                        target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='sites_scrape_stat_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_sites_scrape_stat.set_upstream(therest_map)
@@ -603,7 +601,7 @@ def generate_dags(mode):
                         dag=dag,
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
-                        target_cluster=','.join(deploy_targets),
+                        target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='sites_lite_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_sites_lite.set_upstream(therest_map)
@@ -633,7 +631,7 @@ def generate_dags(mode):
 
             dynamic_prod_lite = DummyOperator(task_id='DynamicProdLite',
                                               dag=dag)
-            for target in deploy_targets:
+            for target in DEPLOY_TARGETS:
                 dynamic_prod_lite_per_target = \
                     DockerBashOperator(task_id='DynamicProdLite_%s' % target,
                                        dag=dag,
@@ -646,7 +644,7 @@ def generate_dags(mode):
 
             dynamic_prod_industry = DummyOperator(task_id='DynamicProdIndustry',
                                                   dag=dag)
-            for target in deploy_targets:
+            for target in DEPLOY_TARGETS:
                 dynamic_prod_industry_per_target = \
                     DockerBashOperator(task_id='DynamicProdIndustry_%s' % target,
                                        dag=dag,
@@ -720,7 +718,7 @@ def generate_dags(mode):
                 cleanup_prod_ds_minus_i = DummyOperator(task_id='CleanupProd_DS-%s' % i,
                                              dag=dag)
 
-                for target in deploy_targets:
+                for target in DEPLOY_TARGETS:
                     cleanup_prod_per_target_ds_minus_i = \
                         DockerBashOperator(task_id='CleanupProd_%s_DS-%s' % (target, i),
                                            dag=dag,
