@@ -132,8 +132,6 @@ def generate_dags(mode):
     site_country_special_referrer_distribution.set_upstream(sum_special_referrer_values)
     site_country_special_referrer_distribution.set_upstream(monthly_sum_estimation_parameters)
 
-    # traffic distro
-
     traffic_distro = \
         DockerBashOperator(task_id='TrafficDistro',
                            dag=dag,
@@ -342,17 +340,18 @@ def generate_dags(mode):
                            )
     misc.set_upstream(monthly_sum_estimation_parameters)
 
-    calc_done = \
-        DummyOperator(task_id='CalcDone',
+    conditionals = \
+        DummyOperator(task_id='Conditionals',
                       dag=dag
                       )
-    calc_done.set_upstream(incoming)
-    calc_done.set_upstream(outgoing)
-    calc_done.set_upstream(keywords)
-    calc_done.set_upstream(social_receiving)
-    calc_done.set_upstream(sending_pages)
-    calc_done.set_upstream(ranks)
-    calc_done.set_upstream(misc)
+    conditionals.set_upstream(incoming)
+    conditionals.set_upstream(outgoing)
+    conditionals.set_upstream(keywords)
+    conditionals.set_upstream(social_receiving)
+    conditionals.set_upstream(sending_pages)
+    conditionals.set_upstream(ranks)
+    conditionals.set_upstream(misc)
+    conditionals.set_upstream(traffic_distro_export_from_hbase)
 
     export_rest = \
         DockerBashOperator(task_id='ExportRest',
@@ -402,7 +401,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/mobile.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
-        mobile.set_upstream(calc_done)
+        mobile.set_upstream(conditionals)
         mobile.set_upstream(export_rest)
 
         sites_lite = \
@@ -411,7 +410,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sites-lite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
-        sites_lite.set_upstream(calc_done)
+        sites_lite.set_upstream(conditionals)
 
         industry_analysis = \
             DockerBashOperator(task_id='IndustryAnalysis',
@@ -463,14 +462,13 @@ def generate_dags(mode):
                     target_cluster=','.join(DEPLOY_TARGETS),
                     table_name_template='sites_info_' + hbase_suffix_template
             )
-        copy_to_prod_sites_info.set_upstream(calc_done)
+        copy_to_prod_sites_info.set_upstream(conditionals)
 
         copy_to_prod = DummyOperator(task_id='CopyToProd',
                                      dag=dag)
         copy_to_prod.set_upstream(copy_to_prod_top_lists)
         copy_to_prod.set_upstream(copy_to_prod_sites_stat)
         copy_to_prod.set_upstream(copy_to_prod_sites_info)
-        copy_to_prod.set_upstream(traffic_distro_export_from_hbase)
 
         cross_cache_calc = \
             DockerBashOperator(task_id='CrossCacheCalc',
@@ -603,7 +601,7 @@ def generate_dags(mode):
                         target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='sites_scrape_stat_' + hbase_suffix_template
                 )
-            copy_to_prod_snapshot_sites_scrape_stat.set_upstream(calc_done)
+            copy_to_prod_snapshot_sites_scrape_stat.set_upstream(conditionals)
 
             copy_to_prod_snapshot_sites_lite = \
                 DockerCopyHbaseTableOperator(
@@ -614,7 +612,7 @@ def generate_dags(mode):
                         target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='sites_lite_' + hbase_suffix_template
                 )
-            copy_to_prod_snapshot_sites_lite.set_upstream(calc_done)
+            copy_to_prod_snapshot_sites_lite.set_upstream(conditionals)
 
             copy_to_prod_snapshot = DummyOperator(task_id='CopyToProdSnapshot',
                                                   dag=dag)
