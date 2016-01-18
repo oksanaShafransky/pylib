@@ -320,14 +320,15 @@ def generate_dag(mode):
                            )
     app_engagement.set_upstream([mobile_estimation, prepare_hbase_tables])
 
-    if is_window_dag():
-        app_engagement_sanity_check = \
-            DockerBashOperator(task_id='AppEngagementSanityCheck',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/qa/checkAppAndCountryEngagementEstimation.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -p check_window'''
-                               )
-        app_engagement_sanity_check.set_upstream(app_engagement)
+    # Todo: Fix this task whose data was deleted fue to retention by fallbacking into using snapshot's data
+    #if is_window_dag():
+    #    app_engagement_sanity_check = \
+    #        DockerBashOperator(task_id='AppEngagementSanityCheck',
+    #                           dag=dag,
+    #                           docker_name='''{{ params.cluster }}''',
+    #                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/qa/checkAppAndCountryEngagementEstimation.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -p check_window'''
+    #                           )
+    #    app_engagement_sanity_check.set_upstream(app_engagement)
 
 
     #############
