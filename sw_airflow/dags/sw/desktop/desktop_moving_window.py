@@ -72,16 +72,6 @@ def generate_dags(mode):
     dag = DAG(dag_id='Desktop_MovingWindow_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
-    daily_aggregation = ExternalTaskSensor(external_dag_id='DesktopPreliminary',
-                                                   external_task_id='DesktopPreliminary',
-                                                   task_id='DailyAggregation',
-                                                   dag=dag)
-
-    daily_estimation = ExternalTaskSensor(external_dag_id='DesktopDailyEstimation',
-                                                   external_task_id='DesktopDailyEstimation',
-                                                   task_id='DailyEstimation',
-                                                   dag=dag)
-
     hbase_tables = \
         DockerBashOperator(task_id='HBaseTables',
                            dag=dag,
@@ -89,13 +79,32 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
                            )
 
+    daily_aggregation = ExternalTaskSensor(external_dag_id='DesktopPreliminary',
+                                                   external_task_id='DesktopPreliminary',
+                                                   task_id='DailyAggregation',
+                                                   dag=dag)
+    daily_aggregation.set_upstream(hbase_tables)
+
+    daily_estimation = ExternalTaskSensor(external_dag_id='DesktopDailyEstimation',
+                                                   external_task_id='DesktopDailyEstimation',
+                                                   task_id='DailyEstimation',
+                                                   dag=dag)
+    daily_estimation.set_upstream(hbase_tables)
+
+    info = \
+        DockerBashOperator(task_id='Info',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_info_table'''
+                           )
+    info.set_upstream(hbase_tables)
+
     daily_incoming = \
         DockerBashOperator(task_id='DailyIncoming',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p insert_daily_incoming'''
                            )
-    daily_incoming.set_upstream(hbase_tables)
     daily_incoming.set_upstream(daily_estimation)
 
     sum_special_referrer_values = \
@@ -189,7 +198,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p add_totals_to_incoming'''
                            )
     incoming_add_totals.set_upstream(estimate_incoming)
-    incoming_add_totals.set_upstream(hbase_tables)
 
     also_visited = \
         DockerBashOperator(task_id='AlsoVisited',
@@ -240,7 +248,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_outgoing,add_totals_to_outgoing,prepare_ad_links,top_site,top_site_paid'''
                            )
     outgoing.set_upstream(estimate_incoming)
-    outgoing.set_upstream(hbase_tables)
     therest_map.set_upstream(outgoing)
 
     keywords = \
@@ -255,7 +262,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p sec_paid'''
                            )
     keywords_paid.set_upstream(keywords_add_totals)
-    keywords_paid.set_upstream(hbase_tables)
     keywords.set_upstream(keywords_paid)
 
     keywords_organic = \
@@ -265,7 +271,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p sec_organic'''
                            )
     keywords_organic.set_upstream(keywords_add_totals)
-    keywords_organic.set_upstream(hbase_tables)
     keywords.set_upstream(keywords_organic)
 
     keywords_top = \
@@ -275,7 +280,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p top_value_site_keyword'''
                            )
     keywords_top.set_upstream(keywords_add_totals)
-    keywords_top.set_upstream(hbase_tables)
     keywords.set_upstream(keywords_top)
 
     therest_map.set_upstream(keywords)
@@ -287,7 +291,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/social-receiving.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_social_receiving,add_totals_to_social_receiving,top_site,top_site_paid'''
                            )
     social_receiving.set_upstream(site_country_special_referrer_distribution)
-    social_receiving.set_upstream(hbase_tables)
     therest_map.set_upstream(social_receiving)
 
     sending_pages = \
@@ -297,16 +300,7 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sending-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_sending_pages,add_totals_to_sending_pages,prepare_sending_pages_social,top_values_sending_pages_social'''
                            )
     sending_pages.set_upstream(estimate_incoming)
-    sending_pages.set_upstream(hbase_tables)
     therest_map.set_upstream(sending_pages)
-
-    info = \
-        DockerBashOperator(task_id='Info',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_info_table'''
-                           )
-    info.set_upstream(hbase_tables)
 
     ranks = \
         DockerBashOperator(task_id='Ranks',
@@ -325,7 +319,6 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/misc.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_subdomains,insert_worldwide_traffic,insert_daily_data'''
                            )
     misc.set_upstream(monthly_sum_estimation_parameters)
-    misc.set_upstream(hbase_tables)
     therest_map.set_upstream(misc)
 
     export_rest = \
@@ -342,10 +335,17 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/popular-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                            )
-    popular_pages.set_upstream(hbase_tables)
     popular_pages.set_upstream(daily_aggregation)
 
     if is_snapshot_dag():
+        info_lite = \
+            DockerBashOperator(task_id='InfoLite',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_info_lite'''
+                               )
+        info_lite.set_upstream(hbase_tables)
+
         check_snapshot_est = \
             DockerBashOperator(task_id='CheckSnapshotEst',
                                dag=dag,
@@ -370,14 +370,6 @@ def generate_dags(mode):
                                )
         mobile.set_upstream(therest_map)
         mobile.set_upstream(export_rest)
-
-        info_lite = \
-            DockerBashOperator(task_id='InfoLite',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_info_lite'''
-                               )
-        info_lite.set_upstream(hbase_tables)
 
         sites_lite = \
             DockerBashOperator(task_id='SitesLite',
