@@ -182,14 +182,55 @@ def generate_dags(mode):
                       dag=dag
                       )
 
-    incoming = \
-        DockerBashOperator(task_id='Incoming',
+    incoming_add_totals = \
+        DockerBashOperator(task_id='IncomingAddTotals',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p add_totals_to_incoming,also_visited,top_site_to_hbase,prepare_ad_links_incoming,top_site_paid_to_hbase'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p add_totals_to_incoming'''
                            )
-    incoming.set_upstream(estimate_incoming)
-    incoming.set_upstream(hbase_tables)
+    incoming_add_totals.set_upstream(estimate_incoming)
+    incoming_add_totals.set_upstream(hbase_tables)
+
+    also_visited = \
+        DockerBashOperator(task_id='AlsoVisited',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p also_visited'''
+                           )
+    also_visited.set_upstream(incoming_add_totals)
+
+    top_sites = \
+        DockerBashOperator(task_id='TopSites',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p top_site_to_hbase'''
+                           )
+    top_sites.set_upstream(incoming_add_totals)
+
+    incoming_paid = \
+        DockerBashOperator(task_id='IncomingPaid',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p prepare_ad_links_incoming'''
+                           )
+    incoming_paid.set_upstream(incoming_add_totals)
+
+    incoming_paid_to_hbase = \
+        DockerBashOperator(task_id='IncomingPaidToHBase',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p top_site_paid_to_hbase'''
+                           )
+    incoming_paid_to_hbase.set_upstream(incoming_paid)
+
+    incoming = \
+        DummyOperator(task_id='Incoming',
+                      dag=dag
+                      )
+    incoming.set_upstream(also_visited)
+    incoming.set_upstream(top_sites)
+    incoming.set_upstream(incoming_paid_to_hbase)
+
     therest_map.set_upstream(incoming)
 
     outgoing = \
