@@ -14,7 +14,7 @@ for offset_days in reversed(range(7, 13)):
         task_id='cleanup_stage_%d' % offset_days,
         dag=temp_dag,
         docker_name="{{ params.default_docker }}",
-        bash_command='{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et staging -p delete_files,drop_crosscache_stage,drop_hbase_tables -bd {{ params.base_hdfs_dir }} {{ params.transients }}' % offset_days
+        bash_command='{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et staging -p delete_files,drop_hbase_tables -bd {{ params.base_hdfs_dir }} {{ params.transients }}' % offset_days
     )
     cleanup_prod = DummyOperator(task_id='cleanup_prod_%d' % offset_days, dag=temp_dag)
     # for docker in ('op-hbp1', 'op-hbp2'):
@@ -23,7 +23,7 @@ for offset_days in reversed(range(7, 13)):
             task_id='cleanup_prod_%d_%s' % (offset_days, docker),
             dag=temp_dag,
             docker_name=docker,
-            bash_command='{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et production -p drop_crosscache_stage,drop_hbase_tables' % offset_days
+            bash_command='{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(ds, -%d) }} -m window -mt last-28 -et production -p drop_hbase_tables' % offset_days
         )
         cleanup_prod.set_upstream(cleanup_prod_single)
         cleanup_prod_single.set_upstream(deploy_prod_done)

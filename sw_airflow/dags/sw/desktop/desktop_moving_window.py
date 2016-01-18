@@ -507,7 +507,7 @@ def generate_dags(mode):
             dynamic_cross_prod_per_target = \
                 DockerBashOperator(task_id='DynamicCrossProd_%s' % target,
                                    dag=dag,
-                                   docker_name='''{{ params.cluster-%s }}''' % target,
+                                   docker_name='''{{ params.cluster }}-%s''' % target,
                                    bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache'''
                                    )
             dynamic_cross_prod_per_target.set_upstream(cross_cache_prod)
@@ -539,7 +539,7 @@ def generate_dags(mode):
             dynamic_prod_per_target = \
                 DockerBashOperator(task_id='DynamicProd_%s' % target,
                                    dag=dag,
-                                   docker_name='''{{ params.cluster-%s }}''' % target,
+                                   docker_name='''{{ params.cluster }}-%s''' % target,
                                    bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_pro,update_special_referrers_prod'''
                                    )
             dynamic_prod_per_target.set_upstream(copy_to_prod)
@@ -649,7 +649,7 @@ def generate_dags(mode):
                 dynamic_prod_lite_per_target = \
                     DockerBashOperator(task_id='DynamicProdLite_%s' % target,
                                        dag=dag,
-                                       docker_name='''{{ params.cluster-%s }}''' % target,
+                                       docker_name='''{{ params.cluster }}-%s''' % target,
                                        bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_lite'''
                                        )
                 dynamic_prod_lite_per_target.set_upstream(copy_to_prod_snapshot)
@@ -662,7 +662,7 @@ def generate_dags(mode):
                 dynamic_prod_industry_per_target = \
                     DockerBashOperator(task_id='DynamicProdIndustry_%s' % target,
                                        dag=dag,
-                                       docker_name='''{{ params.cluster-%s }}''' % target,
+                                       docker_name='''{{ params.cluster }}-%s''' % target,
                                        bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_categories'''
                                        )
                 dynamic_prod_industry_per_target.set_upstream(copy_to_prod_snapshot)
@@ -820,22 +820,17 @@ def generate_dags(mode):
             check_customer_distros.set_upstream(non_operationals)
 
             cleanup_from_days = 8
-            cleanup_to_days = 3
+            cleanup_to_days = 4
 
             cleanup_stage = DummyOperator(task_id='CleanupStage',
                                           dag=dag)
 
             for i in range(cleanup_to_days, cleanup_from_days):
-                if i == cleanup_to_days:
-                    cleanup_stage_stages = 'drop_crosscache_stage'
-                else:
-                    cleanup_stage_stages = 'drop_crosscache_stage,delete_files,drop_hbase_tables'
-
                 cleanup_stage_ds_minus_i = \
                     DockerBashOperator(task_id='CleanupStage_DS-%s' % i,
                                        dag=dag,
                                        docker_name='''{{ params.cluster }}''',
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p %s''' % (i, cleanup_stage_stages)
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p delete_files,drop_hbase_tables''' % i
                                        )
                 cleanup_stage_ds_minus_i.set_upstream(cleanup_stage)
 
@@ -843,17 +838,12 @@ def generate_dags(mode):
             cleanup_stage.set_upstream(non_operationals)
 
             cleanup_from_days = 12
-            cleanup_to_days = 4
+            cleanup_to_days = 5
 
             cleanup_prod = DummyOperator(task_id='CleanupProd',
                                          dag=dag)
 
             for i in range(cleanup_to_days, cleanup_from_days):
-                if i == cleanup_to_days:
-                    cleanup_prod_stages = 'drop_crosscache_prod'
-                else:
-                    cleanup_prod_stages = 'drop_crosscache_prod,drop_hbase_tables'
-
                 cleanup_prod_ds_minus_i = DummyOperator(task_id='CleanupProd_DS-%s' % i,
                                                         dag=dag)
                 cleanup_prod_ds_minus_i.set_upstream(cleanup_prod)
@@ -862,8 +852,8 @@ def generate_dags(mode):
                     cleanup_prod_per_target_ds_minus_i = \
                         DockerBashOperator(task_id='CleanupProd_%s_DS-%s' % (target, i),
                                            dag=dag,
-                                           docker_name='''{{ params.cluster-%s }}''' % target,
-                                           bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }}  -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p %s''' % (i, cleanup_prod_stages)
+                                           docker_name='''{{ params.cluster }}-%s''' % target,
+                                           bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }}  -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p drop_hbase_tables''' % i
                                            )
                     cleanup_prod_per_target_ds_minus_i.set_upstream(cleanup_prod_ds_minus_i)
 
