@@ -57,10 +57,10 @@ def generate_dags(mode):
 
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 1, 18)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 1, 17)})
 
     if is_snapshot_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 1, 18)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 1, 17)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     if is_window_dag():
@@ -83,10 +83,10 @@ def generate_dags(mode):
                                                    dag=dag)
 
     hbase_tables = \
-        DockerBashOperator(task_id='PrepareHBaseTables',
+        DockerBashOperator(task_id='HBaseTables',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-process.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
                            )
 
     daily_incoming = \
