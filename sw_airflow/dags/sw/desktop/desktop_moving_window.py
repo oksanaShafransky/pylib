@@ -131,14 +131,6 @@ def generate_dags(mode):
                            )
     traffic_distro.set_upstream(site_country_special_referrer_distribution)
 
-    check_distros = \
-        DockerBashOperator(task_id='CheckDistros',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p export_traffic_distro_from_hbase'''
-                           )
-    check_distros.set_upstream(traffic_distro)
-
     estimate_incoming = \
         DockerBashOperator(task_id='EstimateIncoming',
                            dag=dag,
@@ -184,6 +176,11 @@ def generate_dags(mode):
     outgoing.set_upstream(hbase_tables)
     therest_map.set_upstream(outgoing)
 
+    keywords = \
+        DummyOperator(task_id='Keywords',
+                      dag=dag
+                      )
+
     keywords_paid = \
         DockerBashOperator(task_id='KeywordsPaid',
                            dag=dag,
@@ -192,7 +189,7 @@ def generate_dags(mode):
                            )
     keywords_paid.set_upstream(keywords_prepare)
     keywords_paid.set_upstream(hbase_tables)
-    therest_map.set_upstream(keywords_paid)
+    keywords.set_upstream(keywords_paid)
 
     keywords_organic = \
         DockerBashOperator(task_id='KeywordsOrganic',
@@ -202,7 +199,7 @@ def generate_dags(mode):
                            )
     keywords_organic.set_upstream(keywords_prepare)
     keywords_organic.set_upstream(hbase_tables)
-    therest_map.set_upstream(keywords_organic)
+    keywords.set_upstream(keywords_organic)
 
     keywords_top = \
         DockerBashOperator(task_id='KeywordsTop',
@@ -212,7 +209,9 @@ def generate_dags(mode):
                            )
     keywords_top.set_upstream(keywords_prepare)
     keywords_top.set_upstream(hbase_tables)
-    therest_map.set_upstream(keywords_top)
+    keywords.set_upstream(keywords_top)
+
+    therest_map.set_upstream(keywords)
 
     social_receiving = \
         DockerBashOperator(task_id='SocialReceiving',
@@ -327,25 +326,7 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/categories.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
-        industry_analysis.set_upstream(therest_map)
         industry_analysis.set_upstream(export_rest)
-
-    if is_window_dag():
-        check_customers_est = \
-            DockerBashOperator(task_id='CheckCustomersEst',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                               )
-        check_customers_est.set_upstream(daily_estimation)
-
-        check_customer_distros = \
-            DockerBashOperator(task_id='CheckCustomerDistros',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                               )
-        check_customer_distros.set_upstream(traffic_distro)
 
     if is_prod_env():
 
@@ -376,7 +357,6 @@ def generate_dags(mode):
                     target_cluster=','.join(DEPLOY_TARGETS),
                     table_name_template='sites_stat_' + hbase_suffix_template
             )
-        copy_to_prod_sites_stat.set_upstream(therest_map)
         copy_to_prod_sites_stat.set_upstream(popular_pages)
         copy_to_prod_sites_stat.set_upstream(export_rest)
         copy_to_prod_sites_stat.set_upstream(daily_incoming)
@@ -397,6 +377,7 @@ def generate_dags(mode):
         copy_to_prod.set_upstream(copy_to_prod_top_lists)
         copy_to_prod.set_upstream(copy_to_prod_sites_stat)
         copy_to_prod.set_upstream(copy_to_prod_sites_info)
+        copy_to_prod.set_upstream(traffic_distro)
 
         cross_cache_calc = \
             DockerBashOperator(task_id='CrossCacheCalc',
@@ -422,6 +403,9 @@ def generate_dags(mode):
                                )
         cross_cache_prod.set_upstream(cross_cache_calc)
 
+
+        dynamic_cross_prod = DummyOperator(task_id='DynamicCrossProd',
+                                     dag=dag)
         for target in DEPLOY_TARGETS:
             dynamic_cross_prod_per_target = \
                 DockerBashOperator(task_id='DynamicCrossProd_%s' % target,
@@ -430,6 +414,7 @@ def generate_dags(mode):
                                    bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache'''
                                    )
             dynamic_cross_prod_per_target.set_upstream(cross_cache_prod)
+            dynamic_cross_prod.set_upstream(dynamic_cross_prod_per_target)
 
         dynamic_stage = \
             DockerBashOperator(task_id='DynamicStage',
@@ -437,7 +422,6 @@ def generate_dags(mode):
                                docker_name='''{{ params.cluster }}''',
                                bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p update_pro,update_special_referrers_stage'''
                                )
-        dynamic_stage.set_upstream(therest_map)
         dynamic_stage.set_upstream(export_rest)
         dynamic_stage.set_upstream(popular_pages)
         dynamic_stage.set_upstream(daily_incoming)
@@ -463,73 +447,6 @@ def generate_dags(mode):
                                    )
             dynamic_prod_per_target.set_upstream(copy_to_prod)
             dynamic_prod.set_upstream(dynamic_prod_per_target)
-
-        repair_incoming_tables = \
-            DockerBashOperator(task_id='RepairIncomingTables',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
-                               )
-        repair_incoming_tables.set_upstream(incoming)
-
-        repair_outgoing_tables = \
-            DockerBashOperator(task_id='RepairOutgoingTables',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
-                               )
-        repair_outgoing_tables.set_upstream(outgoing)
-
-        repair_keywords_tables = \
-            DockerBashOperator(task_id='RepairKeywordsTables',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
-                               )
-        repair_keywords_tables.set_upstream(keywords_paid)
-        repair_keywords_tables.set_upstream(keywords_organic)
-        repair_keywords_tables.set_upstream(keywords_top)
-
-        repair_ranks_tables = \
-            DockerBashOperator(task_id='RepairRanksTables',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
-                               )
-        repair_ranks_tables.set_upstream(ranks)
-        repair_ranks_tables.set_upstream(export_rest)
-
-        repair_sr_tables = \
-            DockerBashOperator(task_id='RepairSrTables',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
-                               )
-        repair_sr_tables.set_upstream(traffic_distro)
-
-        repair_sending_pages_tables = \
-            DockerBashOperator(task_id='RepairSendingPagesTables',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sending-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
-                               )
-        repair_sending_pages_tables.set_upstream(sending_pages)
-
-        repair_popular_pages_tables = \
-            DockerBashOperator(task_id='RepairPopularPagesTables',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/popular-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
-                               )
-        repair_popular_pages_tables.set_upstream(popular_pages)
-
-        repair_social_receiving_tables = \
-            DockerBashOperator(task_id='RepairSocialReceivingTables',
-                               dag=dag,
-                               docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/social-receiving.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
-                               )
-        repair_social_receiving_tables.set_upstream(social_receiving)
 
         if is_snapshot_dag():
 
@@ -680,14 +597,137 @@ def generate_dags(mode):
                                    )
             web_autocomplete.set_upstream(cross_cache_prod)
 
+        ###########
+        # Wrap-up #
+        ###########
+
+        register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
+                                               dag=dag,
+                                               path='''services/bigdata_orchestration/{{ params.mode }}/{{ macros.last_interval_day(ds, dag.schedule_interval) }}''',
+                                               env='PRODUCTION'
+                                               )
+        register_success.set_upstream(dynamic_prod)
+        if is_snapshot_dag():
+            register_success.set_upstream(sitemap)
+            register_success.set_upstream(web_autocomplete)
+            register_success.set_upstream(dynamic_cross_prod)
+
+        moving_window = \
+            DummyOperator(task_id='MovingWindow_%s' % mode_dag_name(),
+                          dag=dag
+                          )
+        moving_window.set_upstream(register_success)
+
+        ##################
+        # Non Operationals #
+        ##################
+        non_operationals = \
+            DummyOperator(task_id='NonOperationals',
+                          dag=dag
+                          )
+        non_operationals.set_upstream(register_success)
+
+        repair_tables = \
+            DummyOperator(task_id='RepairTables',
+                          dag=dag
+                          )
+        repair_tables.set_upstream(non_operationals)
+
+        repair_incoming_tables = \
+            DockerBashOperator(task_id='RepairIncomingTables',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               )
+        repair_incoming_tables.set_upstream(repair_tables)
+
+        repair_outgoing_tables = \
+            DockerBashOperator(task_id='RepairOutgoingTables',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               )
+        repair_outgoing_tables.set_upstream(repair_tables)
+
+        repair_keywords_tables = \
+            DockerBashOperator(task_id='RepairKeywordsTables',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               )
+        repair_keywords_tables.set_upstream(repair_tables)
+
+        repair_ranks_tables = \
+            DockerBashOperator(task_id='RepairRanksTables',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               )
+        repair_ranks_tables.set_upstream(repair_tables)
+
+        repair_sr_tables = \
+            DockerBashOperator(task_id='RepairSrTables',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               )
+        repair_sr_tables.set_upstream(repair_tables)
+
+        repair_sending_pages_tables = \
+            DockerBashOperator(task_id='RepairSendingPagesTables',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sending-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               )
+        repair_sending_pages_tables.set_upstream(repair_tables)
+
+        repair_popular_pages_tables = \
+            DockerBashOperator(task_id='RepairPopularPagesTables',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/popular-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               )
+        repair_popular_pages_tables.set_upstream(repair_tables)
+
+        repair_social_receiving_tables = \
+            DockerBashOperator(task_id='RepairSocialReceivingTables',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/social-receiving.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               )
+        repair_social_receiving_tables.set_upstream(repair_tables)
+
+        check_distros = \
+            DockerBashOperator(task_id='CheckDistros',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p export_traffic_distro_from_hbase'''
+                               )
+        check_distros.set_upstream(non_operationals)
 
         if is_window_dag():
+            check_customers_est = \
+                DockerBashOperator(task_id='CheckCustomersEst',
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                                   )
+            check_customers_est.set_upstream(non_operationals)
+
+            check_customer_distros = \
+                DockerBashOperator(task_id='CheckCustomerDistros',
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                                   )
+            check_customer_distros.set_upstream(non_operationals)
 
             cleanup_from_days = 8
             cleanup_to_days = 3
 
             cleanup_stage = DummyOperator(task_id='CleanupStage',
                                           dag=dag)
+
             for i in range(cleanup_to_days, cleanup_from_days):
                 if i == cleanup_to_days:
                     cleanup_stage_stages = 'drop_crosscache_stage'
@@ -700,15 +740,17 @@ def generate_dags(mode):
                                        docker_name='''{{ params.cluster }}''',
                                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p %s''' % (i, cleanup_stage_stages)
                                        )
-                cleanup_stage_ds_minus_i.set_upstream(cross_cache_stage)
-                cleanup_stage_ds_minus_i.set_upstream(dynamic_stage)
-                cleanup_stage.set_upstream(cleanup_stage_ds_minus_i)
+                cleanup_stage_ds_minus_i.set_upstream(cleanup_stage)
+
+            non_operationals.set_upstream(dynamic_cross_stage)
+            cleanup_stage.set_upstream(non_operationals)
 
             cleanup_from_days = 12
             cleanup_to_days = 4
 
             cleanup_prod = DummyOperator(task_id='CleanupProd',
                                          dag=dag)
+
             for i in range(cleanup_to_days, cleanup_from_days):
                 if i == cleanup_to_days:
                     cleanup_prod_stages = 'drop_crosscache_prod'
@@ -716,7 +758,8 @@ def generate_dags(mode):
                     cleanup_prod_stages = 'drop_crosscache_prod,drop_hbase_tables'
 
                 cleanup_prod_ds_minus_i = DummyOperator(task_id='CleanupProd_DS-%s' % i,
-                                             dag=dag)
+                                                        dag=dag)
+                cleanup_prod_ds_minus_i.set_upstream(cleanup_prod)
 
                 for target in DEPLOY_TARGETS:
                     cleanup_prod_per_target_ds_minus_i = \
@@ -725,22 +768,10 @@ def generate_dags(mode):
                                            docker_name='''{{ params.cluster-%s }}''' % target,
                                            bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }}  -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p %s''' % (i, cleanup_prod_stages)
                                            )
-                    cleanup_prod_per_target_ds_minus_i.set_upstream(cross_cache_prod)
-                    cleanup_prod_per_target_ds_minus_i.set_upstream(dynamic_prod)
-                    cleanup_prod_ds_minus_i.set_upstream(cleanup_prod_per_target_ds_minus_i)
+                    cleanup_prod_per_target_ds_minus_i.set_upstream(cleanup_prod_ds_minus_i)
 
-                cleanup_prod.set_upstream(cleanup_prod_ds_minus_i)
-
-        ###########
-        # Wrap-up #
-        ###########
-
-        register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
-                                               dag=dag,
-                                               path='''services/bigdata_orchestration/{{ params.mode }}/{{ macros.last_interval_day(ds, dag.schedule_interval) }}''',
-                                               env='PRODUCTION'
-                                               )
-        register_success.set_upstream(copy_to_prod)
+            non_operationals.set_upstream(dynamic_cross_prod)
+            cleanup_prod.set_upstream(non_operationals)
 
 
     return dag
