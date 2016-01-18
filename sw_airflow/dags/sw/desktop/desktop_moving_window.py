@@ -848,7 +848,7 @@ def generate_dags(mode):
                     cleanup_prod_per_target_ds_minus_i = \
                         DockerBashOperator(task_id='CleanupProd_%s_DS-%s' % (target, i),
                                            dag=dag,
-                                           docker_name='''{{ params.cluster }}-%s''' % target,
+                                           docker_name='%s' % target,
                                            bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }}  -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p drop_hbase_tables''' % i
                                            )
                     cleanup_prod_per_target_ds_minus_i.set_upstream(cleanup_prod_ds_minus_i)
