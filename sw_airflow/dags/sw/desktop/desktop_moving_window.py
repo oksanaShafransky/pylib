@@ -123,13 +123,31 @@ def generate_dags(mode):
     site_country_special_referrer_distribution.set_upstream(sum_special_referrer_values)
     site_country_special_referrer_distribution.set_upstream(monthly_sum_estimation_parameters)
 
+    # traffic distro
+
     traffic_distro = \
         DockerBashOperator(task_id='TrafficDistro',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p traffic_distro,traffic_distro_to_hbase,export_traffic_distro_from_hbase'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p traffic_distro'''
                            )
     traffic_distro.set_upstream(site_country_special_referrer_distribution)
+
+    traffic_distro_to_hbase = \
+        DockerBashOperator(task_id='TrafficDistroToHBase',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p traffic_distro_to_hbase'''
+                           )
+    traffic_distro_to_hbase.set_upstream(traffic_distro)
+
+    traffic_distro_export_from_hbase = \
+        DockerBashOperator(task_id='TrafficDistroExportFromHBase',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p export_traffic_distro_from_hbase'''
+                           )
+    traffic_distro_export_from_hbase.set_upstream(traffic_distro_to_hbase)
 
     estimate_incoming = \
         DockerBashOperator(task_id='EstimateIncoming',
@@ -139,13 +157,21 @@ def generate_dags(mode):
                            )
     estimate_incoming.set_upstream(site_country_special_referrer_distribution)
 
-    keywords_prepare = \
-        DockerBashOperator(task_id='KeywordsPrepare',
+    keywords_estimation = \
+        DockerBashOperator(task_id='KeywordsEstimation',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_incoming_keywords,add_totals_to_keys'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_incoming_keywords'''
                            )
-    keywords_prepare.set_upstream(site_country_special_referrer_distribution)
+    keywords_estimation.set_upstream(site_country_special_referrer_distribution)
+
+    keywords_add_totals = \
+        DockerBashOperator(task_id='KeywordsAddTotals',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p add_totals_to_keys'''
+                           )
+    keywords_add_totals.set_upstream(keywords_estimation)
 
     ########################
     # the rest map         #
@@ -187,7 +213,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p sec_paid'''
                            )
-    keywords_paid.set_upstream(keywords_prepare)
+    keywords_paid.set_upstream(keywords_add_totals)
     keywords_paid.set_upstream(hbase_tables)
     keywords.set_upstream(keywords_paid)
 
@@ -197,7 +223,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p sec_organic'''
                            )
-    keywords_organic.set_upstream(keywords_prepare)
+    keywords_organic.set_upstream(keywords_add_totals)
     keywords_organic.set_upstream(hbase_tables)
     keywords.set_upstream(keywords_organic)
 
@@ -207,7 +233,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p top_value_site_keyword'''
                            )
-    keywords_top.set_upstream(keywords_prepare)
+    keywords_top.set_upstream(keywords_add_totals)
     keywords_top.set_upstream(hbase_tables)
     keywords.set_upstream(keywords_top)
 
@@ -377,7 +403,7 @@ def generate_dags(mode):
         copy_to_prod.set_upstream(copy_to_prod_top_lists)
         copy_to_prod.set_upstream(copy_to_prod_sites_stat)
         copy_to_prod.set_upstream(copy_to_prod_sites_info)
-        copy_to_prod.set_upstream(traffic_distro)
+        copy_to_prod.set_upstream(traffic_distro_export_from_hbase)
 
         cross_cache_calc = \
             DockerBashOperator(task_id='CrossCacheCalc',
@@ -701,7 +727,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CheckDistros',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p export_traffic_distro_from_hbase'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
         check_distros.set_upstream(non_operationals)
 
