@@ -659,7 +659,8 @@ def generate_dag(mode):
         DockerBashOperator(task_id='StoreAppSdkTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
+                           bash_command='''source /usr/local/src/sw && \
+                                           hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-sdk-stats \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
@@ -680,7 +681,8 @@ def generate_dag(mode):
         DockerBashOperator(task_id='StoreAppRanksTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
+                           bash_command='''source /usr/local/src/sw && \
+                                           hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-eng-rank \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
