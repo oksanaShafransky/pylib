@@ -30,7 +30,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
                        'mode': 'window', 'mode_type': 'last-28'}
 
-dag = DAG(dag_id='iOSPreliminary', default_args=dag_args, params=dag_template_params,
+dag = DAG(dag_id='IosApps_Preliminary', default_args=dag_args, params=dag_template_params,
           schedule_interval=timedelta(days=1))
 
 ios_user_grouping = \
