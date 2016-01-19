@@ -875,7 +875,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='StoreSiteStatsTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''source /usr/local/src/sw && \
+                           bash_command='''source {{ params.execution_dir }}/scripts.common.sh && \
                                            hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
@@ -897,7 +897,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='StoreSiteInfoTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''source /usr/local/src/sw && \
+                           bash_command='''source {{ params.execution_dir }}/scripts.common.sh && \
                                            hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
