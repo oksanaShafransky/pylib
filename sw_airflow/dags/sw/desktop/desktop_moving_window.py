@@ -452,6 +452,7 @@ def generate_dags(mode):
         copy_to_prod_sites_stat.set_upstream(popular_pages)
         copy_to_prod_sites_stat.set_upstream(export_rest)
         copy_to_prod_sites_stat.set_upstream(daily_incoming)
+        copy_to_prod_sites_stat.set_upstream(conditionals)
 
         copy_to_prod_sites_info = \
             DockerCopyHbaseTableOperator(
@@ -462,7 +463,7 @@ def generate_dags(mode):
                     target_cluster=','.join(DEPLOY_TARGETS),
                     table_name_template='sites_info_' + hbase_suffix_template
             )
-        copy_to_prod_sites_info.set_upstream(conditionals)
+        copy_to_prod_sites_info.set_upstream(export_rest)
 
         copy_to_prod = DummyOperator(task_id='CopyToProd',
                                      dag=dag)
@@ -516,6 +517,7 @@ def generate_dags(mode):
         dynamic_stage.set_upstream(export_rest)
         dynamic_stage.set_upstream(popular_pages)
         dynamic_stage.set_upstream(daily_incoming)
+        dynamic_stage.set_upstream(conditionals)
 
         dynamic_cross_stage = \
             DockerBashOperator(task_id='DynamicCacheStage',
