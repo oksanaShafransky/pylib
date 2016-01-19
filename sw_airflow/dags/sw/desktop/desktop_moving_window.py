@@ -79,14 +79,14 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
                            )
 
-    daily_aggregation = ExternalTaskSensor(external_dag_id='DesktopPreliminary',
-                                                   external_task_id='DesktopPreliminary',
+    daily_aggregation = ExternalTaskSensor(external_dag_id='Desktop_Preliminary',
+                                                   external_task_id='Desktop_Preliminary',
                                                    task_id='DailyAggregation',
                                                    dag=dag)
     daily_aggregation.set_upstream(hbase_tables)
 
-    daily_estimation = ExternalTaskSensor(external_dag_id='DesktopDailyEstimation',
-                                                   external_task_id='DesktopDailyEstimation',
+    daily_estimation = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+                                                   external_task_id='Desktop_DailyEstimation',
                                                    task_id='DailyEstimation',
                                                    dag=dag)
     daily_estimation.set_upstream(hbase_tables)

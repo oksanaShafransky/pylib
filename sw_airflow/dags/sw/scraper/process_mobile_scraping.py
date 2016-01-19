@@ -21,7 +21,7 @@ DEPLOY_TO_PROD = True
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2015, 10, 19),
+    'start_date': datetime(2016, 01, 20),
     'depends_on_past': False,
     'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com'],
     'email_on_failure': True,
@@ -34,7 +34,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
                        'problem_num': CHECK_DATA_PROBLEM_NUM}
 
-dag = DAG(dag_id='ProcessMobileScraping', default_args=dag_args, params=dag_template_params)
+dag = DAG(dag_id='Scraping_ProcessMobileScraping', default_args=dag_args, params=dag_template_params)
 
 
 

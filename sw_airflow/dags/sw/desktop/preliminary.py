@@ -15,7 +15,7 @@ DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(15, 11, 13),
+    'start_date': datetime(16, 01, 20),
     'depends_on_past': False,
     'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,
@@ -27,7 +27,7 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='DesktopPreliminary', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='Desktop_Preliminary', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
 
 # define stages
@@ -85,7 +85,7 @@ register_available.set_upstream(daily_aggregation)
 ###########
 
 wrap_up = \
-    DummyOperator(task_id='DesktopPreliminary',
+    DummyOperator(task_id='Desktop_Preliminary',
                   dag=dag
                   )
 wrap_up.set_upstream([repair_tables, register_available])

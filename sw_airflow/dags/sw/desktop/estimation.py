@@ -14,7 +14,7 @@ DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2016, 1, 10),
+    'start_date': datetime(2016, 1, 20),
     'depends_on_past': True,
     'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,
@@ -26,14 +26,14 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='DesktopDailyEstimation', default_args=dag_args, params=dag_template_params,
+dag = DAG(dag_id='Desktop_DailyEstimation', default_args=dag_args, params=dag_template_params,
           schedule_interval=timedelta(days=1))
 
 
-desktop_daily_preliminary = ExternalTaskSensor(external_dag_id='DesktopPreliminary',
+desktop_daily_preliminary = ExternalTaskSensor(external_dag_id='Desktop_Preliminary',
                                                external_task_id='DailyAggregation',
                                                dag=dag,
-                                               task_id="DesktopPreliminary")
+                                               task_id="Desktop_Preliminary")
 #########################
 # estimation
 #########################
@@ -116,7 +116,7 @@ register_available.set_upstream(daily_incoming)
 ###########
 
 wrap_up = \
-    DummyOperator(task_id='DesktopDailyEstimation',
+    DummyOperator(task_id='Desktop_DailyEstimation',
                   dag=dag
                   )
 
