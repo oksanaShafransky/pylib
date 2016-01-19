@@ -8,8 +8,8 @@ from airflow.operators.sensors import HdfsSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 
-DEFAULT_EXECUTION_DIR = '/home/iddoa/similargroup_SIM-6508/feat/ios_reach_collection'
-BASE_DIR = '/user/iddoa/ios_testing'
+DEFAULT_EXECUTION_DIR = '/similargroup/production'
+BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp-ios'
 
