@@ -77,7 +77,7 @@ def generate_dags(mode):
     # mobile web data
     mobile_web_data = ExternalTaskSensor(external_dag_id='AndroidApps_' + mode_dag_name(),
                                                   dag=dag,
-                                                  task_id="MobileWebData",
+                                                  task_id="AndroidApps_MobileWeb",
                                                   external_task_id='MobileWeb')
     mobile_web_data_stored.set_upstream(mobile_web_data)
 

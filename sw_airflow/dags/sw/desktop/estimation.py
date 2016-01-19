@@ -30,7 +30,7 @@ dag = DAG(dag_id='Desktop_DailyEstimation', default_args=dag_args, params=dag_te
           schedule_interval=timedelta(days=1))
 
 
-desktop_daily_preliminary = ExternalTaskSensor(external_dag_id='Desktop_Preliminary',
+desktop_daily_preliminary = ExternalTaskSensor(external_dag_id='Preliminary',
                                                external_task_id='DailyAggregation',
                                                dag=dag,
                                                task_id="Desktop_Preliminary")
@@ -116,7 +116,7 @@ register_available.set_upstream(daily_incoming)
 ###########
 
 wrap_up = \
-    DummyOperator(task_id='Desktop_DailyEstimation',
+    DummyOperator(task_id='DailyEstimation',
                   dag=dag
                   )
 
