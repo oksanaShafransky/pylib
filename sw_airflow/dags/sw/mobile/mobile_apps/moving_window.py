@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
+from airflow.operators.sensors import HdfsSensor
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
 from sw.airflow.operators import DockerBashSensor
@@ -642,6 +643,52 @@ def generate_dag(mode):
                                )
         update_usage_ranks_date_prod.set_upstream(copy_to_prod)
 
+    #################
+    # Histograms    #
+    #################
+
+    app_sdk_hist_sensor = \
+        HdfsSensor(task_id='AppSdkStatsHistogramReady',
+                   dag=dag,
+                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/{{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-sdk-stats/_SUCCESS''',
+                   execution_timeout=timedelta(minutes=600)
+                   )
+
+    app_sdk_hist_register =  \
+        DockerBashOperator(task_id='StoreAppSdkTableSplits',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil
+                                           -in ({ params.base_hdfs_dir }}/%s/{{ macros.date_partition(ds) }}/app-sdk-stats
+                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }}
+                                           -k 500000
+                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type)
+                           '''
+                           )
+    app_sdk_hist_register.set_upstream(app_sdk_hist_sensor)
+
+    app_eng_rank_sensor = \
+        HdfsSensor(task_id='AppSdkStatsHistogramReady',
+                   dag=dag,
+                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/{{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-eng-rank/_SUCCESS''',
+                   execution_timeout=timedelta(minutes=600)
+                   )
+
+    app_eng_rank_register =  \
+        DockerBashOperator(task_id='StoreAppSdkTableSplits',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil
+                                           -in ({ params.base_hdfs_dir }}/%s/{{ macros.date_partition(ds) }}/app-eng-rank
+                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }}
+                                           -k 500000
+                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type)
+                           '''
+                           )
+    app_eng_rank_register.set_upstream(app_eng_rank_sensor)
+
     ###########
     # Wrap-up #
     ###########
@@ -652,7 +699,7 @@ def generate_dag(mode):
                                                dag=dag,
                                                path='''services/mobile_moving_window/{{ params.mode }}/{{ macros.last_interval_day(ds, dag.schedule_interval) }}''',
                                                env='PRODUCTION'
-                                           )
+                                               )
         register_success.set_upstream([copy_to_prod, update_usage_ranks_date_prod])
 
 

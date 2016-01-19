@@ -16,6 +16,12 @@ def type_date_partition(date, mode_type, **kwargs):
     return 'type=%s/%s' % (mode_type, date_partition(date, **kwargs))
 
 
+def hbase_table_suffix_partition(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
+    date_fmt = '%_y_%m' if mode == 'snapshot' else '%_y_%m_%d'
+    date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
+    return date_suffix if mode == 'snapshot' else '%s_%s' % (mode_type, date_suffix)
+
+
 def dss_in_same_month(ds1, ds2):
     ds1s = datetime.strptime(ds1, '%Y-%m-%d')
     ds2s = datetime.strptime(ds2, '%Y-%m-%d')
@@ -39,5 +45,5 @@ class SWMacroAirflowPluginManager(AirflowPlugin):
 
     name = 'SWMacros'
 
-    macros = [date_partition, type_date_partition, dss_in_same_month, last_interval_day]
+    macros = [date_partition, type_date_partition, hbase_table_suffix_partition, dss_in_same_month, last_interval_day]
 
