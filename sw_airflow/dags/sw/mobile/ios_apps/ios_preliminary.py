@@ -9,7 +9,7 @@ from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data/mobile-analytics'
+BASE_DIR = '/similargroup/data/ios-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp-ios'
 
@@ -38,13 +38,13 @@ ios_user_grouping = \
     DockerBashOperator(task_id='IosUserGrouping',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/user_grouping user_grouping -d {{ ds }}'''
+                       bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/user_grouping user_grouping -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
                        )
 
 daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
                                        dag=dag,
                                        docker_name=DEFAULT_CLUSTER,
-                                       bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/daily_aggregation daily_aggregation -d {{ ds }}'''
+                                       bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/daily_aggregation daily_aggregation -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
                                        )
 daily_aggregation.set_upstream(ios_user_grouping)
 
