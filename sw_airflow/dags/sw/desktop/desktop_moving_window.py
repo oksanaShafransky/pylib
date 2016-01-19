@@ -495,7 +495,8 @@ def generate_dags(mode):
                                )
         cross_cache_prod.set_upstream(cross_cache_calc)
 
-
+        dynamic_prod = DummyOperator(task_id='DynamicProd',
+                             dag=dag)
         dynamic_cross_prod = DummyOperator(task_id='DynamicCrossProd',
                                      dag=dag)
         for target in DEPLOY_TARGETS:
@@ -505,6 +506,7 @@ def generate_dags(mode):
                                    docker_name='''{{ params.cluster }}-%s''' % target,
                                    bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache'''
                                    )
+            dynamic_cross_prod_per_target.set_upstream(dynamic_prod)
             dynamic_cross_prod_per_target.set_upstream(cross_cache_prod)
             dynamic_cross_prod.set_upstream(dynamic_cross_prod_per_target)
 
@@ -528,8 +530,6 @@ def generate_dags(mode):
         dynamic_cross_stage.set_upstream(cross_cache_stage)
         dynamic_cross_stage.set_upstream(dynamic_stage)
 
-        dynamic_prod = DummyOperator(task_id='DynamicProd',
-                                     dag=dag)
 
         for target in DEPLOY_TARGETS:
             dynamic_prod_per_target = \
