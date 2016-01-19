@@ -57,7 +57,7 @@ def generate_dag(mode):
 
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 1, 13)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 1, 20)})
 
     if is_snapshot_dag():
         dag_args_for_mode.update({'start_date': datetime(2016, 1, 1), 'end_date': datetime(2016, 1, 1)})
@@ -69,7 +69,7 @@ def generate_dag(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-    dag = DAG(dag_id='MobileApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
+    dag = DAG(dag_id='AndroidApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
     mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Estimation',

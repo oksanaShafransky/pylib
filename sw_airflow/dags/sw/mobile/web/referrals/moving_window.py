@@ -96,7 +96,7 @@ def generate_dags(mode):
                                                 external_task_id='MobileWebReferralsDailyAggregation')
 
     # daily adjustment
-    daily_adjustment = ExternalTaskSensor(external_dag_id='MobileApps_MovingWindow',
+    daily_adjustment = ExternalTaskSensor(external_dag_id='AndroidApps_MovingWindow',
                                                  dag=dag,
                                                  task_id="DailyAdjustment",
                                                  external_task_id='MobileWebAdjustCalc')

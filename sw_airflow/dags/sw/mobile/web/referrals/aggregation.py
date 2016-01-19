@@ -37,7 +37,7 @@ mobile_web_referrals_preliminary = ExternalTaskSensor(external_dag_id='MobileWeb
                                               external_task_id='MobileWebReferralsDailyPreliminary')
 
 # daily adjustment
-mobile_web_adjust_calc = ExternalTaskSensor(external_dag_id='MobileApps_MovingWindow',
+mobile_web_adjust_calc = ExternalTaskSensor(external_dag_id='AndroidApps_MovingWindow',
                                              dag=dag,
                                              task_id="MobileWebAdjustCalc",
                                              external_task_id='MobileWebAdjustCalc')
