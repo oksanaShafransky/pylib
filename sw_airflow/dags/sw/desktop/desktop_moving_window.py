@@ -875,10 +875,10 @@ def generate_dags(mode):
         DockerBashOperator(task_id='StoreSiteStatsTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat
-                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }}
-                                           -k 500000
+                           bash_command='''hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat \
+                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
+                                           -k 2000000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type)
                            '''
                            )
@@ -896,10 +896,10 @@ def generate_dags(mode):
         DockerBashOperator(task_id='StoreSiteInfoTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info
-                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }}
-                                           -k 500000
+                           bash_command='''hadoopexec {{ params.execution_dir }} mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info \
+                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
+                                           -k 2000000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type)
                            '''
                            )
