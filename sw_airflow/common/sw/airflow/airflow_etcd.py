@@ -61,7 +61,7 @@ class EtcdSetOperator(EtcdOperator):
     def execute(self, context):
         path = self.get_path()
         logging.info('etcd path is %s, value is %s' % (path, self.value))
-        self.getClient().set(str(path), str(self.value))
+        self.get_client().set(str(path), str(self.value))
 
 
 class EtcdPromoteOperator(EtcdOperator):
@@ -77,13 +77,13 @@ class EtcdPromoteOperator(EtcdOperator):
     def execute(self, context):
         logging.info('etcd path is %s, value is %s' % (self.path, self.value))
         try:
-            curr = self.getClient().get(str(self.path))
+            curr = self.get_client().get(str(self.path))
             curr_value = self.parser(curr.value)
             logging.info('retrieved existing value %s' % str(curr_value))
             if self.value > curr_value:
-                self.getClient().set(str(self.get_path()), str(self.value))
+                self.get_client().set(str(self.get_path()), str(self.value))
         except Exception:
-            self.getClient().set(str(self.get_path()), str(self.value))
+            self.get_client().set(str(self.get_path()), str(self.value))
 
 
 class EtcdDeleteOperator(EtcdOperator):
@@ -97,7 +97,7 @@ class EtcdDeleteOperator(EtcdOperator):
         path = self.get_path()
         logging.info('etcd path to delete is %s' % path)
         try:
-            self.getClient().delete(str(path))
+            self.get_client().delete(str(path))
         except Exception:
             logging.info('key was not found')
             # exit gracefully
@@ -137,7 +137,7 @@ class EtcdSensor(BaseSensorOperator):
         path = self.get_path()
         logging.info('testing etcd path %s' % path)
         try:
-            return test_etcd_value(self.getClient(), str(path), self.cmp_criteria)
+            return test_etcd_value(self.get_client(), str(path), self.cmp_criteria)
         except Exception:
             # this means the key is not present
             return False
@@ -168,7 +168,7 @@ class CompoundEtcdSensor(EtcdSensor):
         try:
             key_list_path = self.get_check_keys_path()
             logging.info('fetching key list from etcd path %s' % key_list_path)
-            val_str = self.getClient.get(str(key_list_path)).value
+            val_str = self.get_client().get(str(key_list_path)).value
             keys_to_check = val_str.split(self.list_separator)
         except Exception as e:
             logging.error('key list path not found')
@@ -179,7 +179,7 @@ class CompoundEtcdSensor(EtcdSensor):
             for key in keys_to_check:
                 key_path = str(key_root + '/' + key + self.key_suffix)
                 logging.info('testing path %s' % key_path)
-                if not test_etcd_value(self.getClient, key_path, self.test_value):
+                if not test_etcd_value(self.get_client(), key_path, self.test_value):
                     logging.info('not ready')
                     return False
 
