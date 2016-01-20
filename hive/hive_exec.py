@@ -35,7 +35,7 @@ class HiveExecuter(Executer):
         pool_param = Arg('-cp', '--calc-pool', 'calc_pool', str, 'Calculation pool to user', required=False,
                          default='calculation')
         compression_param = Arg('-cm', '--compression', 'compression', ('gz', 'bz2', 'none'), 'Compression type to use',
-                                required=False, default='gz')
+                                required=False, default='bz2')
         slow_start_param = Arg('-sscmr', '--slow-start-rate', 'slow_start_ratio', str,
                                'mapreduce.job.reduce.slowstart.completedmaps',
                                required=False, default=None)
