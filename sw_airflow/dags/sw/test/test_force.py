@@ -12,7 +12,7 @@ DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(20, 1, 16),
+    'start_date': datetime(2016, 1, 16),
     'depends_on_past': False,
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
