@@ -75,6 +75,7 @@ def generate_dags(mode):
     mobile_web_data_stored = DummyOperator(task_id='MobileWebDataStored', dag=dag)
 
     # mobile web data
+    #Todo: There is no such external task - it should be fixed!
     mobile_web_data = ExternalTaskSensor(external_dag_id='AndroidApps_' + mode_dag_name(),
                                                   dag=dag,
                                                   task_id="AndroidApps_MobileWeb",

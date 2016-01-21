@@ -58,7 +58,7 @@ def generate_dag(mode):
 
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 1, 20)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 1, 21)})
 
     if is_snapshot_dag():
         dag_args_for_mode.update({'start_date': datetime(2016, 1, 1), 'end_date': datetime(2016, 1, 1)})
@@ -336,7 +336,7 @@ def generate_dag(mode):
     # App Ranks #
     #############
 
-    daily_ranks_backfill = ExternalTaskSensor(external_dag_id='MobileApps_DailyRanksBackfill',
+    daily_ranks_backfill = ExternalTaskSensor(external_dag_id='AndroidApps_DailyRanksBackfill',
                                               dag=dag,
                                               task_id="DailyRanksBackfill",
                                               external_task_id='DailyRanksBackfill'

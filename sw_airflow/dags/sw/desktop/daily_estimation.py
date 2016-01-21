@@ -14,7 +14,7 @@ DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2016, 1, 20),
+    'start_date': datetime(2016, 1, 21),
     'depends_on_past': True,
     'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,
@@ -30,10 +30,10 @@ dag = DAG(dag_id='Desktop_DailyEstimation', default_args=dag_args, params=dag_te
           schedule_interval=timedelta(days=1))
 
 
-desktop_daily_preliminary = ExternalTaskSensor(external_dag_id='Preliminary',
-                                               external_task_id='DailyAggregation',
-                                               dag=dag,
-                                               task_id="Desktop_Preliminary")
+preliminary = ExternalTaskSensor(external_dag_id='Desktop_Preliminary',
+                                 external_task_id='Preliminary',
+                                 dag=dag,
+                                 task_id="Preliminary")
 #########################
 # estimation
 #########################
@@ -45,7 +45,7 @@ estimation = \
                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p daily_estimation'''
                        )
 
-estimation.set_upstream(desktop_daily_preliminary)
+estimation.set_upstream(preliminary)
 
 add_totals_est = \
     DockerBashOperator(task_id='AddTotalsToEstimationValues',
