@@ -4,10 +4,11 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
+from airflow.operators.sensors import HdfsSensor
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
 from sw.airflow.operators import DockerBashSensor
-from sw.airflow.operators import  DockerCopyHbaseTableOperator
+from sw.airflow.operators import DockerCopyHbaseTableOperator
 from sw.airflow.airflow_etcd import EtcdHook
 from airflow.operators.python_operator import BranchPythonOperator
 
@@ -714,6 +715,8 @@ def generate_dags(mode):
         ##################
         # Non Operationals #
         ##################
+
+
         non_operationals = \
             DummyOperator(task_id='NonOperationals',
                           dag=dag
@@ -855,6 +858,54 @@ def generate_dags(mode):
 
             non_operationals.set_upstream(dynamic_cross_prod)
             cleanup_prod.set_upstream(non_operationals)
+
+    #################
+    # Histograms    #
+    #################
+
+    sites_stat_hist_sensor = \
+        HdfsSensor(task_id='SiteStatsHistogramReady',
+                   dag=dag,
+                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat/_SUCCESS''',
+                   execution_timeout=timedelta(minutes=600)
+                   )
+
+    sites_stat_hist_register =  \
+        DockerBashOperator(task_id='StoreSiteStatsTableSplits',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
+                                           hadoopexec {{ params.execution_dir }}/analytics analytics.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat \
+                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
+                                           -k 2000000 \
+                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                        '''
+                           )
+    sites_stat_hist_register.set_upstream(sites_stat_hist_sensor)
+
+    site_info_hist_sensor = \
+        HdfsSensor(task_id='SiteInfoHistogramReady',
+                   dag=dag,
+                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info/_SUCCESS''',
+                   execution_timeout=timedelta(minutes=600)
+                   )
+
+    site_info_hist_register =  \
+        DockerBashOperator(task_id='StoreSiteInfoTableSplits',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
+                                           hadoopexec {{ params.execution_dir }}/analytics analytics.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info \
+                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
+                                           -k 2000000 \
+                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                        '''
+                           )
+    site_info_hist_register.set_upstream(site_info_hist_sensor)
 
 
     return dag
