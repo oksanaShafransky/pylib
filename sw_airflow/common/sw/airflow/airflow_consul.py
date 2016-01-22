@@ -136,7 +136,7 @@ class ConsulSensor(BaseSensorOperator):
         return self._conn
 
     def test_value(self, path):
-        val = self.client.kv.get(self.path)
+        val = self.client.kv.get(path)
         return self.cmp_criteria(val)
 
     def poke(self, context):
