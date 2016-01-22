@@ -184,9 +184,6 @@ class CompoundConsulSensor(ConsulSensor):
             # this means the key is not present
             return False
 
-    def test_value(self, val):
-        return self.cmp_criteria(val)
-
 
 class CompoundDateConsulSensor(CompoundConsulSensor):
     template_fields = ('env', 'key_list_path', 'key_root', 'list_separator', 'desired_date')
@@ -196,7 +193,7 @@ class CompoundDateConsulSensor(CompoundConsulSensor):
         super(CompoundDateConsulSensor, self).__init__(*args, **kwargs)
         self.desired_date = desired_date
 
-    def test_value(self, dt):
+    def cmp_criteria(self, dt):
         return datetime.strptime(dt, '%Y-%m-%d') >= datetime.strptime(self.desired_date, '%Y-%m-%d')
 
 
