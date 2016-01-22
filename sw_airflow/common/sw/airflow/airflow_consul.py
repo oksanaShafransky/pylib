@@ -194,6 +194,7 @@ class CompoundDateConsulSensor(CompoundConsulSensor):
         self.desired_date = desired_date
 
     def cmp_criteria(self, dt):
+        logging.info('comparing %s to %s' % (dt, self.desired_date))
         return datetime.strptime(dt, '%Y-%m-%d') >= datetime.strptime(self.desired_date, '%Y-%m-%d')
 
 
