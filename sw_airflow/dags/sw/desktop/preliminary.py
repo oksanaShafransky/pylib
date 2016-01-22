@@ -47,14 +47,14 @@ should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
 group_raw = DockerBashOperator(task_id='GroupByUser',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/preliminaryJobs.sh -d {{ ds }} -p group'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/preliminaryJobs.sh -s {{ ds }} -e {{ ds }} -p group'''
                                )
 group_raw.set_upstream(should_run)
 
 blocked_ips = DockerBashOperator(task_id='BlockedIPs',
                                  dag=dag,
                                  docker_name='''{{ params.cluster }}''',
-                                 bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/preliminaryJobs.sh -d {{ ds }} -p blocked_ips'''
+                                 bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/preliminaryJobs.sh -s {{ ds }} -e {{ ds }} -p blocked_ips'''
                                  )
 blocked_ips.set_upstream(group_raw)
 
