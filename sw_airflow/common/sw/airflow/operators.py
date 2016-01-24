@@ -87,7 +87,7 @@ class DockerBashOperator(BashOperator):
 -v /var/run/similargroup:/var/run/similargroup                \
 --rm                                                          \
 --sig-proxy=false                                             \
---user=`id -u`                                                \
+--user=4402778                                              \
 -e DOCKER_GATE={{ docker_manager }}                           \
 -e GELF_HOST="runsrv2.sg.internal"                            \
 -e HOME=/tmp                                                  \
