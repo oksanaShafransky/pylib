@@ -2,6 +2,7 @@ import sys
 import time
 import os
 import datetime
+import subprocess
 import snakebite.client
 from snakebite.errors import FileNotFoundException
 import types
@@ -62,6 +63,26 @@ class TasksInfra(object):
             print 'Dir does not exist'
         finally:
             assert is_valid is True, 'Output dir is not valid, given dir is %s' % directory
+
+    # needed because the regular client throws an exception when a parent directory doesnt exist either
+    @staticmethod
+    def directory_exists(dir_name):
+        hdfs_client = snakebite.client.Client(MRP_HDFS_NAMENODE_SERVER, MRP_HDFS_NAMENODE_PORT, use_trash=False)
+
+        try:
+            return hdfs_client.test(dir_name, directory=True)
+        except FileNotFoundException:
+            return False
+
+    @staticmethod
+    def upload_file_to_hdfs(file_path, target_path):
+
+        if not TasksInfra.directory_exists(target_path):
+            mkdir_cmd = 'hadoop fs -mkdir -p %s' % target_path
+            subprocess.call(mkdir_cmd.split(' '))
+
+        put_cmd = 'hadoop fs -put %s %s' % (file_path, target_path)
+        subprocess.call(put_cmd.split(' '))
 
     @staticmethod
     def load_common_args_to_ctx(ctx, dry_run, force, base_dir, date):
