@@ -82,10 +82,12 @@ class TasksInfra(object):
         return ans
 
 
+
 class ContextualizedTasksInfra(TasksInfra):
 
     def __init__(self, ctx):
         self.ctx = ctx
+        self.execution_dir = execution_dir
 
     def get_common_args(self):
         return self.ctx.config.config['common_args']
