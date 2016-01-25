@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 
 from sw.airflow.key_value import *
-from sw.airfow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 from airflow.operators.dummy_operator import DummyOperator
 
