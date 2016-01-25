@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 
 from sw.airflow.key_value import *
+from sw.airfow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 from airflow.operators.dummy_operator import DummyOperator
 
@@ -38,7 +39,7 @@ should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         key_list_path='services/copy_logs_daily/trackers',
                                         list_separator=';',
                                         desired_date='''{{ ds }}''',
-                                        key_root='services/data-ingestion/trackers/mrptracker',
+                                        key_root='services/data-ingestion/trackers/mrpadvtracker',
                                         key_suffix='.sg.internal',
                                         execution_timeout=timedelta(minutes=240)
                                         )
