@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 
-from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
+from sw.airflow.operators import DockerCopyHbaseTableOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'

@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.sensors import HdfsSensor
 
-from sw.airflow.operators import DockerBashOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data'
