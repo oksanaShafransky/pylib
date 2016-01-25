@@ -8,7 +8,7 @@ from airflow.operators.sensors import HdfsSensor
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
 from sw.airflow.operators import DockerBashSensor
-from sw.airflow.operators import  DockerCopyHbaseTableOperator
+from sw.airflow.operators import DockerCopyHbaseTableOperator
 from sw.airflow.airflow_etcd import EtcdHook
 from airflow.operators.python_operator import BranchPythonOperator
 
@@ -39,7 +39,6 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 
 
 def generate_dag(mode):
-
     def is_window_dag():
         return mode == WINDOW_MODE
 
@@ -52,7 +51,7 @@ def generate_dag(mode):
         if is_snapshot_dag():
             return 'Snapshot'
 
-    #TODO insert the real logic here
+    # TODO insert the real logic here
     def is_prod_env():
         return IS_PROD
 
@@ -70,7 +69,8 @@ def generate_dag(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-    dag = DAG(dag_id='AndroidApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
+    dag = DAG(dag_id='AndroidApps_' + mode_dag_name(), default_args=dag_args_for_mode,
+              params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
     mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Estimation',
@@ -91,7 +91,7 @@ def generate_dag(mode):
         DockerBashOperator(task_id='PrepareHBaseTables',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p tables'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl APPS -p tables'''
                            )
 
     #####################
@@ -322,7 +322,7 @@ def generate_dag(mode):
     app_engagement.set_upstream([mobile_estimation, prepare_hbase_tables])
 
     # Todo: Fix this task whose data was deleted fue to retention by fallbacking into using snapshot's data
-    #if is_window_dag():
+    # if is_window_dag():
     #    app_engagement_sanity_check = \
     #        DockerBashOperator(task_id='AppEngagementSanityCheck',
     #                           dag=dag,
@@ -388,7 +388,7 @@ def generate_dag(mode):
                            )
     ranks_export_stage.set_upstream(prepare_ranks)
 
-    #TODO add check that this is indeed prod environment
+    # TODO add check that this is indeed prod environment
     if is_prod_env():
         ranks_export_prod = \
             DockerBashOperator(task_id='RanksExportProd',
@@ -452,7 +452,8 @@ def generate_dag(mode):
     apps = DummyOperator(task_id='Apps',
                          dag=dag
                          )
-    apps.set_upstream([app_engagement, app_affinity, retention_store, app_retention_categories, retention_leaders, app_usage_pattern_store, usage_pattern_categories, usage_pattern_category_leaders,
+    apps.set_upstream([app_engagement, app_affinity, retention_store, app_retention_categories, retention_leaders,
+                       app_usage_pattern_store, usage_pattern_categories, usage_pattern_category_leaders,
                        usage_ranks, export_ranks, trends])
 
     #######################
@@ -502,14 +503,14 @@ def generate_dag(mode):
                            )
     update_usage_ranks_date_stage.set_upstream(usage_ranks)
 
-
     deploy_targets = ['hbp1', 'hbp2']
     ################
     # Copy to Prod #
     ################
 
-    hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
-                             '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
+    hbase_suffix_template = (
+    '''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
+    '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
 
     if is_prod_env():
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
@@ -520,60 +521,61 @@ def generate_dag(mode):
 
         copy_to_prod_app_sdk = \
             DockerCopyHbaseTableOperator(
-                task_id='CopyToProdAppSdk',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster=','.join(deploy_targets),
-                table_name_template='app_sdk_stats_' + hbase_suffix_template
+                    task_id='CopyToProdAppSdk',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(deploy_targets),
+                    table_name_template='app_sdk_stats_' + hbase_suffix_template
             )
         copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store])
 
         copy_to_prod_cats = \
             DockerCopyHbaseTableOperator(
-                task_id='CopyToProdCats',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster=','.join(deploy_targets),
-                table_name_template='app_sdk_category_stats_' + hbase_suffix_template
-                )
+                    task_id='CopyToProdCats',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(deploy_targets),
+                    table_name_template='app_sdk_category_stats_' + hbase_suffix_template
+            )
         copy_to_prod_cats.set_upstream([app_engagement, category_retention_store, usage_pattern_categories])
 
         copy_to_prod_leaders = \
             DockerCopyHbaseTableOperator(
-                task_id='CopyToProdLeaders',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster=','.join(deploy_targets),
-                table_name_template='app_sdk_category_lead_' + hbase_suffix_template
+                    task_id='CopyToProdLeaders',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(deploy_targets),
+                    table_name_template='app_sdk_category_lead_' + hbase_suffix_template
             )
         copy_to_prod_leaders.set_upstream([app_engagement, retention_leaders, usage_pattern_category_leaders])
 
         copy_to_prod_engage = \
             DockerCopyHbaseTableOperator(
-                task_id='CopyToProdEngage',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster=','.join(deploy_targets),
-                table_name_template='app_eng_rank_' + hbase_suffix_template
+                    task_id='CopyToProdEngage',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(deploy_targets),
+                    table_name_template='app_eng_rank_' + hbase_suffix_template
             )
         copy_to_prod_engage.set_upstream(usage_ranks)
 
         copy_to_prod_rank = \
             DockerCopyHbaseTableOperator(
-                task_id='CopyToProdRank',
-                dag=dag,
-                docker_name='''{{ params.cluster }}''',
-                source_cluster='mrp',
-                target_cluster=','.join(deploy_targets),
-                table_name_template='cat_mod_app_rank_' + hbase_suffix_template
+                    task_id='CopyToProdRank',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(deploy_targets),
+                    table_name_template='cat_mod_app_rank_' + hbase_suffix_template
             )
         copy_to_prod_rank.set_upstream([usage_ranks, trends])
 
-        copy_to_prod.set_upstream([copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders, copy_to_prod_engage, copy_to_prod_rank])
+        copy_to_prod.set_upstream(
+                [copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders, copy_to_prod_engage, copy_to_prod_rank])
 
     ################
     # Cleanup Prod #
@@ -655,7 +657,7 @@ def generate_dag(mode):
                    execution_timeout=timedelta(minutes=600)
                    )
 
-    app_sdk_hist_register =  \
+    app_sdk_hist_register = \
         DockerBashOperator(task_id='StoreAppSdkTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
@@ -677,7 +679,7 @@ def generate_dag(mode):
                    execution_timeout=timedelta(minutes=600)
                    )
 
-    app_eng_rank_hist_register =  \
+    app_eng_rank_hist_register = \
         DockerBashOperator(task_id='StoreAppRanksTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
@@ -696,14 +698,12 @@ def generate_dag(mode):
     ###########
 
     if is_prod_env():
-
         register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
                                                dag=dag,
                                                path='''services/mobile_moving_window/{{ params.mode }}/{{ macros.last_interval_day(ds, dag.schedule_interval) }}''',
                                                env='PRODUCTION'
                                                )
         register_success.set_upstream([copy_to_prod, update_usage_ranks_date_prod])
-
 
     return dag
 
