@@ -25,7 +25,7 @@ dag_args = {
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
+                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER, 'tracker_type': 'mrpadvtracker'}
 
 dag = DAG(dag_id='Advanced_Preliminary', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
@@ -38,7 +38,7 @@ should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         key_list_path='services/copy_logs_daily/trackers',
                                         list_separator=';',
                                         desired_date='''{{ ds }}''',
-                                        key_root='services/data-ingestion/trackers/mrpadvtracker',
+                                        key_root='''services/data-ingestion/trackers/{{ params.tracker_type }}''',
                                         key_suffix='.sg.internal',
                                         execution_timeout=timedelta(minutes=240)
                                         )
