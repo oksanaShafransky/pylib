@@ -36,11 +36,25 @@ class TasksInfra(object):
         ctx.config['common_args'] = d
         return ContextualizedTasksInfra(ctx)
 
+    @staticmethod
+    def add_command_params(command, command_params):
+        ans = command
+        for key, value in command_params.iteritems():
+            if type(value) == types.BooleanType:
+                if value==True:
+                    ans += " -%s " % key
+            else:
+                ans += " -%s " % key
+                ans += '"%s"' % value if type(value) != types.BooleanType else ""
+        return ans
+
+
 
 class ContextualizedTasksInfra(TasksInfra):
 
     def __init__(self, ctx):
         self.ctx = ctx
+        self.execution_dir = execution_dir
 
     def get_common_args(self):
         return self.ctx.config.config['common_args']
@@ -52,16 +66,15 @@ class ContextualizedTasksInfra(TasksInfra):
         ans += " && " + command
         return ans
 
-    def compose_hadoop_runner_command(self, task_params):
-        ans = self.compose_infra_command('execute hadoopexec %s/mobile mobile.jar com.similargroup.mobile.main.MobileRunner' % execution_dir)
-        for key, value in task_params.iteritems():
-            if type(value) == types.BooleanType:
-                if value==True:
-                    ans += " -%s " % key
-            else:
-                ans += " -%s " % key
-                ans += '"%s"' % value if type(value) != types.BooleanType else ""
-        return ans
+    def compose_hadoop_runner_command(self, command_params):
+        command = self.compose_infra_command('execute hadoopexec %s/mobile mobile.jar com.similargroup.mobile.main.MobileRunner' % execution_dir)
+        command = self.add_command_params(command, command_params)
+        return command
+
+    def compose_python_runner_command(self, python_executable, command_params):
+        command = self.compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
+        command = self.add_command_params(command, command_params)
+        return command
 
     def run_bash(self, command):
         print ("Running '%s'" % command)
