@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 
 from airflow.models import DAG
 from airflow.operators.sensors import HdfsSensor
+from airflow.operators.dummy_operator import DummyOperator
 
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
@@ -66,4 +67,7 @@ daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
                                        )
 daily_aggregation.set_upstream(ios_user_grouping)
 daily_aggregation.set_upstream(map_ids)
+
+preliminary = DummyOperator(task_id='Preliminary', dag=dag)
+preliminary.set_upstream(daily_aggregation)
 
