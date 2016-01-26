@@ -8,6 +8,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
 
 from sw.airflow.key_value import *
+
 from sw.airflow.docker_bash_operator import DockerBashOperatorBuilder
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -66,7 +67,7 @@ main_estimation_check.set_upstream(main_estimation)
 ########################
 # Mobile Web Daily Cut #
 ########################
-dc_builder = builder.deepcopy(DockerBashOperatorBuilder()).reset_cmd_components().add_cmd_component('-env daily-cut')
+dc_builder = builder.clone().reset_cmd_components().add_cmd_component('-env daily-cut')
 
 daily_cut_sums = dc_builder.build(task_id='daily_cut_sums', core_command='daily_est.sh -p source_sums')
 daily_cut_sums.set_upstream(mobile_preliminary)
@@ -99,4 +100,3 @@ register_success.set_upstream([daily_cut, main])
 
 mobile_web_estimation = DummyOperator(task_id='mobile_web_estimation', dag=dag)
 mobile_web_estimation.set_upstream(register_success)
-mobile_web_estimation.set_upstream([daily_cut, main])

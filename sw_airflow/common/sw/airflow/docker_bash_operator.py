@@ -59,7 +59,8 @@ class DockerBashOperatorBuilder():
         self.dag = None
         self.date_template = None
 
-    def deepcopy(self, other):
+    def clone(self):
+        other=DockerBashOperatorBuilder()
         other.script_path = self.script_path
         other.core_command = self.core_command
         other.base_data_dir = self.base_data_dir
