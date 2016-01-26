@@ -8,7 +8,7 @@ from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 
-DEFAULT_EXECUTION_DIR = '/home/iddoa/similargroup_SIM-7464/ios-reach-estimation'
+DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/ios-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp-ios'
