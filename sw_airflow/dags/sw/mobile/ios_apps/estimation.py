@@ -33,7 +33,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 dag = DAG(dag_id='IosApps_Estimation', default_args=dag_args, params=dag_template_params,
           schedule_interval='@daily')
 
-mobile_daily_preliminary = ExternalTaskSensor(external_dag_id='IosApps_Preliminary',
+preliminary = ExternalTaskSensor(external_dag_id='IosApps_Preliminary',
                                               dag=dag,
                                               task_id="Preliminary",
                                               external_task_id='Preliminary')
@@ -44,5 +44,5 @@ reach_estimate = DockerBashOperator(task_id='ReachEstimate',
                                        bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/app-engagement/ios/reach_estimate reach_estimate -d {{ ds }}'''
                                        )
 
-reach_estimate.set_upstream(mobile_daily_preliminary)
+reach_estimate.set_upstream(preliminary)
 
