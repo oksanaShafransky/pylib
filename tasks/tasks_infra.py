@@ -11,7 +11,7 @@ MRP_HDFS_NAMENODE_PORT = 8020
 MRP_HDFS_NAMENODE_SERVER = 'active.hdfs-namenode-mrp.service.production'
 
 # The execution_dir should be a relative path to the project's top-level directory
-execution_dir = os.path.dirname(os.path.realpath(__file__))[1:]+"/../.."
+execution_dir = os.path.dirname(os.path.realpath(__file__))[1:] + '/../..'
 
 
 class TasksInfra(object):
