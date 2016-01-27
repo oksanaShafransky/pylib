@@ -120,7 +120,7 @@ misc = DockerBashOperator(
     task_id='misc',
     dag=temp_dag,
     docker_name="{{ params.default_docker }}",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/misc.sh -d {{ ds }} -m window -mt last-28 -p calculate_subdomains,insert_worldwide_traffic,insert_daily_data -bd {{ params.base_hdfs_dir }} {{ params.transients }}'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/misc.sh -d {{ ds }} -m window -mt last-28 -p calculate_subdomains,insert_worldwide_traffic,insert_daily_data,insert_info_counts -bd {{ params.base_hdfs_dir }} {{ params.transients }}'
 )
 
 misc.set_upstream(monthly_sum_estimation_parameters)
