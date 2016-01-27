@@ -53,6 +53,12 @@ ios_user_grouping = \
                        )
 ios_user_grouping.set_upstream(should_run)
 
+export_sources = DockerBashOperator(task_id='ExportSourcesForAnalyze',
+                                    dag=dag,
+                                    docker_name=DEFAULT_CLUSTER,
+                                    bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/daily_aggregation export_sources_for_analyze -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
+                                    )
+
 map_ids = DockerBashOperator(task_id='ExportAppIDs',
                              dag=dag,
                              docker_name=DEFAULT_CLUSTER,
