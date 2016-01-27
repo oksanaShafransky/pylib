@@ -6,7 +6,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
 
 from sw.airflow.key_value import *
-from sw.airflow.operators import DockerBashOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -17,7 +17,7 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2016, 1, 14),
     'depends_on_past': True,
-    'email': ['felixv@similarweb.com','iddoav@similarweb.com', 'barakg@similarweb.com','amitr@similarweb.com>'],
+    'email': ['felixv@similarweb.com', 'iddoav@similarweb.com', 'barakg@similarweb.com', 'amitr@similarweb.com>'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 2,
@@ -27,9 +27,7 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Mobile_Estimation', default_args=dag_args, params=dag_template_params,
-          schedule_interval="@daily")
-
+dag = DAG(dag_id='Mobile_Estimation', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
 mobile_daily_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                               dag=dag,
@@ -98,100 +96,6 @@ app_engagement_daily = \
 
 app_engagement_daily.set_upstream(app_engagement_estimate)
 
-###################
-# Mobile Web Main #
-###################
-
-mobile_web_main_sums = \
-    DockerBashOperator(task_id='MobileWebMainSums',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/daily_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p source_sums'''
-                       )
-
-mobile_web_main_sums.set_upstream(mobile_daily_preliminary)
-
-mobile_web_main_estimation = \
-    DockerBashOperator(task_id='MobileWebMainEstimation',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/daily_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main -p est'''
-                       )
-
-mobile_web_main_estimation.set_upstream(mobile_web_main_sums)
-
-mobile_web_main_estimation_check = \
-    DockerBashOperator(task_id='MobileWebMainEstimationCheck',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/check_first_stage_estimates.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env main'''
-                       )
-
-mobile_web_main_estimation_check.set_upstream(mobile_web_main_estimation)
-
-mobile_web_main = \
-    DummyOperator(task_id='MobileWebMain',
-                  dag=dag
-                  )
-
-mobile_web_main.set_upstream(mobile_web_main_estimation)
-
-########################
-# Mobile Web Daily Cut #
-########################
-
-mobile_web_daily_cut_sums = \
-    DockerBashOperator(task_id='MobileWebDailyCutSums',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/daily_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env daily-cut -p source_sums'''
-                       )
-
-mobile_web_daily_cut_sums.set_upstream(mobile_daily_preliminary)
-
-mobile_web_daily_cut_estimation = \
-    DockerBashOperator(task_id='MobileWebDailyCutEstimation',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/daily_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env daily-cut -p est'''
-                       )
-
-mobile_web_daily_cut_estimation.set_upstream(mobile_web_daily_cut_sums)
-
-mobile_web_daily_cut_estimation_check = \
-    DockerBashOperator(task_id='MobileWebDailyCutEstimationCheck',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/check_first_stage_estimates.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env daily-cut'''
-                       )
-
-mobile_web_daily_cut_estimation_check.set_upstream(mobile_web_daily_cut_estimation)
-
-mobile_web_daily_cut_weights = \
-    DockerBashOperator(task_id='MobileWebDailyCutWeights',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/daily_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env daily-cut -p weights'''
-                       )
-
-mobile_web_daily_cut_weights.set_upstream(mobile_web_daily_cut_estimation)
-
-mobile_web_daily_cut_weights_check = \
-    DockerBashOperator(task_id='MobileWebDailyCutWeightsCheck',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/check_weight_calculations.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env daily-cut'''
-                       )
-
-mobile_web_daily_cut_weights_check.set_upstream(mobile_web_daily_cut_weights)
-
-mobile_web_daily_cut = \
-    DummyOperator(task_id='MobileWebDailyCut',
-                  dag=dag
-                  )
-
-mobile_web_daily_cut.set_upstream(mobile_web_daily_cut_weights)
-
 ##############################
 # Mobile Daily Usage Pattern #
 ##############################
@@ -215,21 +119,12 @@ mobile_apps_estimation = \
                   )
 mobile_apps_estimation.set_upstream([app_engagement_daily, mobile_daily_usage_pattern])
 
-mobile_web_estimation = \
-    DummyOperator(task_id='MobileWebEstimation',
-                  dag=dag
-                  )
-mobile_web_estimation.set_upstream([mobile_web_daily_cut, mobile_web_main])
-
 register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
                                        dag=dag,
-                                       path='''services/mobile-daily-est/daily/{{ ds }}''',
+                                       path='''services/mobile-apps-daily-est/daily/{{ ds }}''',
                                        env='PRODUCTION'
                                        )
-register_success.set_upstream([mobile_apps_estimation, mobile_web_estimation])
+register_success.set_upstream([app_engagement_daily])
 
-estimation = \
-    DummyOperator(task_id='Estimation',
-                  dag=dag
-                  )
-estimation.set_upstream(register_success)
+mobile_apps_estimation = DummyOperator(task_id='mobile_apps_estimation', dag=dag)
+mobile_apps_estimation.set_upstream([register_success])
