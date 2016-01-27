@@ -48,6 +48,10 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         subprocess.call(['bash', '-c', self.kill_cmd])
         super(DockerBashOperator, self).on_kill()
 
+    def set_upstream(self, task_or_task_list):
+        super.set_upstream(self, task_or_task_list)
+        return self
+
 
 class DockerBashOperatorBuilder():
     def __init__(self):
@@ -58,17 +62,6 @@ class DockerBashOperatorBuilder():
         self.cmd_components = []
         self.dag = None
         self.date_template = None
-
-    def clone(self):
-        other=DockerBashOperatorBuilder()
-        other.script_path = self.script_path
-        other.core_command = self.core_command
-        other.base_data_dir = self.base_data_dir
-        other.docker_name = self.base_data_dir
-        other.cmd_components = self.cmd_components
-        other.dag = self.dag
-        other.date_template = self.date_template
-        return other
 
     def set_docker_name(self, docker_name):
         self.docker_name = docker_name
@@ -102,7 +95,7 @@ class DockerBashOperatorBuilder():
         self.cmd_components = []
         return self
 
-    def build(self, task_id, core_command=None):
+    def build(self, task_id, core_command=None, upstreams=[]):
         if core_command:
             full_command = core_command
         elif self.core_command:
@@ -120,8 +113,11 @@ class DockerBashOperatorBuilder():
         full_command += ' ' + ' '.join(self.cmd_components)
 
         logging.info('Building %s.%s="%s"' % (self.dag.dag_id, task_id, full_command))
-        return DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=self.docker_name,
-                                  bash_command=full_command)
+        operator = DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=self.docker_name,
+                                      bash_command=full_command)
+        for upstream in upstreams:
+            operator.set_upstream(upstream)
+        return operator
 
 
 class DockerBashOperatorBuilderException(Exception):

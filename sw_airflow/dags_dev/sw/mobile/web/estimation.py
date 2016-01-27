@@ -40,60 +40,58 @@ mobile_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                         task_id="mobile_preliminary",
                                         external_task_id='Preliminary')
 
-###################
-# Mobile Web Main #
-###################
-builder = DockerBashOperatorBuilder() \
+b = DockerBashOperatorBuilder() \
     .set_docker_name('''{{ params.cluster }}''') \
     .set_script_path('''{{ params.code }}''') \
     .set_dag(dag) \
     .set_base_data_dir('''{{ params.data_dir }}''') \
-    .set_date_template('''{{ ds }}''') \
-    .add_cmd_component('-env main')
+    .set_date_template('''{{ ds }}''')
+###################
+# Mobile Web Main #
+###################
 
-main_sums = builder.build(task_id='main_sums', core_command='daily_est.sh -p source_sums')
-main_sums.set_upstream(mobile_preliminary)
+b.add_cmd_component('-env main')
 
-main_estimation = builder.build(task_id='main_estimation', core_command='daily_est.sh -p est')
-main_estimation.set_upstream(main_sums)
+main_sums = b.build(task_id='main_sums', core_command='daily_est.sh -p source_sums') \
+    .set_upstream(mobile_preliminary)
+main_estimation = b.build(task_id='main_estimation', core_command='daily_est.sh -p est') \
+    .set_upstream(main_sums)
 
 main = DummyOperator(task_id='main', dag=dag)
 main.set_upstream(main_estimation)
-
-main_estimation_check = builder.build(task_id='main_estimation_check',
-                                      core_command='check_first_stage_estimates.sh')
-main_estimation_check.set_upstream(main_estimation)
+main_estimation_check = b.build(task_id='main_estimation_check', core_command='check_first_stage_estimates.sh') \
+    .set_upstream(main_estimation)
 
 ########################
 # Mobile Web Daily Cut #
 ########################
-dc_builder = builder.clone().reset_cmd_components().add_cmd_component('-env daily-cut')
+b.reset_cmd_components().add_cmd_component('-env daily-cut')
 
-daily_cut_sums = dc_builder.build(task_id='daily_cut_sums', core_command='daily_est.sh -p source_sums')
-daily_cut_sums.set_upstream(mobile_preliminary)
+daily_cut_sums = b.build(task_id='daily_cut_sums', core_command='daily_est.sh -p source_sums') \
+    .set_upstream(mobile_preliminary)
 
-daily_cut_estimation = dc_builder.build(task_id='daily_cut_estimation', core_command='daily_est.sh -p est')
-daily_cut_estimation.set_upstream(daily_cut_sums)
+daily_cut_estimation = b.build(task_id='daily_cut_estimation', core_command='daily_est.sh -p est') \
+    .set_upstream(daily_cut_sums)
 
-daily_cut_estimation_check = dc_builder.build(task_id='daily_cut_estimation_check',
-                                              core_command='check_first_stage_estimates.sh')
-daily_cut_estimation_check.set_upstream(daily_cut_estimation)
+daily_cut_estimation_check = b.build(task_id='daily_cut_estimation_check',
+                                     core_command='check_first_stage_estimates.sh') \
+    .set_upstream(daily_cut_estimation)
 
-daily_cut_weights = dc_builder.build(task_id='daily_cut_weights', core_command='daily_est.sh -p weights')
-daily_cut_weights.set_upstream(daily_cut_estimation)
+daily_cut_weights = b.build(task_id='daily_cut_weights', core_command='daily_est.sh -p weights') \
+    .set_upstream(daily_cut_estimation)
 
-daily_cut = DummyOperator(task_id='daily_cut', dag=dag)
-daily_cut.set_upstream(daily_cut_weights)
+daily_cut = DummyOperator(task_id='daily_cut', dag=dag).set_upstream(daily_cut_weights)
 
-daily_cut_weights_check = dc_builder.build(task_id='daily_cut_weights_check',
-                                           core_command='check_weight_calculations.sh')
-daily_cut_weights_check.set_upstream(daily_cut_weights)
+daily_cut_weights_check = b.build(task_id='daily_cut_weights_check',
+                                  core_command='check_weight_calculations.sh') \
+    .set_upstream(daily_cut_weights)
 
 ###########
 # Wrap-up #
 ###########
 register_success = KeyValueSetOperator(task_id='register_success', dag=dag,
                                        path='''services/mobile-web-daily-est/daily/{{ ds }}''',
+                                       # why it is hardcoded to production?
                                        env='DEV'
                                        )
 register_success.set_upstream([daily_cut, main])
