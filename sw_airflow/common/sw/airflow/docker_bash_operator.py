@@ -49,7 +49,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         super(DockerBashOperator, self).on_kill()
 
     def set_upstream(self, task_or_task_list):
-        super.set_upstream(self, task_or_task_list)
+        super(DockerBashOperator, self).set_upstream(task_or_task_list)
         return self
 
 
