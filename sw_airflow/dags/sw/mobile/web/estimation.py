@@ -80,7 +80,8 @@ daily_cut_estimation_check = b.build(task_id='daily_cut_estimation_check',
 daily_cut_weights = b.build(task_id='daily_cut_weights', core_command='daily_est.sh -p weights') \
     .set_upstream(daily_cut_estimation)
 
-daily_cut = DummyOperator(task_id='daily_cut', dag=dag).set_upstream(daily_cut_weights)
+daily_cut = DummyOperator(task_id='daily_cut', dag=dag)
+daily_cut.set_upstream(daily_cut_weights)
 
 daily_cut_weights_check = b.build(task_id='daily_cut_weights_check',
                                   core_command='check_weight_calculations.sh') \
