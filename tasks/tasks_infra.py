@@ -8,7 +8,7 @@ from hadoop.hdfs_util import *
 
 
 # The execution_dir should be a relative path to the project's top-level directory
-execution_dir = os.path.dirname(os.path.realpath(__file__)) + '/../..'
+execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../..'
 
 
 class TasksInfra(object):
