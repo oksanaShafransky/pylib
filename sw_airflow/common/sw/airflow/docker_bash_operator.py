@@ -53,39 +53,26 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         return self
 
 
-class DockerBashOperatorBuilder():
-    def __init__(self):
-        self.script_path = None
-        self.core_command = None
-        self.base_data_dir = None
-        self.docker_name = None
-        self.cmd_components = []
-        self.dag = None
-        self.date_template = None
-
-    def set_docker_name(self, docker_name):
-        self.docker_name = docker_name
-        return self
-
-    def set_script_path(self, script_path):
-        self.script_path = script_path
-        return self
-
-    def set_core_command(self, core_command):
-        self.core_command = core_command
-        return self
-
-    def set_base_data_dir(self, base_data_dir):
+class DockerBashCommandBuilder():
+    def __init__(self,
+                 base_data_dir=None,
+                 core_command=None,
+                 dag=None,
+                 date_template=None,
+                 docker_name=None,
+                 mode=None,
+                 mode_type=None,
+                 script_path=None
+                 ):
         self.base_data_dir = base_data_dir
-        return self
-
-    def set_dag(self, dag):
+        self.core_command = core_command
         self.dag = dag
-        return self
-
-    def set_date_template(self, date_template):
         self.date_template = date_template
-        return self
+        self.docker_name = docker_name
+        self.mode = mode
+        self.mode_type = mode
+        self.script_path = script_path
+        self.cmd_components = []
 
     def add_cmd_component(self, cmd_component):
         self.cmd_components.append(cmd_component)
@@ -95,30 +82,37 @@ class DockerBashOperatorBuilder():
         self.cmd_components = []
         return self
 
-    def build(self, task_id, core_command=None, upstreams=[]):
+    def build(self, task_id, core_command=None, type='operator'):
         if core_command:
             full_command = core_command
         elif self.core_command:
             full_command = self.core_command
         else:
-            raise DockerBashOperatorBuilderException("Core bash command not set")
+            raise DockerBashCommandBuilderException("Core bash command not set")
 
         if self.script_path:
             full_command = self.script_path + '/' + full_command
 
-        if self.date_template:
-            full_command += ' -d ' + self.date_template
+        if self.base_data_dir:
+            full_command += ' -bd ' + self.base_data_dir
+        else:
+            raise DockerBashCommandBuilderException('base_data_dir is mandatory')
 
-        full_command += ' -bd ' + self.base_data_dir
+        if self.date_template: full_command += ' -d ' + self.date_template
+        if self.mode: full_command += ' -m ' + self.mode
+        if self.mode_type: full_command += ' -mt ' + self.mode_type
+
         full_command += ' ' + ' '.join(self.cmd_components)
 
         logging.info('Building %s.%s="%s"' % (self.dag.dag_id, task_id, full_command))
-        operator = DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=self.docker_name,
+        if type == 'operator':
+            return DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=self.docker_name,
                                       bash_command=full_command)
-        for upstream in upstreams:
-            operator.set_upstream(upstream)
-        return operator
+        elif type == 'sensor':
+            raise DockerBashCommandBuilderException('not supported yet')
+        else:
+            raise DockerBashCommandBuilderException('not supported')
 
 
-class DockerBashOperatorBuilderException(Exception):
+class DockerBashCommandBuilderException(Exception):
     pass
