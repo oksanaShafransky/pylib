@@ -6,10 +6,11 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.utils import apply_defaults
 
 
-class DockerBashOperator(BashOperator):
+class DockerBashOperator(BashOperator, object):
     ui_color = '#FFFF66'
     template_fields = ('bash_command', 'kill_cmd')
-    cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run\
+    cmd_template = '''docker run \
+-H=tcp://{{ params.docker_gate }}:2375 \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s \
 -v /etc/localtime:/etc/localtime:ro \
 -v /tmp/logs:/tmp/logs \
@@ -23,8 +24,11 @@ class DockerBashOperator(BashOperator):
 -e DOCKER_GATE={{ docker_manager }} \
 -e GELF_HOST="runsrv2.sg.internal" \
 -e HOME=/tmp \
-runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
-    '''
+runsrv/%(docker)s bash -c " \
+ sudo mkdir -p {{ params.execution_dir }} && \
+ sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && \
+ %(bash_command)s"
+'''
 
     kill_cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %(container_name)s'''
 
@@ -53,7 +57,7 @@ runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -
         return self
 
 
-class DockerBashCommandBuilder():
+class DockerBashCommandBuilder(object):
     def __init__(self,
                  base_data_dir=None,
                  core_command=None,
@@ -70,7 +74,7 @@ class DockerBashCommandBuilder():
         self.date_template = date_template
         self.docker_name = docker_name
         self.mode = mode
-        self.mode_type = mode
+        self.mode_type = mode_type
         self.script_path = script_path
         self.cmd_components = []
 
@@ -82,7 +86,7 @@ class DockerBashCommandBuilder():
         self.cmd_components = []
         return self
 
-    def build(self, task_id, core_command=None, type='operator'):
+    def build(self, task_id, core_command=None, dag_element_type='operator'):
         if core_command:
             full_command = core_command
         elif self.core_command:
@@ -98,17 +102,20 @@ class DockerBashCommandBuilder():
         else:
             raise DockerBashCommandBuilderException('base_data_dir is mandatory')
 
-        if self.date_template: full_command += ' -d ' + self.date_template
-        if self.mode: full_command += ' -m ' + self.mode
-        if self.mode_type: full_command += ' -mt ' + self.mode_type
+        if self.date_template:
+            full_command += ' -d ' + self.date_template
+        if self.mode:
+            full_command += ' -m ' + self.mode
+        if self.mode_type:
+            full_command += ' -mt ' + self.mode_type
 
         full_command += ' ' + ' '.join(self.cmd_components)
 
-        logging.info('Building %s.%s="%s"' % (self.dag.dag_id, task_id, full_command))
-        if type == 'operator':
+        # logging.info('Building %s.%s="%s"' % (self.dag.dag_id, task_id, full_command))
+        if dag_element_type == 'operator':
             return DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=self.docker_name,
                                       bash_command=full_command)
-        elif type == 'sensor':
+        elif dag_element_type == 'sensor':
             raise DockerBashCommandBuilderException('not supported yet')
         else:
             raise DockerBashCommandBuilderException('not supported')
