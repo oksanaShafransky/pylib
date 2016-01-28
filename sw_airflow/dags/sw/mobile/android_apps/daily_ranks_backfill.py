@@ -14,7 +14,7 @@ WINDOW_MODE_TYPE = 'last-28'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2016, 1, 21),
+    'start_date': datetime(2016, 1, 17),
     'depends_on_past': True,
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
@@ -41,7 +41,7 @@ suppl_eng = \
     DockerBashOperator(task_id='SupplEng',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ yesterday_ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -eo -p aggregate'''
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/engagement.sh -d {{ yesterday_ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -eo -p aggregate -f'''
                        )
 
 suppl_eng.set_upstream(mobile_estimation)
@@ -50,7 +50,7 @@ suppl_ranks = \
     DockerBashOperator(task_id='SupplRanks',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ yesterday_ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -p join_scores_info,cat_ranks'''
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ yesterday_ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -p join_scores_info,cat_ranks -f'''
                        )
 
 suppl_ranks.set_upstream(suppl_eng)
