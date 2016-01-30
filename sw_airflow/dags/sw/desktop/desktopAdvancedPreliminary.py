@@ -76,7 +76,7 @@ daily_aggregation.set_upstream(daily_visit_detection)
 repair_tables = DockerBashOperator(task_id='RepairDailyTables',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -p repair -hdb advanced'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -p repair -cd {{ params.base_hdfs_dir }} -hdb advanced'''
                                    )
 repair_tables.set_upstream(daily_aggregation)
 
