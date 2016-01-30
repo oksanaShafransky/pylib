@@ -50,7 +50,7 @@ suppl_ranks = \
     DockerBashOperator(task_id='SupplRanks',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ yesterday_ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -p join_scores_info,cat_ranks -f'''
+                       bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ yesterday_ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -env main -fs -p join_scores_info,cat_ranks -f'''
                        )
 
 suppl_ranks.set_upstream(suppl_eng)

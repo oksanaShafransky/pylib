@@ -346,7 +346,7 @@ def generate_dag(mode):
         DockerBashOperator(task_id='CalculateUsageRanks',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p join_scores_info,cat_ranks'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -fs -p join_scores_info,cat_ranks'''
                            )
     calc_ranks.set_upstream([daily_ranks_backfill, app_engagement])
 
