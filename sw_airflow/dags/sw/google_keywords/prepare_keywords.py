@@ -110,3 +110,10 @@ register_success = DockerBashOperator(task_id='RegisterSuccessOnETCD',
                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p set_success'''
                                       )
 register_success.set_upstream(wrap_up)
+
+register_adwords = DockerBashOperator(task_id='RegisterAdwordsSuccessOnETCD',
+                                      dag=dag,
+                                      docker_name=DEFAULT_DOCKER,
+                                      bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p set_adwords_success'''
+)
+register_adwords.set_upstream(wrap_up)
