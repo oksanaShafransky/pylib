@@ -52,7 +52,7 @@ def generate_dag(mode):
 
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 1, 21)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 1, 28)})
 
     if is_snapshot_dag():
         dag_args_for_mode.update({'start_date': datetime(2016, 1, 1), 'end_date': datetime(2016, 1, 1)})
@@ -206,6 +206,8 @@ def generate_dag(mode):
     app_eng_rank_hist_register.set_upstream(app_eng_rank_hist_sensor)
     """
 
+    return dag
 
-globals()['dag_apps_moving_window_snapshot'] = generate_dag(SNAPHOT_MODE)
-globals()['dag_apps_moving_window_daily'] = generate_dag(WINDOW_MODE)
+
+globals()['dag_ios_apps_moving_window_snapshot'] = generate_dag(SNAPHOT_MODE)
+globals()['dag_ios_apps_moving_window_daily'] = generate_dag(WINDOW_MODE)
