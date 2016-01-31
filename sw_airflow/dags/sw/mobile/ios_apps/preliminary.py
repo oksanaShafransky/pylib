@@ -65,6 +65,20 @@ map_ids = DockerBashOperator(task_id='ExportAppIDs',
                              bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/daily_aggregation export_app_id_mapping -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
                              )
 
+sys_apps = DockerBashOperator(task_id='SystemAppDetection',
+                              dag=dag,
+                              docker_name=DEFAULT_CLUSTER,
+                              bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/daily_aggregation detect_user_apps -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
+                              )
+sys_apps.set_upstream(ios_user_grouping)
+
+user_apps_export = DockerBashOperator(task_id='ExportUserApps',
+                                      dag=dag,
+                                      docker_name=DEFAULT_CLUSTER,
+                                      bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/daily_aggregation export_user_apps -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
+                                      )
+user_apps_export.set_upstream(sys_apps)
+
 
 daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
                                        dag=dag,
@@ -73,6 +87,7 @@ daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
                                        )
 daily_aggregation.set_upstream(ios_user_grouping)
 daily_aggregation.set_upstream(map_ids)
+daily_aggregation.set_upstream(user_apps_export)
 
 preliminary = DummyOperator(task_id='Preliminary', dag=dag)
 preliminary.set_upstream(daily_aggregation)
