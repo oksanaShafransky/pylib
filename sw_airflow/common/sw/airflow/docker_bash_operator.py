@@ -57,7 +57,7 @@ runsrv/%(docker)s bash -c " \
         return self
 
 
-class DockerBashCommandBuilder(object):
+class DockerBashOperatorFactory(object):
     def __init__(self,
                  base_data_dir=None,
                  core_command=None,
@@ -66,7 +66,9 @@ class DockerBashCommandBuilder(object):
                  docker_name=None,
                  mode=None,
                  mode_type=None,
-                 script_path=None
+                 script_path=None,
+                 use_defaults=False,
+                 additional_cmd_components=[]
                  ):
         self.base_data_dir = base_data_dir
         self.core_command = core_command
@@ -76,14 +78,27 @@ class DockerBashCommandBuilder(object):
         self.mode = mode
         self.mode_type = mode_type
         self.script_path = script_path
-        self.cmd_components = []
+        self.additional_cmd_components = additional_cmd_components
+        if not dag:
+            raise DockerBashCommandBuilderException('target dag to register operator is mandatory')
+        if use_defaults:
+            self.fill_in_defaults()
 
-    def add_cmd_component(self, cmd_component):
-        self.cmd_components.append(cmd_component)
+    def fill_in_defaults(self):
+        if not self.base_data_dir:
+            self.base_data_dir = '''{{ params.base_data_dir }}'''
+        if not self.mode:
+            self.mode = '''{{ params.mode }}'''
+        if not self.mode_type:
+            self.mode_type = '''{{ params.mode_type }}'''
+        if not self.date_template:
+            self.date_template = '''{{ ds }}'''
+        if not self.date_template:
+            self.docker_name = '''{{ params.container_name }}'''
         return self
 
-    def reset_cmd_components(self):
-        self.cmd_components = []
+    def add_cmd_component(self, cmd_component):
+        self.additional_cmd_components.append(cmd_component)
         return self
 
     def build(self, task_id, core_command=None, dag_element_type='operator'):
@@ -109,7 +124,7 @@ class DockerBashCommandBuilder(object):
         if self.mode_type:
             full_command += ' -mt ' + self.mode_type
 
-        full_command += ' ' + ' '.join(self.cmd_components)
+        full_command += ' ' + ' '.join(self.additional_cmd_components)
 
         # logging.info('Building %s.%s="%s"' % (self.dag.dag_id, task_id, full_command))
         if dag_element_type == 'operator':
