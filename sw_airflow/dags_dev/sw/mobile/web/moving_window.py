@@ -8,7 +8,6 @@ from datetime import timedelta
 
 from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashCommandBuilder
-from sw.airflow.operators import DockerBashSensor
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -35,39 +34,32 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
+window_template_params = dag_template_params.copy().update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
+snapshot_template_params = dag_template_params.copy().update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-def generate_dags(mode):
-    def is_window_dag():
-        return mode == WINDOW_MODE
+snapshot_dag = DAG(dag_id='Mobile_Web_Snapshot', default_args=dag_args, params=snapshot_template_params,
+                   schedule_interval=timedelta(days=1))
 
+window_dag = DAG(dag_id='Mobile_Web_Window', default_args=dag_args, params=window_template_params,
+                 schedule_interval='0 0 l * *')
+
+
+def assemble_process(mode, dag):
     def is_snapshot_dag():
         return mode == SNAPHOT_MODE
 
-    mode_dag_template_params = dag_template_params.copy()
-    if is_window_dag():
-        mode_dag_template_params.update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
-
-    if is_snapshot_dag():
-        mode_dag_template_params.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
-
-    dag = DAG(dag_id='Mobile_Web_' + mode.capitalize(),
-              default_args=dag_args,
-              params=mode_dag_template_params,
-              schedule_interval=(timedelta(days=1)) if (is_window_dag()) else '0 0 l * *')
+    mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag)
 
     mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Web_Estimation', dag=dag,
                                            task_id="Mobile_Estimation",
                                            external_task_id='Estimation')
-    # ! isProcSuccess MobileDailyEst daily ${date} PRODUCTION ||
-    # ! isProcSuccess DesktopEstimationAggregation window ${date} PRODUCTION) ; then
+    desktop_estimation_aggregation = ExternalTaskSensor(external_dag_id='Desktop_MovingWindow_' + mode.capitalize(),
+                                                        dag=dag,
+                                                        task_id="MonthlySumEstimationParameters",
+                                                        external_task_id='Estimation')
 
-
-    should_run_mw_window = DockerBashSensor(dag=dag,
-                                            task_id="should_run_mw_window",
-                                            docker_name='''{{ params.cluster }}''',
-                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/should_run_mw_window.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
-                                            )
-    should_run_mw_window.set_upstream(mobile_estimation)
+    should_run_mw = DummyOperator(dag=dag, task_id="should_run_mw")
+    should_run_mw.set_upstream([mobile_estimation, desktop_estimation_aggregation])
 
     builder = DockerBashCommandBuilder(
             base_data_dir='''{{ params.base_hdfs_dir }}''',
@@ -80,33 +72,28 @@ def generate_dags(mode):
         .add_cmd_component('''-env main''')
 
     @wraps(builder.build)
-    def build(task_id, core_command):
+    def add_operator(task_id, core_command):
         return builder.build(task_id=task_id, core_command=core_command)
 
-    ########################
-    # Prepare HBase Tables #
-    ########################
-
     prepare_hbase_tables = \
-        build(task_id='prepare_hbase_tables', core_command='../start-process.sh -p tables -fl MOBILE_WEB') \
-            .set_upstream(should_run_mw_window)
+        add_operator(task_id='prepare_hbase_tables', core_command='../start-process.sh -p tables -fl MOBILE_WEB') \
+            .set_upstream(should_run_mw)
 
-    ##############
-    # Mobile Web #
-    ##############
     popular_pages_agg = \
-        build(task_id='popular_pages_agg', core_command='popular_pages.sh -p aggregate_popular_pages').set_upstream(
-                should_run_mw_window)
+        add_operator(task_id='popular_pages_agg',
+                     core_command='popular_pages.sh -p aggregate_popular_pages').set_upstream(
+                should_run_mw)
 
     popular_pages_top_store = \
-        build(task_id='popular_pages_top_store', core_command='popular_pages.sh -p top_popular_pages').set_upstream(
+        add_operator(task_id='popular_pages_top_store',
+                     core_command='popular_pages.sh -p top_popular_pages').set_upstream(
                 [prepare_hbase_tables, popular_pages_agg])
 
     gaps_filler = \
-        build(task_id='gaps_filler', core_command='mobile_web_gaps_filler.sh').set_upstream(should_run_mw_window)
+        add_operator(task_id='gaps_filler', core_command='mobile_web_gaps_filler.sh').set_upstream(should_run_mw)
 
     first_stage_agg = \
-        build(task_id='first_stage_agg', core_command='first_stage_agg.sh').set_upstream(should_run_mw_window)
+        add_operator(task_id='first_stage_agg', core_command='first_stage_agg.sh').set_upstream(should_run_mw)
 
     # ############################################################################################################
     # the reason for new builder here is that we control whether to use new algo through mode and mode type params
@@ -127,53 +114,47 @@ def generate_dags(mode):
     # ###########################################################################################################
 
     check_daily_estimations = \
-        build(task_id='check_daily_estimations', core_command='check_daily_estimations.sh').set_upstream(
+        add_operator(task_id='check_daily_estimations', core_command='check_daily_estimations.sh').set_upstream(
                 adjust_calc)
 
     calc_subdomains = \
-        build(task_id='calc_subdomains', core_command='calc_subdomains.sh').set_upstream(
+        add_operator(task_id='calc_subdomains', core_command='calc_subdomains.sh').set_upstream(
                 [adjust_calc, prepare_hbase_tables])
-
-    if is_snapshot_dag():
-        predict_validate_preparation = \
-            build(task_id='predict_validate_preparation',
-                  core_command='second_stage_tests.sh -wenv daily-cut -p prepare_total_device_count').set_upstream(
-                    should_run_mw_window)
-
-        predict_validate = \
-            build(task_id='predict_validate',
-                  core_command='second_stage_tests.sh -wenv daily-cut -p prepare_predictions_for_test,verify_predictions'
-                  ).set_upstream([predict_validate_preparation, adjust_calc])
-
-        compare_est_to_qc = \
-            build(task_id='compare_est_to_qc', core_command='compare_estimations_to_qc.sh -sm').set_upstream(
-                    first_stage_agg)
-
-    days_to_compute_back = 31
-    if is_window_dag():
-        days_to_compute_back = int(WINDOW_MODE_TYPE.split('-')[1])
 
     sum_ww_builder = copy.copy(builder)
     sum_ww_builder.date_template = '''{{ macros.ds_add(ds,-1) }}'''
     sum_ww_builder.mode = 'daily'
 
-    sum_ww_all = [sum_ww_builder.build(task_id='sum_ww_day_%s' % i, core_command='sum_ww.sh').set_upstream(adjust_calc)
-                  for i in range(0, days_to_compute_back)]
+    sum_ww_all = []
+    for i in range(0, int(WINDOW_MODE_TYPE.split('-')[1]) if is_snapshot_dag() else 31):
+        sum_ww_all.append(
+                sum_ww_builder.build(task_id='sum_ww_day_%s' % i, core_command='sum_ww.sh').set_upstream(adjust_calc))
 
-    adjust_store_deps = [prepare_hbase_tables] + sum_ww_all
-    adjust_store = build(task_id='adjust_store', core_command='adjust_est.sh -p store -ww').set_upstream(
-            adjust_store_deps)
+    adjust_store = add_operator(task_id='adjust_store', core_command='adjust_est.sh -p store -ww').set_upstream(
+            [prepare_hbase_tables] + sum_ww_all)
 
-    mobile_web_pre = DummyOperator(task_id=dag.dag_id, dag=dag)
+    # FINISH WINDOW PART
+    mobile_web.set_upstream([adjust_store, calc_subdomains, popular_pages_top_store])
+
     if is_snapshot_dag():
-        mobile_web_pre.set_upstream(
-                [adjust_store, calc_subdomains, popular_pages_top_store,
-                 predict_validate_preparation, predict_validate, compare_est_to_qc])
-    else:
-        mobile_web_pre.set_upstream([adjust_store, calc_subdomains, popular_pages_top_store])
+        predict_validate_preparation = \
+            add_operator(task_id='predict_validate_preparation',
+                         core_command='second_stage_tests.sh -wenv daily-cut -p prepare_total_device_count').set_upstream(
+                    should_run_mw)
+
+        predict_validate = \
+            add_operator(task_id='predict_validate',
+                         core_command='second_stage_tests.sh -wenv daily-cut -p prepare_predictions_for_test,verify_predictions'
+                         ).set_upstream([predict_validate_preparation, adjust_calc])
+
+        compare_est_to_qc = \
+            add_operator(task_id='compare_est_to_qc', core_command='compare_estimations_to_qc.sh -sm').set_upstream(
+                    first_stage_agg)
+
+        mobile_web.set_upstream([predict_validate, compare_est_to_qc])
 
     return dag
 
 
-snapshot_dag = generate_dags(SNAPHOT_MODE)
-window_dag = generate_dags(WINDOW_MODE)
+snapshot_dag = assemble_process(SNAPHOT_MODE, snapshot_dag)
+window_dag = assemble_process(WINDOW_MODE, window_dag)
