@@ -87,8 +87,14 @@ def generate_dags(mode):
     daily_aggregation.set_upstream(hbase_tables)
 
     daily_estimation = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
-                                                   external_task_id='DailyEstimation',
-                                                   task_id='DailyEstimation',
+                                                   external_task_id='DailyTrafficEstimation',
+                                                   task_id='DailyTrafficEstimation',
+                                                   dag=dag)
+    daily_estimation.set_upstream(hbase_tables)
+
+    daily_incoming = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+                                                   external_task_id='DailyIncoming',
+                                                   task_id='DailyIncomingEstimation',
                                                    dag=dag)
     daily_estimation.set_upstream(hbase_tables)
 
@@ -100,13 +106,13 @@ def generate_dags(mode):
                            )
     info.set_upstream(hbase_tables)
 
-    daily_incoming = \
-        DockerBashOperator(task_id='DailyIncoming',
+    insert_daily_incoming = \
+        DockerBashOperator(task_id='InsertDailyIncomingToHBase',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p insert_daily_incoming'''
                            )
-    daily_incoming.set_upstream(daily_estimation)
+    insert_daily_incoming.set_upstream(daily_estimation)
 
     sum_special_referrer_values = \
         DockerBashOperator(task_id='SumSpecialReferrerValues',

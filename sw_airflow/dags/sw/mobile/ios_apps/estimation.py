@@ -2,6 +2,8 @@ __author__ = 'Iddo Aviram'
 
 from datetime import datetime, timedelta
 
+from airflow.operators.dummy_operator import DummyOperator
+
 from airflow.models import DAG
 from airflow.operators.sensors import ExternalTaskSensor
 
@@ -35,14 +37,21 @@ dag = DAG(dag_id='IosApps_Estimation', default_args=dag_args, params=dag_templat
 
 preliminary = ExternalTaskSensor(external_dag_id='IosApps_Preliminary',
                                               dag=dag,
-                                              task_id="Preliminary",
+                                              task_id='Preliminary',
                                               external_task_id='Preliminary')
 
 reach_estimate = DockerBashOperator(task_id='ReachEstimate',
-                                       dag=dag,
-                                       docker_name=DEFAULT_CLUSTER,
-                                       bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/app-engagement/ios/reach_estimate reach_estimate -d {{ ds }}'''
-                                       )
+                                    dag=dag,
+                                    docker_name=DEFAULT_CLUSTER,
+                                    bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/app-engagement/ios/reach_estimate reach_estimate -d {{ ds }}'''
+                                    )
 
 reach_estimate.set_upstream(preliminary)
+
+wrap_up = DummyOperator(task_id='Estimation',
+                        dag=dag
+                        )
+
+wrap_up.set_upstream(reach_estimate)
+
 
