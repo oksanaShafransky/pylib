@@ -3,14 +3,11 @@ __author__ = 'Iddo Aviram'
 from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
 from airflow.operators.sensors import HdfsSensor
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
-from sw.airflow.operators import DockerBashSensor
 from sw.airflow.operators import  DockerCopyHbaseTableOperator
-from sw.airflow.airflow_etcd import EtcdHook
-from airflow.operators.python_operator import BranchPythonOperator
+from sw.airflow.operators import AdaptedExternalTaskSensor
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -73,15 +70,17 @@ def generate_dag(mode):
     dag = DAG(dag_id='AndroidApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
-    mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Estimation',
+    mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='Mobile_Estimation',
                                            dag=dag,
                                            task_id='MobileDailyEstimation',
-                                           external_task_id='Estimation')
+                                           external_task_id='Estimation',
+                                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
 
-    mobile_preliminary_daily_aggregation = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
+    mobile_preliminary_daily_aggregation = AdaptedExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                                               dag=dag,
                                                               task_id='MobileDailyAggregation',
-                                                              external_task_id='DailyAggregation')
+                                                              external_task_id='DailyAggregation',
+                                                              external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
 
     ########################
     # Prepare HBase Tables #
@@ -336,10 +335,11 @@ def generate_dag(mode):
     # App Ranks #
     #############
 
-    daily_ranks_backfill = ExternalTaskSensor(external_dag_id='AndroidApps_DailyRanksBackfill',
+    daily_ranks_backfill = AdaptedExternalTaskSensor(external_dag_id='AndroidApps_DailyRanksBackfill',
                                               dag=dag,
                                               task_id="DailyRanksBackfill",
-                                              external_task_id='DailyRanksBackfill'
+                                              external_task_id='DailyRanksBackfill',
+                                              external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''
                                               )
 
     calc_ranks = \
