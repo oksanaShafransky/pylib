@@ -1,11 +1,10 @@
-__author__ = 'Amit Rom'
-
-from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from airflow.operators.sensors import ExternalTaskSensor, HdfsSensor
+from datetime import timedelta
+
 from sw.airflow.airflow_etcd import *
-from sw.airflow.operators import DockerBashOperator
+from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -18,7 +17,7 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 12, 1),
     'depends_on_past': True,
-    'email': ['amitr@similarweb.com'],
+    'email': ['amitr@similarweb.com','barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 8,
@@ -28,101 +27,69 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='MobileWebReferralsDailyAggregation', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='MobileWeb_ReferralsAggregation', default_args=dag_args, params=dag_template_params,
+          schedule_interval=timedelta(days=1))
 
-# preliminary
-mobile_web_referrals_preliminary = ExternalTaskSensor(external_dag_id='MobileWebReferralsDailyPreliminary',
-                                              dag=dag,
-                                              task_id="MobileWebReferralsDailyPreliminary",
-                                              external_task_id='MobileWebReferralsDailyPreliminary')
+referrals_preliminary = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsPreliminary',
+                                           dag=dag,
+                                           task_id="referrals_preliminary",
+                                           external_task_id='ReferralsPreliminary')
 
 # daily adjustment
-mobile_web_adjust_calc = ExternalTaskSensor(external_dag_id='AndroidApps_MovingWindow',
-                                             dag=dag,
-                                             task_id="MobileWebAdjustCalc",
-                                             external_task_id='MobileWebAdjustCalc')
+adjust_calc_redist_ready = \
+    HdfsSensor(task_id='adjust_calc_redist_ready',
+               dag=dag,
+               hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
+               filepath='''{{ params.base_hdfs_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''',
+               execution_timeout=timedelta(minutes=600))
 
-# daily weights
-daily_weights = ExternalTaskSensor(external_dag_id='MobileDailyEstimation',
-                                      dag=dag,
-                                      task_id="DailyWeights",
-                                      external_task_id='MobileWebDailyCut')
+# daily_est.sh weights
+daily_cut_weights = ExternalTaskSensor(external_dag_id='Mobile_Estimation',
+                                       dag=dag,
+                                       task_id="daily-cut_weights",
+                                       external_task_id='daily-cut_weights')
 
+factory = DockerBashOperatorFactory(use_defaults=True,
+                                    dag=dag,
+                                    script_path='''{{ params.execution_dir }}/mobile/scripts/web/referrals''',
+                                    additional_cmd_components=['-env main'])
 
-build_user_transitions = DockerBashOperator(task_id='BuildUserTransitions',
-                                     dag=dag,
-                                     docker_name='''{{ params.cluster }}''',
-                                     bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p build_user_transitions -env main'''
-)
-build_user_transitions.set_upstream(mobile_web_referrals_preliminary)
+build_user_transitions = factory.build(task_id='build_user_transitions',
+                                       core_command='aggregation.sh -p build_user_transitions')
+build_user_transitions.set_upstream(referrals_preliminary)
 
-count_user_domain_pvs = DockerBashOperator(task_id='CountUserDomainPVs',
-                                            dag=dag,
-                                            docker_name='''{{ params.cluster }}''',
-                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p count_user_domain_pvs -env main'''
-)
-count_user_domain_pvs.set_upstream(mobile_web_referrals_preliminary)
+count_user_domain_pvs = factory.build(task_id='count_user_domain_pvs',
+                                      core_command='aggregation.sh -p count_user_domain_pvs')
+count_user_domain_pvs.set_upstream(referrals_preliminary)
 
-count_user_site2_events = DockerBashOperator(task_id='CountUserSiteSite2Events',
-                                           dag=dag,
-                                           docker_name='''{{ params.cluster }}''',
-                                           bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p count_user_site2_events -env main'''
-)
+count_user_site2_events = factory.build(task_id='count_user_site2_events',
+                                        core_command='aggregation.sh -p count_user_site2_events')
 count_user_site2_events.set_upstream(build_user_transitions)
 
-calculate_user_event_rates = DockerBashOperator(task_id='CalculateUserEventRates',
-                                             dag=dag,
-                                             docker_name='''{{ params.cluster }}''',
-                                             bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p calculate_user_event_rates -env main'''
-)
-calculate_user_event_rates.set_upstream(count_user_site2_events)
-calculate_user_event_rates.set_upstream(count_user_domain_pvs)
+calculate_user_event_rates = factory.build(task_id='calculate_user_event_rates',
+                                           core_command='aggregation.sh -p calculate_user_event_rates')
+calculate_user_event_rates.set_upstream([count_user_site2_events, count_user_domain_pvs])
 
-calculate_user_event_transitions = DockerBashOperator(task_id='CalculateUserEventTransitions',
-                                                dag=dag,
-                                                docker_name='''{{ params.cluster }}''',
-                                                bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p calculate_user_event_transitions -env main'''
-)
-calculate_user_event_transitions.set_upstream(count_user_site2_events)
-calculate_user_event_transitions.set_upstream(build_user_transitions)
+calculate_user_event_transitions = factory.build(task_id='calculate_user_event_transitions',
+                                                 core_command='aggregation.sh -p calculate_user_event_transitions ')
+calculate_user_event_transitions.set_upstream([count_user_site2_events, build_user_transitions])
 
-adjust_direct_pvs = DockerBashOperator(task_id='AdjustDirectPVs',
-                                                      dag=dag,
-                                                      docker_name='''{{ params.cluster }}''',
-                                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p adjust_direct_pvs -env main'''
-)
-adjust_direct_pvs.set_upstream(build_user_transitions)
-adjust_direct_pvs.set_upstream(mobile_web_adjust_calc)
+adjust_direct_pvs = factory.build(task_id='adjust_direct_pvs',
+                                  bash_command='aggregation.sh -p adjust_direct_pvs')
+adjust_direct_pvs.set_upstream([build_user_transitions, adjust_calc_redist_ready])
 
-prepare_site_estimated_pvs = DockerBashOperator(task_id='PrepareSiteEstimatedPVs',
-                                       dag=dag,
-                                       docker_name='''{{ params.cluster }}''',
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p prepare_site_estimated_pvs -env main -wenv daily-cut'''
-)
+prepare_site_estimated_pvs = factory.build(task_id='prepare_site_estimated_pvs',
+                                           core_command='aggregation.sh -p prepare_site_estimated_pvs -wenv daily-cut')
+prepare_site_estimated_pvs.set_upstream(daily_cut_weights)
 
-prepare_site_estimated_pvs.set_upstream(daily_weights)
-
-calculate_site_pvs_shares = DockerBashOperator(task_id='CalculateSitePVsShares',
-                                                dag=dag,
-                                                docker_name='''{{ params.cluster }}''',
-                                                bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p calculate_site_pvs_shares -env main'''
-)
-
-
+calculate_site_pvs_shares = factory.build(task_id='calculate_site_pvs_shares',
+                                          core_command='aggregation.sh -p calculate_site_pvs_shares')
 calculate_site_pvs_shares.set_upstream(prepare_site_estimated_pvs)
 
-estimate_site_pvs = DockerBashOperator(task_id='EstimateSitePVs',
-                                               dag=dag,
-                                               docker_name='''{{ params.cluster }}''',
-                                               bash_command='''{{ params.execution_dir }}/mobile/scripts/web/referrals/aggregation.sh -d {{ ds }} -p estimate_site_pvs -env main'''
-)
+estimate_site_pvs = factory.build(task_id='estimate_site_pvs',
+                                  core_command='aggregation.sh -p estimate_site_pvs')
+estimate_site_pvs.set_upstream([calculate_site_pvs_shares, adjust_calc_redist_ready])
 
-
-estimate_site_pvs.set_upstream(calculate_site_pvs_shares)
-estimate_site_pvs.set_upstream(mobile_web_adjust_calc)
-
-mobile_web_referrals_aggregation = DummyOperator(task_id='MobileWebReferralsDailyAggregation', dag=dag)
-mobile_web_referrals_aggregation.set_upstream(estimate_site_pvs)
-mobile_web_referrals_aggregation.set_upstream(adjust_direct_pvs)
-mobile_web_referrals_aggregation.set_upstream(calculate_user_event_transitions)
-mobile_web_referrals_aggregation.set_upstream(calculate_user_event_rates)
+process_complete = DummyOperator(task_id='ReferralsAggregation', dag=dag)
+process_complete.set_upstream(
+        [estimate_site_pvs, adjust_direct_pvs, calculate_user_event_transitions, calculate_user_event_rates])
