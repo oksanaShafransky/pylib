@@ -117,7 +117,7 @@ def generate_dag(mode):
         DockerBashOperator(task_id='CalculateUsageRanks',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -hdb mobile -m {{ params.mode }} -mt {{ params.mode_type }} -fs -p join_scores_info,cat_ranks'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -w {{ params.base_hdfs_dir }} -hdb mobile -m {{ params.mode }} -mt {{ params.mode_type }} -fs -p join_scores_info,cat_ranks'''
                            )
     calc_ranks.set_upstream(app_engagement)
 
@@ -125,7 +125,7 @@ def generate_dag(mode):
         DockerBashOperator(task_id='StoreUsageRanks',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -hdb mobile -m {{ params.mode }} -mt {{ params.mode_type }} -p store_cat_ranks'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -w {{ params.base_hdfs_dir }} -hdb mobile -m {{ params.mode }} -mt {{ params.mode_type }} -p store_cat_ranks'''
                            )
     top_list_store.set_upstream(calc_ranks)
 
@@ -133,7 +133,7 @@ def generate_dag(mode):
         DockerBashOperator(task_id='RecordAppUsageRanksHistory',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -hdb mobile -m {{ params.mode }} -mt {{ params.mode_type }} -p store_app_ranks'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -w {{ params.base_hdfs_dir }} -hdb mobile -m {{ params.mode }} -mt {{ params.mode_type }} -p store_app_ranks'''
                            )
     app_ranks_histogram_store.set_upstream(calc_ranks)
 
