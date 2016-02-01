@@ -15,7 +15,7 @@ DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2016, 1, 14),
+    'start_date': datetime(2017, 1, 14),
     'depends_on_past': True,
     'email': ['felixv@similarweb.com', 'iddoav@similarweb.com', 'barakg@similarweb.com', 'amitr@similarweb.com>'],
     'email_on_failure': True,
@@ -27,12 +27,13 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Mobile_Estimation', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
+dag = DAG(dag_id='AndroidApps_Estimation', default_args=dag_args, params=dag_template_params,
+          schedule_interval="@daily")
 
-mobile_daily_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
-                                              dag=dag,
-                                              task_id="Preliminary",
-                                              external_task_id='Preliminary')
+mobile_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
+                                        dag=dag,
+                                        task_id="Mobile_Preliminary",
+                                        external_task_id='Preliminary')
 #########################
 # Apps engagement score #
 #########################
@@ -44,7 +45,7 @@ app_source_weight_calculation = \
                        bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/app_engagement_daily.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -p sqs_weight_calc'''
                        )
 
-app_source_weight_calculation.set_upstream(mobile_daily_preliminary)
+app_source_weight_calculation.set_upstream(mobile_preliminary)
 
 app_source_weight_smoothing_calculation = \
     DockerBashOperator(task_id='AppSourceWeightSmoothingCalculation',
@@ -69,7 +70,7 @@ app_engagement_prior = \
                        bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/app_engagement_daily.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -env all_countries -p prep_ratios'''
                        )
 
-app_engagement_prior.set_upstream(mobile_daily_preliminary)
+app_engagement_prior.set_upstream(mobile_preliminary)
 
 app_engagement_estimate = \
     DockerBashOperator(task_id='AppEngagementEstimate',
@@ -89,13 +90,6 @@ app_engagement_daily_check = \
 
 app_engagement_daily_check.set_upstream(app_engagement_estimate)
 
-app_engagement_daily = \
-    DummyOperator(task_id='AppEngagementDaily',
-                  dag=dag
-                  )
-
-app_engagement_daily.set_upstream(app_engagement_estimate)
-
 ##############################
 # Mobile Daily Usage Pattern #
 ##############################
@@ -107,24 +101,18 @@ mobile_daily_usage_pattern = \
                        bash_command='''{{ params.execution_dir }}/mobile/scripts/usagepatterns/daily_est.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }}'''
                        )
 
-mobile_daily_usage_pattern.set_upstream(mobile_daily_preliminary)
+mobile_daily_usage_pattern.set_upstream(mobile_preliminary)
 
 ###########
 # Wrap-up #
 ###########
-
-mobile_apps_estimation = \
-    DummyOperator(task_id='MobileAppsEstimation',
-                  dag=dag
-                  )
-mobile_apps_estimation.set_upstream([app_engagement_daily, mobile_daily_usage_pattern])
 
 register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
                                        dag=dag,
                                        path='''services/mobile-apps-daily-est/daily/{{ ds }}''',
                                        env='PRODUCTION'
                                        )
-register_success.set_upstream([app_engagement_daily])
+register_success.set_upstream([mobile_daily_usage_pattern, app_engagement_estimate])
 
-mobile_apps_estimation = DummyOperator(task_id='mobile_apps_estimation', dag=dag)
-mobile_apps_estimation.set_upstream([register_success])
+estimation = DummyOperator(task_id='Estimation', dag=dag)
+estimation.set_upstream([register_success])

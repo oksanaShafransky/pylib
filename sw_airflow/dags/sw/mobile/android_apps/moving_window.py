@@ -73,9 +73,9 @@ def generate_dag(mode):
               params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
-    mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Estimation',
+    mobile_estimation = ExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
                                            dag=dag,
-                                           task_id='MobileDailyEstimation',
+                                           task_id='Estimation',
                                            external_task_id='Estimation')
 
     mobile_preliminary_daily_aggregation = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
@@ -509,8 +509,8 @@ def generate_dag(mode):
     ################
 
     hbase_suffix_template = (
-    '''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
-    '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
+        '''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
+        '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
 
     if is_prod_env():
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
