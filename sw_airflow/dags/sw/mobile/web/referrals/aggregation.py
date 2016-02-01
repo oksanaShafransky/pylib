@@ -17,7 +17,7 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 12, 1),
     'depends_on_past': True,
-    'email': ['amitr@similarweb.com','barakg@similarweb.com'],
+    'email': ['amitr@similarweb.com', 'barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 8,
@@ -35,7 +35,7 @@ referrals_preliminary = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsP
                                            task_id="referrals_preliminary",
                                            external_task_id='ReferralsPreliminary')
 
-# daily adjustment
+# daily adjustment - this is calculated in one of MobileWeb_ processes, either Window or snapshot in adjust_calc_redist
 adjust_calc_redist_ready = \
     HdfsSensor(task_id='adjust_calc_redist_ready',
                dag=dag,
