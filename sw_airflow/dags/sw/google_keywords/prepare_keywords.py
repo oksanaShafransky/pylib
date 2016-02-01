@@ -47,7 +47,7 @@ splits = DockerBashOperator(task_id='GetKeywordSplits',
 init = DockerBashOperator(task_id='InitResources',
                           dag=dag,
                           docker_name=DEFAULT_DOCKER,
-                          bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.ds_add(ds,30) }} -p tables'''
+                          bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.ds_add(macros.last_day_of_month(ds),2) }} -p tables'''
                           )
 init.set_upstream(splits)
 
