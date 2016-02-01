@@ -11,8 +11,10 @@ def date_partition(date, in_date_fmt='%Y-%m-%d', **kwargs):
     other_partitions = ['%s=%s' % (key, value) for (key, value) in kwargs.iteritems()]
     return '/'.join([date_parts] + other_partitions)
 
-def month_partition(date, in_date_fmt='%Y-%m-%d', **kwargs):
-    date_parts = datetime.strftime(datetime.strptime(date, in_date_fmt), 'year=%y/month=%m')
+
+def generalized_date_partition(date,  mode, in_date_fmt='%Y-%m-%d', **kwargs):
+    pattern = 'year=%y/month=%m' if mode == 'snapshot' else 'year=%y/month=%m/day=%d'
+    date_parts = datetime.strftime(datetime.strptime(date, in_date_fmt), pattern)
     other_partitions = ['%s=%s' % (key, value) for (key, value) in kwargs.iteritems()]
     return '/'.join([date_parts] + other_partitions)
 
@@ -50,5 +52,5 @@ class SWMacroAirflowPluginManager(AirflowPlugin):
 
     name = 'SWMacros'
 
-    macros = [date_partition, month_partition, type_date_partition, hbase_table_suffix_partition, dss_in_same_month, last_interval_day]
+    macros = [date_partition, generalized_date_partition, type_date_partition, hbase_table_suffix_partition, dss_in_same_month, last_interval_day]
 
