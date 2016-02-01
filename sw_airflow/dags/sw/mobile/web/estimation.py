@@ -1,6 +1,7 @@
 from functools import wraps
 
 from airflow.models import DAG
+from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
 from datetime import datetime, timedelta
 
@@ -26,15 +27,13 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Mobile_Web_Estimation', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
+dag = DAG(dag_id='MobileWeb_Estimation', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
-mobile_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary', dag=dag, task_id="Mobile_Preliminary",
+mobile_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary', dag=dag, task_id="Preliminary",
                                         external_task_id='Preliminary')
 
-factory = DockerBashOperatorFactory(use_defaults=True,
-                                    script_path='''{{ params.execution_dir }}/mobile/scripts/web''',
-                                    dag=dag,
-                                    )
+factory = DockerBashOperatorFactory(use_defaults=True, dag=dag,
+                                    script_path='''{{ params.execution_dir }}/mobile/scripts/web''')
 
 
 # function is located here so it is visually in its place in the flow
@@ -46,33 +45,35 @@ def register_sums_and_estimation(factory, env):
                       core_command='daily_est.sh -p source_sums')
     sums.set_upstream(mobile_preliminary)
 
-    estimation = \
-        factory.build(task_id='%s_estimation' % env,
+    first_stage_estimation = \
+        factory.build(task_id='%s_first_stage_estimation' % env,
                       core_command='daily_est.sh -p est')
-    estimation.set_upstream(sums)
+    first_stage_estimation.set_upstream(sums)
 
     first_stage_check = \
-        factory.build(task_id='%s_estimation_check' % env,
+        factory.build(task_id='%s_first_stage_check' % env,
                       core_command='check_first_stage_estimates.sh')
-    first_stage_check.set_upstream(estimation)
-    return estimation
+    first_stage_check.set_upstream(first_stage_estimation)
+    return first_stage_estimation
 
 
 daily_cut_estimation = register_sums_and_estimation(factory, env='daily-cut')
 
 weights = \
-    factory.build(task_id='daily_cut_weights', core_command='daily_est.sh -p weights')
+    factory.build(task_id='daily-cut_weights', core_command='daily_est.sh -p weights')
 weights.set_upstream(daily_cut_estimation)
 
 weights_check = \
-    factory.build(task_id='daily_cut_weights_check', core_command='check_weight_calculations.sh')
+    factory.build(task_id='daily-cut_weights_check', core_command='check_weight_calculations.sh')
 weights_check.set_upstream(weights)
 
 main_estimation = register_sums_and_estimation(factory, env='main')
 
-# Wrap-up
-mobile_web_estimation = KeyValueSetOperator(task_id='Mobile_Web_Estimation',
-                                            dag=dag,
-                                            path='''services/mobile-web-daily-est/daily/{{ ds }}''',
-                                            env='''{{ params.run_environment }}''')
-mobile_web_estimation.set_upstream([main_estimation, weights])
+register_success = KeyValueSetOperator(task_id='register_success',
+                                       dag=dag,
+                                       path='''services/mobile-web-daily-est/daily/{{ ds }}''',
+                                       env='''{{ params.run_environment }}''')
+register_success.set_upstream([main_estimation, weights])
+
+process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=1))
+process_complete.set_upstream(register_success)

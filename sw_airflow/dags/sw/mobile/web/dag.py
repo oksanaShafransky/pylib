@@ -37,20 +37,20 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 window_template_params = dag_template_params.copy().update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
 snapshot_template_params = dag_template_params.copy().update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-snapshot_dag = DAG(dag_id='Mobile_Web_Snapshot', default_args=dag_args, params=snapshot_template_params,
+snapshot_dag = DAG(dag_id='MobileWeb_Snapshot', default_args=dag_args, params=snapshot_template_params,
                    schedule_interval='@monthly')
 
-window_dag = DAG(dag_id='Mobile_Web_Window', default_args=dag_args, params=window_template_params,
+window_dag = DAG(dag_id='MobileWeb_Window', default_args=dag_args, params=window_template_params,
                  schedule_interval='@daily')
 
 
 def assemble_process(mode, dag, sum_ww_value_size):
-    mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Web_Estimation', dag=dag,
+    mobile_estimation = ExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
                                            task_id="Mobile_Estimation",
                                            external_task_id='Estimation')
     desktop_estimation_aggregation = ExternalTaskSensor(external_dag_id='Desktop_MovingWindow_' + mode.capitalize(),
                                                         dag=dag,
-                                                        task_id="MonthlySumEstimationParameters",
+                                                        task_id="Desktop_MonthlySumEstimationParameters",
                                                         external_task_id='Estimation')
 
     should_run_mw = DummyOperator(dag=dag, task_id="should_run_mw")
