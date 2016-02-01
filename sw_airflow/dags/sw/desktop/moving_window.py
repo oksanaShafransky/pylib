@@ -873,7 +873,7 @@ def generate_dags(mode):
         HdfsSensor(task_id='SiteStatsHistogramReady',
                    dag=dag,
                    hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat/_SUCCESS''',
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.%s(ds) }}/sites-stat/_SUCCESS''' % 'month_partition' if is_snapshot_dag() else 'date_partition',
                    execution_timeout=timedelta(minutes=600)
                    )
 
@@ -895,7 +895,7 @@ def generate_dags(mode):
         HdfsSensor(task_id='SiteInfoHistogramReady',
                    dag=dag,
                    hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info/_SUCCESS''',
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.%s(ds) }}/sites-info/_SUCCESS''' % 'month_partition' if is_snapshot_dag() else 'date_partition',
                    execution_timeout=timedelta(minutes=600)
                    )
 
