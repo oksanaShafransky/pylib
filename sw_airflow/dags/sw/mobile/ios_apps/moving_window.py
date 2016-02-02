@@ -72,11 +72,6 @@ def generate_dag(mode):
                                            task_id='DailyEstimation',
                                            external_task_id='Estimation')
 
-    preliminary = ExternalTaskSensor(external_dag_id='IosApps_Preliminary',
-                                              dag=dag,
-                                              task_id='Preliminary',
-                                              external_task_id='Preliminary')
-
     # for now, wait for tables to be created by the android window
 
     hbase_tables_ready = \

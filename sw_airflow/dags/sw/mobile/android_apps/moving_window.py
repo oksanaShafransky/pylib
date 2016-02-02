@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import HdfsSensor
+from airflow.operators.python_operator import BranchPythonOperator
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
 from sw.airflow.operators import  DockerCopyHbaseTableOperator
@@ -476,6 +477,10 @@ def generate_dag(mode):
 
     if is_window_dag():
 
+        clean_id = 'StageCleanupRequested'
+        cleaning_stage = DummyOperator(task_id=clean_id,
+                                       dag=dag)
+
         cleanup_stage = DummyOperator(task_id='CleanupStage',
                                       dag=dag
                                       )
@@ -485,10 +490,22 @@ def generate_dag(mode):
                 DockerBashOperator(task_id='CleanupStage_DS-%s' % i,
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i,
+
                                    )
             cleanup_stage_ds_minus_i.set_upstream(apps)
+            cleanup_stage_ds_minus_i.set_upstream(cleaning_stage)
             cleanup_stage.set_upstream(cleanup_stage_ds_minus_i)
+
+        skip_clean_id = 'StageCleanupSkipped'
+        not_cleaning_stage = DummyOperator(task_id=skip_clean_id,
+                                           dag=dag)
+
+        # for now, skip cleanup
+        should_clean_stage = BranchPythonOperator(task_id='IsCleanupRequested',
+                                                  dag=dag,
+                                                  python_callable=lambda: skip_clean_id)
+        should_clean_stage.set_downstream([cleaning_stage, not_cleaning_stage])
 
     ############################
     # Local Availability Dates #
@@ -651,7 +668,7 @@ def generate_dag(mode):
         HdfsSensor(task_id='AppSdkStatsHistogramReady',
                    dag=dag,
                    hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-sdk-stats/_SUCCESS''',
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-sdk-stats/_SUCCESS''',
                    execution_timeout=timedelta(minutes=600)
                    )
 
@@ -661,7 +678,7 @@ def generate_dag(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
                                            hadoopexec {{ params.execution_dir }}/mobile mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-sdk-stats \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-sdk-stats \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
@@ -673,7 +690,7 @@ def generate_dag(mode):
         HdfsSensor(task_id='AppRanksHistogramReady',
                    dag=dag,
                    hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-eng-rank/_SUCCESS''',
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-eng-rank/_SUCCESS''',
                    execution_timeout=timedelta(minutes=600)
                    )
 
@@ -683,7 +700,7 @@ def generate_dag(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
                                            hadoopexec {{ params.execution_dir }}/mobile mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-eng-rank \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-eng-rank \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
