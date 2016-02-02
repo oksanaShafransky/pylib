@@ -360,7 +360,7 @@ def generate_dag(mode):
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p store_cat_ranks''',
-                           depends_on_past=True
+                           depends_on_past=True if is_snapshot_dag() else False #In the window case - it is taken care by the daily_ranks_backfill DAG
                            )
     store_usage_ranks.set_upstream(calc_ranks)
 
