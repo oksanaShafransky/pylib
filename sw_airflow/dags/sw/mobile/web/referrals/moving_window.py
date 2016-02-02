@@ -14,7 +14,6 @@ WINDOW_MODE = 'window'
 SNAPHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
-DEFAULT_HBASE_CLUSTER = 'hbp1'
 
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
@@ -30,8 +29,7 @@ dag_args = {
 }
 
 base_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                        'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
-                        'hbase_cluster': DEFAULT_HBASE_CLUSTER}
+                        'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
 snapshot_template_params = base_template_params.copy().update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
@@ -39,7 +37,7 @@ snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, 
                    schedule_interval='@monthly')
 
 
-def assemble_process(mode, dag):
+def assemble_process(dag):
     calculate_user_event_rates = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsAggregation',
                                                     dag=dag, task_id="calculate_user_event_rates",
                                                     external_task_id='calculate_user_event_rates')
@@ -107,4 +105,4 @@ def assemble_process(mode, dag):
     mobile_web_referrals_mw.set_upstream(store_site_referrers_with_totals)
 
 
-assemble_process(SNAPHOT_MODE, snapshot_dag)
+assemble_process(snapshot_dag)
