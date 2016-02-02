@@ -497,15 +497,15 @@ def generate_dag(mode):
             cleanup_stage_ds_minus_i.set_upstream(cleaning_stage)
             cleanup_stage.set_upstream(cleanup_stage_ds_minus_i)
 
-    skip_clean_id = 'StageCleanupSkipped'
-    not_cleaning_stage = DummyOperator(task_id=skip_clean_id,
+        skip_clean_id = 'StageCleanupSkipped'
+        not_cleaning_stage = DummyOperator(task_id=skip_clean_id,
                                        dag=dag)
 
-    # for now, skip cleanup
-    should_clean_stage = BranchPythonOperator(task_id='IsCleanupRequested',
-                                              dag=dag,
-                                              python_callable=lambda x: skip_clean_id)
-    should_clean_stage.set_downstream([cleaning_stage, not_cleaning_stage])
+        # for now, skip cleanup
+        should_clean_stage = BranchPythonOperator(task_id='IsCleanupRequested',
+                                                  dag=dag,
+                                                  python_callable=lambda x: skip_clean_id)
+        should_clean_stage.set_downstream([cleaning_stage, not_cleaning_stage])
 
     ############################
     # Local Availability Dates #
