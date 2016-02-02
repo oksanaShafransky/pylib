@@ -502,7 +502,9 @@ def generate_dag(mode):
                                        dag=dag)
 
     # for now, skip cleanup
-    should_clean_stage = BranchPythonOperator(python_callable=lambda x: skip_clean_id)
+    should_clean_stage = BranchPythonOperator(task_id='IsCleanupRequested',
+                                              dag=dag,
+                                              python_callable=lambda x: skip_clean_id)
     should_clean_stage.set_downstream([cleaning_stage, not_cleaning_stage])
 
     ############################
