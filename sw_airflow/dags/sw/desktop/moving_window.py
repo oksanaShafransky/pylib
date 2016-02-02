@@ -873,7 +873,7 @@ def generate_dags(mode):
         HdfsSensor(task_id='SiteStatsHistogramReady',
                    dag=dag,
                    hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat/_SUCCESS''',
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-stat/_SUCCESS''',
                    execution_timeout=timedelta(minutes=600)
                    )
 
@@ -883,7 +883,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
                                            hadoopexec {{ params.execution_dir }}/analytics analytics.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-stat \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
@@ -895,7 +895,7 @@ def generate_dags(mode):
         HdfsSensor(task_id='SiteInfoHistogramReady',
                    dag=dag,
                    hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info/_SUCCESS''',
+                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-info/_SUCCESS''',
                    execution_timeout=timedelta(minutes=600)
                    )
 
@@ -905,7 +905,7 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
                                            hadoopexec {{ params.execution_dir }}/analytics analytics.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-info \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
