@@ -7,10 +7,7 @@ from airflow.operators.sensors import ExternalTaskSensor
 from airflow.operators.sensors import HdfsSensor
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
-from sw.airflow.operators import DockerBashSensor
 from sw.airflow.operators import DockerCopyHbaseTableOperator
-from sw.airflow.airflow_etcd import EtcdHook
-from airflow.operators.python_operator import BranchPythonOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/analytics'
@@ -520,16 +517,21 @@ def generate_dags(mode):
 
         dynamic_cross_prod = DummyOperator(task_id='DynamicCrossProd',
                                      dag=dag)
-        for target in DEPLOY_TARGETS:
-            dynamic_cross_prod_per_target = \
-                DockerBashOperator(task_id='DynamicCrossProd_%s' % target,
-                                   dag=dag,
-                                   docker_name='''{{ params.cluster }}-%s''' % target,
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache'''
-                                   )
-            dynamic_cross_prod_per_target.set_upstream(dynamic_prod)
-            dynamic_cross_prod_per_target.set_upstream(cross_cache_prod)
-            dynamic_cross_prod.set_upstream(dynamic_cross_prod_per_target)
+
+        if is_window_dag():
+            for target in DEPLOY_TARGETS:
+                dynamic_cross_prod_per_target = \
+                    DockerBashOperator(task_id='DynamicCrossProd_%s' % target,
+                                       dag=dag,
+                                       docker_name='''{{ params.cluster }}-%s''' % target,
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache'''
+                                       )
+                dynamic_cross_prod_per_target.set_upstream(dynamic_prod)
+                dynamic_cross_prod_per_target.set_upstream(cross_cache_prod)
+                dynamic_cross_prod.set_upstream(dynamic_cross_prod_per_target)
+        elif is_snapshot_dag():
+            dynamic_cross_prod.set_upstream(dynamic_prod)
+            dynamic_cross_prod.set_upstream(cross_cache_prod)
 
         dynamic_stage = \
             DockerBashOperator(task_id='DynamicStage',
