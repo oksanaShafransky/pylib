@@ -79,8 +79,7 @@ def generate_dag(mode):
         AdaptedExternalTaskSensor(external_dag_id='AndroidApps_%s' % mode_dag_name(),
                            dag=dag,
                            task_id='PrepareHBaseTables',
-                           external_task_id='PrepareHBaseTables',
-                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''
+                           external_task_id='PrepareHBaseTables'
                            )
 
     ##################
