@@ -3,9 +3,9 @@ __author__ = 'Iddo Aviram'
 from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
+from sw.airflow.operators import AdaptedExternalTaskSensor
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/ios-analytics'
@@ -67,18 +67,20 @@ def generate_dag(mode):
     dag = DAG(dag_id='IosApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
-    mobile_estimation = ExternalTaskSensor(external_dag_id='IosApps_Estimation',
+    mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='IosApps_Estimation',
                                            dag=dag,
                                            task_id='DailyEstimation',
-                                           external_task_id='Estimation')
+                                           external_task_id='Estimation',
+                                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
 
     # for now, wait for tables to be created by the android window
 
     hbase_tables_ready = \
-        ExternalTaskSensor(external_dag_id='AndroidApps_%s' % mode_dag_name(),
+        AdaptedExternalTaskSensor(external_dag_id='AndroidApps_%s' % mode_dag_name(),
                            dag=dag,
                            task_id='PrepareHBaseTables',
-                           external_task_id='PrepareHBaseTables'
+                           external_task_id='PrepareHBaseTables',
+                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''
                            )
 
     ##################
