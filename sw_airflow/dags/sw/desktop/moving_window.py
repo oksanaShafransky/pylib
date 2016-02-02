@@ -504,6 +504,20 @@ def generate_dags(mode):
 
         dynamic_prod = DummyOperator(task_id='DynamicProd',
                              dag=dag)
+
+        if is_window_dag():
+            for target in DEPLOY_TARGETS:
+                dynamic_prod_per_target = \
+                    DockerBashOperator(task_id='DynamicProd_%s' % target,
+                                       dag=dag,
+                                       docker_name='''{{ params.cluster }}-%s''' % target,
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_pro,update_special_referrers_prod'''
+                                       )
+                dynamic_prod_per_target.set_upstream(copy_to_prod)
+                dynamic_prod.set_upstream(dynamic_prod_per_target)
+        elif is_snapshot_dag():
+            dynamic_prod.set_upstream(copy_to_prod)
+
         dynamic_cross_prod = DummyOperator(task_id='DynamicCrossProd',
                                      dag=dag)
         for target in DEPLOY_TARGETS:
@@ -536,17 +550,6 @@ def generate_dags(mode):
                                )
         dynamic_cross_stage.set_upstream(cross_cache_stage)
         dynamic_cross_stage.set_upstream(dynamic_stage)
-
-
-        for target in DEPLOY_TARGETS:
-            dynamic_prod_per_target = \
-                DockerBashOperator(task_id='DynamicProd_%s' % target,
-                                   dag=dag,
-                                   docker_name='''{{ params.cluster }}-%s''' % target,
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_pro,update_special_referrers_prod'''
-                                   )
-            dynamic_prod_per_target.set_upstream(copy_to_prod)
-            dynamic_prod.set_upstream(dynamic_prod_per_target)
 
         if is_snapshot_dag():
 
