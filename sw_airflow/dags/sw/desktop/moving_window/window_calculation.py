@@ -130,7 +130,7 @@ ranks = DockerBashOperator(
     task_id='ranks',
     dag=temp_dag,
     docker_name="{{ params.default_docker }}",
-    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ ds }} -m window -mt last-28 -p create_info_table,calculate_ranks,export_top_lists,topsites_for_testing -bd {{ params.base_hdfs_dir }} {{ params.transients }}'
+    bash_command='{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ ds }} -m window -mt last-28 -p create_info_table,calculate_pro_dates,calculate_ranks,export_top_lists,topsites_for_testing -bd {{ params.base_hdfs_dir }} {{ params.transients }}'
 )
 
 ranks.set_upstream(monthly_sum_estimation_parameters)

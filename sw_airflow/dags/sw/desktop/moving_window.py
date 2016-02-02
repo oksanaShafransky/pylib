@@ -333,8 +333,21 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_ranks,export_top_lists,topsites_for_testing'''
                            )
-    ranks.set_upstream(monthly_sum_estimation_parameters)
-    ranks.set_upstream(info)
+
+    if is_window_dag():
+        ranks.set_upstream(monthly_sum_estimation_parameters)
+        ranks.set_upstream(info)
+
+    elif is_snapshot_dag():
+        calculate_pro_dates = \
+            DockerBashOperator(task_id='CalculateProDates',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_pro_dates'''
+                               )
+        calculate_pro_dates.set_upstream(info)
+        calculate_pro_dates.set_upstream(monthly_sum_estimation_parameters)
+        ranks.set_upstream(calculate_pro_dates)
 
     misc = \
         DockerBashOperator(task_id='Misc',
