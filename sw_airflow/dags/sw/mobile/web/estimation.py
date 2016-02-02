@@ -14,7 +14,7 @@ DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
-    'owner': 'similarweb',
+    'owner': 'MobileWeb',
     'start_date': datetime(2016, 1, 24),
     'depends_on_past': True,
     'email': ['barakg@similarweb.com', 'amitr@similarweb.com'],

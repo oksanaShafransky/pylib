@@ -1,5 +1,4 @@
 import copy
-from functools import wraps
 
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
@@ -21,7 +20,7 @@ SNAPSHOT_MODE_TYPE = 'monthly'
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
-    'owner': 'similarweb',
+    'owner': 'MobileWeb',
     'depends_on_past': True,
     'email': ['barakg@similarweb.com'],
     'email_on_failure': True,
