@@ -666,29 +666,35 @@ def generate_dags(mode):
 
             dynamic_prod_lite = DummyOperator(task_id='DynamicProdLite',
                                               dag=dag)
-            for target in DEPLOY_TARGETS:
-                dynamic_prod_lite_per_target = \
-                    DockerBashOperator(task_id='DynamicProdLite_%s' % target,
-                                       dag=dag,
-                                       docker_name='''{{ params.cluster }}-%s''' % target,
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_lite'''
-                                       )
-                dynamic_prod_lite_per_target.set_upstream(copy_to_prod_snapshot)
-                dynamic_prod_lite_per_target.set_upstream(sites_lite)
-                dynamic_prod_lite.set_upstream(dynamic_prod_lite_per_target)
+            dynamic_prod_lite.set_upstream(copy_to_prod_snapshot)
+            dynamic_prod_lite.set_upstream(sites_lite)
+
+            # for target in DEPLOY_TARGETS:
+            #     dynamic_prod_lite_per_target = \
+            #         DockerBashOperator(task_id='DynamicProdLite_%s' % target,
+            #                            dag=dag,
+            #                            docker_name='''{{ params.cluster }}-%s''' % target,
+            #                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_lite'''
+            #                            )
+            #     dynamic_prod_lite_per_target.set_upstream(copy_to_prod_snapshot)
+            #     dynamic_prod_lite_per_target.set_upstream(sites_lite)
+            #     dynamic_prod_lite.set_upstream(dynamic_prod_lite_per_target)
 
             dynamic_prod_industry = DummyOperator(task_id='DynamicProdIndustry',
                                                   dag=dag)
-            for target in DEPLOY_TARGETS:
-                dynamic_prod_industry_per_target = \
-                    DockerBashOperator(task_id='DynamicProdIndustry_%s' % target,
-                                       dag=dag,
-                                       docker_name='''{{ params.cluster }}-%s''' % target,
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_categories'''
-                                       )
-                dynamic_prod_industry_per_target.set_upstream(copy_to_prod_snapshot)
-                dynamic_prod_industry_per_target.set_upstream(industry_analysis)
-                dynamic_prod_industry.set_upstream(dynamic_prod_industry_per_target)
+            dynamic_prod_industry.set_upstream(copy_to_prod_snapshot)
+            dynamic_prod_industry.set_upstream(industry_analysis)
+
+            # for target in DEPLOY_TARGETS:
+            #     dynamic_prod_industry_per_target = \
+            #         DockerBashOperator(task_id='DynamicProdIndustry_%s' % target,
+            #                            dag=dag,
+            #                            docker_name='''{{ params.cluster }}-%s''' % target,
+            #                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_categories'''
+            #                            )
+            #     dynamic_prod_industry_per_target.set_upstream(copy_to_prod_snapshot)
+            #     dynamic_prod_industry_per_target.set_upstream(industry_analysis)
+            #     dynamic_prod_industry.set_upstream(dynamic_prod_industry_per_target)
 
             repair_mobile = \
                 DockerBashOperator(task_id='RepairMobile',
