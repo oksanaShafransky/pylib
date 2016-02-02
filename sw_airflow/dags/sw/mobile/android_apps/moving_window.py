@@ -355,13 +355,14 @@ def generate_dag(mode):
                                 dag=dag
                                 )
 
-    top_list_store = \
+    store_usage_ranks = \
         DockerBashOperator(task_id='StoreUsageRanks',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p store_cat_ranks'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p store_cat_ranks''',
+                           depends_on_past=True
                            )
-    top_list_store.set_upstream(calc_ranks)
+    store_usage_ranks.set_upstream(calc_ranks)
 
     app_ranks_histogram_store = \
         DockerBashOperator(task_id='RecordAppUsageRanksHistory',
@@ -371,7 +372,7 @@ def generate_dag(mode):
                            )
     app_ranks_histogram_store.set_upstream(calc_ranks)
 
-    usage_ranks.set_upstream([calc_ranks, top_list_store, app_ranks_histogram_store])
+    usage_ranks.set_upstream([calc_ranks, store_usage_ranks, app_ranks_histogram_store])
 
     prepare_ranks = \
         DockerBashOperator(task_id='PrepareRanks',
