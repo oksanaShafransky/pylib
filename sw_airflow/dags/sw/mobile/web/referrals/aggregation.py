@@ -14,7 +14,7 @@ DEFAULT_CLUSTER = 'mrp'
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
-    'owner': 'similarweb',
+    'owner': 'MobileWeb',
     'start_date': datetime(2015, 12, 1),
     'depends_on_past': True,
     'email': ['amitr@similarweb.com', 'barakg@similarweb.com'],
@@ -75,7 +75,7 @@ calculate_user_event_transitions = factory.build(task_id='calculate_user_event_t
 calculate_user_event_transitions.set_upstream([count_user_site2_events, build_user_transitions])
 
 adjust_direct_pvs = factory.build(task_id='adjust_direct_pvs',
-                                  bash_command='aggregation.sh -p adjust_direct_pvs')
+                                  core_command='aggregation.sh -p adjust_direct_pvs')
 adjust_direct_pvs.set_upstream([build_user_transitions, adjust_calc_redist_ready])
 
 prepare_site_estimated_pvs = factory.build(task_id='prepare_site_estimated_pvs',
