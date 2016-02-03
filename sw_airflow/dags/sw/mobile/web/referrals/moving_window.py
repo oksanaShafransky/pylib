@@ -82,12 +82,13 @@ def assemble_process(dag):
                                               core_command='estimation.sh -p calculate_joint_estimates')
     calculate_joint_estimates.set_upstream(join_event_actions)
 
-    calculate_site_referrers = factory.build(task_id='CalculateSiteReferrers',
+    calculate_site_referrers = factory.build(task_id='calculate_site_referrers',
                                              core_command='estimation.sh -p calculate_site_referrers')
     calculate_site_referrers.set_upstream([calculate_joint_estimates, adjust_direct_pvs, adjust_calc_redist])
 
-    calculate_site_referrers_with_totals = factory.build(task_id='CalculateSiteReferrersWithTotals',
-                                                         core_command='estimation.sh -p calculate_site_referrers_with_totals')
+    calculate_site_referrers_with_totals = \
+        factory.build(task_id='calculate_site_referrers_with_totals',
+                      core_command='estimation.sh -p calculate_site_referrers_with_totals')
     calculate_site_referrers_with_totals.set_upstream(calculate_site_referrers)
 
     ##################
