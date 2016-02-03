@@ -24,7 +24,7 @@ class DockerBashOperator(BashOperator, object):
 -e DOCKER_GATE={{ docker_manager }} \
 -e GELF_HOST="runsrv2.sg.internal" \
 -e HOME=/tmp \
-runsrv/%(docker)s bash -c " \
+bigdata/centos6.cdh5.%(docker)s bash -c " \
  sudo mkdir -p {{ params.execution_dir }} && \
  sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && \
  %(bash_command)s"
@@ -101,13 +101,20 @@ class DockerBashOperatorFactory(object):
         self.additional_cmd_components.append(cmd_component)
         return self
 
-    def build(self, task_id, core_command=None, dag_element_type='operator'):
+    def build(self, task_id, core_command=None, docker_name=None, dag_element_type='operator'):
         if core_command:
             full_command = core_command
         elif self.core_command:
             full_command = self.core_command
         else:
             raise DockerBashCommandBuilderException("Core bash command not set")
+
+        if docker_name:
+            docker_to_use = docker_name
+        elif self.docker_name:
+            docker_to_use = self.docker_name
+        else:
+            raise DockerBashCommandBuilderException('docker_name is mandatory, set in constructor or pass into build')
 
         if self.script_path:
             full_command = self.script_path + '/' + full_command
@@ -128,7 +135,7 @@ class DockerBashOperatorFactory(object):
 
         # logging.info('Building %s.%s="%s"' % (self.dag.dag_id, task_id, full_command))
         if dag_element_type == 'operator':
-            return DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=self.docker_name,
+            return DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=docker_to_use,
                                       bash_command=full_command)
         elif dag_element_type == 'sensor':
             raise DockerBashCommandBuilderException('not supported yet')
