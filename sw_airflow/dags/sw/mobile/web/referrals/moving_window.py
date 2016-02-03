@@ -38,19 +38,19 @@ snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, 
 
 
 def assemble_process(dag):
-    calculate_user_event_rates = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsAggregation',
+    calculate_user_event_rates = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
                                                     dag=dag, task_id="calculate_user_event_rates",
                                                     external_task_id='calculate_user_event_rates')
 
-    calculate_user_event_transitions = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsAggregation',
+    calculate_user_event_transitions = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
                                                           dag=dag, task_id="calculate_user_event_transitions",
                                                           external_task_id='calculate_user_event_transitions')
 
-    estimate_site_pvs = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsAggregation',
+    estimate_site_pvs = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
                                            dag=dag, task_id="estimate_site_pvs",
                                            external_task_id='estimate_site_pvs')
 
-    adjust_direct_pvs = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsAggregation',
+    adjust_direct_pvs = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
                                            dag=dag, task_id="adjust_direct_pvs",
                                            external_task_id='adjust_direct_pvs')
 
