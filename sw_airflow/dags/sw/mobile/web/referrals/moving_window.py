@@ -92,18 +92,21 @@ def assemble_process(dag):
     calculate_site_referrers_with_totals.set_upstream(calculate_site_referrers)
 
     ##################
-    # store to hbase #
+    # load to hbase #
     ##################
     prepare_hbase_tables = ExternalTaskSensor(external_dag_id='MobileWeb_Window',
                                               dag=dag, task_id="prepare_hbase_tables",
                                               external_task_id='prepare_hbase_tables')
 
-    store_site_referrers_with_totals = factory.build(task_id='StoreSiteReferrersWithTotals',
-                                                     core_command='estimation.sh -p store_site_referrers_with_totals')
-    store_site_referrers_with_totals.set_upstream([calculate_site_referrers_with_totals, prepare_hbase_tables])
+    load_site_referrers_with_totals = factory.build(task_id='load_site_referrers_with_totals',
+                                                    core_command='mwr_load.sh -p load_site_referrers_with_totals')
+    load_site_referrers_with_totals.set_upstream([calculate_site_referrers_with_totals, prepare_hbase_tables])
+    calculate_traffic_dist_month = factory.build(task_id='calculate_traffic_dist_month',
+                                                 core_command='mwr_load.sh -p calculate_traffic_dist_month')
+    calculate_traffic_dist_month.set_upstream([calculate_site_referrers_with_totals, prepare_hbase_tables])
 
     mobile_web_referrals_mw = DummyOperator(task_id=dag.dag_id, dag=dag)
-    mobile_web_referrals_mw.set_upstream(store_site_referrers_with_totals)
+    mobile_web_referrals_mw.set_upstream([load_site_referrers_with_totals, calculate_traffic_dist_month])
 
 
 assemble_process(snapshot_dag)

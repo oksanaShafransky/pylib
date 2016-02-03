@@ -53,16 +53,13 @@ filter_invalid_users = factory.build(task_id='filter_invalid_users',
                                      core_command='preliminary.sh -p filter_invalid_users_from_events''')
 filter_invalid_users.set_upstream(extract_invalid_users)
 
-referrals_preliminary = DummyOperator(task_id='ReferralsPreliminary', dag=dag)
-referrals_preliminary.set_upstream(filter_invalid_users)
-
 build_user_transitions = factory.build(task_id='build_user_transitions',
                                        core_command='aggregation.sh -p build_user_transitions')
-build_user_transitions.set_upstream(referrals_preliminary)
+build_user_transitions.set_upstream(filter_invalid_users)
 
 count_user_domain_pvs = factory.build(task_id='count_user_domain_pvs',
                                       core_command='aggregation.sh -p count_user_domain_pvs')
-count_user_domain_pvs.set_upstream(referrals_preliminary)
+count_user_domain_pvs.set_upstream(filter_invalid_users)
 
 count_user_site2_events = factory.build(task_id='count_user_site2_events',
                                         core_command='aggregation.sh -p count_user_site2_events')
@@ -106,6 +103,6 @@ estimate_site_pvs = factory.build(task_id='estimate_site_pvs',
                                   core_command='aggregation.sh -p estimate_site_pvs')
 estimate_site_pvs.set_upstream([calculate_site_pvs_shares, adjust_calc_redist_ready])
 
-process_complete = DummyOperator(task_id='ReferralsAggregation', dag=dag)
+process_complete = DummyOperator(task_id='ReferralsDaily', dag=dag)
 process_complete.set_upstream(
         [estimate_site_pvs, adjust_direct_pvs, calculate_user_event_transitions, calculate_user_event_rates])
