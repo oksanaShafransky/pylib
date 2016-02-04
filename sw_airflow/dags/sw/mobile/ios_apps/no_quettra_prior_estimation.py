@@ -11,7 +11,7 @@ from sw.airflow.airflow_etcd import *
 from sw.airflow.operators import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/home/iddoa/similargroup_SIM-7965/study-alternative-quettra-ios-apps-estimation'
-BASE_DIR = '/similargroup/data/ios-analytics'
+BASE_DIR = '/user/iddoa/ios-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp-ios'
 
@@ -43,7 +43,7 @@ preliminary = ExternalTaskSensor(external_dag_id='IosApps_Preliminary',
 reach_estimate = DockerBashOperator(task_id='ReachEstimate',
                                     dag=dag,
                                     docker_name=DEFAULT_CLUSTER,
-                                    bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/app-engagement/ios/reach_estimate reach_estimate -d {{ ds }}'''
+                                    bash_command='''invoke  -c {{ params.execution_dir }}/mobile/scripts/app-engagement/ios/reach_estimate reach_estimate -d {{ ds }} -b {{ params.base_hdfs_dir }}'''
                                     )
 
 reach_estimate.set_upstream(preliminary)
