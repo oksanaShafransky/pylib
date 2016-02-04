@@ -453,7 +453,7 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=','.join(DEPLOY_TARGETS),
-                    table_name_template='top_list_' + hbase_suffix_template
+                    table_name_template='top_lists_' + hbase_suffix_template
             )
         copy_to_prod_top_lists.set_upstream(ranks)
 
