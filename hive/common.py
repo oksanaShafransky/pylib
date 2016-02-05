@@ -114,7 +114,7 @@ snapshot_tables_names = {  # "incoming-data-with-source": "analytics.snapshot_in
     "sr-estimate": "/similargroup/data/analytics/snapshot/aggregation/aggkey=sr-estimate",
     "feature-counts": "/similargroup/data/analytics/snapshot/mobile-share/features/features-counts",
     "site-distros": "/similargroup/data/analytics/snapshot/general/sites-distro/type=monthly",
-    "sites-info": "/similargroup/data/analytics/snapshot/general/sitesinfo/type=monthly",
+    "sites-info": "/similargroup/data/analytics/snapshot/general/sitesinfo",
     "target-counts": "/similargroup/data/analytics/snapshot/mobile-share/response/monthly-target-counts",
     "qc-mobile-counts": "/similargroup/data/analytics/estimation/learningSet/country=ALL",
     "special-referrer": "/similargroup/data/analytics/snapshot/aggregation/aggkey=special-referrer",
