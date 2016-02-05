@@ -893,14 +893,6 @@ def generate_dags(mode):
     # Histograms    #
     #################
 
-    sites_stat_hist_sensor = \
-        HdfsSensor(task_id='SiteStatsHistogramReady',
-                   dag=dag,
-                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-stat/_SUCCESS''',
-                   execution_timeout=timedelta(minutes=600)
-                   )
-
     sites_stat_hist_register =  \
         DockerBashOperator(task_id='StoreSiteStatsTableSplits',
                            dag=dag,
@@ -913,15 +905,8 @@ def generate_dags(mode):
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
-    sites_stat_hist_register.set_upstream(sites_stat_hist_sensor)
+    sites_stat_hist_register.set_upstream(popular_pages)
 
-    site_info_hist_sensor = \
-        HdfsSensor(task_id='SiteInfoHistogramReady',
-                   dag=dag,
-                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-info/_SUCCESS''',
-                   execution_timeout=timedelta(minutes=600)
-                   )
 
     site_info_hist_register =  \
         DockerBashOperator(task_id='StoreSiteInfoTableSplits',
@@ -935,8 +920,7 @@ def generate_dags(mode):
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
-    site_info_hist_register.set_upstream(site_info_hist_sensor)
-
+    site_info_hist_register.set_upstream(info)
 
     return dag
 

@@ -665,14 +665,6 @@ def generate_dag(mode):
     # Histograms    #
     #################
 
-    app_sdk_hist_sensor = \
-        HdfsSensor(task_id='AppSdkStatsHistogramReady',
-                   dag=dag,
-                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-sdk-stats/_SUCCESS''',
-                   execution_timeout=timedelta(minutes=600)
-                   )
-
     app_sdk_hist_register =  \
         DockerBashOperator(task_id='StoreAppSdkTableSplits',
                            dag=dag,
@@ -685,15 +677,7 @@ def generate_dag(mode):
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
-    app_sdk_hist_register.set_upstream(app_sdk_hist_sensor)
-
-    app_eng_rank_hist_sensor = \
-        HdfsSensor(task_id='AppRanksHistogramReady',
-                   dag=dag,
-                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-eng-rank/_SUCCESS''',
-                   execution_timeout=timedelta(minutes=600)
-                   )
+    app_sdk_hist_register.set_upstream(app_engagement)
 
     app_eng_rank_hist_register =  \
         DockerBashOperator(task_id='StoreAppRanksTableSplits',
@@ -707,7 +691,7 @@ def generate_dag(mode):
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
-    app_eng_rank_hist_register.set_upstream(app_eng_rank_hist_sensor)
+    app_eng_rank_hist_register.set_upstream(usage_ranks)
 
     ###########
     # Wrap-up #

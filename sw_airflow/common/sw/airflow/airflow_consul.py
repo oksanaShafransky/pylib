@@ -22,7 +22,7 @@ class ConsulHook(BaseHook):
         return self._client or self._init_client()
 
     def _init_client(self):
-        self._client = consulate.Consul('consul.service%(suffix)s' % {'suffix': ('.' + self.env if self.env else '')})
+        self._client = consulate.Consul('consul.service%(suffix)s' % {'suffix': (('.' + self.env) if self.env else '')})
         return self._client
 
     @staticmethod

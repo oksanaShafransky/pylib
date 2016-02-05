@@ -21,7 +21,7 @@ dag_args = {
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 8,
-    'retry_delay': timedelta(minutes=15)
+    'retry_delay': timedelta(minutes=15),
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
