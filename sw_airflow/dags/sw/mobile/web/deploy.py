@@ -74,7 +74,7 @@ def assemble_process(mode, dag):
         '''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if mode == WINDOW_MODE else
         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
 
-    update_dynamic_settings_stage = factory.build(task_id='UpdateDynamicSettingsStage',
+    update_dynamic_settings_stage = factory.build(task_id='update_dynamic_settings_stage',
                                                   core_command='''dynamic-settings.sh -et STAGE -p mobile_web''')
     update_dynamic_settings_stage.set_upstream(full_mobile_web_data_ready)
 
@@ -84,6 +84,9 @@ def assemble_process(mode, dag):
                             path='''services/mobile-web/moving-window/{{ params.mode }}/{{ ds }}''',
                             env='STAGE')
     register_success_stage.set_upstream(full_mobile_web_data_ready)
+
+    stage_is_set = DummyOperator(task_id='stage_is_set', dag=dag)
+    stage_is_set.set_upstream([register_success_stage, update_dynamic_settings_stage])
 
     if airflow_env == 'prod':
         copy_to_prod = DockerCopyHbaseTableOperator(
@@ -96,11 +99,14 @@ def assemble_process(mode, dag):
         )
         copy_to_prod.set_upstream(full_mobile_web_data_ready)
 
+        prod_is_set = DummyOperator(task_id='prod_is_set', dag=dag)
+
         if mode == WINDOW_MODE:
             update_dynamic_settings_prod = \
                 factory.build(task_id='update_dynamic_settings_prod',
                               core_command='dynamic-settings.sh -et PRODUCTION -p mobile_web')
             update_dynamic_settings_prod.set_upstream(copy_to_prod)
+            prod_is_set.set_upstream(update_dynamic_settings_prod)
 
         register_success_prod = \
             KeyValueSetOperator(task_id='register_success_prod',
@@ -108,6 +114,9 @@ def assemble_process(mode, dag):
                                 path='''services/mobile-web/moving-window/{{ params.mode }}/{{ ds }}''',
                                 env='PRODUCTION')
         register_success_prod.set_upstream(copy_to_prod)
+
+        prod_is_set.set_upstream(register_success_prod)
+
     return dag
 
 

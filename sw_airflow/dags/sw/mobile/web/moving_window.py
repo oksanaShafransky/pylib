@@ -25,7 +25,7 @@ dag_args = {
     'email': ['barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'start_date': datetime(2015, 12, 23),
+    'start_date': datetime(2016, 2, 10),
     'retries': 1,
     'retry_delay': timedelta(minutes=15)
 }
@@ -107,12 +107,13 @@ def assemble_process(mode, dag, sum_ww_value_size):
 
     # ww value aggregation
     sum_ww_factory = copy.copy(factory)
-    sum_ww_factory.date_template = '''{{ macros.ds_add(ds,-1) }}'''
     sum_ww_factory.mode = 'daily'
 
     sum_ww_all = []
-    for i in range(0, sum_ww_value_size):
-        sum_ww_i = sum_ww_factory.build(task_id='sum_ww_day_%s' % i, core_command='sum_ww.sh')
+    for day_to_calculate in range(0, sum_ww_value_size):
+        sum_ww_i = sum_ww_factory.build(task_id='sum_ww_day_%s' % day_to_calculate,
+                                        date_template='''{{ macros.ds_add(ds,-%d) }}''' % day_to_calculate,
+                                        core_command='sum_ww.sh')
         sum_ww_i.set_upstream(adjust_calc_redist)
         sum_ww_all.append(sum_ww_i)
 

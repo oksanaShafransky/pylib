@@ -101,7 +101,18 @@ class DockerBashOperatorFactory(object):
         self.additional_cmd_components.append(cmd_component)
         return self
 
-    def build(self, task_id, core_command=None, docker_image_name=None, dag_element_type='operator'):
+    def build(self, task_id, core_command=None, docker_image_name=None, date_template=None,
+              dag_element_type='operator'):
+        """
+        builds DockerBashOperator, as general rule of thumb params that can be passed are meant for usecases where
+        this param is modified on every invocation, like date_template in cleanup usecase for example
+        :param task_id:
+        :param core_command:
+        :param docker_image_name:
+        :param date_template:
+        :param dag_element_type:
+        :return:
+        """
         if core_command:
             full_command = core_command
         elif self.core_command:
@@ -125,10 +136,14 @@ class DockerBashOperatorFactory(object):
         else:
             raise DockerBashCommandBuilderException('base_data_dir is mandatory')
 
-        if self.date_template:
+        if date_template:
+            full_command += ' -d ' + date_template
+        elif self.date_template:
             full_command += ' -d ' + self.date_template
+
         if self.mode:
             full_command += ' -m ' + self.mode
+
         if self.mode_type:
             full_command += ' -mt ' + self.mode_type
 
