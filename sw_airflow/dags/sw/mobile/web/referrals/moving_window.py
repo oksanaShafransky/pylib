@@ -20,7 +20,7 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 dag_args = {
     'owner': 'MobileWeb',
     'depends_on_past': False,
-    'start_date': datetime(2015, 2, 10),
+    'start_date': datetime(2016, 2, 10),
     'email': ['amitr@similarweb.com', 'barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
@@ -32,7 +32,8 @@ base_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': D
                         'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION',
                         'docker_image_name': DEFAULT_CLUSTER}
 
-snapshot_template_params = base_template_params.copy().update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
+snapshot_template_params = base_template_params.copy()
+snapshot_template_params.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
 snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, params=snapshot_template_params,
                    schedule_interval='@monthly')

@@ -11,9 +11,9 @@ from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
-DEFAULT_CLUSTER = 'mrp'
+DEFAULT_CLUSTER = 'mrp-mrp'
 WINDOW_MODE = 'window'
-SNAPHOT_MODE = 'snapshot'
+SNAPSHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
 
@@ -33,8 +33,10 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'docker_image_name': DEFAULT_CLUSTER}
 
-window_template_params = dag_template_params.copy().update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
-snapshot_template_params = dag_template_params.copy().update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
+window_template_params = dag_template_params.copy()
+window_template_params.update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
+snapshot_template_params = dag_template_params.copy()
+snapshot_template_params.update({'mode': SNAPSHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
 snapshot_dag = DAG(dag_id='MobileWeb_Snapshot', default_args=dag_args, params=snapshot_template_params,
                    schedule_interval='@monthly')
@@ -126,7 +128,7 @@ def assemble_process(mode, dag, sum_ww_value_size):
     mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag)
     mobile_web.set_upstream([adjust_store, calc_subdomains, popular_pages_top_store])
 
-    if mode == SNAPHOT_MODE:
+    if mode == SNAPSHOT_MODE:
         predict_validate_preparation = \
             factory.build(task_id='predict_validate_preparation',
                           core_command='second_stage_tests.sh -wenv daily-cut -p prepare_total_device_count')
@@ -145,5 +147,5 @@ def assemble_process(mode, dag, sum_ww_value_size):
         mobile_web.set_upstream([predict_validate, compare_est_to_qc])
 
 
-assemble_process(SNAPHOT_MODE, snapshot_dag, sum_ww_value_size=31)
+assemble_process(SNAPSHOT_MODE, snapshot_dag, sum_ww_value_size=31)
 assemble_process(WINDOW_MODE, window_dag, sum_ww_value_size=int(WINDOW_MODE_TYPE.split('-')[1]))

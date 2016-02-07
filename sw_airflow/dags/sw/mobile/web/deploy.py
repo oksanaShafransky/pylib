@@ -12,7 +12,7 @@ BASE_DIR = '/similargroup/data/mobile-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 WINDOW_MODE = 'window'
-SNAPHOT_MODE = 'snapshot'
+SNAPSHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
 DEFAULT_HBASE_CLUSTER = 'hbp1'
@@ -34,8 +34,10 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION',
                        'docker_image_name': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER}
 
-window_template_params = dag_template_params.copy().update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
-snapshot_template_params = dag_template_params.copy().update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
+window_template_params = dag_template_params.copy()
+window_template_params.update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
+snapshot_template_params = dag_template_params.copy()
+snapshot_template_params.update({'mode': SNAPSHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
 snapshot_dag = DAG(dag_id='MobileWeb_SnapshotDeploy', default_args=dag_args, params=snapshot_template_params,
                    schedule_interval='@monthly')
@@ -59,7 +61,7 @@ def assemble_process(mode, dag):
                                                external_task_id=mw_dag_id)
     full_mobile_web_data_ready.set_upstream(mobile_web_data_ready)
 
-    if mode == SNAPHOT_MODE:
+    if mode == SNAPSHOT_MODE:
         mobile_web_referrals_data = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsSnapshot',
                                                        dag=dag, task_id='MobileWeb_ReferralsSnapshot',
                                                        external_task_id='MobileWeb_ReferralsSnapshot')
@@ -120,5 +122,5 @@ def assemble_process(mode, dag):
     return dag
 
 
-assemble_process(SNAPHOT_MODE, snapshot_dag)
+assemble_process(SNAPSHOT_MODE, snapshot_dag)
 assemble_process(WINDOW_MODE, window_dag)
