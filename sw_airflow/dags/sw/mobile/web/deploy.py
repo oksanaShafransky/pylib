@@ -11,7 +11,7 @@ WINDOW_MODE = 'window'
 SNAPSHOT_MODE = 'snapshot'
 
 dag_args = {
-    'owner': 'similarweb',
+    'owner': 'MobileWeb',
     'depends_on_past': False,
     'email': ['amitr@similarweb.com', 'barakg@similarweb.com'],
     'email_on_failure': True,

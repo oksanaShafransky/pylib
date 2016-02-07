@@ -7,7 +7,7 @@ from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 
 dag_args = {
-    'owner': 'similarweb',
+    'owner': 'MobileWeb',
     'depends_on_past': False,
     'email': ['barakg@similarweb.com'],
     'email_on_failure': True,
