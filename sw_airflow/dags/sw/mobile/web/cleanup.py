@@ -59,6 +59,6 @@ if airflow_env == 'prod':
                 factory.build(task_id='cleanup_prod_%s_%s' % (target, day_to_clean),
                               docker_image_name=target,
                               date_template='''{{ macros.ds_add(ds,-%d) }}''' % day_to_clean,
-                              core_command='windowCleanup.sh -p drop_hbase_tables -fl mw -dock %s' % target)
+                              core_command='windowCleanup.sh -p drop_hbase_tables -fl mw')
             cleanup_day.set_upstream(prod_is_set)
             cleanup_prod.set_upstream(cleanup_day)
