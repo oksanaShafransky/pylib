@@ -3,14 +3,12 @@ __author__ = 'Iddo Aviram'
 from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
 from airflow.operators.sensors import HdfsSensor
+from airflow.operators.python_operator import BranchPythonOperator
 from sw.airflow.key_value import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
-from sw.airflow.operators import DockerBashSensor
 from sw.airflow.operators import DockerCopyHbaseTableOperator
-from sw.airflow.airflow_etcd import EtcdHook
-from airflow.operators.python_operator import BranchPythonOperator
+from sw.airflow.operators import AdaptedExternalTaskSensor
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -73,15 +71,17 @@ def generate_dag(mode):
               params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
-    mobile_estimation = ExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
+    mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
                                            dag=dag,
                                            task_id='Estimation',
-                                           external_task_id='Estimation')
+                                           external_task_id='Estimation',
+                                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''))
 
-    mobile_preliminary_daily_aggregation = ExternalTaskSensor(external_dag_id='Mobile_Preliminary',
+    mobile_preliminary_daily_aggregation = AdaptedExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                                               dag=dag,
                                                               task_id='MobileDailyAggregation',
-                                                              external_task_id='DailyAggregation')
+                                                              external_task_id='DailyAggregation',
+                                                              external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
 
     ########################
     # Prepare HBase Tables #
@@ -336,17 +336,18 @@ def generate_dag(mode):
     # App Ranks #
     #############
 
-    daily_ranks_backfill = ExternalTaskSensor(external_dag_id='AndroidApps_DailyRanksBackfill',
+    daily_ranks_backfill = AdaptedExternalTaskSensor(external_dag_id='AndroidApps_DailyRanksBackfill',
                                               dag=dag,
                                               task_id="DailyRanksBackfill",
-                                              external_task_id='DailyRanksBackfill'
+                                              external_task_id='DailyRanksBackfill',
+                                              external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''
                                               )
 
     calc_ranks = \
         DockerBashOperator(task_id='CalculateUsageRanks',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p join_scores_info,cat_ranks'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -fs -p join_scores_info,cat_ranks'''
                            )
     calc_ranks.set_upstream([daily_ranks_backfill, app_engagement])
 
@@ -354,13 +355,14 @@ def generate_dag(mode):
                                 dag=dag
                                 )
 
-    top_list_store = \
+    store_usage_ranks = \
         DockerBashOperator(task_id='StoreUsageRanks',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p store_cat_ranks'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-engagement/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -env all_countries -m {{ params.mode }} -mt {{ params.mode_type }} -p store_cat_ranks''',
+                           depends_on_past=True if is_snapshot_dag() else False #In the window case - it is taken care by the daily_ranks_backfill DAG
                            )
-    top_list_store.set_upstream(calc_ranks)
+    store_usage_ranks.set_upstream(calc_ranks)
 
     app_ranks_histogram_store = \
         DockerBashOperator(task_id='RecordAppUsageRanksHistory',
@@ -370,7 +372,7 @@ def generate_dag(mode):
                            )
     app_ranks_histogram_store.set_upstream(calc_ranks)
 
-    usage_ranks.set_upstream([calc_ranks, top_list_store, app_ranks_histogram_store])
+    usage_ranks.set_upstream([calc_ranks, store_usage_ranks, app_ranks_histogram_store])
 
     prepare_ranks = \
         DockerBashOperator(task_id='PrepareRanks',
@@ -477,6 +479,10 @@ def generate_dag(mode):
 
     if is_window_dag():
 
+        clean_id = 'StageCleanupRequested'
+        cleaning_stage = DummyOperator(task_id=clean_id,
+                                       dag=dag)
+
         cleanup_stage = DummyOperator(task_id='CleanupStage',
                                       dag=dag
                                       )
@@ -486,10 +492,22 @@ def generate_dag(mode):
                 DockerBashOperator(task_id='CleanupStage_DS-%s' % i,
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i,
+
                                    )
             cleanup_stage_ds_minus_i.set_upstream(apps)
+            cleanup_stage_ds_minus_i.set_upstream(cleaning_stage)
             cleanup_stage.set_upstream(cleanup_stage_ds_minus_i)
+
+        skip_clean_id = 'StageCleanupSkipped'
+        not_cleaning_stage = DummyOperator(task_id=skip_clean_id,
+                                           dag=dag)
+
+        # for now, skip cleanup
+        should_clean_stage = BranchPythonOperator(task_id='IsCleanupRequested',
+                                                  dag=dag,
+                                                  python_callable=lambda: skip_clean_id)
+        should_clean_stage.set_downstream([cleaning_stage, not_cleaning_stage])
 
     ############################
     # Local Availability Dates #
@@ -521,56 +539,56 @@ def generate_dag(mode):
 
         copy_to_prod_app_sdk = \
             DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdAppSdk',
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=','.join(deploy_targets),
-                    table_name_template='app_sdk_stats_' + hbase_suffix_template
+                task_id='CopyToProdAppSdk',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='app_sdk_stats_' + hbase_suffix_template
             )
         copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store])
 
         copy_to_prod_cats = \
             DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdCats',
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=','.join(deploy_targets),
-                    table_name_template='app_sdk_category_stats_' + hbase_suffix_template
-            )
+                task_id='CopyToProdCats',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='app_sdk_category_stats_' + hbase_suffix_template
+                )
         copy_to_prod_cats.set_upstream([app_engagement, category_retention_store, usage_pattern_categories])
 
         copy_to_prod_leaders = \
             DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdLeaders',
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=','.join(deploy_targets),
-                    table_name_template='app_sdk_category_lead_' + hbase_suffix_template
+                task_id='CopyToProdLeaders',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='app_sdk_category_lead_' + hbase_suffix_template
             )
         copy_to_prod_leaders.set_upstream([app_engagement, retention_leaders, usage_pattern_category_leaders])
 
         copy_to_prod_engage = \
             DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdEngage',
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=','.join(deploy_targets),
-                    table_name_template='app_eng_rank_' + hbase_suffix_template
+                task_id='CopyToProdEngage',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='app_eng_rank_' + hbase_suffix_template
             )
         copy_to_prod_engage.set_upstream(usage_ranks)
 
         copy_to_prod_rank = \
             DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdRank',
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=','.join(deploy_targets),
-                    table_name_template='cat_mod_app_rank_' + hbase_suffix_template
+                task_id='CopyToProdRank',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(deploy_targets),
+                table_name_template='cat_mod_app_rank_' + hbase_suffix_template
             )
         copy_to_prod_rank.set_upstream([usage_ranks, trends])
 
@@ -649,35 +667,19 @@ def generate_dag(mode):
     # Histograms    #
     #################
 
-    app_sdk_hist_sensor = \
-        HdfsSensor(task_id='AppSdkStatsHistogramReady',
-                   dag=dag,
-                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-sdk-stats/_SUCCESS''',
-                   execution_timeout=timedelta(minutes=600)
-                   )
-
-    app_sdk_hist_register = \
+    app_sdk_hist_register =  \
         DockerBashOperator(task_id='StoreAppSdkTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
                                            hadoopexec {{ params.execution_dir }}/mobile mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-sdk-stats \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-sdk-stats \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
-    app_sdk_hist_register.set_upstream(app_sdk_hist_sensor)
-
-    app_eng_rank_hist_sensor = \
-        HdfsSensor(task_id='AppRanksHistogramReady',
-                   dag=dag,
-                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-eng-rank/_SUCCESS''',
-                   execution_timeout=timedelta(minutes=600)
-                   )
+    app_sdk_hist_register.set_upstream(app_engagement)
 
     app_eng_rank_hist_register = \
         DockerBashOperator(task_id='StoreAppRanksTableSplits',
@@ -685,13 +687,13 @@ def generate_dag(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
                                            hadoopexec {{ params.execution_dir }}/mobile mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/app-eng-rank \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-eng-rank \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
-    app_eng_rank_hist_register.set_upstream(app_eng_rank_hist_sensor)
+    app_eng_rank_hist_register.set_upstream(usage_ranks)
 
     ###########
     # Wrap-up #

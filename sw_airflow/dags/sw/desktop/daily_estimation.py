@@ -83,6 +83,12 @@ est_repair = \
 
 est_repair.set_upstream(fractions_and_reach)
 
+values_est = \
+    DummyOperator(task_id='DailyTrafficEstimation',
+                  dag=dag
+                  )
+values_est.set_upstream(est_repair)
+
 daily_incoming = \
     DockerBashOperator(task_id='DailyIncoming',
                        dag=dag,
@@ -107,7 +113,7 @@ register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          env='''{{ params.run_environment }}'''
                                          )
 
-register_available.set_upstream(fractions_and_reach)
+register_available.set_upstream(values_est)
 register_available.set_upstream(check)
 register_available.set_upstream(daily_incoming)
 

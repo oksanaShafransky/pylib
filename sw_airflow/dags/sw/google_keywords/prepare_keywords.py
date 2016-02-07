@@ -10,7 +10,7 @@ from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
-DOCKER_MANAGER = 'docker-a01.sg.internal'
+DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_DOCKER = 'mrp'
 DEFAULT_HDFS = 'mrp'
 DEFAULT_CLUSTER = 'mrp'
@@ -48,7 +48,7 @@ splits = DockerBashOperator(task_id='GetKeywordSplits',
 init = DockerBashOperator(task_id='InitResources',
                           dag=dag,
                           docker_name=DEFAULT_DOCKER,
-                          bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ ds }} -p tables'''
+                          bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.ds_add(macros.last_day_of_month(ds),2) }} -p tables'''
                           )
 init.set_upstream(splits)
 
@@ -111,3 +111,10 @@ register_success = DockerBashOperator(task_id='RegisterSuccessOnETCD',
                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p set_success'''
                                       )
 register_success.set_upstream(wrap_up)
+
+register_adwords = DockerBashOperator(task_id='RegisterAdwordsSuccessOnETCD',
+                                      dag=dag,
+                                      docker_name=DEFAULT_DOCKER,
+                                      bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p set_adwords_success'''
+)
+register_adwords.set_upstream(wrap_up)

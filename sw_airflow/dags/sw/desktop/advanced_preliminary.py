@@ -25,7 +25,7 @@ dag_args = {
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
+                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER, 'tracker_type': 'mrpadvtracker'}
 
 dag = DAG(dag_id='Advanced_Preliminary', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
@@ -38,7 +38,7 @@ should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         key_list_path='services/copy_logs_daily/trackers',
                                         list_separator=';',
                                         desired_date='''{{ ds }}''',
-                                        key_root='services/data-ingestion/trackers/mrptracker',
+                                        key_root='''services/data-ingestion/trackers/{{ params.tracker_type }}''',
                                         key_suffix='.sg.internal',
                                         execution_timeout=timedelta(minutes=240)
                                         )
@@ -76,13 +76,13 @@ daily_aggregation.set_upstream(daily_visit_detection)
 repair_tables = DockerBashOperator(task_id='RepairDailyTables',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -p repair -hdb advanced'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -p repair -cd {{ params.base_hdfs_dir }} -hdb advanced'''
                                    )
 repair_tables.set_upstream(daily_aggregation)
 
 register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          dag=dag,
-                                         path='''services/advanced-aggregation/data-available/{{ ds }}''',
+                                         path='''services/advanced-stats-aggregation/data-available/{{ ds }}''',
                                          env='''{{ params.run_environment }}'''
                                          )
 register_available.set_upstream(daily_aggregation)

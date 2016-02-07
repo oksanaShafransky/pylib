@@ -52,6 +52,14 @@ group_raw_data_by_user = DockerBashOperator(task_id='GroupRawDataByUser',
 group_raw_data_by_user.set_upstream(should_run)
 
 
+merge_user_data_files = DockerBashOperator(task_id='MergeUserDataFiles',
+                                           dag=dag,
+                                           docker_name=DEFAULT_CLUSTER,
+                                           bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/group_raw.sh -d {{ ds }} -p merge_user_data'''
+                                           )
+merge_user_data_files.set_upstream(group_raw_data_by_user)
+
+
 merge_outlier_files = DockerBashOperator(task_id='MergeOutlierFiles',
                                          dag=dag,
                                          docker_name=DEFAULT_CLUSTER,
@@ -69,6 +77,12 @@ outliers_report.set_upstream(merge_outlier_files)
 
 
 ######################### Aggregation ##############################################
+
+sources_for_analyze = DockerBashOperator(task_id='PrepareSourcesForAnalyze',
+                                         dag=dag,
+                                         docker_name=DEFAULT_CLUSTER,
+                                         bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p sources -mmem 1536'''
+                                         )
 
 blocked_ips = DockerBashOperator(task_id='BlockedIPs',
                                  dag=dag,

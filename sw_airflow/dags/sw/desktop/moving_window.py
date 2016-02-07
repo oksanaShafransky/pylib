@@ -7,10 +7,7 @@ from airflow.operators.sensors import ExternalTaskSensor
 from airflow.operators.sensors import HdfsSensor
 from sw.airflow.key_value import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
-from sw.airflow.operators import DockerBashSensor
 from sw.airflow.operators import DockerCopyHbaseTableOperator
-from sw.airflow.airflow_etcd import EtcdHook
-from airflow.operators.python_operator import BranchPythonOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/analytics'
@@ -87,10 +84,16 @@ def generate_dags(mode):
     daily_aggregation.set_upstream(hbase_tables)
 
     daily_estimation = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
-                                                   external_task_id='DailyEstimation',
-                                                   task_id='DailyEstimation',
-                                                   dag=dag)
+                                          external_task_id='DailyTrafficEstimation',
+                                          task_id='DailyTrafficEstimation',
+                                          dag=dag)
     daily_estimation.set_upstream(hbase_tables)
+
+    daily_incoming = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+                                        external_task_id='DailyIncoming',
+                                        task_id='DailyIncomingEstimation',
+                                        dag=dag)
+    daily_incoming.set_upstream(hbase_tables)
 
     info = \
         DockerBashOperator(task_id='Info',
@@ -100,13 +103,13 @@ def generate_dags(mode):
                            )
     info.set_upstream(hbase_tables)
 
-    daily_incoming = \
-        DockerBashOperator(task_id='DailyIncoming',
+    insert_daily_incoming = \
+        DockerBashOperator(task_id='InsertDailyIncomingToHBase',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p insert_daily_incoming'''
                            )
-    daily_incoming.set_upstream(daily_estimation)
+    insert_daily_incoming.set_upstream(daily_incoming)
 
     sum_special_referrer_values = \
         DockerBashOperator(task_id='SumSpecialReferrerValues',
@@ -330,14 +333,27 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_ranks,export_top_lists,topsites_for_testing'''
                            )
-    ranks.set_upstream(monthly_sum_estimation_parameters)
-    ranks.set_upstream(info)
+
+    if is_window_dag():
+        ranks.set_upstream(monthly_sum_estimation_parameters)
+        ranks.set_upstream(info)
+
+    elif is_snapshot_dag():
+        calculate_pro_dates = \
+            DockerBashOperator(task_id='CalculateProDates',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_pro_dates'''
+                               )
+        calculate_pro_dates.set_upstream(info)
+        calculate_pro_dates.set_upstream(monthly_sum_estimation_parameters)
+        ranks.set_upstream(calculate_pro_dates)
 
     misc = \
         DockerBashOperator(task_id='Misc',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/misc.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_subdomains,insert_worldwide_traffic,insert_daily_data'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/misc.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_subdomains,insert_worldwide_traffic,insert_daily_data,insert_info_counts'''
                            )
     misc.set_upstream(monthly_sum_estimation_parameters)
 
@@ -384,7 +400,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CheckSnapshotEst',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/SnapshotSiteAndCountryEstimation.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p site_country_special_referrer_distribution'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/SnapshotSiteAndCountryEstimation.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
         check_snapshot_est.set_upstream(monthly_sum_estimation_parameters)
 
@@ -392,7 +408,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CheckCustomerSnapshotEst',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/SnapshotCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p site_country_special_referrer_distribution'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/SnapshotCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                )
         check_customer_snapshot_est.set_upstream(monthly_sum_estimation_parameters)
 
@@ -437,7 +453,7 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=','.join(DEPLOY_TARGETS),
-                    table_name_template='top_list_' + hbase_suffix_template
+                    table_name_template='top_lists_' + hbase_suffix_template
             )
         copy_to_prod_top_lists.set_upstream(ranks)
 
@@ -498,18 +514,37 @@ def generate_dags(mode):
 
         dynamic_prod = DummyOperator(task_id='DynamicProd',
                              dag=dag)
+
+        if is_window_dag():
+            for target in DEPLOY_TARGETS:
+                dynamic_prod_per_target = \
+                    DockerBashOperator(task_id='DynamicProd_%s' % target,
+                                       dag=dag,
+                                       docker_name='''{{ params.cluster }}-%s''' % target,
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_pro,update_special_referrers_prod'''
+                                       )
+                dynamic_prod_per_target.set_upstream(copy_to_prod)
+                dynamic_prod.set_upstream(dynamic_prod_per_target)
+        elif is_snapshot_dag():
+            dynamic_prod.set_upstream(copy_to_prod)
+
         dynamic_cross_prod = DummyOperator(task_id='DynamicCrossProd',
                                      dag=dag)
-        for target in DEPLOY_TARGETS:
-            dynamic_cross_prod_per_target = \
-                DockerBashOperator(task_id='DynamicCrossProd_%s' % target,
-                                   dag=dag,
-                                   docker_name='''{{ params.cluster }}-%s''' % target,
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache'''
-                                   )
-            dynamic_cross_prod_per_target.set_upstream(dynamic_prod)
-            dynamic_cross_prod_per_target.set_upstream(cross_cache_prod)
-            dynamic_cross_prod.set_upstream(dynamic_cross_prod_per_target)
+
+        if is_window_dag():
+            for target in DEPLOY_TARGETS:
+                dynamic_cross_prod_per_target = \
+                    DockerBashOperator(task_id='DynamicCrossProd_%s' % target,
+                                       dag=dag,
+                                       docker_name='''{{ params.cluster }}-%s''' % target,
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache'''
+                                       )
+                dynamic_cross_prod_per_target.set_upstream(dynamic_prod)
+                dynamic_cross_prod_per_target.set_upstream(cross_cache_prod)
+                dynamic_cross_prod.set_upstream(dynamic_cross_prod_per_target)
+        elif is_snapshot_dag():
+            dynamic_cross_prod.set_upstream(dynamic_prod)
+            dynamic_cross_prod.set_upstream(cross_cache_prod)
 
         dynamic_stage = \
             DockerBashOperator(task_id='DynamicStage',
@@ -530,17 +565,6 @@ def generate_dags(mode):
                                )
         dynamic_cross_stage.set_upstream(cross_cache_stage)
         dynamic_cross_stage.set_upstream(dynamic_stage)
-
-
-        for target in DEPLOY_TARGETS:
-            dynamic_prod_per_target = \
-                DockerBashOperator(task_id='DynamicProd_%s' % target,
-                                   dag=dag,
-                                   docker_name='''{{ params.cluster }}-%s''' % target,
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_pro,update_special_referrers_prod'''
-                                   )
-            dynamic_prod_per_target.set_upstream(copy_to_prod)
-            dynamic_prod.set_upstream(dynamic_prod_per_target)
 
         if is_snapshot_dag():
 
@@ -642,29 +666,35 @@ def generate_dags(mode):
 
             dynamic_prod_lite = DummyOperator(task_id='DynamicProdLite',
                                               dag=dag)
-            for target in DEPLOY_TARGETS:
-                dynamic_prod_lite_per_target = \
-                    DockerBashOperator(task_id='DynamicProdLite_%s' % target,
-                                       dag=dag,
-                                       docker_name='''{{ params.cluster }}-%s''' % target,
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_lite'''
-                                       )
-                dynamic_prod_lite_per_target.set_upstream(copy_to_prod_snapshot)
-                dynamic_prod_lite_per_target.set_upstream(sites_lite)
-                dynamic_prod_lite.set_upstream(dynamic_prod_lite_per_target)
+            dynamic_prod_lite.set_upstream(copy_to_prod_snapshot)
+            dynamic_prod_lite.set_upstream(sites_lite)
+
+            # for target in DEPLOY_TARGETS:
+            #     dynamic_prod_lite_per_target = \
+            #         DockerBashOperator(task_id='DynamicProdLite_%s' % target,
+            #                            dag=dag,
+            #                            docker_name='''{{ params.cluster }}-%s''' % target,
+            #                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_lite'''
+            #                            )
+            #     dynamic_prod_lite_per_target.set_upstream(copy_to_prod_snapshot)
+            #     dynamic_prod_lite_per_target.set_upstream(sites_lite)
+            #     dynamic_prod_lite.set_upstream(dynamic_prod_lite_per_target)
 
             dynamic_prod_industry = DummyOperator(task_id='DynamicProdIndustry',
                                                   dag=dag)
-            for target in DEPLOY_TARGETS:
-                dynamic_prod_industry_per_target = \
-                    DockerBashOperator(task_id='DynamicProdIndustry_%s' % target,
-                                       dag=dag,
-                                       docker_name='''{{ params.cluster }}-%s''' % target,
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_categories'''
-                                       )
-                dynamic_prod_industry_per_target.set_upstream(copy_to_prod_snapshot)
-                dynamic_prod_industry_per_target.set_upstream(industry_analysis)
-                dynamic_prod_industry.set_upstream(dynamic_prod_industry_per_target)
+            dynamic_prod_industry.set_upstream(copy_to_prod_snapshot)
+            dynamic_prod_industry.set_upstream(industry_analysis)
+
+            # for target in DEPLOY_TARGETS:
+            #     dynamic_prod_industry_per_target = \
+            #         DockerBashOperator(task_id='DynamicProdIndustry_%s' % target,
+            #                            dag=dag,
+            #                            docker_name='''{{ params.cluster }}-%s''' % target,
+            #                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_categories'''
+            #                            )
+            #     dynamic_prod_industry_per_target.set_upstream(copy_to_prod_snapshot)
+            #     dynamic_prod_industry_per_target.set_upstream(industry_analysis)
+            #     dynamic_prod_industry.set_upstream(dynamic_prod_industry_per_target)
 
             repair_mobile = \
                 DockerBashOperator(task_id='RepairMobile',
@@ -689,7 +719,7 @@ def generate_dags(mode):
                                    docker_name='''{{ params.cluster }}''',
                                    bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/web_autocomplete.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
                                    )
-            web_autocomplete.set_upstream(cross_cache_prod)
+            web_autocomplete.set_upstream(export_rest)
 
         ###########
         # Wrap-up #
@@ -863,35 +893,20 @@ def generate_dags(mode):
     # Histograms    #
     #################
 
-    sites_stat_hist_sensor = \
-        HdfsSensor(task_id='SiteStatsHistogramReady',
-                   dag=dag,
-                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat/_SUCCESS''',
-                   execution_timeout=timedelta(minutes=600)
-                   )
-
     sites_stat_hist_register =  \
         DockerBashOperator(task_id='StoreSiteStatsTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
                                            hadoopexec {{ params.execution_dir }}/analytics analytics.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-stat \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-stat \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
-    sites_stat_hist_register.set_upstream(sites_stat_hist_sensor)
+    sites_stat_hist_register.set_upstream(popular_pages)
 
-    site_info_hist_sensor = \
-        HdfsSensor(task_id='SiteInfoHistogramReady',
-                   dag=dag,
-                   hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
-                   filepath='''{{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info/_SUCCESS''',
-                   execution_timeout=timedelta(minutes=600)
-                   )
 
     site_info_hist_register =  \
         DockerBashOperator(task_id='StoreSiteInfoTableSplits',
@@ -899,14 +914,13 @@ def generate_dags(mode):
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
                                            hadoopexec {{ params.execution_dir }}/analytics analytics.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
-                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.date_partition(ds) }}/sites-info \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-info \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
                                            -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
-    site_info_hist_register.set_upstream(site_info_hist_sensor)
-
+    site_info_hist_register.set_upstream(info)
 
     return dag
 

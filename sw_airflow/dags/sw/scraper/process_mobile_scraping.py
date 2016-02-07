@@ -283,6 +283,7 @@ lite_app_info.set_upstream(init)
 lite_app_info.set_upstream(ps_info)
 lite_app_info.set_upstream(it_info)
 lite_app_info.set_upstream(supp_it_info)
+lite_app_info.set_upstream(export_app_info_stage)
 lite_app_info.set_downstream(deploy_prod)
 
 lite_app_stats = DockerBashOperator(task_id='CopyAppStatsForLite',
