@@ -76,24 +76,24 @@ def assemble_process(mode, dag, sum_ww_value_size):
                                 core_command='mobile_web_gaps_filler.sh')
     gaps_filler.set_upstream(should_run_mw)
 
-    first_stage_agg = factory.build(task_id='first_stage_agg',
-                                    core_command='first_stage_agg.sh')
-    first_stage_agg.set_upstream(should_run_mw)
-
     # ############################################################################################################
     # the reason for new factory here is that we control whether to use new algo through mode and mode type params
 
     new_algo_factory = copy.copy(factory)
     new_algo_factory.mode = 'window'
     new_algo_factory.mode_type = 'last-28'
-    new_algo_factory.add_cmd_component('-wenv daily-cut')
 
-    adjust_calc_intermediate = new_algo_factory.build(task_id='adjust_calc_intermediate',
-                                                      core_command='adjust_est.sh -p prepare_data,predict')
+    first_stage_agg = new_algo_factory.build(task_id='first_stage_agg',
+                                             core_command='first_stage_agg.sh')
+    first_stage_agg.set_upstream(should_run_mw)
+
+    adjust_calc_intermediate = \
+        new_algo_factory.build(task_id='adjust_calc_intermediate',
+                               core_command='adjust_est.sh -p prepare_data,predict -wenv daily-cut')
     adjust_calc_intermediate.set_upstream(first_stage_agg)
 
     adjust_calc_redist = new_algo_factory.build(task_id='adjust_calc_redist',
-                                                core_command='adjust_est.sh -p redist')
+                                                core_command='adjust_est.sh -p redist -wenv daily-cut')
     adjust_calc_redist.set_upstream([gaps_filler, adjust_calc_intermediate])
     # ###########################################################################################################
 
