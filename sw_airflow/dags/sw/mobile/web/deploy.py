@@ -7,17 +7,8 @@ from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 from sw.airflow.key_value import KeyValueSetOperator
 from sw.airflow.operators import DockerCopyHbaseTableOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data/mobile-analytics'
-DOCKER_MANAGER = 'docker-a02.sg.internal'
-DEFAULT_CLUSTER = 'mrp'
 WINDOW_MODE = 'window'
 SNAPSHOT_MODE = 'snapshot'
-WINDOW_MODE_TYPE = 'last-28'
-SNAPSHOT_MODE_TYPE = 'monthly'
-DEFAULT_HBASE_CLUSTER = 'hbp1'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/staging', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
@@ -30,14 +21,17 @@ dag_args = {
     'retry_delay': timedelta(minutes=15)
 }
 
-dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION',
-                       'docker_image_name': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER}
+dag_template_params = {'execution_dir': '/similargroup/production',
+                       'docker_gate': 'docker-a02.sg.internal',
+                       'base_data_dir': '/similargroup/data/mobile-analytics',
+                       'run_environment': 'PRODUCTION',
+                       'docker_image_name': 'mrp-mrp'
+                       }
 
 window_template_params = dag_template_params.copy()
-window_template_params.update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
+window_template_params.update({'mode': WINDOW_MODE, 'mode_type': 'last-28'})
 snapshot_template_params = dag_template_params.copy()
-snapshot_template_params.update({'mode': SNAPSHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
+snapshot_template_params.update({'mode': SNAPSHOT_MODE, 'mode_type': 'monthly'})
 
 snapshot_dag = DAG(dag_id='MobileWeb_SnapshotDeploy', default_args=dag_args, params=snapshot_template_params,
                    schedule_interval='@monthly')

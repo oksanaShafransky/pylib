@@ -1,5 +1,3 @@
-from functools import wraps
-
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
@@ -7,11 +5,6 @@ from datetime import datetime, timedelta
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 from sw.airflow.key_value import KeyValueSetOperator
-
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data/mobile-analytics'
-DOCKER_MANAGER = 'docker-a02.sg.internal'
-DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
     'owner': 'MobileWeb',
@@ -24,8 +17,12 @@ dag_args = {
     'retry_delay': timedelta(minutes=15)
 }
 
-dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'docker_image_name': DEFAULT_CLUSTER}
+dag_template_params = {'execution_dir': '/similargroup/production',
+                       'docker_gate': 'docker-a02.sg.internal',
+                       'base_data_dir': '/similargroup/data/mobile-analytics',
+                       'run_environment': 'PRODUCTION',
+                       'docker_image_name': 'mrp-mrp'
+                       }
 
 dag = DAG(dag_id='MobileWeb_Estimation', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
@@ -38,7 +35,7 @@ factory = DockerBashOperatorFactory(use_defaults=True, dag=dag,
 
 # function is located here so it is visually in its place in the flow
 def register_sums_and_estimation(factory, env):
-    factory.cmd_components = ['-env %s' % env]
+    factory.additional_cmd_components = ['-env %s' % env]
 
     sums = \
         factory.build(task_id='%s_sums' % env,

@@ -6,15 +6,6 @@ from datetime import timedelta
 from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data/mobile-analytics'
-DOCKER_MANAGER = 'docker-a02.sg.internal'
-DEFAULT_CLUSTER = 'mrp'
-WINDOW_MODE = 'window'
-SNAPHOT_MODE = 'snapshot'
-WINDOW_MODE_TYPE = 'last-28'
-SNAPSHOT_MODE_TYPE = 'monthly'
-
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
@@ -28,14 +19,15 @@ dag_args = {
     'retry_delay': timedelta(minutes=15)
 }
 
-base_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                        'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION',
-                        'docker_image_name': DEFAULT_CLUSTER}
+dag_template_params = {'execution_dir': '/similargroup/production',
+                       'docker_gate': 'docker-a02.sg.internal',
+                       'base_data_dir': '/similargroup/data/mobile-analytics',
+                       'run_environment': 'PRODUCTION',
+                       'docker_image_name': 'mrp-mrp',
+                       'mode': 'snapshot',
+                       'mode_type': 'monthly'}
 
-snapshot_template_params = base_template_params.copy()
-snapshot_template_params.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
-
-snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, params=snapshot_template_params,
+snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, params=dag_template_params,
                    schedule_interval='@monthly')
 
 

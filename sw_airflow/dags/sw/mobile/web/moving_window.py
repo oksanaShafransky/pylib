@@ -8,16 +8,10 @@ from datetime import timedelta
 from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data/mobile-analytics'
-DOCKER_MANAGER = 'docker-a02.sg.internal'
-DEFAULT_CLUSTER = 'mrp-mrp'
 WINDOW_MODE = 'window'
-SNAPSHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
+SNAPSHOT_MODE = 'snapshot'
 SNAPSHOT_MODE_TYPE = 'monthly'
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'MobileWeb',
@@ -30,8 +24,12 @@ dag_args = {
     'retry_delay': timedelta(minutes=15)
 }
 
-dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'docker_image_name': DEFAULT_CLUSTER}
+dag_template_params = {'execution_dir': '/similargroup/production',
+                       'docker_gate': 'docker-a02.sg.internal',
+                       'base_data_dir': '/similargroup/data/mobile-analytics',
+                       'run_environment': 'PRODUCTION',
+                       'docker_image_name': 'mrp-mrp'
+                       }
 
 window_template_params = dag_template_params.copy()
 window_template_params.update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
@@ -136,7 +134,8 @@ def assemble_process(mode, dag, sum_ww_value_size):
 
         predict_validate = \
             factory.build(task_id='predict_validate',
-                          core_command='second_stage_tests.sh -wenv daily-cut -p prepare_predictions_for_test,verify_predictions'
+                          core_command='second_stage_tests.sh -wenv daily-cut '
+                                       '-p prepare_predictions_for_test,verify_predictions'
                           )
         predict_validate.set_upstream([predict_validate_preparation, adjust_calc_redist])
 

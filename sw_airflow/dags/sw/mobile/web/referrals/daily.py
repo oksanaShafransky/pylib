@@ -6,12 +6,9 @@ from datetime import timedelta
 from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data/mobile-analytics'
-DOCKER_MANAGER = 'docker-a02.sg.internal'
-DEFAULT_CLUSTER = 'mrp'
-
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
+DEFAULT_HDFS = 'mrp'
+DEFAULT_HBASE = 'mrp'
 
 dag_args = {
     'owner': 'MobileWeb',
@@ -24,8 +21,12 @@ dag_args = {
     'retry_delay': timedelta(minutes=15)
 }
 
-dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'docker_image_name': DEFAULT_CLUSTER}
+dag_template_params = {'execution_dir': '/similargroup/production',
+                       'docker_gate': 'docker-a02.sg.internal',
+                       'base_hdfs_dir': '/similargroup/data/mobile-analytics',
+                       'run_environment': 'PRODUCTION',
+                       'docker_image_name': '%s-%s' % (DEFAULT_HDFS, DEFAULT_HBASE)
+                       }
 
 dag = DAG(dag_id='MobileWeb_ReferralsDaily', default_args=dag_args, params=dag_template_params,
           schedule_interval=timedelta(days=1))
@@ -77,7 +78,7 @@ calculate_user_event_transitions.set_upstream([count_user_site2_events, build_us
 adjust_calc_redist_ready = \
     HdfsSensor(task_id='adjust_calc_redist_ready',
                dag=dag,
-               hdfs_conn_id='hdfs_%s' % DEFAULT_CLUSTER,
+               hdfs_conn_id='hdfs_%s' % DEFAULT_HDFS,
                filepath='''{{ params.base_hdfs_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''',
                execution_timeout=timedelta(minutes=600))
 
