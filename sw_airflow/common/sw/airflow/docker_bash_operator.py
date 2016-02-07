@@ -63,7 +63,7 @@ class DockerBashOperatorFactory(object):
                  core_command=None,
                  dag=None,
                  date_template=None,
-                 docker_name=None,
+                 docker_image_name=None,
                  mode=None,
                  mode_type=None,
                  script_path=None,
@@ -74,7 +74,7 @@ class DockerBashOperatorFactory(object):
         self.core_command = core_command
         self.dag = dag
         self.date_template = date_template
-        self.docker_name = docker_name
+        self.docker_image_name = docker_image_name
         self.mode = mode
         self.mode_type = mode_type
         self.script_path = script_path
@@ -93,15 +93,15 @@ class DockerBashOperatorFactory(object):
             self.mode_type = '''{{ params.mode_type }}'''
         if not self.date_template:
             self.date_template = '''{{ ds }}'''
-        if not self.date_template:
-            self.docker_name = '''{{ params.container_name }}'''
+        if not self.docker_image_name:
+            self.docker_image_name = '''{{ params.docker_image_name }}'''
         return self
 
     def add_cmd_component(self, cmd_component):
         self.additional_cmd_components.append(cmd_component)
         return self
 
-    def build(self, task_id, core_command=None, docker_name=None, dag_element_type='operator'):
+    def build(self, task_id, core_command=None, docker_image_name=None, dag_element_type='operator'):
         if core_command:
             full_command = core_command
         elif self.core_command:
@@ -109,12 +109,13 @@ class DockerBashOperatorFactory(object):
         else:
             raise DockerBashCommandBuilderException("Core bash command not set")
 
-        if docker_name:
-            docker_to_use = docker_name
-        elif self.docker_name:
-            docker_to_use = self.docker_name
+        if docker_image_name:
+            docker_to_use = docker_image_name
+        elif self.docker_image_name:
+            docker_to_use = self.docker_image_name
         else:
-            raise DockerBashCommandBuilderException('docker_name is mandatory, set in constructor or pass into build')
+            raise DockerBashCommandBuilderException(
+                    'docker_image_name is mandatory, set in constructor or pass into build')
 
         if self.script_path:
             full_command = self.script_path + '/' + full_command

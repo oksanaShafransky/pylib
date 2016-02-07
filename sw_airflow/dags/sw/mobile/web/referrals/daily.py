@@ -25,7 +25,7 @@ dag_args = {
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
+                       'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'docker_image_name': DEFAULT_CLUSTER}
 
 dag = DAG(dag_id='MobileWeb_ReferralsDaily', default_args=dag_args, params=dag_template_params,
           schedule_interval=timedelta(days=1))

@@ -34,7 +34,7 @@ dag_args = {
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION',
-                       'cluster': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER}
+                       'docker_image_name': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER}
 
 window_template_params = dag_template_params.copy().update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
 snapshot_template_params = dag_template_params.copy().update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
@@ -72,7 +72,7 @@ for i in range(cleanup_to, cleanup_from):
     for target in deploy_targets:
         cleanup_day = \
             factory.build(task_id='Cleanup%s_DS-%s' % (target, i),
-                          docker_name='%s' % target,
+                          container_name='%s' % target,
                           bash_command='''windowCleanup.sh -d {{ ds_add(ds,-%s) }} -p drop_hbase_tables -fl mw''' % i)
         cleanup_day.set_upstream(copy_to_prod_mw)
         cleanup_prod.set_upstream(cleanup_day)

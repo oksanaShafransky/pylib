@@ -29,7 +29,8 @@ dag_args = {
 }
 
 base_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                        'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
+                        'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION',
+                        'docker_image_name': DEFAULT_CLUSTER}
 
 snapshot_template_params = base_template_params.copy().update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 

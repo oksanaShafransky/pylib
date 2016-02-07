@@ -25,7 +25,7 @@ dag_args = {
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
-                       'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
+                       'base_data_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'docker_image_name': DEFAULT_CLUSTER}
 
 dag = DAG(dag_id='MobileWeb_Estimation', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
