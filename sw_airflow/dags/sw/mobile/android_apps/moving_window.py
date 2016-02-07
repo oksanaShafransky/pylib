@@ -1,14 +1,14 @@
+
 __author__ = 'Iddo Aviram'
 
 from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import HdfsSensor
 from airflow.operators.python_operator import BranchPythonOperator
-from sw.airflow.key_value import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
-from sw.airflow.operators import DockerCopyHbaseTableOperator
+from sw.airflow.key_value import *
 from sw.airflow.operators import AdaptedExternalTaskSensor
+from sw.airflow.operators import DockerCopyHbaseTableOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -75,7 +75,7 @@ def generate_dag(mode):
                                            dag=dag,
                                            task_id='Estimation',
                                            external_task_id='Estimation',
-                                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''))
+                                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
 
     mobile_preliminary_daily_aggregation = AdaptedExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                                               dag=dag,
@@ -337,12 +337,11 @@ def generate_dag(mode):
     #############
 
     daily_ranks_backfill = AdaptedExternalTaskSensor(external_dag_id='AndroidApps_DailyRanksBackfill',
-                                              dag=dag,
-                                              task_id="DailyRanksBackfill",
-                                              external_task_id='DailyRanksBackfill',
-                                              external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''
-                                              )
-
+                                                     dag=dag,
+                                                     task_id="DailyRanksBackfill",
+                                                     external_task_id='DailyRanksBackfill',
+                                                     external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''
+                                                     )
     calc_ranks = \
         DockerBashOperator(task_id='CalculateUsageRanks',
                            dag=dag,
@@ -592,8 +591,7 @@ def generate_dag(mode):
             )
         copy_to_prod_rank.set_upstream([usage_ranks, trends])
 
-        copy_to_prod.set_upstream(
-                [copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders, copy_to_prod_engage, copy_to_prod_rank])
+        copy_to_prod.set_upstream([copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders, copy_to_prod_engage, copy_to_prod_rank])
 
     ################
     # Cleanup Prod #
@@ -681,7 +679,7 @@ def generate_dag(mode):
                            )
     app_sdk_hist_register.set_upstream(app_engagement)
 
-    app_eng_rank_hist_register = \
+    app_eng_rank_hist_register =  \
         DockerBashOperator(task_id='StoreAppRanksTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
@@ -700,12 +698,14 @@ def generate_dag(mode):
     ###########
 
     if is_prod_env():
+
         register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
                                                dag=dag,
                                                path='''services/mobile_moving_window/{{ params.mode }}/{{ macros.last_interval_day(ds, dag.schedule_interval) }}''',
                                                env='PRODUCTION'
                                                )
         register_success.set_upstream([copy_to_prod, update_usage_ranks_date_prod])
+
 
     return dag
 
