@@ -21,7 +21,7 @@ dag_template_params = {'execution_dir': '/similargroup/production',
                        'docker_gate': 'docker-a02.sg.internal',
                        'base_data_dir': '/similargroup/data/mobile-analytics',
                        'run_environment': 'PRODUCTION',
-                       'docker_image_name': 'mrp-mrp',
+                       'docker_image_name': 'mrp',
                        'mode': 'window',
                        'mode_type': 'last-28'
                        }
@@ -57,7 +57,7 @@ if airflow_env == 'prod':
         for day_to_clean in range(cleanup_to, cleanup_from):
             cleanup_day = \
                 factory.build(task_id='cleanup_prod_%s_%s' % (target, day_to_clean),
-                              docker_image_name='%s' % target,
+                              docker_image_name=target,
                               date_template='''{{ macros.ds_add(ds,-%d) }}''' % day_to_clean,
                               core_command='windowCleanup.sh -p drop_hbase_tables -fl mw -dock %s' % target)
             cleanup_day.set_upstream(prod_is_set)

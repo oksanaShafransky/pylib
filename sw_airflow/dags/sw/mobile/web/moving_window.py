@@ -28,7 +28,7 @@ dag_template_params = {'execution_dir': '/similargroup/production',
                        'docker_gate': 'docker-a02.sg.internal',
                        'base_data_dir': '/similargroup/data/mobile-analytics',
                        'run_environment': 'PRODUCTION',
-                       'docker_image_name': 'mrp-mrp'
+                       'docker_image_name': 'mrp'
                        }
 
 window_template_params = dag_template_params.copy()
