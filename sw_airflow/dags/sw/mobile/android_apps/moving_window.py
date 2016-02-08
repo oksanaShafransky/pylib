@@ -447,10 +447,6 @@ def generate_dag(mode):
         trends_1_month.set_upstream(usage_ranks)
         trends.set_upstream(trends_1_month)
 
-    ####################
-    # Dynamic Settings #
-    ####################
-
     apps = DummyOperator(task_id='Apps',
                          dag=dag
                          )
@@ -522,6 +518,7 @@ def generate_dag(mode):
 
 
     deploy_targets = ['hbp1', 'hbp2']
+
     ################
     # Copy to Prod #
     ################
@@ -618,7 +615,7 @@ def generate_dag(mode):
                     cleanup_prod_ds_minus_i = \
                         DockerBashOperator(task_id='Cleanup%s_DS-%s' % (target, i),
                                            dag=dag,
-                                           docker_name='''{{ params.hbase_cluster }}''',
+                                           docker_name=target,
                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
                                            )
                     cleanup_prod_ds_minus_i.set_upstream(copy_to_prod)
