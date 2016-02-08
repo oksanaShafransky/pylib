@@ -180,7 +180,7 @@ def generate_dag(mode):
                                            hadoopexec {{ params.execution_dir }}/mobile mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/cat-mod-app-rank \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
-                                           -k 500000 \
+                                           -k 50000 \
                                            -t cat_mod_app_rank{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }} \
                                            -a
                                         '''
