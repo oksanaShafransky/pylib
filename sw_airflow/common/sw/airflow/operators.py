@@ -52,9 +52,9 @@ class BashSensor(BaseSensorOperator):
                              "location :{0}".format(script_location))
                 logging.info("Running command: " + bash_command)
                 sp = Popen(
-                    ['bash', fname],
-                    stdout=PIPE, stderr=STDOUT,
-                    cwd=tmp_dir, env=self.env)
+                        ['bash', fname],
+                        stdout=PIPE, stderr=STDOUT,
+                        cwd=tmp_dir, env=self.env)
 
                 self.sp = sp
 
@@ -90,7 +90,7 @@ class DockerBashSensor(BashSensor):
 -e DOCKER_GATE={{ docker_manager }}                           \
 -e GELF_HOST="runsrv2.sg.internal"                            \
 -e HOME=/tmp                                                  \
-runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
+bigdata/centos6.cdh5.%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
     @apply_defaults
@@ -140,11 +140,12 @@ class DockerCopyHbaseTableOperator(BashOperator):
 -e DOCKER_GATE={{ params.docker_gate }}                           \
 -e GELF_HOST="runsrv2.sg.internal"                            \
 -e HOME=/tmp                                                  \
-runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
+bigdata/centos6.cdh5.%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
     @apply_defaults
-    def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args, **kwargs):
+    def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args,
+                 **kwargs):
         self.docker_name = docker_name
         bash_cmd = DockerCopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
                                                                 'target_cluster': target_cluster,
@@ -179,7 +180,7 @@ class SuccedOrSkipOperator(PythonOperator):
             if task.task_id not in (skip_list + success_list):
                 continue
             ti = TaskInstance(
-                task, execution_date=context['ti'].execution_date)
+                    task, execution_date=context['ti'].execution_date)
             ti.start_date = datetime.now()
             ti.end_date = datetime.now()
             if task.task_id in skip_list:
@@ -194,7 +195,7 @@ class SuccedOrSkipOperator(PythonOperator):
         session.close()
         if self.task_id not in success_list:
             raise ValueError(
-                "Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
+                    "Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
         logging.info("Done.")
 
     def run(self, start_date=None, end_date=None, ignore_dependencies=False, force=False, mark_success=False):
@@ -207,10 +208,10 @@ class SuccedOrSkipOperator(PythonOperator):
         # We mark our own successes if needed. Run in "test" mode
         for dt in utils.date_range(start_date, end_date, self.schedule_interval):
             TaskInstance(self, dt).run(
-                mark_success=False,
-                ignore_dependencies=ignore_dependencies,
-                test_mode=True,
-                force=force, )
+                    mark_success=False,
+                    ignore_dependencies=ignore_dependencies,
+                    test_mode=True,
+                    force=force, )
 
 
 class AdaptedExternalTaskSensor(BaseSensorOperator):
@@ -266,7 +267,7 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
                 TI.task_id == self.external_task_id,
                 TI.state.in_(self.allowed_states),
                 TI.execution_date == dttm,
-                ).count()
+        ).count()
         session.commit()
         session.close()
         return count
