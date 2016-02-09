@@ -43,7 +43,7 @@ window_dag = DAG(dag_id='MobileWeb_Window', default_args=dag_args, params=window
 
 
 def assemble_process(mode, dag, sum_ww_value_size):
-    mobile_estimation = ExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
+    estimation = ExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
                                            task_id="MobileWeb_Estimation",
                                            external_task_id='Estimation')
     desktop_estimation_aggregation = ExternalTaskSensor(external_dag_id='Desktop_MovingWindow_' + mode.capitalize(),
@@ -52,7 +52,7 @@ def assemble_process(mode, dag, sum_ww_value_size):
                                                         external_task_id='MonthlySumEstimationParameters')
 
     should_run_mw = DummyOperator(dag=dag, task_id="should_run_mw")
-    should_run_mw.set_upstream([mobile_estimation, desktop_estimation_aggregation])
+    should_run_mw.set_upstream([estimation, desktop_estimation_aggregation])
 
     factory = DockerBashOperatorFactory(use_defaults=True,
                                         dag=dag,
