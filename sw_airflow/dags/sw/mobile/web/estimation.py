@@ -29,8 +29,12 @@ dag = DAG(dag_id='MobileWeb_Estimation', default_args=dag_args, params=dag_templ
 mobile_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary', dag=dag, task_id="Mobile_Preliminary",
                                         external_task_id='Preliminary')
 
-factory = DockerBashOperatorFactory(use_defaults=True, dag=dag,
-                                    script_path='''{{ params.execution_dir }}/mobile/scripts/web''')
+factory = DockerBashOperatorFactory(dag=dag,
+                                    base_data_dir='''{{ params.base_data_dir }}''',
+                                    date_template='''{{ ds }}''',
+                                    cluster='''{{ params.cluster }}''',
+                                    script_path='''{{ params.execution_dir }}/mobile/scripts/web'''
+                                    )
 
 
 # function is located here so it is visually in its place in the flow
