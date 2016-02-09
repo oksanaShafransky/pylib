@@ -77,7 +77,7 @@ calculate_user_event_transitions.set_upstream([count_user_site2_events, build_us
 adjust_calc_redist_ready = \
     HdfsSensor(task_id='adjust_calc_redist_ready',
                dag=dag,
-               hdfs_conn_id='''hdfs_{{ params.cluster }}''',
+               hdfs_conn_id='hdfs_%s' % dag_template_params['cluster'],
                filepath='''{{ params.base_hdfs_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''',
                execution_timeout=timedelta(minutes=600))
 
