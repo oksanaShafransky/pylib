@@ -8,7 +8,7 @@ from sw.airflow.key_value import KeyValueSetOperator
 
 dag_args = {
     'owner': 'MobileWeb',
-    'start_date': datetime(2016, 2, 10),
+    'start_date': datetime(2016, 2, 8),
     'depends_on_past': True,
     'email': ['barakg@similarweb.com', 'amitr@similarweb.com'],
     'email_on_failure': True,
@@ -26,7 +26,7 @@ dag_template_params = {'execution_dir': '/similargroup/production',
 
 dag = DAG(dag_id='MobileWeb_Estimation', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
-mobile_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary', dag=dag, task_id="Preliminary",
+mobile_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary', dag=dag, task_id="Mobile_Preliminary",
                                         external_task_id='Preliminary')
 
 factory = DockerBashOperatorFactory(use_defaults=True, dag=dag,

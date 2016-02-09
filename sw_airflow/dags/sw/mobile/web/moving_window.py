@@ -18,8 +18,8 @@ dag_args = {
     'email': ['barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'start_date': datetime(2016, 2, 10),
-    'retries': 1,
+    'start_date': datetime(2016, 2, 8),
+    'retries': 2,
     'retry_delay': timedelta(minutes=15)
 }
 
