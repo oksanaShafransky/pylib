@@ -446,10 +446,6 @@ def generate_dag(mode):
         trends_1_month.set_upstream(usage_ranks)
         trends.set_upstream(trends_1_month)
 
-    ####################
-    # Dynamic Settings #
-    ####################
-
     apps = DummyOperator(task_id='Apps',
                          dag=dag
                          )
@@ -521,6 +517,7 @@ def generate_dag(mode):
     update_usage_ranks_date_stage.set_upstream(usage_ranks)
 
     deploy_targets = ['hbp1', 'hbp2']
+
     ################
     # Copy to Prod #
     ################
@@ -618,7 +615,7 @@ def generate_dag(mode):
                     cleanup_prod_ds_minus_i = \
                         DockerBashOperator(task_id='Cleanup%s_DS-%s' % (target, i),
                                            dag=dag,
-                                           docker_name='''{{ params.hbase_cluster }}''',
+                                           docker_name=target,
                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
                                            )
                     cleanup_prod_ds_minus_i.set_upstream(copy_to_prod)
@@ -674,10 +671,26 @@ def generate_dag(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-sdk-stats \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }} \
+                                           -a
                                         '''
                            )
     app_sdk_hist_register.set_upstream(app_engagement)
+
+    cat_rank_hist_register =  \
+        DockerBashOperator(task_id='StoreCategoryRanksTableSplits',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
+                                           hadoopexec {{ params.execution_dir }}/mobile mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/cat-mod-app-rank \
+                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
+                                           -k 50000 \
+                                           -t cat_mod_app_rank{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }} \
+                                           -a
+                                        '''
+                           )
+    cat_rank_hist_register.set_upstream(usage_ranks)
 
     app_eng_rank_hist_register =  \
         DockerBashOperator(task_id='StoreAppRanksTableSplits',
@@ -688,7 +701,8 @@ def generate_dag(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-eng-rank \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t app_eng_rank{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }} \
+                                           -a
                                         '''
                            )
     app_eng_rank_hist_register.set_upstream(usage_ranks)
