@@ -9,8 +9,9 @@ from airflow.utils import apply_defaults
 class DockerBashOperator(BashOperator, object):
     ui_color = '#FFFF66'
     template_fields = ('bash_command', 'kill_cmd')
-    cmd_template = '''docker run \
+    cmd_template = '''docker \
 -H=tcp://{{ params.docker_gate }}:2375 \
+run \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s \
 -v /etc/localtime:/etc/localtime:ro \
 -v /tmp/logs:/tmp/logs \
