@@ -44,7 +44,7 @@ window_dag = DAG(dag_id='MobileWeb_Window', default_args=dag_args, params=window
 
 def assemble_process(mode, dag, sum_ww_value_size):
     mobile_estimation = ExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
-                                           task_id="Mobile_Estimation",
+                                           task_id="MobileWeb_Estimation",
                                            external_task_id='Estimation')
     desktop_estimation_aggregation = ExternalTaskSensor(external_dag_id='Desktop_MovingWindow_' + mode.capitalize(),
                                                         dag=dag,
