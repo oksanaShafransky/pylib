@@ -1,14 +1,10 @@
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor, HdfsSensor
-from datetime import timedelta
+from datetime import timedelta, datetime
 
-from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
-DEFAULT_HDFS = 'mrp'
-DEFAULT_HBASE = 'mrp'
+from sw.airflow.key_value import KeyValueSensor
 
 dag_args = {
     'owner': 'MobileWeb',
@@ -25,22 +21,23 @@ dag_template_params = {'execution_dir': '/similargroup/production',
                        'docker_gate': 'docker-a02.sg.internal',
                        'base_data_dir': '/similargroup/data/mobile-analytics',
                        'run_environment': 'PRODUCTION',
-                       'docker_image_name': '%s-%s' % (DEFAULT_HDFS, DEFAULT_HBASE)
+                       'cluster': 'mrp'
                        }
 
 dag = DAG(dag_id='MobileWeb_ReferralsDaily', default_args=dag_args, params=dag_template_params,
-          schedule_interval=timedelta(days=1))
+          schedule_interval='@daily')
 
 factory = DockerBashOperatorFactory(use_defaults=True,
                                     dag=dag,
                                     script_path='''{{ params.execution_dir }}/mobile/scripts/web/referrals''',
                                     additional_cmd_components=['-env main'])
 
-opera_raw_data_ready = EtcdSensor(task_id='opera_raw_data_ready',
-                                  dag=dag,
-                                  root=ETCD_ENV_ROOT[dag_template_params['run_environment']],
-                                  path='''services/opera-mini-s3/daily/{{ ds }}'''
-                                  )
+opera_raw_data_ready = KeyValueSensor(task_id='opera_raw_data_ready',
+                                      dag=dag,
+                                      env='''{{ params.run_environment }}''',
+                                      path='''services/opera-mini-s3/daily/{{ ds }}''',
+                                      execution_timeout=timedelta(minutes=1)
+                                      )
 
 filter_malformed_events = factory.build(task_id='filter_malformed_events',
                                         core_command='preliminary.sh -p filter_malformed_events')
@@ -78,7 +75,7 @@ calculate_user_event_transitions.set_upstream([count_user_site2_events, build_us
 adjust_calc_redist_ready = \
     HdfsSensor(task_id='adjust_calc_redist_ready',
                dag=dag,
-               hdfs_conn_id='hdfs_%s' % DEFAULT_HDFS,
+               hdfs_conn_id='''hdfs_{{ params.cluster }}''',
                filepath='''{{ params.base_hdfs_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''',
                execution_timeout=timedelta(minutes=600))
 
