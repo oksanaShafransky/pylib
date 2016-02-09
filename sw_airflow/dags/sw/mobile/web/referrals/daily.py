@@ -21,7 +21,9 @@ dag_template_params = {'execution_dir': '/similargroup/production',
                        'docker_gate': 'docker-a02.sg.internal',
                        'base_data_dir': '/similargroup/data/mobile-analytics',
                        'run_environment': 'PRODUCTION',
-                       'cluster': 'mrp'
+                       'cluster': 'mrp',
+                       'mode': 'window',  # ignored in most commands
+                       'mode_type': 'last-28'  # ignored in most commands
                        }
 
 dag = DAG(dag_id='MobileWeb_ReferralsDaily', default_args=dag_args, params=dag_template_params,
