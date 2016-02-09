@@ -199,5 +199,5 @@ def generate_dags(mode):
     return dag
 
 
-globals()['dag_apps_mw_referrers_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
-globals()['dag_apps_mw_referrers_moving_window_window'] = generate_dags(WINDOW_MODE)
+# globals()['dag_apps_mw_referrers_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
+# globals()['dag_apps_mw_referrers_moving_window_window'] = generate_dags(WINDOW_MODE)
