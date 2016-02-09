@@ -8,7 +8,7 @@ from sw.airflow.key_value import KeyValueSetOperator
 
 dag_args = {
     'owner': 'MobileWeb',
-    'start_date': datetime(2016, 1, 24),
+    'start_date': datetime(2016, 2, 10),
     'depends_on_past': True,
     'email': ['barakg@similarweb.com', 'amitr@similarweb.com'],
     'email_on_failure': True,

@@ -12,7 +12,7 @@ DEFAULT_HBASE = 'mrp'
 
 dag_args = {
     'owner': 'MobileWeb',
-    'start_date': datetime(2015, 12, 1),
+    'start_date': datetime(2016, 2, 10),
     'depends_on_past': True,
     'email': ['amitr@similarweb.com', 'barakg@similarweb.com'],
     'email_on_failure': True,
