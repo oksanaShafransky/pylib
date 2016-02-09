@@ -3,9 +3,8 @@ import copy
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
-from datetime import timedelta
+from datetime import timedelta, datetime
 
-from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 
 WINDOW_MODE = 'window'
@@ -28,7 +27,7 @@ dag_template_params = {'execution_dir': '/similargroup/production',
                        'docker_gate': 'docker-a02.sg.internal',
                        'base_data_dir': '/similargroup/data/mobile-analytics',
                        'run_environment': 'PRODUCTION',
-                       'docker_image_name': 'mrp'
+                       'cluster': 'mrp'
                        }
 
 window_template_params = dag_template_params.copy()

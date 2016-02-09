@@ -64,7 +64,7 @@ class DockerBashOperatorFactory(object):
                  core_command=None,
                  dag=None,
                  date_template=None,
-                 docker_image_name=None,
+                 cluster=None,
                  mode=None,
                  mode_type=None,
                  script_path=None,
@@ -75,7 +75,7 @@ class DockerBashOperatorFactory(object):
         self.core_command = core_command
         self.dag = dag
         self.date_template = date_template
-        self.docker_image_name = docker_image_name
+        self.cluster = cluster
         self.mode = mode
         self.mode_type = mode_type
         self.script_path = script_path
@@ -94,22 +94,22 @@ class DockerBashOperatorFactory(object):
             self.mode_type = '''{{ params.mode_type }}'''
         if not self.date_template:
             self.date_template = '''{{ ds }}'''
-        if not self.docker_image_name:
-            self.docker_image_name = '''{{ params.docker_image_name }}'''
+        if not self.cluster:
+            self.cluster = '''{{ params.cluster }}'''
         return self
 
     def add_cmd_component(self, cmd_component):
         self.additional_cmd_components.append(cmd_component)
         return self
 
-    def build(self, task_id, core_command=None, docker_image_name=None, date_template=None,
+    def build(self, task_id, core_command=None, cluster=None, date_template=None,
               dag_element_type='operator'):
         """
         builds DockerBashOperator, as general rule of thumb params that can be passed are meant for usecases where
         this param is modified on every invocation, like date_template in cleanup usecase for example
         :param task_id:
         :param core_command:
-        :param docker_image_name:
+        :param cluster:
         :param date_template:
         :param dag_element_type:
         :return:
@@ -121,13 +121,13 @@ class DockerBashOperatorFactory(object):
         else:
             raise DockerBashCommandBuilderException("Core bash command not set")
 
-        if docker_image_name:
-            docker_to_use = docker_image_name
-        elif self.docker_image_name:
-            docker_to_use = self.docker_image_name
+        if cluster:
+            docker_to_use = cluster
+        elif self.cluster:
+            docker_to_use = self.cluster
         else:
             raise DockerBashCommandBuilderException(
-                    'docker_image_name is mandatory, set in constructor or pass into build')
+                    'cluster is mandatory, it controls docker image. set in constructor or pass as parameter')
 
         if self.script_path:
             full_command = self.script_path + '/' + full_command

@@ -1,12 +1,9 @@
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
-from datetime import timedelta
+from datetime import timedelta, datetime
 
-from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
-
-ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'MobileWeb',
@@ -23,9 +20,10 @@ dag_template_params = {'execution_dir': '/similargroup/production',
                        'docker_gate': 'docker-a02.sg.internal',
                        'base_data_dir': '/similargroup/data/mobile-analytics',
                        'run_environment': 'PRODUCTION',
-                       'docker_image_name': 'mrp',
+                       'cluster': 'mrp',
                        'mode': 'snapshot',
-                       'mode_type': 'monthly'}
+                       'mode_type': 'monthly'
+                       }
 
 snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, params=dag_template_params,
                    schedule_interval='@monthly')
