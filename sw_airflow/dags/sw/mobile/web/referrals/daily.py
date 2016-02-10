@@ -38,7 +38,7 @@ opera_raw_data_ready = KeyValueSensor(task_id='opera_raw_data_ready',
                                       dag=dag,
                                       env='''{{ params.run_environment }}''',
                                       path='''services/opera-mini-s3/daily/{{ ds }}''',
-                                      execution_timeout=timedelta(minutes=1)
+                                      execution_timeout=timedelta(days=2)
                                       )
 
 filter_malformed_events = factory.build(task_id='filter_malformed_events',
