@@ -142,7 +142,7 @@ def assemble_process(mode, dag, sum_ww_value_size):
                                           core_command='compare_estimations_to_qc.sh -sm')
         compare_est_to_qc.set_upstream(first_stage_agg)
 
-        first_stage_agg_for_model = factory.build(task_id='first_stage_agg',
+        first_stage_agg_for_model = factory.build(task_id='first_stage_agg_for_model',
                                                   core_command='first_stage_agg.sh')
         first_stage_agg_for_model.set_upstream(should_run_mw)
 
