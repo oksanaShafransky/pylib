@@ -44,8 +44,8 @@ window_dag = DAG(dag_id='MobileWeb_Window', default_args=dag_args, params=window
 
 def assemble_process(mode, dag, sum_ww_value_size):
     estimation = ExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
-                                           task_id="MobileWeb_Estimation",
-                                           external_task_id='Estimation')
+                                    task_id="MobileWeb_Estimation",
+                                    external_task_id='Estimation')
     desktop_estimation_aggregation = ExternalTaskSensor(external_dag_id='Desktop_MovingWindow_' + mode.capitalize(),
                                                         dag=dag,
                                                         task_id="Desktop_MonthlySumEstimationParameters",
@@ -72,7 +72,7 @@ def assemble_process(mode, dag, sum_ww_value_size):
     popular_pages_top_store.set_upstream([prepare_hbase_tables, popular_pages_agg])
 
     gaps_filler = factory.build(task_id='gaps_filler',
-                                core_command='mobile_web_gaps_filler.sh')
+                                core_command='airflow_mobile_web_gaps_filler.sh')
     gaps_filler.set_upstream(should_run_mw)
 
     # ############################################################################################################
@@ -142,7 +142,11 @@ def assemble_process(mode, dag, sum_ww_value_size):
                                           core_command='compare_estimations_to_qc.sh -sm')
         compare_est_to_qc.set_upstream(first_stage_agg)
 
-        mobile_web.set_upstream([predict_validate, compare_est_to_qc])
+        first_stage_agg_for_model = factory.build(task_id='first_stage_agg',
+                                                  core_command='first_stage_agg.sh')
+        first_stage_agg_for_model.set_upstream(should_run_mw)
+
+        mobile_web.set_upstream([predict_validate, compare_est_to_qc, first_stage_agg_for_model])
 
 
 assemble_process(SNAPSHOT_MODE, snapshot_dag, sum_ww_value_size=31)
