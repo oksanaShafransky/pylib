@@ -15,7 +15,7 @@ DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2017, 1, 14),
+    'start_date': datetime(2016, 2, 8),
     'depends_on_past': True,
     'email': ['felixv@similarweb.com', 'iddoav@similarweb.com', 'barakg@similarweb.com', 'amitr@similarweb.com>'],
     'email_on_failure': True,
