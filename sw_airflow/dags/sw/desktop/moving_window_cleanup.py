@@ -28,7 +28,7 @@ dag_args = {
     'email_on_retry': False,
     'retries': 3,
     'retry_delay': timedelta(minutes=15),
-    'start_date': datetime(2016, 2, 15)
+    'start_date': datetime(2016, 2, 11)
 }
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
