@@ -617,7 +617,7 @@ def generate_dags(mode):
                         target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='categories_' + hbase_suffix_template
                 )
-            copy_to_prod_snapshot_industry.set_upstream(ranks)
+            copy_to_prod_snapshot_industry.set_upstream(industry_analysis)
 
             copy_to_prod_snapshot_sites_scrape_stat = \
                 DockerCopyHbaseTableOperator(
