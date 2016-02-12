@@ -119,13 +119,20 @@ def generate_dags(mode):
                            )
     sum_special_referrer_values.set_upstream(daily_aggregation)
 
-    monthly_sum_estimation_parameters = \
-        DockerBashOperator(task_id='MonthlySumEstimationParameters',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p monthly_sum_estimation_parameters'''
-                           )
-    monthly_sum_estimation_parameters.set_upstream(daily_estimation)
+    # estimation parameters sum in window mode is done daily during estimation. in snapshot, it needs to be explicitly declared
+    if is_snapshot_dag():
+        monthly_sum_estimation_parameters = \
+            DockerBashOperator(task_id='MonthlySumEstimationParameters',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p monthly_sum_estimation_parameters'''
+                               )
+        monthly_sum_estimation_parameters.set_upstream(daily_estimation)
+    else:
+        monthly_sum_estimation_parameters = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+                                                               external_task_id='SumEstimation',
+                                                               task_id='MonthlySumEstimationParameters',
+                                                               dag=dag)
 
     site_country_special_referrer_distribution = \
         DockerBashOperator(task_id='SiteCountrySpecialReferrerDistribution',

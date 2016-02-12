@@ -495,7 +495,7 @@ def generate_dag(mode):
             cleanup_stage.set_upstream(cleanup_stage_ds_minus_i)
 
         skip_clean_id = 'StageCleanupSkipped'
-        not_cleaning_stage = DummyOperator(task_id=skip_clean_id,
+        not_cleaning_stage = DummyOperator(task_id=clean_id,
                                            dag=dag)
 
         # for now, skip cleanup
