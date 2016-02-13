@@ -56,14 +56,23 @@ add_totals_est = \
 
 add_totals_est.set_upstream(estimation)
 
-fractions_and_reach = \
-    DockerBashOperator(task_id='CalculateFractionsAndReach',
+global_reach = \
+    DockerBashOperator(task_id='CalculateGlobalReach',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p create_fractions_and_reach'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p global_reach'''
                        )
 
-fractions_and_reach.set_upstream(add_totals_est)
+global_reach.set_upstream(add_totals_est)
+
+fractions = \
+    DockerBashOperator(task_id='CalculateFractions',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p fractions'''
+                       )
+
+fractions.set_upstream(add_totals_est)
 
 check = \
     DockerBashOperator(task_id='Check',
@@ -81,7 +90,7 @@ est_repair = \
                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p repair'''
                        )
 
-est_repair.set_upstream(fractions_and_reach)
+est_repair.set_upstream([fractions, global_reach])
 
 values_est = \
     DummyOperator(task_id='DailyTrafficEstimation',
