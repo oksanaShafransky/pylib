@@ -48,8 +48,8 @@ def assemble_process(mode, dag, sum_ww_value_size):
                                     external_task_id='Estimation')
     desktop_estimation_aggregation = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
                                                         dag=dag,
-                                                        task_id='SumEstimation',
-                                                        external_task_id='MonthlySumEstimationParameters')
+                                                        task_id='MonthlySumEstimationParameters',
+                                                        external_task_id='SumEstimation')
 
     should_run_mw = DummyOperator(dag=dag, task_id='should_run_mw')
     should_run_mw.set_upstream([estimation, desktop_estimation_aggregation])
