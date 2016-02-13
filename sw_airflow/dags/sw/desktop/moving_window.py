@@ -6,7 +6,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
 from airflow.operators.sensors import HdfsSensor
 from sw.airflow.key_value import *
-from sw.airflow.operators import DockerBashOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.operators import DockerCopyHbaseTableOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -119,13 +119,20 @@ def generate_dags(mode):
                            )
     sum_special_referrer_values.set_upstream(daily_aggregation)
 
-    monthly_sum_estimation_parameters = \
-        DockerBashOperator(task_id='MonthlySumEstimationParameters',
-                           dag=dag,
-                           docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p monthly_sum_estimation_parameters'''
-                           )
-    monthly_sum_estimation_parameters.set_upstream(daily_estimation)
+    # estimation parameters sum in window mode is done daily during estimation. in snapshot, it needs to be explicitly declared
+    if is_snapshot_dag():
+        monthly_sum_estimation_parameters = \
+            DockerBashOperator(task_id='MonthlySumEstimationParameters',
+                               dag=dag,
+                               docker_name='''{{ params.cluster }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p monthly_sum_estimation_parameters'''
+                               )
+        monthly_sum_estimation_parameters.set_upstream(daily_estimation)
+    else:
+        monthly_sum_estimation_parameters = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+                                                               external_task_id='SumEstimation',
+                                                               task_id='MonthlySumEstimationParameters',
+                                                               dag=dag)
 
     site_country_special_referrer_distribution = \
         DockerBashOperator(task_id='SiteCountrySpecialReferrerDistribution',
@@ -617,7 +624,7 @@ def generate_dags(mode):
                         target_cluster=','.join(DEPLOY_TARGETS),
                         table_name_template='categories_' + hbase_suffix_template
                 )
-            copy_to_prod_snapshot_industry.set_upstream(ranks)
+            copy_to_prod_snapshot_industry.set_upstream(industry_analysis)
 
             copy_to_prod_snapshot_sites_scrape_stat = \
                 DockerCopyHbaseTableOperator(
@@ -848,46 +855,8 @@ def generate_dags(mode):
                                    )
             check_customer_distros.set_upstream(non_operationals)
 
-            cleanup_from_days = 8
-            cleanup_to_days = 4
-
-            cleanup_stage = DummyOperator(task_id='CleanupStage',
-                                          dag=dag)
-
-            for i in range(cleanup_to_days, cleanup_from_days):
-                cleanup_stage_ds_minus_i = \
-                    DockerBashOperator(task_id='CleanupStage_DS-%s' % i,
-                                       dag=dag,
-                                       docker_name='''{{ params.cluster }}''',
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p delete_files,drop_hbase_tables''' % i
-                                       )
-                cleanup_stage_ds_minus_i.set_upstream(cleanup_stage)
-
             non_operationals.set_upstream(dynamic_cross_stage)
-            cleanup_stage.set_upstream(non_operationals)
-
-            cleanup_from_days = 12
-            cleanup_to_days = 5
-
-            cleanup_prod = DummyOperator(task_id='CleanupProd',
-                                         dag=dag)
-
-            for i in range(cleanup_to_days, cleanup_from_days):
-                cleanup_prod_ds_minus_i = DummyOperator(task_id='CleanupProd_DS-%s' % i,
-                                                        dag=dag)
-                cleanup_prod_ds_minus_i.set_upstream(cleanup_prod)
-
-                for target in DEPLOY_TARGETS:
-                    cleanup_prod_per_target_ds_minus_i = \
-                        DockerBashOperator(task_id='CleanupProd_%s_DS-%s' % (target, i),
-                                           dag=dag,
-                                           docker_name='%s' % target,
-                                           bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/windowCleanup.sh -d {{ macros.ds_add(macros.last_interval_day(ds, dag.schedule_interval),-%s) }}  -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p drop_hbase_tables''' % i
-                                           )
-                    cleanup_prod_per_target_ds_minus_i.set_upstream(cleanup_prod_ds_minus_i)
-
             non_operationals.set_upstream(dynamic_cross_prod)
-            cleanup_prod.set_upstream(non_operationals)
 
     #################
     # Histograms    #

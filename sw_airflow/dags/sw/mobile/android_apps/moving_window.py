@@ -1,14 +1,14 @@
+
 __author__ = 'Iddo Aviram'
 
 from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import HdfsSensor
 from airflow.operators.python_operator import BranchPythonOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.key_value import *
-from sw.airflow.operators import DockerBashOperator
-from sw.airflow.operators import  DockerCopyHbaseTableOperator
 from sw.airflow.operators import AdaptedExternalTaskSensor
+from sw.airflow.operators import DockerCopyHbaseTableOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -37,7 +37,6 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 
 
 def generate_dag(mode):
-
     def is_window_dag():
         return mode == WINDOW_MODE
 
@@ -50,7 +49,7 @@ def generate_dag(mode):
         if is_snapshot_dag():
             return 'Snapshot'
 
-    #TODO insert the real logic here
+    # TODO insert the real logic here
     def is_prod_env():
         return IS_PROD
 
@@ -68,12 +67,13 @@ def generate_dag(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-    dag = DAG(dag_id='AndroidApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
+    dag = DAG(dag_id='AndroidApps_' + mode_dag_name(), default_args=dag_args_for_mode,
+              params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
-    mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='Mobile_Estimation',
+    mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
                                            dag=dag,
-                                           task_id='MobileDailyEstimation',
+                                           task_id='Estimation',
                                            external_task_id='Estimation',
                                            external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
 
@@ -91,7 +91,7 @@ def generate_dag(mode):
         DockerBashOperator(task_id='PrepareHBaseTables',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p tables'''
+                           bash_command='''{{ params.execution_dir }}/mobile/scripts/start-process.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl APPS -p tables'''
                            )
 
     #####################
@@ -322,7 +322,7 @@ def generate_dag(mode):
     app_engagement.set_upstream([mobile_estimation, prepare_hbase_tables])
 
     # Todo: Fix this task whose data was deleted fue to retention by fallbacking into using snapshot's data
-    #if is_window_dag():
+    # if is_window_dag():
     #    app_engagement_sanity_check = \
     #        DockerBashOperator(task_id='AppEngagementSanityCheck',
     #                           dag=dag,
@@ -337,12 +337,11 @@ def generate_dag(mode):
     #############
 
     daily_ranks_backfill = AdaptedExternalTaskSensor(external_dag_id='AndroidApps_DailyRanksBackfill',
-                                              dag=dag,
-                                              task_id="DailyRanksBackfill",
-                                              external_task_id='DailyRanksBackfill',
-                                              external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''
-                                              )
-
+                                                     dag=dag,
+                                                     task_id="DailyRanksBackfill",
+                                                     external_task_id='DailyRanksBackfill',
+                                                     external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}'''
+                                                     )
     calc_ranks = \
         DockerBashOperator(task_id='CalculateUsageRanks',
                            dag=dag,
@@ -390,7 +389,7 @@ def generate_dag(mode):
                            )
     ranks_export_stage.set_upstream(prepare_ranks)
 
-    #TODO add check that this is indeed prod environment
+    # TODO add check that this is indeed prod environment
     if is_prod_env():
         ranks_export_prod = \
             DockerBashOperator(task_id='RanksExportProd',
@@ -447,14 +446,11 @@ def generate_dag(mode):
         trends_1_month.set_upstream(usage_ranks)
         trends.set_upstream(trends_1_month)
 
-    ####################
-    # Dynamic Settings #
-    ####################
-
     apps = DummyOperator(task_id='Apps',
                          dag=dag
                          )
-    apps.set_upstream([app_engagement, app_affinity, retention_store, app_retention_categories, retention_leaders, app_usage_pattern_store, usage_pattern_categories, usage_pattern_category_leaders,
+    apps.set_upstream([app_engagement, app_affinity, retention_store, app_retention_categories, retention_leaders,
+                       app_usage_pattern_store, usage_pattern_categories, usage_pattern_category_leaders,
                        usage_ranks, export_ranks, trends])
 
     #######################
@@ -505,7 +501,7 @@ def generate_dag(mode):
         # for now, skip cleanup
         should_clean_stage = BranchPythonOperator(task_id='IsCleanupRequested',
                                                   dag=dag,
-                                                  python_callable=lambda: skip_clean_id)
+                                                  python_callable=lambda: clean_id)
         should_clean_stage.set_downstream([cleaning_stage, not_cleaning_stage])
 
     ############################
@@ -520,14 +516,15 @@ def generate_dag(mode):
                            )
     update_usage_ranks_date_stage.set_upstream(usage_ranks)
 
-
     deploy_targets = ['hbp1', 'hbp2']
+
     ################
     # Copy to Prod #
     ################
 
-    hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
-                             '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
+    hbase_suffix_template = (
+        '''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
+        '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
 
     if is_prod_env():
         # TODO configure parallelism setting for this task, which is heavier (30 slots)
@@ -618,7 +615,7 @@ def generate_dag(mode):
                     cleanup_prod_ds_minus_i = \
                         DockerBashOperator(task_id='Cleanup%s_DS-%s' % (target, i),
                                            dag=dag,
-                                           docker_name='''{{ params.hbase_cluster }}''',
+                                           docker_name=target,
                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
                                            )
                     cleanup_prod_ds_minus_i.set_upstream(copy_to_prod)
@@ -674,10 +671,26 @@ def generate_dag(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-sdk-stats \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }} \
+                                           -a
                                         '''
                            )
     app_sdk_hist_register.set_upstream(app_engagement)
+
+    cat_rank_hist_register =  \
+        DockerBashOperator(task_id='StoreCategoryRanksTableSplits',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''source {{ params.execution_dir }}/scripts/common.sh && \
+                                           hadoopexec {{ params.execution_dir }}/mobile mobile.jar com.similargroup.common.job.topvalues.KeyHistogramAnalysisUtil \
+                                           -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/cat-mod-app-rank \
+                                           -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
+                                           -k 50000 \
+                                           -t cat_mod_app_rank{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }} \
+                                           -a
+                                        '''
+                           )
+    cat_rank_hist_register.set_upstream(usage_ranks)
 
     app_eng_rank_hist_register =  \
         DockerBashOperator(task_id='StoreAppRanksTableSplits',
@@ -688,7 +701,8 @@ def generate_dag(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/app-eng-rank \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 500000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t app_eng_rank{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }} \
+                                           -a
                                         '''
                            )
     app_eng_rank_hist_register.set_upstream(usage_ranks)

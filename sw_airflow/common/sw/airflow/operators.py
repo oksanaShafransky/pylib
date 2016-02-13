@@ -1,17 +1,17 @@
-from airflow import settings, utils
-from airflow.models import TaskInstance, Log
-from airflow.operators.python_operator import PythonOperator
-from airflow.plugins_manager import AirflowPlugin
 import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
 
+from airflow import settings, utils
+from airflow.models import TaskInstance, Log
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.operators.sensors import BaseSensorOperator
+from airflow.plugins_manager import AirflowPlugin
 from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
-import random
-import subprocess
+
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 
 class BashSensor(BaseSensorOperator):
@@ -52,9 +52,9 @@ class BashSensor(BaseSensorOperator):
                              "location :{0}".format(script_location))
                 logging.info("Running command: " + bash_command)
                 sp = Popen(
-                    ['bash', fname],
-                    stdout=PIPE, stderr=STDOUT,
-                    cwd=tmp_dir, env=self.env)
+                        ['bash', fname],
+                        stdout=PIPE, stderr=STDOUT,
+                        cwd=tmp_dir, env=self.env)
 
                 self.sp = sp
 
@@ -74,52 +74,6 @@ class BashSensor(BaseSensorOperator):
         return self.run_bash()
 
 
-class DockerBashOperator(BashOperator):
-    ui_color = '#FFFF66'
-    template_fields = ('bash_command', 'docker_name', 'kill_cmd')
-    cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
--v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
--v /etc/localtime:/etc/localtime:ro                           \
--v /tmp/logs:/tmp/logs                                        \
--v /var/lib/sss:/var/lib/sss                                  \
--v /etc/localtime:/etc/localtime:ro                           \
--v /usr/bin:/opt/old_bin                                      \
--v /var/run/similargroup:/var/run/similargroup                \
---rm                                                          \
---sig-proxy=false                                             \
---user=`id -u`                                                \
--e DOCKER_GATE={{ docker_manager }}                           \
--e GELF_HOST="runsrv2.sg.internal"                            \
--e HOME=/tmp                                                  \
-runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
-    '''
-
-    kill_cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %(container_name)s'''
-    kill_cmd = ''
-
-    @apply_defaults
-    def __init__(self, docker_name, bash_command, *args, **kwargs):
-        super(DockerBashOperator, self).__init__(bash_command=None, *args, **kwargs)
-
-        rand = str(random.randint(10000, 99999))
-
-        self.docker_name = docker_name
-        self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id, 'task_id': self.task_id, 'rand': rand}
-
-        docker_command = DockerBashOperator.cmd_template % {'random': rand, 'container_name': self.container_name, 'docker': self.docker_name,
-                                                                     'bash_command': bash_command}
-
-        self.kill_cmd = DockerBashOperator.kill_cmd_template % {'container_name': self.container_name}
-        self.bash_command = docker_command
-
-    def on_kill(self):
-        logging.info('Killing container %s' % self.container_name)
-
-        subprocess.call(['bash', '-c', self.kill_cmd])
-
-        super(DockerBashOperator, self).on_kill()
-
-
 class DockerBashSensor(BashSensor):
     template_fields = ('bash_command', 'docker_name')
     cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
@@ -136,7 +90,7 @@ class DockerBashSensor(BashSensor):
 -e DOCKER_GATE={{ docker_manager }}                           \
 -e GELF_HOST="runsrv2.sg.internal"                            \
 -e HOME=/tmp                                                  \
-runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
+bigdata/centos6.cdh5.%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
     @apply_defaults
@@ -186,11 +140,12 @@ class DockerCopyHbaseTableOperator(BashOperator):
 -e DOCKER_GATE={{ params.docker_gate }}                           \
 -e GELF_HOST="runsrv2.sg.internal"                            \
 -e HOME=/tmp                                                  \
-runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
+bigdata/centos6.cdh5.%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
     @apply_defaults
-    def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args, **kwargs):
+    def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args,
+                 **kwargs):
         self.docker_name = docker_name
         bash_cmd = DockerCopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
                                                                 'target_cluster': target_cluster,
@@ -225,7 +180,7 @@ class SuccedOrSkipOperator(PythonOperator):
             if task.task_id not in (skip_list + success_list):
                 continue
             ti = TaskInstance(
-                task, execution_date=context['ti'].execution_date)
+                    task, execution_date=context['ti'].execution_date)
             ti.start_date = datetime.now()
             ti.end_date = datetime.now()
             if task.task_id in skip_list:
@@ -240,7 +195,7 @@ class SuccedOrSkipOperator(PythonOperator):
         session.close()
         if self.task_id not in success_list:
             raise ValueError(
-                "Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
+                    "Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
         logging.info("Done.")
 
     def run(self, start_date=None, end_date=None, ignore_dependencies=False, force=False, mark_success=False):
@@ -253,10 +208,10 @@ class SuccedOrSkipOperator(PythonOperator):
         # We mark our own successes if needed. Run in "test" mode
         for dt in utils.date_range(start_date, end_date, self.schedule_interval):
             TaskInstance(self, dt).run(
-                mark_success=False,
-                ignore_dependencies=ignore_dependencies,
-                test_mode=True,
-                force=force, )
+                    mark_success=False,
+                    ignore_dependencies=ignore_dependencies,
+                    test_mode=True,
+                    force=force, )
 
 
 class AdaptedExternalTaskSensor(BaseSensorOperator):
@@ -312,7 +267,7 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
                 TI.task_id == self.external_task_id,
                 TI.state.in_(self.allowed_states),
                 TI.execution_date == dttm,
-                ).count()
+        ).count()
         session.commit()
         session.close()
         return count

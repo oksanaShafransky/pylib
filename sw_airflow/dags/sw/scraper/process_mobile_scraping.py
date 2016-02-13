@@ -7,7 +7,8 @@ from airflow.operators.dummy_operator import DummyOperator
 
 from airflow.operators.sensors import HdfsSensor
 
-from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
+from sw.airflow.operators import DockerCopyHbaseTableOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.key_value import *
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'

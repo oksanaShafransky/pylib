@@ -5,7 +5,7 @@ from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.key_value import *
-from sw.airflow.operators import DockerBashOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/analytics'
@@ -56,14 +56,23 @@ add_totals_est = \
 
 add_totals_est.set_upstream(estimation)
 
-fractions_and_reach = \
-    DockerBashOperator(task_id='CalculateFractionsAndReach',
+global_reach = \
+    DockerBashOperator(task_id='CalculateGlobalReach',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p create_fractions_and_reach'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p global_reach'''
                        )
 
-fractions_and_reach.set_upstream(add_totals_est)
+global_reach.set_upstream(add_totals_est)
+
+fractions = \
+    DockerBashOperator(task_id='CalculateFractions',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p fractions'''
+                       )
+
+fractions.set_upstream(add_totals_est)
 
 check = \
     DockerBashOperator(task_id='Check',
@@ -81,7 +90,7 @@ est_repair = \
                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyEstimation.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p repair'''
                        )
 
-est_repair.set_upstream(fractions_and_reach)
+est_repair.set_upstream([fractions, global_reach])
 
 values_est = \
     DummyOperator(task_id='DailyTrafficEstimation',
@@ -93,7 +102,7 @@ daily_incoming = \
     DockerBashOperator(task_id='DailyIncoming',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyIncoming.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyIncoming.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }}'''
                        )
 
 daily_incoming.set_upstream(add_totals_est)
@@ -102,10 +111,18 @@ incoming_repair = \
     DockerBashOperator(task_id='HiveRepairDailyIncoming',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyIncoming.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyIncoming.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -p repair'''
                        )
 
 incoming_repair.set_upstream(daily_incoming)
+
+sum_estimation_parameters = \
+    DockerBashOperator(task_id='SumEstimation',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m window -mt last-28 -p monthly_sum_estimation_parameters'''
+                       )
+sum_estimation_parameters.set_upstream(values_est)
 
 register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          dag=dag,
@@ -129,3 +146,4 @@ wrap_up = \
 wrap_up.set_upstream(est_repair)
 wrap_up.set_upstream(incoming_repair)
 wrap_up.set_upstream(register_available)
+wrap_up.set_upstream(sum_estimation_parameters)

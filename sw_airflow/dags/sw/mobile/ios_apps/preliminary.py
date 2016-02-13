@@ -7,7 +7,7 @@ from airflow.operators.sensors import HdfsSensor
 from airflow.operators.dummy_operator import DummyOperator
 
 from sw.airflow.key_value import *
-from sw.airflow.operators import DockerBashOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/ios-analytics'
