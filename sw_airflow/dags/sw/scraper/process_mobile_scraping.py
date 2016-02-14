@@ -2,7 +2,7 @@ __author__ = 'Felix'
 
 from datetime import datetime, timedelta
 
-from airflow.models import DAG
+from airflow.models import DAG, Variable
 from airflow.operators.dummy_operator import DummyOperator
 
 from airflow.operators.sensors import HdfsSensor
@@ -80,8 +80,7 @@ ps_rank_hist = DockerBashOperator(task_id='AssemblePlaystoreRanksHistory',
                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/ranks.sh -d {{ ds }} -p playstore_rank_hist''',
                                   priority_weight=3
                                   )
-ps_rank_hist.set_upstream(init)
-ps_rank_hist.set_upstream(ps_ranks_exp)
+ps_rank_hist.set_upstream(init, ps_ranks_exp)
 ps_rank_hist.set_downstream(deploy_prod)
 
 it_rank_hist = DockerBashOperator(task_id='AssembleiTunesRanksHistory',
@@ -90,8 +89,7 @@ it_rank_hist = DockerBashOperator(task_id='AssembleiTunesRanksHistory',
                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/ranks.sh -d {{ ds }} -p itunes_rank_hist''',
                                   priority_weight=3
                                   )
-it_rank_hist.set_upstream(init)
-it_rank_hist.set_upstream(it_ranks_exp)
+it_rank_hist.set_upstream(init, it_ranks_exp)
 it_rank_hist.set_downstream(deploy_prod)
 
 store_cat_ranks = DockerBashOperator(task_id='StoreCategoryRanks',
@@ -99,9 +97,7 @@ store_cat_ranks = DockerBashOperator(task_id='StoreCategoryRanks',
                                      docker_name=DEFAULT_DOCKER,
                                      bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/ranks.sh -d {{ ds }} -p store_cat_ranks'''
                                      )
-store_cat_ranks.set_upstream(init)
-store_cat_ranks.set_upstream(ps_ranks_exp)
-store_cat_ranks.set_upstream(it_ranks_exp)
+store_cat_ranks.set_upstream(init, ps_ranks_exp, it_ranks_exp)
 store_cat_ranks.set_downstream(deploy_prod)
 
 trends_7_days = DockerBashOperator(task_id='7DayTrends',
@@ -110,9 +106,7 @@ trends_7_days = DockerBashOperator(task_id='7DayTrends',
                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/trends.sh -d {{ ds }} -td 7''',
                                    priority_weight=2
                                    )
-trends_7_days.set_upstream(init)
-trends_7_days.set_upstream(ps_ranks_exp)
-trends_7_days.set_upstream(it_ranks_exp)
+trends_7_days.set_upstream(init, ps_ranks_exp, it_ranks_exp)
 trends_7_days.set_downstream(deploy_prod)
 
 trends_28_days = DockerBashOperator(task_id='28DayTrends',
@@ -121,9 +115,7 @@ trends_28_days = DockerBashOperator(task_id='28DayTrends',
                                     bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/trends.sh -d {{ ds }} -td 28''',
                                     priority_weight=2
                                     )
-trends_28_days.set_upstream(init)
-trends_28_days.set_upstream(ps_ranks_exp)
-trends_28_days.set_upstream(it_ranks_exp)
+trends_28_days.set_upstream(init, ps_ranks_exp, it_ranks_exp)
 trends_28_days.set_downstream(deploy_prod)
 
 
@@ -155,9 +147,7 @@ if DEPLOY_TO_PROD:
                                          bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/app_info.sh -d {{ ds }} \
                                                             -p export_couchbase,export_elastic -et {{ params.run_environment }}'''
                                          )
-    export_app_info.set_upstream(init)
-    export_app_info.set_upstream(ps_info)
-    export_app_info.set_upstream(it_info)
+    export_app_info.set_upstream(init, ps_info, it_info)
     export_app_info.set_downstream(wrap_up)
 
 export_app_info_stage = DockerBashOperator(task_id='ExportAppInfoStage',
@@ -166,9 +156,7 @@ export_app_info_stage = DockerBashOperator(task_id='ExportAppInfoStage',
                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/app_info.sh -d {{ ds }} \
                                                         -p export_couchbase,export_elastic,export_hbase -et STAGE'''
                                            )
-export_app_info_stage.set_upstream(init)
-export_app_info_stage.set_upstream(ps_info)
-export_app_info_stage.set_upstream(it_info)
+export_app_info_stage.set_upstream(init, ps_info, it_info)
 export_app_info_stage.set_downstream(wrap_up)
 
 supp_it_info = DockerBashOperator(task_id='SupplementiTunesInfo',
@@ -177,9 +165,7 @@ supp_it_info = DockerBashOperator(task_id='SupplementiTunesInfo',
                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/app_info.sh -d {{ ds }} -p supp_itunes_info -fd''',
                                   priority_weight=3
                                   )
-supp_it_info.set_upstream(init)
-supp_it_info.set_upstream(it_info)
-supp_it_info.set_upstream(it_ranks_exp)
+supp_it_info.set_upstream(init, it_info, it_ranks_exp)
 supp_it_info.set_downstream(deploy_prod)
 
 
@@ -210,9 +196,7 @@ kw_ranks = DockerBashOperator(task_id='KeywordRanks',
                               docker_name=DEFAULT_DOCKER,
                               bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/keywords.sh -d {{ ds }} -p kw_apps'''
                               )
-kw_ranks.set_upstream(init)
-kw_ranks.set_upstream(ps_kw_ready)
-kw_ranks.set_upstream(it_kw_ready)
+kw_ranks.set_upstream(init, ps_kw_ready, it_kw_ready)
 kw_ranks.set_downstream(deploy_prod)
 
 app_kw = DockerBashOperator(task_id='AppKeywords',
@@ -221,9 +205,7 @@ app_kw = DockerBashOperator(task_id='AppKeywords',
                             bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/keywords.sh -d {{ ds }} -p app_keywords''',
                             priority_weight=2
                             )
-app_kw.set_upstream(init)
-app_kw.set_upstream(ps_kw_ready)
-app_kw.set_upstream(it_kw_ready)
+app_kw.set_upstream(init, ps_kw_ready, it_kw_ready)
 app_kw.set_downstream(deploy_prod)
 
 app_kw_hist = DockerBashOperator(task_id='AppKeywordRanksHistory',
@@ -232,9 +214,7 @@ app_kw_hist = DockerBashOperator(task_id='AppKeywordRanksHistory',
                                  bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/keywords.sh -d {{ ds }} -p app_kw_hist''',
                                  priority_weight=4
                                  )
-app_kw_hist.set_upstream(init)
-app_kw_hist.set_upstream(ps_kw_ready)
-app_kw_hist.set_upstream(it_kw_ready)
+app_kw_hist.set_upstream(init, ps_kw_ready, it_kw_ready)
 app_kw_hist.set_downstream(deploy_prod)
 
 #################################################
@@ -246,9 +226,7 @@ link = DockerBashOperator(task_id='LinkAppsWithSites',
                           docker_name=DEFAULT_DOCKER,
                           bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/link.sh -d {{ ds }} -p link_app_devsite,link_pub_site,link_app_pub,store_app_sites -et {{ params.run_environment }}'''
                           )
-link.set_upstream(init)
-link.set_upstream(ps_info)
-link.set_upstream(it_info)
+link.set_upstream(init, ps_info, it_info)
 link.set_downstream(deploy_prod)
 
 if DEPLOY_TO_PROD:
@@ -257,10 +235,7 @@ if DEPLOY_TO_PROD:
                                    docker_name=DEFAULT_DOCKER,
                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/link.sh -d {{ ds }}  -p export_site_apps -et {{ params.run_environment }}'''
                                    )
-    link_prod.set_upstream(init)
-    link_prod.set_upstream(ps_info)
-    link_prod.set_upstream(it_info)
-    link_prod.set_upstream(link)
+    link_prod.set_upstream(init, ps_info, it_info, link)
     link_prod.set_downstream(deploy_prod)
 
 link_stage = DockerBashOperator(task_id='LinkAppsWithSitesStage',
@@ -268,10 +243,7 @@ link_stage = DockerBashOperator(task_id='LinkAppsWithSitesStage',
                                 docker_name=DEFAULT_DOCKER,
                                 bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/link.sh -d {{ ds }} -p export_site_apps -et STAGE'''
                                 )
-link_stage.set_upstream(init)
-link_stage.set_upstream(ps_info)
-link_stage.set_upstream(it_info)
-link_stage.set_upstream(link)
+link_stage.set_upstream(init, ps_info, it_info, link)
 link_stage.set_downstream(deploy_prod)
 
 lite_app_info = DockerBashOperator(task_id='CopyAppDetailsForLite',
@@ -279,11 +251,7 @@ lite_app_info = DockerBashOperator(task_id='CopyAppDetailsForLite',
                                    docker_name=DEFAULT_DOCKER,
                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/lite.sh -d {{ ds }} -p details'''
                                    )
-lite_app_info.set_upstream(init)
-lite_app_info.set_upstream(ps_info)
-lite_app_info.set_upstream(it_info)
-lite_app_info.set_upstream(supp_it_info)
-lite_app_info.set_upstream(export_app_info_stage)
+lite_app_info.set_upstream(init, ps_info, it_info, supp_it_info, export_app_info_stage)
 lite_app_info.set_downstream(deploy_prod)
 
 lite_app_stats = DockerBashOperator(task_id='CopyAppStatsForLite',
@@ -299,9 +267,7 @@ lite_kw = DockerBashOperator(task_id='CopyKeywordsForLite',
                              docker_name=DEFAULT_DOCKER,
                              bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/lite.sh -d {{ ds }} -p keywords'''
                              )
-lite_kw.set_upstream(init)
-lite_kw.set_upstream(ps_kw_ready)
-lite_kw.set_upstream(it_kw_ready)
+lite_kw.set_upstream(init, ps_kw_ready, it_kw_ready)
 lite_kw.set_downstream(deploy_prod)
 
 #################################################
@@ -322,82 +288,51 @@ check_data.set_downstream(deploy_prod_done)
 #################################################
 ###    Deploy                                  #
 #################################################
-last_deploy_step = None
-for target_cluster in ('hbp1','hbp2'):
-    copy_app_details = DockerCopyHbaseTableOperator(
-        task_id='copy_app_details_%s' % target_cluster,
-        dag=dag,
-        docker_name=DEFAULT_DOCKER,
-        source_cluster=DEFAULT_CLUSTER,
-        target_cluster=target_cluster,
-        table_name_template="app_details_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-    )
-    copy_app_details.set_upstream(deploy_prod)
-    copy_app_details.set_downstream(deploy_prod_done)
-    if last_deploy_step is not None:
-        copy_app_details.set_upstream(last_deploy_step)
+deploy_targets = Variable.get(key='deploy_targets', default_var='{[]}', deserialize_json=True)
 
-    copy_app_top_list = DockerCopyHbaseTableOperator(
-        task_id='copy_app_top_list_%s' % target_cluster,
-        dag=dag,
-        docker_name=DEFAULT_DOCKER,
-        source_cluster=DEFAULT_CLUSTER,
-        target_cluster=target_cluster,
-        table_name_template="app_top_list_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-    )
-    copy_app_top_list.set_upstream(deploy_prod)
-    copy_app_top_list.set_downstream(deploy_prod_done)
-    if last_deploy_step is not None:
-        copy_app_top_list.set_upstream(last_deploy_step)
+copy_app_details = DockerCopyHbaseTableOperator(
+    task_id='copy_app_details',
+    dag=dag,
+    docker_name=DEFAULT_DOCKER,
+    source_cluster=DEFAULT_CLUSTER,
+    target_cluster=','.join(deploy_targets),
+    table_name_template="app_details_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
+)
+copy_app_details.set_upstream(deploy_prod)
+copy_app_details.set_downstream(deploy_prod_done)
 
-    copy_app_cat_rank = DockerCopyHbaseTableOperator(
-        task_id='copy_app_cat_rank_%s' % target_cluster,
-        dag=dag,
-        docker_name=DEFAULT_DOCKER,
-        source_cluster=DEFAULT_CLUSTER,
-        target_cluster=target_cluster,
-        table_name_template="app_cat_rank_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-    )
-    copy_app_cat_rank.set_upstream(deploy_prod)
-    copy_app_cat_rank.set_downstream(deploy_prod_done)
-    if last_deploy_step is not None:
-        copy_app_cat_rank.set_upstream(last_deploy_step)
+copy_app_top_list = DockerCopyHbaseTableOperator(
+    task_id='copy_app_top_list',
+    dag=dag,
+    docker_name=DEFAULT_DOCKER,
+    source_cluster=DEFAULT_CLUSTER,
+    target_cluster=','.join(deploy_targets),
+    table_name_template="app_top_list_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
+)
+copy_app_top_list.set_upstream(deploy_prod)
+copy_app_top_list.set_downstream(deploy_prod_done)
 
-    copy_mobile_app_keyword_positions = DockerCopyHbaseTableOperator(
-        task_id='copy_mobile_app_keyword_positions_%s' % target_cluster,
-        dag=dag,
-        docker_name=DEFAULT_DOCKER,
-        source_cluster=DEFAULT_CLUSTER,
-        target_cluster=target_cluster,
-        table_name_template="mobile_app_keyword_positions_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-    )
-    copy_mobile_app_keyword_positions.set_upstream(deploy_prod)
-    copy_mobile_app_keyword_positions.set_downstream(deploy_prod_done)
-    if last_deploy_step is not None:
-        copy_mobile_app_keyword_positions.set_upstream(last_deploy_step)
+copy_mobile_app_keyword_positions = DockerCopyHbaseTableOperator(
+    task_id='copy_mobile_app_keyword_positions',
+    dag=dag,
+    docker_name=DEFAULT_DOCKER,
+    source_cluster=DEFAULT_CLUSTER,
+    target_cluster=','.join(deploy_targets),
+    table_name_template="mobile_app_keyword_positions_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
+)
+copy_mobile_app_keyword_positions.set_upstream(deploy_prod)
+copy_mobile_app_keyword_positions.set_downstream(deploy_prod_done)
 
-    copy_app_lite = DockerCopyHbaseTableOperator(
-        task_id='copy_app_lite_%s' % target_cluster,
-        dag=dag,
-        docker_name=DEFAULT_DOCKER,
-        source_cluster=DEFAULT_CLUSTER,
-        target_cluster=target_cluster,
-        table_name_template="app_lite_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
-    )
-    copy_app_lite.set_upstream(deploy_prod)
-    copy_app_lite.set_downstream(deploy_prod_done)
-    if last_deploy_step is not None:
-        copy_app_lite.set_upstream(last_deploy_step)
-
-    last_deploy_step = DummyOperator(task_id='deploy_step_%s' % target_cluster, dag=dag)
-    last_deploy_step.set_upstream(copy_app_details)
-    last_deploy_step.set_upstream(copy_app_top_list)
-    last_deploy_step.set_upstream(copy_app_cat_rank)
-    last_deploy_step.set_upstream(copy_mobile_app_keyword_positions)
-    last_deploy_step.set_upstream(copy_app_lite)
-    last_deploy_step.set_downstream(deploy_prod_done)
-
-
+copy_app_lite = DockerCopyHbaseTableOperator(
+    task_id='copy_app_lite',
+    dag=dag,
+    docker_name=DEFAULT_DOCKER,
+    source_cluster=DEFAULT_CLUSTER,
+    target_cluster=','.join(deploy_targets),
+    table_name_template="app_lite_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
+)
+copy_app_lite.set_upstream(deploy_prod)
+copy_app_lite.set_downstream(deploy_prod_done)
 
 
 #################################################
@@ -462,9 +397,7 @@ update_elastic_alias_stage = DockerBashOperator(task_id='UpdateElasticAliasStage
                                                 bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/elastic.sh -d {{ ds }} -et STAGE'''
                                                 )
 update_elastic_alias_stage.set_upstream(wrap_up)
-update_elastic_alias_stage.set_downstream(register_success)
-update_elastic_alias_stage.set_downstream(update_latest_date)
-update_elastic_alias_stage.set_downstream(register_available)
+update_elastic_alias_stage.set_downstream(register_success, update_latest_date, register_available)
 
 #################################################
 ###    Cleanup                                  #

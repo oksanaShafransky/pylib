@@ -2,7 +2,7 @@ __author__ = 'lajonat'
 
 from datetime import datetime, timedelta
 
-from airflow.models import DAG
+from airflow.models import DAG, Variable
 from airflow.operators.dummy_operator import DummyOperator
 
 from sw.airflow.operators import DockerCopyHbaseTableOperator
@@ -81,24 +81,18 @@ process.set_upstream(init)
 ###    Deploy                                  #
 #################################################
 if DEPLOY_TO_PROD:
-    last_deploy_step = None
-    for target_cluster in ('hbp1','hbp2'):
-        copy_processed = DockerCopyHbaseTableOperator(
-            task_id='copy_sites_scrape_stat_%s' % target_cluster,
-            dag=dag,
-            docker_name=DEFAULT_DOCKER,
-            source_cluster=DEFAULT_CLUSTER,
-            target_cluster=target_cluster,
-            table_name_template="sites_scrape_stat_{{ macros.ds_format(macros.ds_add(ds,-1), '%Y-%m-%d', '%y_%m') }}"
-        )
-        copy_processed.set_upstream(deploy_prod)
-        copy_processed.set_downstream(deploy_prod_done)
-        if last_deploy_step is not None:
-            copy_processed.set_upstream(last_deploy_step)
+    deploy_targets = Variable.get(key='deploy_targets', default_var='{[]}', deserialize_json=True)
 
-        last_deploy_step = DummyOperator(task_id='deploy_step_%s' % target_cluster, dag=dag)
-        last_deploy_step.set_upstream(copy_processed)
-        last_deploy_step.set_downstream(deploy_prod_done)
+    copy_processed = DockerCopyHbaseTableOperator(
+        task_id='copy_sites_scrape_stat',
+        dag=dag,
+        docker_name=DEFAULT_DOCKER,
+        source_cluster=DEFAULT_CLUSTER,
+        target_cluster=','.join(deploy_targets),
+        table_name_template="sites_scrape_stat_{{ macros.ds_format(macros.ds_add(ds,-1), '%Y-%m-%d', '%y_%m') }}"
+    )
+    copy_processed.set_upstream(deploy_prod)
+    copy_processed.set_downstream(deploy_prod_done)
 
 
 #################################################
