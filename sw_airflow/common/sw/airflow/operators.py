@@ -8,6 +8,9 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.operators.python_operator import PythonOperator
 from airflow.operators.sensors import BaseSensorOperator
 from airflow.plugins_manager import AirflowPlugin
+from airflow.models import DagBag
+from airflow.utils import AirflowException
+from airflow.bin import cli
 from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
 
@@ -260,6 +263,10 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
                 '{self.external_task_id} on '
                 '{dttm} ... '.format(**locals()))
         TI = TaskInstance
+
+        # Validate that the external dag and task exist
+        dag_bag = DagBag(cli.DAGS_FOLDER)
+        dag_bag.dags[self.external_dag_id].get_task(self.external_task_id)
 
         session = settings.Session()
         count = session.query(TI).filter(
