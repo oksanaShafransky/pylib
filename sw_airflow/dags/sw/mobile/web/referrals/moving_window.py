@@ -1,6 +1,6 @@
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from datetime import timedelta, datetime
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
@@ -30,23 +30,23 @@ snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, 
 
 
 def assemble_process(dag):
-    calculate_user_event_rates = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
+    calculate_user_event_rates = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
                                                     dag=dag, task_id="calculate_user_event_rates",
                                                     external_task_id='calculate_user_event_rates')
 
-    calculate_user_event_transitions = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
+    calculate_user_event_transitions = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
                                                           dag=dag, task_id="calculate_user_event_transitions",
                                                           external_task_id='calculate_user_event_transitions')
 
-    estimate_site_pvs = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
+    estimate_site_pvs = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
                                            dag=dag, task_id="estimate_site_pvs",
                                            external_task_id='estimate_site_pvs')
 
-    adjust_direct_pvs = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
+    adjust_direct_pvs = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
                                            dag=dag, task_id="adjust_direct_pvs",
                                            external_task_id='adjust_direct_pvs')
 
-    adjust_calc_redist = ExternalTaskSensor(external_dag_id='MobileWeb_Snapshot',
+    adjust_calc_redist = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Snapshot',
                                             dag=dag, task_id="adjust_calc_redist",
                                             external_task_id='adjust_calc_redist')
 
@@ -86,7 +86,7 @@ def assemble_process(dag):
     ##################
     # load to hbase #
     ##################
-    prepare_hbase_tables = ExternalTaskSensor(external_dag_id='MobileWeb_Window',
+    prepare_hbase_tables = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Window',
                                               dag=dag, task_id="prepare_hbase_tables",
                                               external_task_id='prepare_hbase_tables')
 
