@@ -3,7 +3,7 @@ __author__ = 'Kfir Eittan'
 from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from sw.airflow.key_value import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
 
@@ -30,7 +30,7 @@ dag = DAG(dag_id='Desktop_DailyEstimation', default_args=dag_args, params=dag_te
           schedule_interval=timedelta(days=1))
 
 
-preliminary = ExternalTaskSensor(external_dag_id='Desktop_Preliminary',
+preliminary = AdaptedExternalTaskSensor(external_dag_id='Desktop_Preliminary',
                                  external_task_id='Preliminary',
                                  dag=dag,
                                  task_id="Preliminary")

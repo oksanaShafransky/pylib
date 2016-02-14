@@ -1,6 +1,6 @@
 from airflow.models import DAG, Variable
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from datetime import timedelta, datetime
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
@@ -51,12 +51,12 @@ def assemble_process(mode, dag):
     full_mobile_web_data_ready = DummyOperator(task_id='full_mobile_web_data_ready', dag=dag)
 
     mw_dag_id = 'MobileWeb_Window' if mode == WINDOW_MODE else 'MobileWeb_Snapshot'
-    mobile_web_data_ready = ExternalTaskSensor(external_dag_id=mw_dag_id, dag=dag, task_id=mw_dag_id,
+    mobile_web_data_ready = AdaptedExternalTaskSensor(external_dag_id=mw_dag_id, dag=dag, task_id=mw_dag_id,
                                                external_task_id=mw_dag_id)
     full_mobile_web_data_ready.set_upstream(mobile_web_data_ready)
 
     if mode == SNAPSHOT_MODE:
-        mobile_web_referrals_data = ExternalTaskSensor(external_dag_id='MobileWeb_ReferralsSnapshot',
+        mobile_web_referrals_data = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsSnapshot',
                                                        dag=dag, task_id='MobileWeb_ReferralsSnapshot',
                                                        external_task_id='MobileWeb_ReferralsSnapshot')
         full_mobile_web_data_ready.set_upstream(mobile_web_referrals_data)

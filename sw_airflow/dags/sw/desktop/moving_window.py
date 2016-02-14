@@ -3,7 +3,7 @@ __author__ = 'Kfir Eittan'
 from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from airflow.operators.sensors import HdfsSensor
 from sw.airflow.key_value import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
@@ -77,19 +77,19 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
                            )
 
-    daily_aggregation = ExternalTaskSensor(external_dag_id='Desktop_Preliminary',
+    daily_aggregation = AdaptedExternalTaskSensor(external_dag_id='Desktop_Preliminary',
                                                    external_task_id='Preliminary',
                                                    task_id='Preliminary',
                                                    dag=dag)
     daily_aggregation.set_upstream(hbase_tables)
 
-    daily_estimation = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+    daily_estimation = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
                                           external_task_id='DailyTrafficEstimation',
                                           task_id='DailyTrafficEstimation',
                                           dag=dag)
     daily_estimation.set_upstream(hbase_tables)
 
-    daily_incoming = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+    daily_incoming = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
                                         external_task_id='DailyIncoming',
                                         task_id='DailyIncomingEstimation',
                                         dag=dag)
@@ -129,7 +129,7 @@ def generate_dags(mode):
                                )
         monthly_sum_estimation_parameters.set_upstream(daily_estimation)
     else:
-        monthly_sum_estimation_parameters = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+        monthly_sum_estimation_parameters = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
                                                                external_task_id='SumEstimation',
                                                                task_id='MonthlySumEstimationParameters',
                                                                dag=dag)

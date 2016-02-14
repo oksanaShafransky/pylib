@@ -7,7 +7,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from airflow.operators.python_operator import BranchPythonOperator
 from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.key_value import *
-from sw.airflow.operators import AdaptedExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from sw.airflow.operators import DockerCopyHbaseTableOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'

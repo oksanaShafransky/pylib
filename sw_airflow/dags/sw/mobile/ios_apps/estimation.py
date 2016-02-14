@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from airflow.operators.dummy_operator import DummyOperator
 
 from airflow.models import DAG
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 
 from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
@@ -35,7 +35,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 dag = DAG(dag_id='IosApps_Estimation', default_args=dag_args, params=dag_template_params,
           schedule_interval='@daily')
 
-preliminary = ExternalTaskSensor(external_dag_id='IosApps_Preliminary',
+preliminary = AdaptedExternalTaskSensor(external_dag_id='IosApps_Preliminary',
                                               dag=dag,
                                               task_id='Preliminary',
                                               external_task_id='Preliminary')

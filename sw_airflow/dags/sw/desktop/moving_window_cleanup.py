@@ -3,7 +3,7 @@ __author__ = 'Kfir Eittan'
 from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from airflow.operators.sensors import HdfsSensor
 from sw.airflow.key_value import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
@@ -38,7 +38,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 
 dag = DAG(dag_id='Desktop_MovingWindow_Cleanup', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
-moving_window = ExternalTaskSensor(external_dag_id='Desktop_MovingWindow_Window',
+moving_window = AdaptedExternalTaskSensor(external_dag_id='Desktop_MovingWindow_Window',
                                        external_task_id='NonOperationals',
                                        task_id='MovingWindow',
                                        dag=dag)
