@@ -59,7 +59,7 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
         if self.pokes % 10 == 0:
             logging.info('Validating the existing of the referenced task')
             dag_bag = DagBag(cli.DAGS_FOLDER)
-            dag_bag.dags[self.external_dag_id + "Dasda"].get_task(self.external_task_id)
+            dag_bag.dags[self.external_dag_id].get_task(self.external_task_id)
 
         session = settings.Session()
         count = session.query(TI).filter(
