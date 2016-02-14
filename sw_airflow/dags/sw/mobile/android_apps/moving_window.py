@@ -487,7 +487,7 @@ def generate_dag(mode):
                 DockerBashOperator(task_id='CleanupStage_DS-%s' % i,
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p delete_files -p drop_hbase_tables''' % i,
+                                   bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl APPS -p delete_files -p drop_hbase_tables''' % i,
 
                                    )
             cleanup_stage_ds_minus_i.set_upstream(apps)
@@ -616,7 +616,7 @@ def generate_dag(mode):
                         DockerBashOperator(task_id='Cleanup%s_DS-%s' % (target, i),
                                            dag=dag,
                                            docker_name=target,
-                                           bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl apps -p drop_hbase_tables''' % i
+                                           bash_command='''{{ params.execution_dir }}/mobile/scripts/windowCleanup.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -fl APPS -p drop_hbase_tables''' % i
                                            )
                     cleanup_prod_ds_minus_i.set_upstream(copy_to_prod)
 
