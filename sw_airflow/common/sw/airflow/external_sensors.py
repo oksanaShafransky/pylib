@@ -57,7 +57,7 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
 
         # Validate that the external dag and task exist once every 10 pokes
         if self.pokes % 10 == 0:
-            logging.info('Validating the existing of the referenced task')
+            logging.info('Validating the existence of the referenced task')
             dag_bag = DagBag(cli.DAGS_FOLDER)
             dag_bag.dags[self.external_dag_id].get_task(self.external_task_id)
 
