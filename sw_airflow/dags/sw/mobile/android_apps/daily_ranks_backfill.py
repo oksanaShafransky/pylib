@@ -14,7 +14,7 @@ WINDOW_MODE_TYPE = 'last-28'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2016, 1, 17),
+    'start_date': datetime(2016, 2, 9),
     'depends_on_past': True,
     'email': ['iddo.aviram@similarweb.com'],
     'email_on_failure': True,
@@ -30,9 +30,9 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 dag = DAG(dag_id='AndroidApps_DailyRanksBackfill', default_args=dag_args, params=dag_template_params,
           schedule_interval="@daily")
 
-mobile_estimation = ExternalTaskSensor(external_dag_id='Mobile_Estimation',
+mobile_estimation = ExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
                                        dag=dag,
-                                       task_id="MobileDailyEstimation",
+                                       task_id="Estimation",
                                        external_task_id='Estimation',
                                        execution_delta=timedelta(days=1)
                                        )
