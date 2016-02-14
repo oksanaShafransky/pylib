@@ -43,7 +43,6 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
         self.pokes = 0
 
     def poke(self, context):
-        self.pokes += 1
         if self.external_execution_date:
             dttm = self.external_execution_date
         else:
@@ -60,7 +59,7 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
         if self.pokes % 10 == 0:
             logging.info('Validating the existing of the referenced task')
             dag_bag = DagBag(cli.DAGS_FOLDER)
-            dag_bag.dags[self.external_dag_id].get_task(self.external_task_id)
+            dag_bag.dags[self.external_dag_id + "Dasda"].get_task(self.external_task_id)
 
         session = settings.Session()
         count = session.query(TI).filter(
@@ -71,4 +70,5 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
                 ).count()
         session.commit()
         session.close()
+        self.pokes += 1
         return count
