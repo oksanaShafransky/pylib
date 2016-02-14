@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 
 from sw.airflow.docker_bash_operator import DockerBashOperator
 
@@ -30,7 +30,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 dag = DAG(dag_id='AndroidApps_DailyRanksBackfill', default_args=dag_args, params=dag_template_params,
           schedule_interval="@daily")
 
-mobile_estimation = ExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
+mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
                                        dag=dag,
                                        task_id="Estimation",
                                        external_task_id='Estimation',

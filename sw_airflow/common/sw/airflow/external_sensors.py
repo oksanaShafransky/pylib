@@ -19,9 +19,13 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
     :type external_task_id: string
     :param allowed_states: list of allowed states, default is ``['success']``
     :type allowed_states: list
-    :param execution_delta: time difference with the previous execution to
-        look at, the default is the same execution_date as the current task.
-        For yesterday, use [positive!] datetime.timedelta(days=1)
+    :param external_execution_date the date on which to poke the external task's
+        run. The default is the same execution_date as the current task.
+    :type: datetime.datetime
+    :param execution_delta: time offset to look at,
+        For yesterday, use [positive!] datetime.timedelta(days=1). Default is no offset.
+        If both external_execution_date and execution_delta are given, the result is the
+        offset of external_execution_date.timedelta(days=execution_delta).
     :type execution_delta: datetime.timedelta
     """
 
@@ -34,10 +38,12 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
             external_task_id,
             allowed_states=None,
             external_execution_date=None,
+            execution_delta=None,
             *args, **kwargs):
         super(AdaptedExternalTaskSensor, self).__init__(*args, **kwargs)
         self.allowed_states = allowed_states or [State.SUCCESS]
         self.external_execution_date = external_execution_date
+        self.execution_delta = execution_delta
         self.external_dag_id = external_dag_id
         self.external_task_id = external_task_id
         self.pokes = 0
@@ -47,6 +53,9 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
             dttm = self.external_execution_date
         else:
             dttm = context['execution_date']
+
+        if self.execution_delta:
+            dttm = dttm - self.execution_delta
 
         logging.info(
                 'Poking for '
