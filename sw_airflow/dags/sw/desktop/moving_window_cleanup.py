@@ -23,7 +23,7 @@ DEPLOY_TARGETS = ['hbp1', 'hbp2']
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['kfire@similarweb.com','amitr@similarweb.com'],
+    'email': ['kfire@similarweb.com','amitr@similarweb.com','andrews@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
