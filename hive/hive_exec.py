@@ -16,7 +16,7 @@ class HiveExecuter(Executer):
     def get_common_params(self):
 
         date_param = Arg('-d', '--date', 'date', Arg.date_arg, 'Date to use in %Y-%m-%d or %Y-%m format', required=True)
-        mode_param = Arg('-m', '--mode', 'mode', ('window', 'snapshot'), 'Job mode', required=True)
+        mode_param = Arg('-m', '--mode', 'mode', ('daily', 'window', 'snapshot'), 'Job mode', required=True)
         mode_type_param = Arg('-mt', '--mode-type', 'mode_type', (
             'weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
                               'Mode Type', required=False, default=None)
@@ -47,7 +47,8 @@ class HiveExecuter(Executer):
 
         return {
             ('mode', 'snapshot'): ('mode_type', 'monthly'),
-            ('mode', 'window'): ('mode_type', 'last-28')
+            ('mode', 'window'): ('mode_type', 'last-28'),
+            ('mode', 'daily'): ('mode_type', 'last-1')
         }
 
     def execute(self):
