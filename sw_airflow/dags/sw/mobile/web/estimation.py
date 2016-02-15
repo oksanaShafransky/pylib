@@ -1,6 +1,6 @@
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from datetime import datetime, timedelta
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
@@ -26,7 +26,7 @@ dag_template_params = {'execution_dir': '/similargroup/production',
 
 dag = DAG(dag_id='MobileWeb_Estimation', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
-mobile_preliminary = ExternalTaskSensor(external_dag_id='Mobile_Preliminary', dag=dag, task_id="Mobile_Preliminary",
+mobile_preliminary = AdaptedExternalTaskSensor(external_dag_id='Mobile_Preliminary', dag=dag, task_id="Mobile_Preliminary",
                                         external_task_id='Preliminary')
 
 factory = DockerBashOperatorFactory(dag=dag,

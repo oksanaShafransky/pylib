@@ -213,66 +213,6 @@ class SuccedOrSkipOperator(PythonOperator):
                     test_mode=True,
                     force=force, )
 
-
-class AdaptedExternalTaskSensor(BaseSensorOperator):
-    """
-    Waits for a task to complete in a different DAG
-
-    :param external_dag_id: The dag_id that contains the task you want to
-        wait for
-    :type external_dag_id: string
-    :param external_task_id: The task_id that contains the task you want to
-        wait for
-    :type external_task_id: string
-    :param allowed_states: list of allowed states, default is ``['success']``
-    :type allowed_states: list
-    :param execution_delta: time difference with the previous execution to
-        look at, the default is the same execution_date as the current task.
-        For yesterday, use [positive!] datetime.timedelta(days=1)
-    :type execution_delta: datetime.timedelta
-    """
-
-    template_fields = ('external_execution_date',)
-
-    @apply_defaults
-    def __init__(
-            self,
-            external_dag_id,
-            external_task_id,
-            allowed_states=None,
-            external_execution_date=None,
-            *args, **kwargs):
-        super(AdaptedExternalTaskSensor, self).__init__(*args, **kwargs)
-        self.allowed_states = allowed_states or [State.SUCCESS]
-        self.external_execution_date = external_execution_date
-        self.external_dag_id = external_dag_id
-        self.external_task_id = external_task_id
-
-    def poke(self, context):
-        if self.external_execution_date:
-            dttm = self.external_execution_date
-        else:
-            dttm = context['execution_date']
-
-        logging.info(
-                'Poking for '
-                '{self.external_dag_id}.'
-                '{self.external_task_id} on '
-                '{dttm} ... '.format(**locals()))
-        TI = TaskInstance
-
-        session = settings.Session()
-        count = session.query(TI).filter(
-                TI.dag_id == self.external_dag_id,
-                TI.task_id == self.external_task_id,
-                TI.state.in_(self.allowed_states),
-                TI.execution_date == dttm,
-        ).count()
-        session.commit()
-        session.close()
-        return count
-
-
 class SWAAirflowPluginManager(AirflowPlugin):
     name = 'SWOperators'
 

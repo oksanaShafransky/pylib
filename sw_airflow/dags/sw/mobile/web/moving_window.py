@@ -2,7 +2,7 @@ import copy
 
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from datetime import timedelta, datetime
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
@@ -43,10 +43,10 @@ window_dag = DAG(dag_id='MobileWeb_Window', default_args=dag_args, params=window
 
 
 def assemble_process(mode, dag, sum_ww_value_size):
-    estimation = ExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
+    estimation = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
                                     task_id="MobileWeb_Estimation",
                                     external_task_id='Estimation')
-    desktop_estimation_aggregation = ExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+    desktop_estimation_aggregation = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
                                                         dag=dag,
                                                         task_id='MonthlySumEstimationParameters',
                                                         external_task_id='SumEstimation')

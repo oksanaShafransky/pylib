@@ -5,7 +5,7 @@ from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
-from sw.airflow.operators import AdaptedExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/ios-analytics'

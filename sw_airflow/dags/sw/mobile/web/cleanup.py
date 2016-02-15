@@ -1,6 +1,6 @@
 from airflow.models import DAG, Variable
 from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.sensors import ExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from datetime import timedelta, datetime
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
@@ -37,7 +37,7 @@ cleanup_to = 3
 deploy_targets = Variable.get(key='deploy_targets', default_var=[], deserialize_json=True)
 airflow_env = Variable.get(key='airflow_env', default_var='dev')
 
-stage_is_set = ExternalTaskSensor(external_dag_id='MobileWeb_WindowDeploy', dag=dag, task_id='window_in_stage_is_set',
+stage_is_set = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_WindowDeploy', dag=dag, task_id='window_in_stage_is_set',
                                   external_task_id='stage_is_set')
 cleanup_stage = DummyOperator(task_id='cleanup_stage', dag=dag)
 for day_to_clean in range(cleanup_to, cleanup_from):
@@ -49,7 +49,7 @@ for day_to_clean in range(cleanup_to, cleanup_from):
     cleanup_stage.set_upstream(cleanup_day)
 
 if airflow_env == 'prod':
-    prod_is_set = ExternalTaskSensor(external_dag_id='MobileWeb_WindowDeploy', dag=dag, task_id='window_in_prod_is_set',
+    prod_is_set = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_WindowDeploy', dag=dag, task_id='window_in_prod_is_set',
                                      external_task_id='prod_is_set')
     for target in deploy_targets:
         cleanup_prod = DummyOperator(task_id='cleanup_prod_%s' % target, dag=dag)
