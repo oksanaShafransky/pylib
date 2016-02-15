@@ -288,7 +288,7 @@ check_data.set_downstream(deploy_prod_done)
 #################################################
 ###    Deploy                                  #
 #################################################
-deploy_targets = Variable.get(key='deploy_targets', default_var='{[]}', deserialize_json=True)
+deploy_targets = Variable.get(key='hbase_deploy_targets', default_var=[], deserialize_json=True)
 
 copy_app_details = DockerCopyHbaseTableOperator(
     task_id='copy_app_details',

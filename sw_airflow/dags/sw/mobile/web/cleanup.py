@@ -34,7 +34,7 @@ factory = DockerBashOperatorFactory(use_defaults=True,
 cleanup_from = 8
 cleanup_to = 3
 
-deploy_targets = Variable.get(key='deploy_targets', default_var=[], deserialize_json=True)
+deploy_targets = Variable.get(key='hbase_deploy_targets', default_var=[], deserialize_json=True)
 airflow_env = Variable.get(key='airflow_env', default_var='dev')
 
 stage_is_set = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_WindowDeploy', dag=dag, task_id='window_in_stage_is_set',

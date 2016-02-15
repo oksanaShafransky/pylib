@@ -517,7 +517,7 @@ def generate_dag(mode):
                            )
     update_usage_ranks_date_stage.set_upstream(usage_ranks)
 
-    deploy_targets = Variable.get("hbase_deploy_targets", deserialize_json=True)
+    deploy_targets = Variable.get(key='hbase_deploy_targets', default_var=[], deserialize_json=True)
 
     ################
     # Copy to Prod #

@@ -1,6 +1,10 @@
 from airflow.models import Variable, Connection
 from airflow.utils import *
 
+########################################
+# PRODUCTION ENV DEFAULT CONFIGURATION #
+########################################
+
 
 def set_default_vars():
     Variable.set("hbase_deploy_targets", ["hbp1", "hbp2"], serialize_json=True)

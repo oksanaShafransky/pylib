@@ -81,7 +81,7 @@ process.set_upstream(init)
 ###    Deploy                                  #
 #################################################
 if DEPLOY_TO_PROD:
-    deploy_targets = Variable.get(key='deploy_targets', default_var='{[]}', deserialize_json=True)
+    deploy_targets = Variable.get(key='hbase_deploy_targets', default_var=[], deserialize_json=True)
 
     copy_processed = DockerCopyHbaseTableOperator(
         task_id='copy_sites_scrape_stat',

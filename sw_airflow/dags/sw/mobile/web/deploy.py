@@ -64,7 +64,7 @@ def assemble_process(mode, dag):
     factory = DockerBashOperatorFactory(use_defaults=True, dag=dag,
                                         script_path='''{{ params.execution_dir }}/mobile/scripts''')
 
-    deploy_targets = Variable.get(key='deploy_targets', default_var='{[]}', deserialize_json=True)
+    deploy_targets = Variable.get(key='hbase_deploy_targets', default_var=[], deserialize_json=True)
 
     hbase_suffix_template = (
         '''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if mode == WINDOW_MODE else
