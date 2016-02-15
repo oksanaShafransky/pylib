@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from airflow.models import DAG
 
 from sw.airflow.airflow_etcd import *
-from sw.airflow.operators import DockerBashOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 DOCKER_MANAGER = 'docker-a02.sg.internal'

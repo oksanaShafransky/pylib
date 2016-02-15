@@ -21,7 +21,7 @@ class HiveExecuter(Executer):
             'weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
                               'Mode Type', required=False, default=None)
         num_reducers_param = Arg('-n', '--num-of-reducers', 'num_of_reducers', int, 'Number of reducers to use',
-                                 required=False, default=250)
+                                 required=False, default=32)
         sync_param = Arg('-s', '--sync', 'sync', bool, 'Run in sync mode (wait for completion', required=False,
                          default=False)
         dry_run_param = Arg('-dr', '--dry-run', 'dry_run', bool, 'If set, only output statements without running',
@@ -30,16 +30,18 @@ class HiveExecuter(Executer):
                                  'Output path root (not including the partition path', required=True)
         check_out_param = Arg('-co', '--check-output', 'check_output', bool, 'Return if output already exists',
                               required=False, default=False)
+        merge_out_param = Arg('-dmo', '--dont-merge-output', 'no_merge_output', bool, 'Whether To Merge Output Files',
+                              required=False, default=False)
         pool_param = Arg('-cp', '--calc-pool', 'calc_pool', str, 'Calculation pool to user', required=False,
                          default='calculation')
         compression_param = Arg('-cm', '--compression', 'compression', ('gz', 'bz2', 'none'), 'Compression type to use',
-                                required=False, default='gz')
+                                required=False, default='bz2')
         slow_start_param = Arg('-sscmr', '--slow-start-rate', 'slow_start_ratio', str,
                                'mapreduce.job.reduce.slowstart.completedmaps',
                                required=False, default=None)
 
         return [date_param, mode_param, mode_type_param, num_reducers_param, sync_param, dry_run_param,
-                output_table_param, check_out_param, pool_param, compression_param, slow_start_param]
+                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param]
 
     def get_arg_dependencies(self):
 
@@ -108,13 +110,13 @@ class HiveExecuter(Executer):
         else:
             logger.info('Action Name:%s' % query_name)
 
-        log_dir = tempfile.mkdtemp('_hive_runner')
+        log_dir = tempfile.gettempdir() + '/logs/hive_exec/' + tempfile._get_candidate_names().next()
         logger.info('Hive log is at: %s' % log_dir)
         job_name = 'Hive. %s' % (' - '.join([query_name] + job_params))
 
         try:
             hive_runner.run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
-                                     sync=args.sync,
+                                     sync=args.sync, consolidate_output=not args.no_merge_output,
                                      log_dir=log_dir, slow_start_ratio=args.slow_start_ratio,
                                      calc_pool=args.calc_pool, compression=args.compression)
             self.results[query_name] = 'success'
@@ -122,7 +124,10 @@ class HiveExecuter(Executer):
             self.results[query_name] = 'failure'
             traceback.print_exc()
         finally:
-            shutil.rmtree(log_dir)
+            try:
+                shutil.rmtree(log_dir)
+            except:
+                logger.error('failed removing log dir')
 
     def report_results(self):
         logger.info('reporting execution summary\n')

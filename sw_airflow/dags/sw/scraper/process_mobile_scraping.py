@@ -7,8 +7,9 @@ from airflow.operators.dummy_operator import DummyOperator
 
 from airflow.operators.sensors import HdfsSensor
 
-from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
-from sw.airflow.airflow_etcd import EtcdSetOperator, EtcdDeleteOperator, EtcdPromoteOperator
+from sw.airflow.operators import DockerCopyHbaseTableOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
+from sw.airflow.key_value import *
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -19,11 +20,9 @@ DEFAULT_CLUSTER = 'mrp'
 CHECK_DATA_PROBLEM_NUM = '20'
 DEPLOY_TO_PROD = True
 
-ETCD_ENV_ROOT = {'STAGE': 'v1/staging', 'PRODUCTION': 'v1/production'}
-
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2015, 10, 19),
+    'start_date': datetime(2016, 01, 21),
     'depends_on_past': False,
     'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com'],
     'email_on_failure': True,
@@ -36,7 +35,7 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
                        'problem_num': CHECK_DATA_PROBLEM_NUM}
 
-dag = DAG(dag_id='ProcessMobileScraping', default_args=dag_args, params=dag_template_params)
+dag = DAG(dag_id='Scraping_ProcessMobileScraping', default_args=dag_args, params=dag_template_params)
 
 
 
@@ -284,6 +283,7 @@ lite_app_info.set_upstream(init)
 lite_app_info.set_upstream(ps_info)
 lite_app_info.set_upstream(it_info)
 lite_app_info.set_upstream(supp_it_info)
+lite_app_info.set_upstream(export_app_info_stage)
 lite_app_info.set_downstream(deploy_prod)
 
 lite_app_stats = DockerBashOperator(task_id='CopyAppStatsForLite',
@@ -404,47 +404,47 @@ for target_cluster in ('hbp1','hbp2'):
 ###    Wrap Up                                  #
 #################################################
 
-register_success = EtcdSetOperator(task_id='RegisterSuccessOnETCD',
-                                   dag=dag,
-                                   path='''services/process_mobile_scraping/success/{{ ds }}''',
-                                   root=ETCD_ENV_ROOT['PRODUCTION']
-                                   )
+register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
+                                       dag=dag,
+                                       path='''services/process_mobile_scraping/success/{{ ds }}''',
+                                       env='PRODUCTION'
+                                       )
 register_success.set_upstream(wrap_up)
 
-register_success_stage = EtcdSetOperator(task_id='RegisterSuccessOnETCDStage',
-                                   dag=dag,
-                                   path='''services/process_mobile_scraping/success/{{ ds }}''',
-                                   root=ETCD_ENV_ROOT['STAGE']
+register_success_stage = KeyValueSetOperator(task_id='RegisterSuccessOnETCDStage',
+                                             dag=dag,
+                                             path='''services/process_mobile_scraping/success/{{ ds }}''',
+                                             env='STAGING'
 )
 register_success_stage.set_upstream(wrap_up)
 
-update_latest_date = EtcdPromoteOperator(task_id='SetLatestDate',
-                                         dag=dag,
-                                         path='services/dynamic_settings/window/mobile_scraper_date',
-                                         value='''{{ ds }}''',
-                                         root=ETCD_ENV_ROOT[dag_template_params['run_environment']]
-                                         )
+update_latest_date = KeyValuePromoteOperator(task_id='SetLatestDate',
+                                             dag=dag,
+                                             path='services/dynamic_settings/window/mobile_scraper_date',
+                                             value='''{{ ds }}''',
+                                             env='PRODUCTION'
+                                             )
 update_latest_date.set_upstream(wrap_up)
 
-update_latest_date_stage = EtcdPromoteOperator(task_id='SetLatestDateStage',
-                                         dag=dag,
-                                         path='services/dynamic_settings/window/mobile_scraper_date',
-                                         value='''{{ ds }}''',
-                                         root=ETCD_ENV_ROOT['STAGE']
+update_latest_date_stage = KeyValuePromoteOperator(task_id='SetLatestDateStage',
+                                                   dag=dag,
+                                                   path='services/dynamic_settings/window/mobile_scraper_date',
+                                                   value='''{{ ds }}''',
+                                                   env='STAGING'
 )
 update_latest_date_stage.set_upstream(wrap_up)
 
-register_available = EtcdSetOperator(task_id='SetDataAvailableDate',
-                                     dag=dag,
-                                     path='''services/process_mobile_scraping/data-available/{{ ds }}''',
-                                     root=ETCD_ENV_ROOT[dag_template_params['run_environment']]
-                                     )
+register_available = KeyValueSetOperator(task_id='SetDataAvailableDate',
+                                         dag=dag,
+                                         path='''services/process_mobile_scraping/data-available/{{ ds }}''',
+                                         env='PRODUCTION'
+                                         )
 register_available.set_upstream(wrap_up)
 
-register_available_stage = EtcdSetOperator(task_id='SetDataAvailableDateStage',
-                                     dag=dag,
-                                     path='''services/process_mobile_scraping/data-available/{{ ds }}''',
-                                     root=ETCD_ENV_ROOT['STAGE']
+register_available_stage = KeyValueSetOperator(task_id='SetDataAvailableDateStage',
+                                               dag=dag,
+                                               path='''services/process_mobile_scraping/data-available/{{ ds }}''',
+                                               env='STAGING'
 )
 register_available_stage.set_upstream(wrap_up)
 
@@ -489,26 +489,26 @@ for days_back in range(cleanup_interval_start, cleanup_interval_end, -1):
     cleanups[idx].set_upstream(wrap_up)
     cleanups[idx].set_upstream(update_elastic_alias_stage)
 
-    unregister_available = EtcdDeleteOperator(task_id='DropDataAvailableDate%dDaysBack' % days_back,
-                                              dag=dag,
-                                              path='''services/process_mobile_scraping/data-available/{{ macros.ds_add(ds, -%d) }}''' % days_back,
-                                              root=ETCD_ENV_ROOT[dag_template_params['run_environment']]
-                                              )
+    unregister_available = KeyValueDeleteOperator(task_id='DropDataAvailableDate%dDaysBack' % days_back,
+                                                  dag=dag,
+                                                  path='''services/process_mobile_scraping/data-available/{{ macros.ds_add(ds, -%d) }}''' % days_back,
+                                                  env='PRODUCTION'
+                                                  )
     unregister_available.set_upstream(cleanups[idx])
 
     cleanups_stage += [DockerBashOperator(task_id='''Cleanup_%d_days_Stage''' % days_back,
-                                    dag=dag,
-                                    docker_name=DEFAULT_DOCKER,
-                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/cleanup.sh -d {{ macros.ds_add(ds, -%d) }} -et STAGE''' % days_back
+                                          dag=dag,
+                                          docker_name=DEFAULT_DOCKER,
+                                          bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/cleanup.sh -d {{ macros.ds_add(ds, -%d) }} -et STAGE''' % days_back
     )
     ]
     cleanups_stage[idx].set_upstream(wrap_up)
     cleanups_stage[idx].set_upstream(update_elastic_alias_stage)
 
-    unregister_available_stage = EtcdDeleteOperator(task_id='DropDataAvailableDate%dDaysBackStage' % days_back,
-                                              dag=dag,
-                                              path='''services/process_mobile_scraping/data-available/{{ macros.ds_add(ds, -%d) }}''' % days_back,
-                                              root=ETCD_ENV_ROOT['STAGE']
+    unregister_available_stage = KeyValueDeleteOperator(task_id='DropDataAvailableDate%dDaysBackStage' % days_back,
+                                                        dag=dag,
+                                                        path='''services/process_mobile_scraping/data-available/{{ macros.ds_add(ds, -%d) }}''' % days_back,
+                                                        env='STAGING'
     )
     unregister_available_stage.set_upstream(cleanups_stage[idx])
 

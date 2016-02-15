@@ -6,7 +6,7 @@ from airflow.models import DAG
 from airflow.operators.sensors import HdfsSensor
 
 from sw.airflow.airflow_etcd import *
-from sw.airflow.operators import DockerBashOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data'
@@ -17,7 +17,7 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(15, 11, 13),
+    'start_date': datetime(2016, 01, 21),
     'depends_on_past': False,
     'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,
@@ -29,7 +29,7 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='DesktopDailyPanelReport', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
+dag = DAG(dag_id='Desktop_DailyPanelReport', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
 
 
 # define stages

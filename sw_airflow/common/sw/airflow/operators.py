@@ -1,15 +1,17 @@
-from airflow import settings, utils
-from airflow.models import TaskInstance, Log
-from airflow.operators.python_operator import PythonOperator
-from airflow.plugins_manager import AirflowPlugin
 import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
 
+from airflow import settings, utils
+from airflow.models import TaskInstance, Log
 from airflow.operators.bash_operator import BashOperator
+from airflow.operators.python_operator import PythonOperator
 from airflow.operators.sensors import BaseSensorOperator
+from airflow.plugins_manager import AirflowPlugin
 from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
+
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 
 class BashSensor(BaseSensorOperator):
@@ -50,9 +52,9 @@ class BashSensor(BaseSensorOperator):
                              "location :{0}".format(script_location))
                 logging.info("Running command: " + bash_command)
                 sp = Popen(
-                    ['bash', fname],
-                    stdout=PIPE, stderr=STDOUT,
-                    cwd=tmp_dir, env=self.env)
+                        ['bash', fname],
+                        stdout=PIPE, stderr=STDOUT,
+                        cwd=tmp_dir, env=self.env)
 
                 self.sp = sp
 
@@ -72,35 +74,6 @@ class BashSensor(BaseSensorOperator):
         return self.run_bash()
 
 
-class DockerBashOperator(BashOperator):
-    ui_color = '#FFFF66'
-    template_fields = ('bash_command', 'docker_name')
-    cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
--v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
--v /etc/localtime:/etc/localtime:ro                           \
--v /tmp/logs:/tmp/logs                                        \
--v /var/lib/sss:/var/lib/sss                                  \
--v /etc/localtime:/etc/localtime:ro                           \
--v /usr/bin:/opt/old_bin                                      \
--v /var/run/similargroup:/var/run/similargroup                \
---rm                                                          \
---sig-proxy=false                                             \
---user=`id -u`                                                \
--e DOCKER_GATE={{ docker_manager }}                           \
--e GELF_HOST="runsrv2.sg.internal"                            \
--e HOME=/tmp                                                  \
-runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
-    '''
-
-    @apply_defaults
-    def __init__(self, docker_name, bash_command, *args, **kwargs):
-        self.docker_name = docker_name
-        random_string = str(datetime.utcnow().strftime('%s'))
-        docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': self.docker_name,
-                                                            'bash_command': bash_command}
-        super(DockerBashOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
-
-
 class DockerBashSensor(BashSensor):
     template_fields = ('bash_command', 'docker_name')
     cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
@@ -117,7 +90,7 @@ class DockerBashSensor(BashSensor):
 -e DOCKER_GATE={{ docker_manager }}                           \
 -e GELF_HOST="runsrv2.sg.internal"                            \
 -e HOME=/tmp                                                  \
-runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
+bigdata/centos6.cdh5.%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
     @apply_defaults
@@ -167,11 +140,12 @@ class DockerCopyHbaseTableOperator(BashOperator):
 -e DOCKER_GATE={{ params.docker_gate }}                           \
 -e GELF_HOST="runsrv2.sg.internal"                            \
 -e HOME=/tmp                                                  \
-runsrv/%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
+bigdata/centos6.cdh5.%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
     '''
 
     @apply_defaults
-    def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args, **kwargs):
+    def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args,
+                 **kwargs):
         self.docker_name = docker_name
         bash_cmd = DockerCopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
                                                                 'target_cluster': target_cluster,
@@ -206,7 +180,7 @@ class SuccedOrSkipOperator(PythonOperator):
             if task.task_id not in (skip_list + success_list):
                 continue
             ti = TaskInstance(
-                task, execution_date=context['ti'].execution_date)
+                    task, execution_date=context['ti'].execution_date)
             ti.start_date = datetime.now()
             ti.end_date = datetime.now()
             if task.task_id in skip_list:
@@ -221,7 +195,7 @@ class SuccedOrSkipOperator(PythonOperator):
         session.close()
         if self.task_id not in success_list:
             raise ValueError(
-                "Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
+                    "Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
         logging.info("Done.")
 
     def run(self, start_date=None, end_date=None, ignore_dependencies=False, force=False, mark_success=False):
@@ -234,10 +208,69 @@ class SuccedOrSkipOperator(PythonOperator):
         # We mark our own successes if needed. Run in "test" mode
         for dt in utils.date_range(start_date, end_date, self.schedule_interval):
             TaskInstance(self, dt).run(
-                mark_success=False,
-                ignore_dependencies=ignore_dependencies,
-                test_mode=True,
-                force=force, )
+                    mark_success=False,
+                    ignore_dependencies=ignore_dependencies,
+                    test_mode=True,
+                    force=force, )
+
+
+class AdaptedExternalTaskSensor(BaseSensorOperator):
+    """
+    Waits for a task to complete in a different DAG
+
+    :param external_dag_id: The dag_id that contains the task you want to
+        wait for
+    :type external_dag_id: string
+    :param external_task_id: The task_id that contains the task you want to
+        wait for
+    :type external_task_id: string
+    :param allowed_states: list of allowed states, default is ``['success']``
+    :type allowed_states: list
+    :param execution_delta: time difference with the previous execution to
+        look at, the default is the same execution_date as the current task.
+        For yesterday, use [positive!] datetime.timedelta(days=1)
+    :type execution_delta: datetime.timedelta
+    """
+
+    template_fields = ('external_execution_date',)
+
+    @apply_defaults
+    def __init__(
+            self,
+            external_dag_id,
+            external_task_id,
+            allowed_states=None,
+            external_execution_date=None,
+            *args, **kwargs):
+        super(AdaptedExternalTaskSensor, self).__init__(*args, **kwargs)
+        self.allowed_states = allowed_states or [State.SUCCESS]
+        self.external_execution_date = external_execution_date
+        self.external_dag_id = external_dag_id
+        self.external_task_id = external_task_id
+
+    def poke(self, context):
+        if self.external_execution_date:
+            dttm = self.external_execution_date
+        else:
+            dttm = context['execution_date']
+
+        logging.info(
+                'Poking for '
+                '{self.external_dag_id}.'
+                '{self.external_task_id} on '
+                '{dttm} ... '.format(**locals()))
+        TI = TaskInstance
+
+        session = settings.Session()
+        count = session.query(TI).filter(
+                TI.dag_id == self.external_dag_id,
+                TI.task_id == self.external_task_id,
+                TI.state.in_(self.allowed_states),
+                TI.execution_date == dttm,
+        ).count()
+        session.commit()
+        session.close()
+        return count
 
 
 class SWAAirflowPluginManager(AirflowPlugin):

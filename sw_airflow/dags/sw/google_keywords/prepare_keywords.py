@@ -1,16 +1,16 @@
 __author__ = 'lajonat'
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from monthdelta import *
 
-from sw.airflow.operators import DockerBashOperator, DockerCopyHbaseTableOperator
+from sw.airflow.operators import DockerCopyHbaseTableOperator
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
-DOCKER_MANAGER = 'docker-a01.sg.internal'
+DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_DOCKER = 'mrp'
 DEFAULT_HDFS = 'mrp'
 DEFAULT_CLUSTER = 'mrp'
@@ -20,7 +20,7 @@ ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production-mrp'}
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2015, 10, 31),
+    'start_date': datetime(2016, 01, 21),
     'depends_on_past': False,
     'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com'],
     'email_on_failure': True,
@@ -32,8 +32,8 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER, 'hdfs': DEFAULT_HDFS,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='PrepareGoogleKeywords', default_args=dag_args, params=dag_template_params,
-          schedule_interval=monthdelta(1))
+dag = DAG(dag_id='Scraping_PrepareGoogleKeywords', default_args=dag_args, params=dag_template_params,
+          schedule_interval="@monthly")
 
 
 
@@ -48,7 +48,7 @@ splits = DockerBashOperator(task_id='GetKeywordSplits',
 init = DockerBashOperator(task_id='InitResources',
                           dag=dag,
                           docker_name=DEFAULT_DOCKER,
-                          bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ ds }} -p tables'''
+                          bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.ds_add(macros.last_day_of_month(ds),2) }} -p tables'''
                           )
 init.set_upstream(splits)
 
@@ -81,6 +81,7 @@ process.set_upstream(init)
 ###    Deploy                                  #
 #################################################
 if DEPLOY_TO_PROD:
+    last_deploy_step = None
     for target_cluster in ('hbp1','hbp2'):
         copy_processed = DockerCopyHbaseTableOperator(
             task_id='copy_sites_scrape_stat_%s' % target_cluster,
@@ -92,6 +93,12 @@ if DEPLOY_TO_PROD:
         )
         copy_processed.set_upstream(deploy_prod)
         copy_processed.set_downstream(deploy_prod_done)
+        if last_deploy_step is not None:
+            copy_processed.set_upstream(last_deploy_step)
+
+        last_deploy_step = DummyOperator(task_id='deploy_step_%s' % target_cluster, dag=dag)
+        last_deploy_step.set_upstream(copy_processed)
+        last_deploy_step.set_downstream(deploy_prod_done)
 
 
 #################################################
@@ -104,3 +111,10 @@ register_success = DockerBashOperator(task_id='RegisterSuccessOnETCD',
                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p set_success'''
                                       )
 register_success.set_upstream(wrap_up)
+
+register_adwords = DockerBashOperator(task_id='RegisterAdwordsSuccessOnETCD',
+                                      dag=dag,
+                                      docker_name=DEFAULT_DOCKER,
+                                      bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/scraped-keywords.sh -d {{ ds }} -p set_adwords_success'''
+)
+register_adwords.set_upstream(wrap_up)

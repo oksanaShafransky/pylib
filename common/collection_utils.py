@@ -57,6 +57,15 @@ def read_collection(col_stream, col_schema):
     return ret
 
 
+def append_dict(*dicts):
+    ret = dict()
+    for dict in dicts:
+        for key, val in dict.iteritems():
+            ret[key] = val
+
+    return ret
+
+
 if __name__ == '__main__':
 
     rank_schema = [('curr_rank', 'int'), ('prev_rank', 'int'), ('app_id', 'str'), ('cover', 'str'), ('title', 'str'), ('author', 'str'), ('price', 'str'), ('rating', 'double'),
