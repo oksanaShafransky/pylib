@@ -11,7 +11,7 @@ dag_args = {
     'email': ['barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'start_date': datetime(2016, 2, 9),
+    'start_date': datetime(2016, 2, 15),
     'retries': 8,
     'retry_delay': timedelta(minutes=15)
 }
@@ -37,8 +37,9 @@ cleanup_to = 3
 deploy_targets = Variable.get(key='hbase_deploy_targets', default_var=[], deserialize_json=True)
 airflow_env = Variable.get(key='airflow_env', default_var='dev')
 
-stage_is_set = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_WindowDeploy', dag=dag, task_id='window_in_stage_is_set',
-                                  external_task_id='stage_is_set')
+stage_is_set = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_WindowDeploy', dag=dag,
+                                         task_id='window_in_stage_is_set',
+                                         external_task_id='stage_is_set')
 cleanup_stage = DummyOperator(task_id='cleanup_stage', dag=dag)
 for day_to_clean in range(cleanup_to, cleanup_from):
     cleanup_day = \
@@ -49,8 +50,9 @@ for day_to_clean in range(cleanup_to, cleanup_from):
     cleanup_stage.set_upstream(cleanup_day)
 
 if airflow_env == 'prod':
-    prod_is_set = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_WindowDeploy', dag=dag, task_id='window_in_prod_is_set',
-                                     external_task_id='prod_is_set')
+    prod_is_set = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_WindowDeploy', dag=dag,
+                                            task_id='window_in_prod_is_set',
+                                            external_task_id='prod_is_set')
     for target in deploy_targets:
         cleanup_prod = DummyOperator(task_id='cleanup_prod_%s' % target, dag=dag)
         for day_to_clean in range(cleanup_to, cleanup_from):
