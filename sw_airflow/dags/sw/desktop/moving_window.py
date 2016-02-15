@@ -1,12 +1,14 @@
 __author__ = 'Kfir Eittan'
 
 from datetime import datetime, timedelta
+
 from airflow.models import DAG
+from airflow.models import Variable
 from airflow.operators.dummy_operator import DummyOperator
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
-from airflow.operators.sensors import HdfsSensor
-from sw.airflow.key_value import *
+
 from sw.airflow.docker_bash_operator import DockerBashOperator
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
+from sw.airflow.key_value import *
 from sw.airflow.operators import DockerCopyHbaseTableOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -19,7 +21,7 @@ WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
 DEFAULT_HBASE_CLUSTER = 'hbp1'
 IS_PROD = True
-DEPLOY_TARGETS = ['hbp1', 'hbp2']
+DEPLOY_TARGETS = Variable.get("hbase_deploy_targets", deserialize_json=True)
 
 dag_args = {
     'owner': 'similarweb',

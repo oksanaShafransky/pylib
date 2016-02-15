@@ -7,6 +7,7 @@ from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.operators import DockerCopyHbaseTableOperator
+from airflow.models import Variable
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -117,7 +118,7 @@ def generate_dags(mode):
     ################
     # Copy to Prod #
     ################
-    deploy_targets = ['hbp1', 'hbp2']
+    deploy_targets = Variable.get("hbase_deploy_targets", deserialize_json=True)
     if is_prod_env():
         hbase_suffix_template = (
             '''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
