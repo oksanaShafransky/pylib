@@ -9,6 +9,7 @@ from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.key_value import *
 from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from sw.airflow.operators import DockerCopyHbaseTableOperator
+from airflow.models import Variable
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -516,7 +517,7 @@ def generate_dag(mode):
                            )
     update_usage_ranks_date_stage.set_upstream(usage_ranks)
 
-    deploy_targets = ['hbp1', 'hbp2']
+    deploy_targets = Variable.get(key='hbase_deploy_targets', default_var=[], deserialize_json=True)
 
     ################
     # Copy to Prod #
@@ -606,7 +607,7 @@ def generate_dag(mode):
                 cleanup_ranks_etcd_prod_ds_minus_i = \
                     DockerBashOperator(task_id='CleanupRanksEtcdProd_DS-%s' % i,
                                        dag=dag,
-                                       docker_name='''{{ params.hbase_cluster }}''',
+                                       docker_name='''{{ params.cluster }}''',
                                        bash_command='''{{ params.execution_dir }}/mobile/scripts/dynamic-settings.sh -d {{ macros.ds_add(ds,-%s) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et PRODUCTION -p usage_ranks -pn UsageRanksProd -um failure''' % i
                                        )
                 cleanup_prod.set_upstream(cleanup_ranks_etcd_prod_ds_minus_i)

@@ -7,6 +7,7 @@ from airflow.operators.sensors import ExternalTaskSensor
 from sw.airflow.airflow_etcd import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.operators import DockerCopyHbaseTableOperator
+from airflow.models import Variable
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -117,7 +118,8 @@ def generate_dags(mode):
     ################
     # Copy to Prod #
     ################
-    deploy_targets = ['hbp1', 'hbp2']
+
+    deploy_targets = Variable.get(key='hbase_deploy_targets', default_var=[], deserialize_json=True)
     if is_prod_env():
         hbase_suffix_template = (
             '''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
@@ -150,7 +152,6 @@ def generate_dags(mode):
                                          )
 
             for i in range(cleanup_to, cleanup_from):
-                # TODO check why is it configured to use this specific docker; extract reference to configuration
                 for target in deploy_targets:
                     cleanup_day = DockerBashOperator(task_id='Cleanup%s_DS-%s' % (target, i),
                                                      dag=dag,
