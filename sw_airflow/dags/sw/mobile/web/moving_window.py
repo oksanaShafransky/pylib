@@ -14,11 +14,11 @@ SNAPSHOT_MODE_TYPE = 'monthly'
 
 dag_args = {
     'owner': 'MobileWeb',
-    'depends_on_past': True,
+    'depends_on_past': False,
     'email': ['barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'start_date': datetime(2016, 2, 8),
+    'start_date': datetime(2016, 2, 14),
     'retries': 2,
     'retry_delay': timedelta(minutes=15)
 }
@@ -44,12 +44,12 @@ window_dag = DAG(dag_id='MobileWeb_Window', default_args=dag_args, params=window
 
 def assemble_process(mode, dag, sum_ww_value_size):
     estimation = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
-                                    task_id="MobileWeb_Estimation",
-                                    external_task_id='Estimation')
+                                           task_id="MobileWeb_Estimation",
+                                           external_task_id='Estimation')
     desktop_estimation_aggregation = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
-                                                        dag=dag,
-                                                        task_id='MonthlySumEstimationParameters',
-                                                        external_task_id='SumEstimation')
+                                                               dag=dag,
+                                                               task_id='MonthlySumEstimationParameters',
+                                                               external_task_id='SumEstimation')
 
     should_run_mw = DummyOperator(dag=dag, task_id='should_run_mw')
     should_run_mw.set_upstream([estimation, desktop_estimation_aggregation])
@@ -61,22 +61,19 @@ def assemble_process(mode, dag, sum_ww_value_size):
 
     prepare_hbase_tables = factory.build(task_id='prepare_hbase_tables',
                                          core_command='../start-process.sh -p tables -fl MOBILE_WEB')
-    prepare_hbase_tables.set_upstream(should_run_mw)
-
-    popular_pages_agg = factory.build(task_id='popular_pages_agg',
-                                      core_command='popular_pages.sh -p aggregate_popular_pages')
-    popular_pages_agg.set_upstream(should_run_mw)
-
-    popular_pages_top_store = factory.build(task_id='popular_pages_top_store',
-                                            core_command='popular_pages.sh -p top_popular_pages')
-    popular_pages_top_store.set_upstream([prepare_hbase_tables, popular_pages_agg])
-
-    gaps_filler = factory.build(task_id='gaps_filler',
-                                core_command='airflow_mobile_web_gaps_filler.sh')
-    gaps_filler.set_upstream(should_run_mw)
 
     # ############################################################################################################
-    # the reason for new factory here is that we control whether to use new algo through mode and mode type params
+    # LOGIC
+
+    popular_pages_top_store = add_popular_pages(dag, factory, prepare_hbase_tables)
+
+    gaps_filler = factory.build(task_id='gaps_filler',
+                                core_command='airflow_mobile_web_gaps_filler.sh -f')
+    gaps_filler.set_upstream(should_run_mw)
+
+    # ##############################################################
+    # the reason for new factory here is that we control whether to use new
+    # algo through mode and mode type params
 
     new_algo_factory = copy.copy(factory)
     new_algo_factory.mode = 'window'
@@ -86,14 +83,14 @@ def assemble_process(mode, dag, sum_ww_value_size):
                                              core_command='first_stage_agg.sh')
     first_stage_agg.set_upstream(should_run_mw)
 
-    adjust_calc_intermediate = \
-        new_algo_factory.build(task_id='adjust_calc_intermediate',
+    predict_for_day = \
+        new_algo_factory.build(task_id='predict_for_day',
                                core_command='adjust_est.sh -p prepare_data,predict -wenv daily-cut')
-    adjust_calc_intermediate.set_upstream(first_stage_agg)
+    predict_for_day.set_upstream(first_stage_agg)
 
     adjust_calc_redist = new_algo_factory.build(task_id='adjust_calc_redist',
                                                 core_command='adjust_est.sh -p redist -wenv daily-cut')
-    adjust_calc_redist.set_upstream([gaps_filler, adjust_calc_intermediate])
+    adjust_calc_redist.set_upstream([gaps_filler, predict_for_day])
     # ###########################################################################################################
 
     check_daily_estimations = factory.build(task_id='check_daily_estimations',
@@ -147,6 +144,28 @@ def assemble_process(mode, dag, sum_ww_value_size):
         first_stage_agg_for_model.set_upstream(should_run_mw)
 
         mobile_web.set_upstream([predict_validate, compare_est_to_qc, first_stage_agg_for_model])
+
+
+def add_popular_pages(dag, factory, prepare_hbase_tables):
+    """
+    adds popular pages calculation to the dag. splitting this to separate function to put it aside
+    for the cleanup of the rest. afterward worth considering inlinening this function back
+    :param prepare_hbase_tables: dependency that creates the relevant hbase table
+    :param factory: DockerBashOperatorFactory
+    :param dag: dag to enrich
+    :returns last operator in the flow to tie into last DummyOperator of the dag
+    """
+    mobile_daily_aggregation = AdaptedExternalTaskSensor(external_dag_id='Mobile_Preliminary',
+                                                         dag=dag,
+                                                         task_id='Mobile_DailyAggregation',
+                                                         external_task_id='DailyAggregation')
+    popular_pages_agg = factory.build(task_id='popular_pages_agg',
+                                      core_command='popular_pages.sh -p aggregate_popular_pages')
+    popular_pages_agg.set_upstream(mobile_daily_aggregation)
+    popular_pages_top_store = factory.build(task_id='popular_pages_top_store',
+                                            core_command='popular_pages.sh -p top_popular_pages')
+    popular_pages_top_store.set_upstream([prepare_hbase_tables, popular_pages_agg])
+    return popular_pages_top_store
 
 
 assemble_process(SNAPSHOT_MODE, snapshot_dag, sum_ww_value_size=31)

@@ -1,13 +1,13 @@
 __author__ = 'Kfir Eittan'
 
 from datetime import datetime, timedelta
+
 from airflow.models import DAG
+from airflow.models import Variable
 from airflow.operators.dummy_operator import DummyOperator
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
-from airflow.operators.sensors import HdfsSensor
-from sw.airflow.key_value import *
+
 from sw.airflow.docker_bash_operator import DockerBashOperator
-from sw.airflow.operators import DockerCopyHbaseTableOperator
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/analytics'
@@ -18,12 +18,12 @@ SNAPHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
 DEFAULT_HBASE_CLUSTER = 'hbp1'
-DEPLOY_TARGETS = ['hbp1', 'hbp2']
+DEPLOY_TARGETS = Variable.get("hbase_deploy_targets", deserialize_json=True)
 
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['kfire@similarweb.com','amitr@similarweb.com','andrews@similarweb.com'],
+    'email': ['kfire@similarweb.com', 'amitr@similarweb.com', 'andrews@similarweb.com', 'barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
@@ -36,12 +36,13 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
                        'cluster': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER,
                        'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE}
 
-dag = DAG(dag_id='Desktop_MovingWindow_Cleanup', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
+dag = DAG(dag_id='Desktop_MovingWindow_Cleanup', default_args=dag_args, params=dag_template_params,
+          schedule_interval="@daily")
 
 moving_window = AdaptedExternalTaskSensor(external_dag_id='Desktop_MovingWindow_Window',
-                                       external_task_id='NonOperationals',
-                                       task_id='MovingWindow',
-                                       dag=dag)
+                                          external_task_id='NonOperationals',
+                                          task_id='MovingWindow',
+                                          dag=dag)
 
 cleanup_from_days = 8
 cleanup_to_days = 4

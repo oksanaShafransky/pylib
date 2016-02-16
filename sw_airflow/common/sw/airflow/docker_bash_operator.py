@@ -20,6 +20,7 @@ run \
 -v /usr/bin:/opt/old_bin \
 -v /var/run/similargroup:/var/run/similargroup \
 --rm \
+--name=%(container_name)s \
 --sig-proxy=false \
 --user=`id -u` \
 -e DOCKER_GATE={{ docker_manager }} \

@@ -12,7 +12,7 @@ from sw.airflow.docker_bash_operator import DockerBashOperator
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/ios-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
-DEFAULT_CLUSTER = 'mrp-ios'
+DEFAULT_CLUSTER = 'mrp'
 
 ETCD_ENV_ROOT = {'STAGE': 'v1/dev', 'PRODUCTION': 'v1/production'}
 

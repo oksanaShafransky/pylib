@@ -16,7 +16,7 @@ dag_args = {
     'email': ['amitr@similarweb.com', 'barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'start_date': datetime(2016, 2, 9),
+    'start_date': datetime(2016, 2, 14),
     'retries': 8,
     'retry_delay': timedelta(minutes=15)
 }
@@ -52,19 +52,19 @@ def assemble_process(mode, dag):
 
     mw_dag_id = 'MobileWeb_Window' if mode == WINDOW_MODE else 'MobileWeb_Snapshot'
     mobile_web_data_ready = AdaptedExternalTaskSensor(external_dag_id=mw_dag_id, dag=dag, task_id=mw_dag_id,
-                                               external_task_id=mw_dag_id)
+                                                      external_task_id=mw_dag_id)
     full_mobile_web_data_ready.set_upstream(mobile_web_data_ready)
 
     if mode == SNAPSHOT_MODE:
         mobile_web_referrals_data = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsSnapshot',
-                                                       dag=dag, task_id='MobileWeb_ReferralsSnapshot',
-                                                       external_task_id='MobileWeb_ReferralsSnapshot')
+                                                              dag=dag, task_id='MobileWeb_ReferralsSnapshot',
+                                                              external_task_id='MobileWeb_ReferralsSnapshot')
         full_mobile_web_data_ready.set_upstream(mobile_web_referrals_data)
 
     factory = DockerBashOperatorFactory(use_defaults=True, dag=dag,
                                         script_path='''{{ params.execution_dir }}/mobile/scripts''')
 
-    deploy_targets = Variable.get(key='deploy_targets', default_var='{[]}', deserialize_json=True)
+    deploy_targets = Variable.get(key='hbase_deploy_targets', default_var=[], deserialize_json=True)
 
     hbase_suffix_template = (
         '''{{ params.mode_type }}_{{ macros.ds_format(ds, "%Y-%m-%d", "%y_%m_%d")}}''' if mode == WINDOW_MODE else
