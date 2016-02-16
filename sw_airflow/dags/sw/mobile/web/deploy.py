@@ -71,14 +71,14 @@ def assemble_process(mode, dag):
         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
 
     update_dynamic_settings_stage = factory.build(task_id='update_dynamic_settings_stage',
-                                                  core_command='''dynamic-settings.sh -et STAGE -p mobile_web''')
+                                                  core_command='dynamic-settings.sh -et staging -p mobile_web')
     update_dynamic_settings_stage.set_upstream(full_mobile_web_data_ready)
 
     register_success_stage = \
         KeyValueSetOperator(task_id='register_success_stage',
                             dag=dag,
                             path='''services/mobile-web/moving-window/{{ params.mode }}/{{ ds }}''',
-                            env='STAGE')
+                            env='staging')
     register_success_stage.set_upstream(full_mobile_web_data_ready)
 
     stage_is_set = DummyOperator(task_id='stage_is_set', dag=dag, sla=timedelta(hours=1))
