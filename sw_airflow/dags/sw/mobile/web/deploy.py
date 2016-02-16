@@ -78,7 +78,7 @@ def assemble_process(mode, dag):
         KeyValueSetOperator(task_id='register_success_stage',
                             dag=dag,
                             path='''services/mobile-web/moving-window/{{ params.mode }}/{{ ds }}''',
-                            env='staging')
+                            env='STAGING')
     register_success_stage.set_upstream(full_mobile_web_data_ready)
 
     stage_is_set = DummyOperator(task_id='stage_is_set', dag=dag, sla=timedelta(hours=1))
