@@ -57,7 +57,7 @@ def assemble_process(mode, dag):
                                              external_task_id='redist')
     calc_subdomains = add_calc_subdomains(daily_redist, factory, prepare_hbase_tables)
 
-    mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag, sla=timedelta(days=1))
+    mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag, sla=timedelta(days=8))
     mobile_web.set_upstream([adjust_store, calc_subdomains, popular_pages_top_store])
 
     if mode == SNAPSHOT_MODE:
