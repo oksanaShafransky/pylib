@@ -116,7 +116,9 @@ def add_popular_pages(dag, factory, prepare_hbase_tables):
     mobile_daily_aggregation = AdaptedExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                                          dag=dag,
                                                          task_id='Mobile_DailyAggregation',
-                                                         external_task_id='DailyAggregation')
+                                                         external_task_id='DailyAggregation',
+                                                         execution_timeout=timedelta(days=1),
+                                                         timeout=60 * 60 * 24)
     popular_pages_agg = factory.build(task_id='popular_pages_agg',
                                       core_command='popular_pages.sh -p aggregate_popular_pages')
     popular_pages_agg.set_upstream(mobile_daily_aggregation)

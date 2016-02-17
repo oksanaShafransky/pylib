@@ -1,10 +1,12 @@
-from airflow.operators.sensors import BaseSensorOperator
-from airflow.models import DagBag
-from airflow.bin import cli
-from airflow.utils import apply_defaults, State
-from airflow import settings, utils
 import logging
-from airflow.models import TaskInstance, Log
+
+from airflow import settings
+from airflow.bin import cli
+from airflow.models import DagBag
+from airflow.models import TaskInstance
+from airflow.operators.sensors import BaseSensorOperator
+from airflow.utils import apply_defaults, State
+from datetime import timedelta, datetime
 
 
 class AdaptedExternalTaskSensor(BaseSensorOperator):
@@ -39,6 +41,7 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
             allowed_states=None,
             external_execution_date=None,
             execution_delta=None,
+            task_existence_check_interval=timedelta(minutes=10),
             *args, **kwargs):
         super(AdaptedExternalTaskSensor, self).__init__(*args, **kwargs)
         self.allowed_states = allowed_states or [State.SUCCESS]
@@ -46,7 +49,8 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
         self.execution_delta = execution_delta
         self.external_dag_id = external_dag_id
         self.external_task_id = external_task_id
-        self.pokes = 0
+        self.task_existence_check_interval = task_existence_check_interval
+        self.last_check_date = datetime.now()
 
     def poke(self, context):
         if self.external_execution_date:
@@ -64,8 +68,8 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
                 '{dttm} ... '.format(**locals()))
         TI = TaskInstance
 
-        # Validate that the external dag and task exist once every 10 pokes
-        if self.pokes % 10 == 0:
+        # Validate that the external dag and task exist every task_existence_check_interval
+        if datetime.now() - self.last_check_date > self.task_existence_check_interval:
             logging.info('Validating the existence of the referenced task:')
             dag_bag = DagBag(cli.DAGS_FOLDER)
             dag_bag.dags[self.external_dag_id].get_task(self.external_task_id)
@@ -77,8 +81,7 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
                 TI.task_id == self.external_task_id,
                 TI.state.in_(self.allowed_states),
                 TI.execution_date == dttm,
-                ).count()
+        ).count()
         session.commit()
         session.close()
-        self.pokes += 1
         return count
