@@ -250,6 +250,10 @@ def dedent(s):
     return '\n'.join([line.lstrip() for line in s.split('\n') if line.strip()])
 
 
+def formatted(f):
+    return lambda *args, **kwargs: dedent(f(*args, **kwargs))
+
+
 def parse_date(dt):
     return int(str(dt.year)[-2:]), dt.month, dt.day
 
