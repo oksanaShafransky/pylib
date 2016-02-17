@@ -1,11 +1,9 @@
-import copy
-
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from datetime import timedelta, datetime
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 
 WINDOW_MODE = 'window'
 WINDOW_MODE_TYPE = 'last-28'
