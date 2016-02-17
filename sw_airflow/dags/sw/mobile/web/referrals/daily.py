@@ -109,6 +109,6 @@ estimate_site_pvs = factory.build(task_id='estimate_site_pvs',
                                   core_command='aggregation.sh -p estimate_site_pvs')
 estimate_site_pvs.set_upstream([calculate_site_pvs_shares, adjust_calc_redist_ready])
 
-process_complete = DummyOperator(task_id='ReferralsDaily', dag=dag)
+process_complete = DummyOperator(task_id='ReferralsDaily', dag=dag, sla=timedelta(days=4))
 process_complete.set_upstream(
         [estimate_site_pvs, adjust_direct_pvs, calculate_user_event_transitions, calculate_user_event_rates])
