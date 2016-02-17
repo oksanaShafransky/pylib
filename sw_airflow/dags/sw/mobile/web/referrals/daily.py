@@ -1,5 +1,7 @@
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
+from airflow.operators.sensors import HdfsSensor
+
 from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from datetime import timedelta, datetime
 
@@ -74,17 +76,16 @@ calculate_user_event_transitions = factory.build(task_id='calculate_user_event_t
 calculate_user_event_transitions.set_upstream([count_user_site2_events, build_user_transitions])
 
 # daily adjustment - this is calculated in one of MobileWeb_ processes, either Window or snapshot in adjust_calc_redist
-# adjust_calc_redist_ready = \
-#     HdfsSensor(task_id='adjust_calc_redist_ready',
-#                dag=dag,
-#                hdfs_conn_id='hdfs_%s' % dag_template_params['cluster'],
-#                filepath='''{{ params.base_data_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''',
-#                execution_timeout=timedelta(minutes=600))
-# TODO this below is a hack until code above can be fixed to work (no _SUCCESS file is created)
-adjust_calc_redist_ready = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Window',
-                                              dag=dag,
-                                              task_id="adjust_calc_redist",
-                                              external_task_id='adjust_calc_redist')
+adjust_calc_redist_ready = \
+    HdfsSensor(task_id='adjust_calc_redist_ready',
+               dag=dag,
+               hdfs_conn_id='hdfs_%s' % dag_template_params['cluster'],
+               filepath='''{{ params.base_data_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''',
+               execution_timeout=timedelta(minutes=600))
+# adjust_calc_redist_ready = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Window',
+#                                               dag=dag,
+#                                               task_id="adjust_calc_redist",
+#                                               external_task_id='adjust_calc_redist')
 
 adjust_direct_pvs = factory.build(task_id='adjust_direct_pvs',
                                   core_command='aggregation.sh -p adjust_direct_pvs')
@@ -92,9 +93,9 @@ adjust_direct_pvs.set_upstream([build_user_transitions, adjust_calc_redist_ready
 
 # daily_est.sh weights
 daily_cut_weights = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Estimation',
-                                       dag=dag,
-                                       task_id="daily-cut_weights",
-                                       external_task_id='daily-cut_weights')
+                                              dag=dag,
+                                              task_id="daily-cut_weights",
+                                              external_task_id='daily-cut_weights')
 
 prepare_site_estimated_pvs = factory.build(task_id='prepare_site_estimated_pvs',
                                            core_command='aggregation.sh -p prepare_site_estimated_pvs -wenv daily-cut')
