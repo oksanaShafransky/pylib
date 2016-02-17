@@ -24,7 +24,7 @@ def type_date_partition(date, mode_type, **kwargs):
 
 
 def hbase_table_suffix_partition(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
-    date_fmt = '%_y_%m' if mode == 'snapshot' else '%_y_%m_%d'
+    date_fmt = '_%y_%m' if mode == 'snapshot' else '_%y_%m_%d'
     date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
     return date_suffix if mode == 'snapshot' else '_%s%s' % (mode_type, date_suffix)
 
