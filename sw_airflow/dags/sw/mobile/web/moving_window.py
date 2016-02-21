@@ -68,7 +68,7 @@ def assemble_process(mode, dag, sum_ww_value_size):
     popular_pages_top_store = add_popular_pages(dag, factory, prepare_hbase_tables)
 
     gaps_filler = factory.build(task_id='gaps_filler',
-                                core_command='airflow_mobile_web_gaps_filler.sh -f')
+                                core_command='airflow_mobile_web_gaps_filler.sh')
     gaps_filler.set_upstream(should_run_mw)
 
     # ##############################################################
@@ -119,7 +119,7 @@ def assemble_process(mode, dag, sum_ww_value_size):
     adjust_store.set_upstream([prepare_hbase_tables] + sum_ww_all)
 
     # FINISH WINDOW PART
-    mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag)
+    mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag, sla=timedelta(hours=8))
     mobile_web.set_upstream([adjust_store, calc_subdomains, popular_pages_top_store])
 
     if mode == SNAPSHOT_MODE:

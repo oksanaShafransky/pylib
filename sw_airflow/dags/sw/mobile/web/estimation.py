@@ -26,8 +26,9 @@ dag_template_params = {'execution_dir': '/similargroup/production',
 
 dag = DAG(dag_id='MobileWeb_Estimation', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
-mobile_preliminary = AdaptedExternalTaskSensor(external_dag_id='Mobile_Preliminary', dag=dag, task_id="Mobile_Preliminary",
-                                        external_task_id='Preliminary')
+mobile_preliminary = AdaptedExternalTaskSensor(external_dag_id='Mobile_Preliminary', dag=dag,
+                                               task_id="Mobile_Preliminary",
+                                               external_task_id='Preliminary')
 
 factory = DockerBashOperatorFactory(dag=dag,
                                     base_data_dir='''{{ params.base_data_dir }}''',
@@ -76,5 +77,5 @@ register_success = KeyValueSetOperator(task_id='register_success',
                                        env='''{{ params.run_environment }}''')
 register_success.set_upstream([main_estimation, weights])
 
-process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=1))
+process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=7))
 process_complete.set_upstream(register_success)
