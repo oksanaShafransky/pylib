@@ -45,7 +45,7 @@ for day_to_clean in range(stage_cleanup_to, stage_cleanup_from):
     cleanup_day = \
         factory.build(task_id='cleanup_stage_DT_%s' % day_to_clean,
                       date_template='''{{ macros.ds_add(ds,-%d) }}''' % day_to_clean,
-                      core_command='windowCleanup.sh -p delete_files -p drop_hbase_tables -fl mw')
+                      core_command='windowCleanup.sh -p delete_files -p drop_hbase_tables -fl MOBILE_WEB')
     cleanup_day.set_upstream(stage_is_set)
     cleanup_stage.set_upstream(cleanup_day)
 
@@ -62,6 +62,6 @@ if airflow_env == 'prod':
                 factory.build(task_id='cleanup_prod_%s_%s' % (target, day_to_clean),
                               cluster=target,
                               date_template='''{{ macros.ds_add(ds,-%d) }}''' % day_to_clean,
-                              core_command='windowCleanup.sh -p drop_hbase_tables -fl mw')
+                              core_command='windowCleanup.sh -p drop_hbase_tables -fl MOBILE_WEB')
             cleanup_day.set_upstream(prod_is_set)
             cleanup_prod.set_upstream(cleanup_day)
