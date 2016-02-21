@@ -3,13 +3,10 @@ from airflow.operators.dummy_operator import DummyOperator
 from datetime import timedelta, datetime
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExternalTaskSensor
 
 WINDOW_MODE = 'window'
-WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE = 'snapshot'
-SNAPSHOT_MODE_TYPE = 'monthly'
-
 dag_args = {
     'owner': 'MobileWeb',
     'depends_on_past': False,
@@ -29,9 +26,9 @@ dag_template_params = {'execution_dir': '/similargroup/production',
                        }
 
 window_template_params = dag_template_params.copy()
-window_template_params.update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
+window_template_params.update({'mode': WINDOW_MODE, 'mode_type': 'last-28'})
 snapshot_template_params = dag_template_params.copy()
-snapshot_template_params.update({'mode': SNAPSHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
+snapshot_template_params.update({'mode': SNAPSHOT_MODE, 'mode_type': 'monthly'})
 
 snapshot_dag = DAG(dag_id='MobileWeb_Snapshot', default_args=dag_args, params=snapshot_template_params,
                    schedule_interval='@monthly')
@@ -49,7 +46,7 @@ def assemble_process(mode, dag):
     prepare_hbase_tables = factory.build(task_id='prepare_hbase_tables',
                                          core_command='../start-process.sh -p tables -fl MOBILE_WEB')
 
-    adjust_store = add_sum_ww(dag, factory, prepare_hbase_tables)
+    adjust_store = add_adjust_store(dag, factory, prepare_hbase_tables)
 
     popular_pages_top_store = add_popular_pages(dag, factory, prepare_hbase_tables)
     daily_redist = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily', dag=dag,
@@ -95,10 +92,13 @@ def add_calc_subdomains(daily_redist, factory, prepare_hbase_tables):
     return calc_subdomains
 
 
-def add_sum_ww(dag, factory, prepare_hbase_tables):
-    daily_sum_ww = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily', dag=dag,
-                                             task_id="MobileWeb_Daily_sum_ww",
-                                             external_task_id='sum_ww')
+def add_adjust_store(dag, factory, prepare_hbase_tables):
+    daily_sum_ww = AggRangeExternalTaskSensor(external_dag_id='MobileWeb_Daily', dag=dag,
+                                              task_id="MobileWeb_Daily_sum_ww",
+                                              external_task_id='sum_ww',
+                                              timeout=60 * 60 * 24,
+                                              agg_mode=dag.default_args.get('mode_type')
+                                              )
     adjust_store = factory.build(task_id='adjust_store', core_command='adjust_est.sh -p store -ww')
     adjust_store.set_upstream([daily_sum_ww, prepare_hbase_tables])
     return adjust_store
@@ -117,7 +117,6 @@ def add_popular_pages(dag, factory, prepare_hbase_tables):
                                                          dag=dag,
                                                          task_id='Mobile_DailyAggregation',
                                                          external_task_id='DailyAggregation',
-                                                         execution_timeout=timedelta(days=1),
                                                          timeout=60 * 60 * 24)
     popular_pages_agg = factory.build(task_id='popular_pages_agg',
                                       core_command='popular_pages.sh -p aggregate_popular_pages')
