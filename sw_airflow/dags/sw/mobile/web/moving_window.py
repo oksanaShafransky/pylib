@@ -10,7 +10,7 @@ SNAPSHOT_MODE = 'snapshot'
 dag_args = {
     'owner': 'MobileWeb',
     'depends_on_past': False,
-    'email': ['barakg@similarweb.com'],
+    'email': ['amitr@similarweb.com', 'barakg@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'start_date': datetime(2016, 2, 14),
@@ -43,16 +43,16 @@ def assemble_process(mode, dag):
                                         script_path='''{{ params.execution_dir }}/mobile/scripts/web''',
                                         additional_cmd_components=['-env main'])
 
-    prepare_hbase_tables = factory.build(task_id='prepare_hbase_tables',
-                                         core_command='../start-process.sh -p tables -fl MOBILE_WEB')
-
-    adjust_store = add_adjust_store(dag, factory, prepare_hbase_tables)
-
-    popular_pages_top_store = add_popular_pages(dag, factory, prepare_hbase_tables)
     daily_redist = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily', dag=dag,
                                              task_id="MobileWeb_Daily_redist",
                                              external_task_id='redist')
-    calc_subdomains = add_calc_subdomains(daily_redist, factory, prepare_hbase_tables)
+
+    prepare_hbase_tables = factory.build(task_id='prepare_hbase_tables',
+                                         core_command='../start-process.sh -p tables -fl MOBILE_WEB')
+
+    adjust_store = add_adjust_store(dag, factory, [prepare_hbase_tables, daily_redist])
+    popular_pages_top_store = add_popular_pages(dag, factory, prepare_hbase_tables)
+    calc_subdomains = add_calc_subdomains(factory, [prepare_hbase_tables, daily_redist])
 
     mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag, sla=timedelta(hours=8))
     mobile_web.set_upstream([adjust_store, calc_subdomains, popular_pages_top_store])
@@ -86,21 +86,21 @@ def assemble_process(mode, dag):
         mobile_web.set_upstream([predict_validate, compare_est_to_qc, first_stage_agg_for_model])
 
 
-def add_calc_subdomains(daily_redist, factory, prepare_hbase_tables):
-    calc_subdomains = factory.build(task_id='calc_subdomains', core_command='calc_subdomains.sh')
-    calc_subdomains.set_upstream([daily_redist, prepare_hbase_tables])
+def add_calc_subdomains(factory, upstreams):
+    calc_subdomains = factory.build(task_id='calc_subdomains', core_command='calc_subdomains.sh', timeout=60 * 60 * 24)
+    calc_subdomains.set_upstream(upstreams)
     return calc_subdomains
 
 
-def add_adjust_store(dag, factory, prepare_hbase_tables):
-    daily_sum_ww = AggRangeExternalTaskSensor(external_dag_id='MobileWeb_Daily', dag=dag,
-                                              task_id="MobileWeb_Daily_sum_ww",
-                                              external_task_id='sum_ww',
-                                              timeout=60 * 60 * 24,
-                                              agg_mode=dag.default_args.get('mode_type')
-                                              )
+def add_adjust_store(dag, factory, upstreams):
+    sum_ww = AggRangeExternalTaskSensor(external_dag_id='MobileWeb_Daily', dag=dag,
+                                        task_id="MobileWeb_Daily_sum_ww",
+                                        external_task_id='sum_ww',
+                                        timeout=60 * 60 * 24,
+                                        agg_mode=dag.params.get('mode_type')
+                                        )
     adjust_store = factory.build(task_id='adjust_store', core_command='adjust_est.sh -p store -ww')
-    adjust_store.set_upstream([daily_sum_ww, prepare_hbase_tables])
+    adjust_store.set_upstream([sum_ww] + upstreams)
     return adjust_store
 
 
