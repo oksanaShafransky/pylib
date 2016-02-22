@@ -42,31 +42,25 @@ factory = DockerBashOperatorFactory(dag=dag,
 def register_sums_and_estimation(factory, env):
     factory.additional_cmd_components = ['-env %s' % env]
 
-    sums = \
-        factory.build(task_id='%s_sums' % env,
-                      core_command='daily_est.sh -p source_sums')
+    sums = factory.build(task_id='%s_sums' % env, core_command='daily_est.sh -p source_sums')
     sums.set_upstream(mobile_preliminary)
 
-    first_stage_estimation = \
-        factory.build(task_id='%s_first_stage_estimation' % env,
-                      core_command='daily_est.sh -p est')
+    first_stage_estimation = factory.build(task_id='%s_first_stage_estimation' % env,
+                                           core_command='daily_est.sh -p est')
     first_stage_estimation.set_upstream(sums)
 
-    first_stage_check = \
-        factory.build(task_id='%s_first_stage_check' % env,
-                      core_command='check_first_stage_estimates.sh')
+    first_stage_check = factory.build(task_id='%s_first_stage_check' % env,
+                                      core_command='check_first_stage_estimates.sh')
     first_stage_check.set_upstream(first_stage_estimation)
     return first_stage_estimation
 
 
 daily_cut_estimation = register_sums_and_estimation(factory, env='daily-cut')
 
-weights = \
-    factory.build(task_id='daily-cut_weights', core_command='daily_est.sh -p weights')
+weights = factory.build(task_id='daily-cut_weights', core_command='daily_est.sh -p weights')
 weights.set_upstream(daily_cut_estimation)
 
-weights_check = \
-    factory.build(task_id='daily-cut_weights_check', core_command='check_weight_calculations.sh')
+weights_check = factory.build(task_id='daily-cut_weights_check', core_command='check_weight_calculations.sh')
 weights_check.set_upstream(weights)
 
 main_estimation = register_sums_and_estimation(factory, env='main')
