@@ -45,7 +45,8 @@ def assemble_process(mode, dag):
 
     daily_redist = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily', dag=dag,
                                              task_id="MobileWeb_Daily_redist",
-                                             external_task_id='redist')
+                                             external_task_id='redist',
+                                             timeout=60 * 60 * 24)
 
     prepare_hbase_tables = factory.build(task_id='prepare_hbase_tables',
                                          core_command='../start-process.sh -p tables -fl MOBILE_WEB')
@@ -87,7 +88,7 @@ def assemble_process(mode, dag):
 
 
 def add_calc_subdomains(factory, upstreams):
-    calc_subdomains = factory.build(task_id='calc_subdomains', core_command='calc_subdomains.sh', timeout=60 * 60 * 24)
+    calc_subdomains = factory.build(task_id='calc_subdomains', core_command='calc_subdomains.sh')
     calc_subdomains.set_upstream(upstreams)
     return calc_subdomains
 
@@ -96,7 +97,6 @@ def add_adjust_store(dag, factory, upstreams):
     sum_ww = AggRangeExternalTaskSensor(external_dag_id='MobileWeb_Daily', dag=dag,
                                         task_id="MobileWeb_Daily_sum_ww",
                                         external_task_id='sum_ww',
-                                        timeout=60 * 60 * 24,
                                         agg_mode=dag.params.get('mode_type')
                                         )
     adjust_store = factory.build(task_id='adjust_store', core_command='adjust_est.sh -p store -ww')
