@@ -8,7 +8,7 @@ from sw.airflow.docker_bash_operator import DockerBashOperator
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
-DOCKER_IMAGE = 'mrp-retention'
+DOCKER_IMAGE = 'mrp.retention'
 
 dag_args = {
     'owner': 'similarweb',
