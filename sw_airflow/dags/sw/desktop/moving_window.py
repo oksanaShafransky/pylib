@@ -26,7 +26,7 @@ DEPLOY_TARGETS = Variable.get("hbase_deploy_targets", deserialize_json=True)
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['kfire@similarweb.com','amitr@similarweb.com','andrews@similarweb.com'],
+    'email': ['kfire@similarweb.com','amitr@similarweb.com','andrews@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
