@@ -9,6 +9,7 @@ from airflow.operators.sensors import BaseSensorOperator
 from airflow.utils import apply_defaults, State, AirflowException
 from datetime import timedelta, datetime
 
+
 class BaseExternalTaskSensor(BaseSensorOperator):
     """
     Waits for a task to complete in a different DAG
@@ -117,6 +118,8 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
     see BaseExternalTaskSensor
     """
 
+    ui_color = '#1192bd'
+
     @apply_defaults
     def __init__(self, agg_mode='last-28', *args, **kwargs):
         super(AggRangeExternalTaskSensor, self).__init__(*args, **kwargs)
@@ -128,9 +131,24 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
         dt = datetime.date(context['execution_date'])
         if self.agg_mode == 'monthly':
             days_in_month = calendar.monthrange(dt.year, dt.month)[1]
-            dates_to_query = macros.get_days(days_in_month, days_in_month)
+            dates_to_query = self.get_days(days_in_month, days_in_month)
         elif self.agg_mode.startswith('last'):
             num_days_in_range = self.agg_mode.split('-')[1]
-            dates_to_query = macros.get_days(dt, num_days_in_range)
+            dates_to_query = self.get_days(dt, num_days_in_range)
 
         return super.internal_poke(dates_to_query)
+
+    @staticmethod
+    def get_days(end, days_back=1):
+        """
+        returns list of datetime objects for each day in range starting from end and going backwards.
+        end date is included
+
+        :param end: this param is aimed for dag execution_date. for usacases where we need dates from current date and back
+        :param days_back: how many days to go back
+        """
+        truncated_end = datetime.date(end.year, end.month, end.day)
+        days = []
+        for i in range(0, days_back):
+            days.append(truncated_end - timedelta(days=i))
+        return days
