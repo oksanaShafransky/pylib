@@ -96,7 +96,7 @@ class AdaptedExternalTaskSensor(BaseExternalTaskSensor):
         else:
             dttm = context['execution_date']
 
-        return super.internal_poke([dttm])
+        return super(AdaptedExternalTaskSensor, self).internal_poke([dttm])
 
 
 class DeltaExternalTaskSensor(BaseExternalTaskSensor):
@@ -110,7 +110,7 @@ class DeltaExternalTaskSensor(BaseExternalTaskSensor):
         self.execution_delta = execution_delta
 
     def poke(self, context):
-        return super.internal_poke([(context['execution_date'] - self.execution_delta)])
+        return super(DeltaExternalTaskSensor, self).internal_poke([(context['execution_date'] - self.execution_delta)])
 
 
 class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
@@ -136,7 +136,7 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
             num_days_in_range = self.agg_mode.split('-')[1]
             dates_to_query = self.get_days(dt, num_days_in_range)
 
-        return super.internal_poke(dates_to_query)
+        return super(AggRangeExternalTaskSensor, self).internal_poke(dates_to_query)
 
     @staticmethod
     def get_days(end, days_back=1):
