@@ -71,5 +71,5 @@ register_success = KeyValueSetOperator(task_id='register_success',
                                        env='''{{ params.run_environment }}''')
 register_success.set_upstream([main_estimation, weights])
 
-process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=7))
+process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=8))
 process_complete.set_upstream(register_success)

@@ -54,7 +54,7 @@ def assemble_process(mode, dag):
     popular_pages_top_store = add_popular_pages(dag, factory, prepare_hbase_tables)
     calc_subdomains = add_calc_subdomains(factory, [prepare_hbase_tables, daily_redist])
 
-    mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag, sla=timedelta(hours=8))
+    mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag, sla=timedelta(hours=12))
     mobile_web.set_upstream([adjust_store, calc_subdomains, popular_pages_top_store])
 
     if mode == SNAPSHOT_MODE:
