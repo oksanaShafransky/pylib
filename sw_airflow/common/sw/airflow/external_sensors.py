@@ -128,7 +128,7 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
         self.agg_mode = agg_mode
 
     def poke(self, context):
-        dt = date(context['execution_date'])  # this truncates hours, minutes, seconds
+        dt = datetime.date(context['execution_date'])  # this truncates hours, minutes, seconds
         if self.agg_mode == 'monthly':
             days_in_month = calendar.monthrange(dt.year, dt.month)[1]
             dates_to_query = self.get_days(days_in_month, days_in_month)
