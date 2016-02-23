@@ -103,7 +103,7 @@ combine_system_apps.set_upstream(system_app_detection)
 daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
                                        dag=dag,
                                        docker_name=DEFAULT_CLUSTER,
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 3200 -rmem 1536'''
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 4500 -rmem 1536'''
                                        )
 daily_aggregation.set_upstream(sources_for_analyze)
 daily_aggregation.set_upstream(blocked_ips)
