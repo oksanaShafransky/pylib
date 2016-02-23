@@ -1,10 +1,9 @@
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from datetime import datetime, timedelta
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
-from sw.airflow.key_value import KeyValueSetOperator
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 
 dag_args = {
     'owner': 'MobileWeb',
@@ -65,11 +64,5 @@ weights_check.set_upstream(weights)
 
 main_estimation = register_sums_and_estimation(factory, env='main')
 
-register_success = KeyValueSetOperator(task_id='register_success',
-                                       dag=dag,
-                                       path='''services/mobile-web-daily-est/daily/{{ ds }}''',
-                                       env='''{{ params.run_environment }}''')
-register_success.set_upstream([main_estimation, weights])
-
 process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=8))
-process_complete.set_upstream(register_success)
+process_complete.set_upstream([main_estimation, weights])

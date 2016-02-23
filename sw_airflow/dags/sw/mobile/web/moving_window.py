@@ -21,7 +21,6 @@ dag_args = {
 dag_template_params = {'execution_dir': '/similargroup/production',
                        'docker_gate': 'docker-a02.sg.internal',
                        'base_data_dir': '/similargroup/data/mobile-analytics',
-                       'run_environment': 'PRODUCTION',
                        'cluster': 'mrp'
                        }
 

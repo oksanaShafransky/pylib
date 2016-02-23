@@ -81,7 +81,7 @@ def assemble_process(mode, dag):
                             env='STAGING')
     register_success_stage.set_upstream(full_mobile_web_data_ready)
 
-    stage_is_set = DummyOperator(task_id='stage_is_set', dag=dag, sla=timedelta(hours=1))
+    stage_is_set = DummyOperator(task_id='stage_is_set', dag=dag, sla=timedelta(hours=24))
     stage_is_set.set_upstream([register_success_stage, update_dynamic_settings_stage])
 
     if airflow_env == 'prod':
