@@ -7,7 +7,7 @@ from airflow.models import DagBag
 from airflow.models import TaskInstance
 from airflow.operators.sensors import BaseSensorOperator
 from airflow.utils import apply_defaults, State, AirflowException
-from datetime import timedelta, datetime
+from datetime import timedelta, datetime, date
 
 
 class BaseExternalTaskSensor(BaseSensorOperator):
@@ -128,7 +128,7 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
         self.agg_mode = agg_mode
 
     def poke(self, context):
-        dt = datetime.date(context['execution_date'])
+        dt = date(context['execution_date'])  # this truncates hours, minutes, seconds
         if self.agg_mode == 'monthly':
             days_in_month = calendar.monthrange(dt.year, dt.month)[1]
             dates_to_query = self.get_days(days_in_month, days_in_month)
@@ -147,7 +147,7 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
         :param end: this param is aimed for dag execution_date. for usacases where we need dates from current date and back
         :param days_back: how many days to go back
         """
-        truncated_end = datetime.date(end.year, end.month, end.day)
+        truncated_end = date(end.year, end.month, end.day)
         days = []
         for i in range(0, days_back):
             days.append(truncated_end - timedelta(days=i))
