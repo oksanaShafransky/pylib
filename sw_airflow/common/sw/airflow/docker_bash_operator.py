@@ -103,11 +103,12 @@ class DockerBashOperatorFactory(object):
         self.additional_cmd_components.append(cmd_component)
         return self
 
-    def build(self, task_id, core_command=None, cluster=None, date_template=None,
+    def build(self, task_id, core_command=None, cluster=None, date_template=None, depends_on_past=None,
               dag_element_type='operator'):
         """
         builds DockerBashOperator, as general rule of thumb params that can be passed are meant for usecases where
         this param is modified on every invocation, like date_template in cleanup usecase for example
+        :param depends_on_past:
         :param task_id:
         :param core_command:
         :param cluster:
@@ -153,8 +154,12 @@ class DockerBashOperatorFactory(object):
 
         # logging.info('Building %s.%s="%s"' % (self.dag.dag_id, task_id, full_command))
         if dag_element_type == 'operator':
-            return DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=docker_to_use,
-                                      bash_command=full_command)
+            if depends_on_past:
+                return DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=docker_to_use,
+                                          depends_on_past=depends_on_past, bash_command=full_command)
+            else:
+                return DockerBashOperator(task_id=task_id, dag=self.dag, docker_name=docker_to_use,
+                                          bash_command=full_command)
         elif dag_element_type == 'sensor':
             raise DockerBashCommandBuilderException('not supported yet')
         else:

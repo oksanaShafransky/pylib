@@ -8,13 +8,13 @@ from sw.airflow.docker_bash_operator import DockerBashOperator
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
-DOCKER_IMAGE = 'mrp-retention'
+DOCKER_IMAGE = 'mrp.retention'
 
 dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 12, 28),
     'depends_on_past': True,
-    'email': ['kfire@similarweb.com'],
+    'email': ['kfire@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 0,

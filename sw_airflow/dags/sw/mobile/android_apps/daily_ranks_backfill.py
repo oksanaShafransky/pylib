@@ -1,9 +1,9 @@
-from datetime import datetime, timedelta
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
+from datetime import datetime, timedelta
 
 from sw.airflow.docker_bash_operator import DockerBashOperator
+from sw.airflow.external_sensors import DeltaExternalTaskSensor
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -16,7 +16,7 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2016, 2, 9),
     'depends_on_past': True,
-    'email': ['iddo.aviram@similarweb.com'],
+    'email': ['iddo.aviram@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
     'email_on_failure': True,
     'email_on_retry': True,
     'retries': 20,
@@ -30,12 +30,12 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 dag = DAG(dag_id='AndroidApps_DailyRanksBackfill', default_args=dag_args, params=dag_template_params,
           schedule_interval="@daily")
 
-mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
-                                       dag=dag,
-                                       task_id="Estimation",
-                                       external_task_id='Estimation',
-                                       execution_delta=timedelta(days=1)
-                                       )
+mobile_estimation = DeltaExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
+                                            dag=dag,
+                                            task_id="Estimation",
+                                            external_task_id='Estimation',
+                                            execution_delta=timedelta(days=1)
+                                            )
 
 suppl_eng = \
     DockerBashOperator(task_id='SupplEng',

@@ -1,10 +1,9 @@
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from datetime import datetime, timedelta
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
-from sw.airflow.key_value import KeyValueSetOperator
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 
 dag_args = {
     'owner': 'MobileWeb',
@@ -42,40 +41,28 @@ factory = DockerBashOperatorFactory(dag=dag,
 def register_sums_and_estimation(factory, env):
     factory.additional_cmd_components = ['-env %s' % env]
 
-    sums = \
-        factory.build(task_id='%s_sums' % env,
-                      core_command='daily_est.sh -p source_sums')
+    sums = factory.build(task_id='%s_sums' % env, core_command='daily_est.sh -p source_sums')
     sums.set_upstream(mobile_preliminary)
 
-    first_stage_estimation = \
-        factory.build(task_id='%s_first_stage_estimation' % env,
-                      core_command='daily_est.sh -p est')
+    first_stage_estimation = factory.build(task_id='%s_first_stage_estimation' % env,
+                                           core_command='daily_est.sh -p est')
     first_stage_estimation.set_upstream(sums)
 
-    first_stage_check = \
-        factory.build(task_id='%s_first_stage_check' % env,
-                      core_command='check_first_stage_estimates.sh')
+    first_stage_check = factory.build(task_id='%s_first_stage_check' % env,
+                                      core_command='check_first_stage_estimates.sh')
     first_stage_check.set_upstream(first_stage_estimation)
     return first_stage_estimation
 
 
 daily_cut_estimation = register_sums_and_estimation(factory, env='daily-cut')
 
-weights = \
-    factory.build(task_id='daily-cut_weights', core_command='daily_est.sh -p weights')
+weights = factory.build(task_id='daily-cut_weights', core_command='daily_est.sh -p weights')
 weights.set_upstream(daily_cut_estimation)
 
-weights_check = \
-    factory.build(task_id='daily-cut_weights_check', core_command='check_weight_calculations.sh')
+weights_check = factory.build(task_id='daily-cut_weights_check', core_command='check_weight_calculations.sh')
 weights_check.set_upstream(weights)
 
 main_estimation = register_sums_and_estimation(factory, env='main')
 
-register_success = KeyValueSetOperator(task_id='register_success',
-                                       dag=dag,
-                                       path='''services/mobile-web-daily-est/daily/{{ ds }}''',
-                                       env='''{{ params.run_environment }}''')
-register_success.set_upstream([main_estimation, weights])
-
-process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=7))
-process_complete.set_upstream(register_success)
+process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=8))
+process_complete.set_upstream([main_estimation, weights])
