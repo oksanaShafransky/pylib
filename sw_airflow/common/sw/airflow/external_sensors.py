@@ -133,7 +133,7 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
             days_in_month = calendar.monthrange(dt.year, dt.month)[1]
             dates_to_query = self.get_days(days_in_month, days_in_month)
         elif self.agg_mode.startswith('last'):
-            num_days_in_range = self.agg_mode.split('-')[1]
+            num_days_in_range = int(self.agg_mode.split('-')[1])
             dates_to_query = self.get_days(dt, num_days_in_range)
 
         return super(AggRangeExternalTaskSensor, self).internal_poke(dates_to_query)
