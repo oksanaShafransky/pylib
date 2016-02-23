@@ -34,7 +34,7 @@ dag_args = {
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER, 'hdfs': DEFAULT_HDFS,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
-                       'problem_num': CHECK_DATA_PROBLEM_NUM}
+                       'problem_num': CHECK_DATA_PROBLEM_NUM, 'base_data_dir': BASE_DIR, 'mode': 'window', 'mode_type': 'last-28'}
 
 dag = DAG(dag_id='Scraping_ProcessMobileScraping', default_args=dag_args, params=dag_template_params)
 
