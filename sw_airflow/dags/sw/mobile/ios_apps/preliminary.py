@@ -9,7 +9,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from sw.airflow.key_value import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
+DEFAULT_EXECUTION_DIR = '/home/iddoa/similargroup_SIM-8362/spark-icon-cache-resolver'
 BASE_DIR = '/similargroup/data/ios-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
@@ -44,6 +44,15 @@ should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         key_suffix='.sg.internal',
                                         execution_timeout=timedelta(minutes=240)
                                         )
+
+
+icon_cache_resolution = \
+    DockerBashOperator(task_id='IconCacheResolution',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/icon_cache_resolution icon_cache_resolution -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
+                       )
+icon_cache_resolution.set_upstream(should_run)
 
 ios_user_grouping = \
     DockerBashOperator(task_id='IosUserGrouping',
