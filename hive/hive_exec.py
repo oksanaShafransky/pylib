@@ -39,9 +39,10 @@ class HiveExecuter(Executer):
         slow_start_param = Arg('-sscmr', '--slow-start-rate', 'slow_start_ratio', str,
                                'mapreduce.job.reduce.slowstart.completedmaps',
                                required=False, default=None)
+        hive_db = Arg('-hdb', '--hive-database', 'hive_db', str, 'hive db to use', required=False, default='analytics')
 
         return [date_param, mode_param, mode_type_param, num_reducers_param, sync_param, dry_run_param,
-                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param]
+                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param, hive_db]
 
     def get_arg_dependencies(self):
 
