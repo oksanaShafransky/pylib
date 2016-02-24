@@ -22,7 +22,7 @@ run \
 --rm \
 --name=%(container_name)s \
 --sig-proxy=false \
---user=4402778 \
+--user=`id -u` \
 -e DOCKER_GATE={{ docker_manager }} \
 -e GELF_HOST="runsrv2.sg.internal" \
 -e HOME=/tmp \
