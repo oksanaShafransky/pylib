@@ -9,7 +9,7 @@ from airflow.operators.dummy_operator import DummyOperator
 from sw.airflow.key_value import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
 
-DEFAULT_EXECUTION_DIR = '/home/iddoa/similargroup_SIM-8362/spark-icon-cache-resolver'
+DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/ios-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
@@ -50,7 +50,8 @@ icon_cache_resolution = \
     DockerBashOperator(task_id='IconCacheResolution',
                        dag=dag,
                        docker_name='''{{ params.cluster }}''',
-                       bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/icon_cache_resolution icon_cache_resolution -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
+                       bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/icon_cache_resolution icon_cache_resolution -d {{ ds }} -b {{ params.base_hdfs_dir}}''',
+                       start_date=datetime(2016, 2, 9)
                        )
 icon_cache_resolution.set_upstream(should_run)
 
