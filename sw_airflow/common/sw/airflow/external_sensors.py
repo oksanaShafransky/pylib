@@ -1,13 +1,16 @@
-from airflow.operators.sensors import BaseSensorOperator
-from airflow.models import DagBag
-from airflow.bin import cli
-from airflow.utils import apply_defaults, State
-from airflow import settings, utils
+import calendar
 import logging
-from airflow.models import TaskInstance, Log
+
+from airflow import settings
+from airflow.bin import cli
+from airflow.models import DagBag
+from airflow.models import TaskInstance
+from airflow.operators.sensors import BaseSensorOperator
+from airflow.utils import apply_defaults, State, AirflowException
+from datetime import timedelta, datetime, date
 
 
-class AdaptedExternalTaskSensor(BaseSensorOperator):
+class BaseExternalTaskSensor(BaseSensorOperator):
     """
     Waits for a task to complete in a different DAG
 
@@ -29,24 +32,63 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
     :type execution_delta: datetime.timedelta
     """
 
-    template_fields = ('external_execution_date',)
-
     @apply_defaults
     def __init__(
             self,
             external_dag_id,
             external_task_id,
             allowed_states=None,
-            external_execution_date=None,
-            execution_delta=None,
+            dates_to_query=None,
+            task_existence_check_interval=timedelta(minutes=10),
             *args, **kwargs):
-        super(AdaptedExternalTaskSensor, self).__init__(*args, **kwargs)
+        super(BaseExternalTaskSensor, self).__init__(*args, **kwargs)
         self.allowed_states = allowed_states or [State.SUCCESS]
-        self.external_execution_date = external_execution_date
-        self.execution_delta = execution_delta
         self.external_dag_id = external_dag_id
         self.external_task_id = external_task_id
-        self.pokes = 0
+        self.task_existence_check_interval = task_existence_check_interval
+        self.dates_to_query = dates_to_query
+
+        self.last_check_date = datetime.now()
+
+    def poke(self, context):
+        return self.internal_poke(self.dates_to_query)
+
+    def internal_poke(self, dates_to_query):
+        logging.info('Poking for '
+                     '{self.external_dag_id}.'
+                     '{self.external_task_id} on '
+                     '{dates_to_query} ... '.format(**locals()))
+
+        # Validate that the external dag and task exist every task_existence_check_interval
+        if datetime.now() - self.last_check_date > self.task_existence_check_interval:
+            logging.info('Validating the existence of the referenced task:')
+            dag_bag = DagBag(cli.DAGS_FOLDER)
+            dag_bag.dags[self.external_dag_id].get_task(self.external_task_id)
+            logging.info('The referenced task was validated and found to be ok')
+
+        TI = TaskInstance
+        session = settings.Session()
+        count = session.query(TI).filter(
+                TI.dag_id == self.external_dag_id,
+                TI.task_id == self.external_task_id,
+                TI.state.in_(self.allowed_states),
+                TI.execution_date.in_(dates_to_query)).count()
+        session.commit()
+        session.close()
+        if count >= len(dates_to_query):
+            return count
+        return 0
+
+
+class AdaptedExternalTaskSensor(BaseExternalTaskSensor):
+    """
+    default implementation of BaseExternalTaskSensor
+    """
+
+    @apply_defaults
+    def __init__(self, external_execution_date=None, *args, **kwargs):
+        super(AdaptedExternalTaskSensor, self).__init__(*args, **kwargs)
+        self.external_execution_date = external_execution_date
 
     def poke(self, context):
         if self.external_execution_date:
@@ -54,31 +96,59 @@ class AdaptedExternalTaskSensor(BaseSensorOperator):
         else:
             dttm = context['execution_date']
 
-        if self.execution_delta:
-            dttm = dttm - self.execution_delta
+        return super(AdaptedExternalTaskSensor, self).internal_poke([dttm])
 
-        logging.info(
-                'Poking for '
-                '{self.external_dag_id}.'
-                '{self.external_task_id} on '
-                '{dttm} ... '.format(**locals()))
-        TI = TaskInstance
 
-        # Validate that the external dag and task exist once every 10 pokes
-        if self.pokes % 10 == 0:
-            logging.info('Validating the existence of the referenced task:')
-            dag_bag = DagBag(cli.DAGS_FOLDER)
-            dag_bag.dags[self.external_dag_id].get_task(self.external_task_id)
-            logging.info('The referenced task was validated and found to be ok')
+class DeltaExternalTaskSensor(BaseExternalTaskSensor):
+    """
+    see BaseExternalTaskSensor
+    """
 
-        session = settings.Session()
-        count = session.query(TI).filter(
-                TI.dag_id == self.external_dag_id,
-                TI.task_id == self.external_task_id,
-                TI.state.in_(self.allowed_states),
-                TI.execution_date == dttm,
-                ).count()
-        session.commit()
-        session.close()
-        self.pokes += 1
-        return count
+    @apply_defaults
+    def __init__(self, execution_delta=0, *args, **kwargs):
+        super(DeltaExternalTaskSensor, self).__init__(*args, **kwargs)
+        self.execution_delta = execution_delta
+
+    def poke(self, context):
+        return super(DeltaExternalTaskSensor, self).internal_poke([(context['execution_date'] - self.execution_delta)])
+
+
+class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
+    """
+    see BaseExternalTaskSensor
+    """
+
+    ui_color = '#1192bd'
+
+    @apply_defaults
+    def __init__(self, agg_mode='last-28', *args, **kwargs):
+        super(AggRangeExternalTaskSensor, self).__init__(*args, **kwargs)
+        if agg_mode != 'monthly' and not agg_mode.startswith('last'):
+            raise AirflowException('AggRangeExternalTaskSensor: unsupported agg_mode=%s' % self.agg_mode)
+        self.agg_mode = agg_mode
+
+    def poke(self, context):
+        dt = datetime.date(context['execution_date'])  # this truncates hours, minutes, seconds
+        if self.agg_mode == 'monthly':
+            days_in_month = calendar.monthrange(dt.year, dt.month)[1]
+            dates_to_query = self.get_days(days_in_month, days_in_month)
+        elif self.agg_mode.startswith('last'):
+            num_days_in_range = int(self.agg_mode.split('-')[1])
+            dates_to_query = self.get_days(dt, num_days_in_range)
+
+        return super(AggRangeExternalTaskSensor, self).internal_poke(dates_to_query)
+
+    @staticmethod
+    def get_days(end, days_back=1):
+        """
+        returns list of datetime objects for each day in range starting from end and going backwards.
+        end date is included
+
+        :param end: this param is aimed for dag execution_date. for usacases where we need dates from current date and back
+        :param days_back: how many days to go back
+        """
+        truncated_end = date(end.year, end.month, end.day)
+        days = []
+        for i in range(0, days_back):
+            days.append(truncated_end - timedelta(days=i))
+        return days

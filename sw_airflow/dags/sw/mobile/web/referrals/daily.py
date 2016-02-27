@@ -39,9 +39,7 @@ factory = DockerBashOperatorFactory(use_defaults=True,
 opera_raw_data_ready = KeyValueSensor(task_id='opera_raw_data_ready',
                                       dag=dag,
                                       env='''{{ params.run_environment }}''',
-                                      path='''services/opera-mini-s3/daily/{{ ds }}''',
-                                      execution_timeout=timedelta(days=2)
-                                      )
+                                      path='''services/opera-mini-s3/daily/{{ ds }}''')
 
 filter_malformed_events = factory.build(task_id='filter_malformed_events',
                                         core_command='preliminary.sh -p filter_malformed_events')
@@ -80,8 +78,7 @@ adjust_calc_redist_ready = \
     HdfsSensor(task_id='adjust_calc_redist_ready',
                dag=dag,
                hdfs_conn_id='hdfs_%s' % dag_template_params['cluster'],
-               filepath='''{{ params.base_data_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''',
-               execution_timeout=timedelta(minutes=600))
+               filepath='''{{ params.base_data_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''')
 # adjust_calc_redist_ready = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Window',
 #                                               dag=dag,
 #                                               task_id="adjust_calc_redist",

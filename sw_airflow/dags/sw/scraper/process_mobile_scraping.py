@@ -9,6 +9,7 @@ from airflow.operators.sensors import HdfsSensor
 
 from sw.airflow.operators import DockerCopyHbaseTableOperator
 from sw.airflow.docker_bash_operator import DockerBashOperator
+from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 from sw.airflow.key_value import *
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -24,7 +25,7 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2016, 01, 21),
     'depends_on_past': False,
-    'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com'],
+    'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 4,
@@ -33,7 +34,7 @@ dag_args = {
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER, 'hdfs': DEFAULT_HDFS,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
-                       'problem_num': CHECK_DATA_PROBLEM_NUM}
+                       'problem_num': CHECK_DATA_PROBLEM_NUM, 'base_data_dir': BASE_DIR, 'mode': 'window', 'mode_type': 'last-28'}
 
 dag = DAG(dag_id='Scraping_ProcessMobileScraping', default_args=dag_args, params=dag_template_params)
 
@@ -403,6 +404,9 @@ update_elastic_alias_stage.set_downstream([register_success, update_latest_date,
 ###    Cleanup                                  #
 #################################################
 
+factory = DockerBashOperatorFactory(use_defaults=True,
+                                    dag=dag,
+                                    script_path='''{{ params.execution_dir }}/mobile/scripts/app-store''')
 
 cleanup_interval_start = 10
 cleanup_interval_end = 3  # this is effectively the retention policy, in days
@@ -413,21 +417,30 @@ cleanups = []
 cleanups_stage = []
 idx = 0
 for days_back in range(cleanup_interval_start, cleanup_interval_end, -1):
-    cleanups += [DockerBashOperator(task_id='''Cleanup_%d_days''' % days_back,
-                                    dag=dag,
-                                    docker_name=DEFAULT_DOCKER,
-                                    bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/cleanup.sh -d {{ macros.ds_add(ds, -%d) }} -et {{ params.run_environment }}''' % days_back
-                                    )
-                 ]
-    cleanups[idx].set_upstream(wrap_up)
-    cleanups[idx].set_upstream(update_elastic_alias_stage)
+    if DEPLOY_TO_PROD:
+        unregister_available = KeyValueDeleteOperator(task_id='DropDataAvailableDate%dDaysBack' % days_back,
+                                                      dag=dag,
+                                                      path='''services/process_mobile_scraping/data-available/{{ macros.ds_add(ds, -%d) }}''' % days_back,
+                                                      env='PRODUCTION'
+        )
 
-    unregister_available = KeyValueDeleteOperator(task_id='DropDataAvailableDate%dDaysBack' % days_back,
-                                                  dag=dag,
-                                                  path='''services/process_mobile_scraping/data-available/{{ macros.ds_add(ds, -%d) }}''' % days_back,
-                                                  env='PRODUCTION'
-                                                  )
-    unregister_available.set_upstream(cleanups[idx])
+        for target in deploy_targets:
+            cleanup_day = \
+                factory.build(task_id='cleanup_prod_%s_%s' % (target, days_back),
+                              cluster=target,
+                              date_template='''{{ macros.ds_add(ds,-%d) }}''' % days_back,
+                              core_command='cleanup.sh -p drop_hbase_tables -et {{ params.run_environment }}')
+            cleanup_day.set_upstream(update_elastic_alias)
+            cleanup_day.set_downstream(unregister_available)
+
+        cleanups += [DockerBashOperator(task_id='''Cleanup_elastic_%d_days''' % days_back,
+                                        dag=dag,
+                                        docker_name=DEFAULT_DOCKER,
+                                        bash_command='''{{ params.execution_dir }}/mobile/scripts/app-store/cleanup.sh -d {{ macros.ds_add(ds, -%d) }} -p elastic_search -et {{ params.run_environment }}''' % days_back
+                                        )
+                     ]
+        cleanups[idx].set_upstream(update_elastic_alias)
+
 
     cleanups_stage += [DockerBashOperator(task_id='''Cleanup_%d_days_Stage''' % days_back,
                                           dag=dag,

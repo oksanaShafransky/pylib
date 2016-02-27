@@ -26,7 +26,7 @@ DEPLOY_TARGETS = Variable.get("hbase_deploy_targets", deserialize_json=True)
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['kfire@similarweb.com','amitr@similarweb.com','andrews@similarweb.com'],
+    'email': ['kfire@similarweb.com','amitr@similarweb.com','andrews@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
@@ -722,13 +722,21 @@ def generate_dags(mode):
             sitemap.set_upstream(dynamic_prod_lite)
             sitemap.set_upstream(dynamic_prod_industry)
 
-            web_autocomplete = \
-                DockerBashOperator(task_id='WebAutocomplete',
+            web_autocomplete_import = \
+                DockerBashOperator(task_id='WebAutocompleteImport',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/web_autocomplete.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/web_autocomplete.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p import_autocomplete'''
                                    )
-            web_autocomplete.set_upstream(export_rest)
+            web_autocomplete_import.set_upstream(export_rest)
+
+            web_autocomplete_stage = \
+                DockerBashOperator(task_id='WebAutocompleteStage',
+                                   dag=dag,
+                                   docker_name='''{{ params.cluster }}''',
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/web_autocomplete.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p create_index,insert_index,update_alias'''
+                                   )
+            web_autocomplete_stage.set_upstream(web_autocomplete_import)
 
         ###########
         # Wrap-up #
@@ -742,7 +750,7 @@ def generate_dags(mode):
         register_success.set_upstream(dynamic_prod)
         if is_snapshot_dag():
             register_success.set_upstream(sitemap)
-            register_success.set_upstream(web_autocomplete)
+            register_success.set_upstream(web_autocomplete_stage)
             register_success.set_upstream(dynamic_cross_prod)
 
         moving_window = \
