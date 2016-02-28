@@ -86,7 +86,7 @@ class AdaptedExternalTaskSensor(BaseExternalTaskSensor):
     """
 
     ui_color = '#e6f1f2'
-    template_fields = 'external_execution_date'
+    template_fields = ('external_execution_date',)
 
     @apply_defaults
     def __init__(self, external_execution_date=None, *args, **kwargs):
@@ -108,7 +108,7 @@ class DeltaExternalTaskSensor(BaseExternalTaskSensor):
     """
 
     ui_color = '#e6f1f2'
-    template_fields = 'execution_delta'
+    template_fields = ('execution_delta',)
 
     @apply_defaults
     def __init__(self, execution_delta=0, *args, **kwargs):
@@ -125,7 +125,7 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
     """
 
     ui_color = '#1192bd'
-    template_fields = 'agg_mode'
+    template_fields = ('agg_mode',)
 
     @apply_defaults
     def __init__(self, agg_mode='last-28', *args, **kwargs):
