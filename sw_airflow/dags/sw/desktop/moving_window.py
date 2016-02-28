@@ -26,7 +26,8 @@ DEPLOY_TARGETS = Variable.get("hbase_deploy_targets", deserialize_json=True)
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['kfire@similarweb.com','amitr@similarweb.com','andrews@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
+    'email': ['kfire@similarweb.com', 'amitr@similarweb.com', 'andrews@similarweb.com',
+              'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
@@ -51,7 +52,7 @@ def generate_dags(mode):
         if is_snapshot_dag():
             return 'Snapshot'
 
-    #TODO insert the real logic here
+    # TODO insert the real logic here
     def is_prod_env():
         return IS_PROD
 
@@ -69,7 +70,8 @@ def generate_dags(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-    dag = DAG(dag_id='Desktop_MovingWindow_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
+    dag = DAG(dag_id='Desktop_MovingWindow_' + mode_dag_name(), default_args=dag_args_for_mode,
+              params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
     hbase_tables = \
@@ -80,21 +82,21 @@ def generate_dags(mode):
                            )
 
     daily_aggregation = AdaptedExternalTaskSensor(external_dag_id='Desktop_Preliminary',
-                                                   external_task_id='Preliminary',
-                                                   task_id='Preliminary',
-                                                   dag=dag)
+                                                  external_task_id='Preliminary',
+                                                  task_id='Preliminary',
+                                                  dag=dag)
     daily_aggregation.set_upstream(hbase_tables)
 
     daily_estimation = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
-                                          external_task_id='DailyTrafficEstimation',
-                                          task_id='DailyTrafficEstimation',
-                                          dag=dag)
+                                                 external_task_id='DailyTrafficEstimation',
+                                                 task_id='DailyTrafficEstimation',
+                                                 dag=dag)
     daily_estimation.set_upstream(hbase_tables)
 
     daily_incoming = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
-                                        external_task_id='DailyIncoming',
-                                        task_id='DailyIncomingEstimation',
-                                        dag=dag)
+                                               external_task_id='DailyIncoming',
+                                               task_id='DailyIncomingEstimation',
+                                               dag=dag)
     daily_incoming.set_upstream(hbase_tables)
 
     info = \
@@ -132,9 +134,9 @@ def generate_dags(mode):
         monthly_sum_estimation_parameters.set_upstream(daily_estimation)
     else:
         monthly_sum_estimation_parameters = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
-                                                               external_task_id='SumEstimation',
-                                                               task_id='MonthlySumEstimationParameters',
-                                                               dag=dag)
+                                                                      external_task_id='SumEstimation',
+                                                                      task_id='MonthlySumEstimationParameters',
+                                                                      dag=dag)
 
     site_country_special_referrer_distribution = \
         DockerBashOperator(task_id='SiteCountrySpecialReferrerDistribution',
@@ -448,8 +450,9 @@ def generate_dags(mode):
 
     if is_prod_env():
 
-        hbase_suffix_template = ('''{{ params.mode_type }}_{{ macros.ds_format(macros.last_interval_day(ds, dag.schedule_interval), "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
-                                 '''{{macros.ds_format(macros.last_interval_day(ds, dag.schedule_interval), "%Y-%m-%d", "%y_%m")}}''')
+        hbase_suffix_template = (
+        '''{{ params.mode_type }}_{{ macros.ds_format(macros.last_interval_day(ds, dag.schedule_interval), "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
+        '''{{macros.ds_format(macros.last_interval_day(ds, dag.schedule_interval), "%Y-%m-%d", "%y_%m")}}''')
 
         #######################
         # Copy to Prod        #
@@ -522,7 +525,7 @@ def generate_dags(mode):
         cross_cache_prod.set_upstream(cross_cache_calc)
 
         dynamic_prod = DummyOperator(task_id='DynamicProd',
-                             dag=dag)
+                                     dag=dag)
 
         if is_window_dag():
             for target in DEPLOY_TARGETS:
@@ -538,7 +541,7 @@ def generate_dags(mode):
             dynamic_prod.set_upstream(copy_to_prod)
 
         dynamic_cross_prod = DummyOperator(task_id='DynamicCrossProd',
-                                     dag=dag)
+                                           dag=dag)
 
         if is_window_dag():
             for target in DEPLOY_TARGETS:
@@ -576,7 +579,6 @@ def generate_dags(mode):
         dynamic_cross_stage.set_upstream(dynamic_stage)
 
         if is_snapshot_dag():
-
             copy_to_prod_mobile_keyword_apps = \
                 DockerCopyHbaseTableOperator(
                         task_id='CopyToProdMobileKeywordApps',
@@ -872,7 +874,7 @@ def generate_dags(mode):
     # Histograms    #
     #################
 
-    sites_stat_hist_register =  \
+    sites_stat_hist_register = \
         DockerBashOperator(task_id='StoreSiteStatsTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
@@ -886,8 +888,7 @@ def generate_dags(mode):
                            )
     sites_stat_hist_register.set_upstream(popular_pages)
 
-
-    site_info_hist_register =  \
+    site_info_hist_register = \
         DockerBashOperator(task_id='StoreSiteInfoTableSplits',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',

@@ -19,7 +19,8 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2016, 01, 21),
     'depends_on_past': False,
-    'email': ['kfire@similarweb.com','amitr@similarweb.com','andrews@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
+    'email': ['kfire@similarweb.com', 'amitr@similarweb.com', 'andrews@similarweb.com',
+              'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 8,
@@ -29,8 +30,8 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Desktop_DailyPanelReport', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(days=1))
-
+dag = DAG(dag_id='Desktop_DailyPanelReport', default_args=dag_args, params=dag_template_params,
+          schedule_interval=timedelta(days=1))
 
 # define stages
 
@@ -41,7 +42,6 @@ group_files_ready = HdfsSensor(task_id='GroupFilesReady',
                                filepath='''%s/{{ macros.date_partition(ds) }}/_SUCCESS''' % group_files_base,
                                execution_timeout=timedelta(minutes=240)
                                )
-
 
 blocked_ips_base = '/similargroup/data/analytics/daily/blockedips'
 blocked_ips_ready = HdfsSensor(task_id='BlockedIpsReady',
@@ -58,6 +58,3 @@ panel_report = DockerBashOperator(task_id='PanelStats',
                                   )
 panel_report.set_upstream(group_files_ready)
 panel_report.set_upstream(blocked_ips_ready)
-
-
-
