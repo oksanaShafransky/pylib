@@ -45,6 +45,17 @@ should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         execution_timeout=timedelta(minutes=240)
                                         )
 
+
+icon_cache_resolution = \
+    DockerBashOperator(task_id='IconCacheResolution',
+                       dag=dag,
+                       docker_name='''{{ params.cluster }}''',
+                       bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/icon_cache_resolution icon_cache_resolution -d {{ ds }} -b {{ params.base_hdfs_dir}}''',
+                       start_date=datetime(2016, 2, 9),
+                       depends_on_past=True
+                       )
+icon_cache_resolution.set_upstream(should_run)
+
 ios_user_grouping = \
     DockerBashOperator(task_id='IosUserGrouping',
                        dag=dag,

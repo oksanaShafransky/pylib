@@ -86,15 +86,15 @@ def generate_dags(mode):
     daily_aggregation.set_upstream(hbase_tables)
 
     daily_estimation = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
-                                          external_task_id='DailyTrafficEstimation',
-                                          task_id='DailyTrafficEstimation',
-                                          dag=dag)
+                                                 external_task_id='DailyTrafficEstimation',
+                                                 task_id='DailyTrafficEstimation',
+                                                 dag=dag)
     daily_estimation.set_upstream(hbase_tables)
 
     daily_incoming = AdaptedExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
-                                        external_task_id='DailyIncoming',
-                                        task_id='DailyIncomingEstimation',
-                                        dag=dag)
+                                               external_task_id='DailyIncoming',
+                                               task_id='DailyIncomingEstimation',
+                                               dag=dag)
     daily_incoming.set_upstream(hbase_tables)
 
     info = \
