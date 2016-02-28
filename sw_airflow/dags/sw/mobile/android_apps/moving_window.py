@@ -73,16 +73,16 @@ def generate_dag(mode):
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
     mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='AndroidApps_Estimation',
-                                           dag=dag,
-                                           task_id='Estimation',
-                                           external_task_id='Estimation',
-                                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
+                                                  dag=dag,
+                                                  task_id='Estimation',
+                                                  external_task_id='Estimation',
+                                                  external_execution_date='''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
 
     mobile_preliminary_daily_aggregation = AdaptedExternalTaskSensor(external_dag_id='Mobile_Preliminary',
-                                                              dag=dag,
-                                                              task_id='MobileDailyAggregation',
-                                                              external_task_id='DailyAggregation',
-                                                              external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
+                                                                     dag=dag,
+                                                                     task_id='MobileDailyAggregation',
+                                                                     external_task_id='DailyAggregation',
+                                                                     external_execution_date='''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
 
     ########################
     # Prepare HBase Tables #

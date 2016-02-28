@@ -42,9 +42,9 @@ def last_day_of_month(date):
 
 
 def last_interval_day(ds, interval):
-    if interval == "@daily":
+    if interval == '@daily':
         return ds
-    if interval == "@monthly":
+    if interval == '@monthly':
         dsd = datetime.strptime(ds, '%Y-%m-%d')
         return last_day_of_month(dsd).isoformat()[:10]
 
