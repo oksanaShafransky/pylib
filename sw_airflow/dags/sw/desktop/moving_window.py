@@ -151,6 +151,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='TrafficDistro',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
+                           email_on_failure = False,
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p traffic_distro'''
                            )
     traffic_distro.set_upstream(site_country_special_referrer_distribution)
