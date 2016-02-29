@@ -846,7 +846,8 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CheckDistros',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}''',
+                               email_on_failure=False
                                )
         check_distros.set_upstream(non_operationals)
 
