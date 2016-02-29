@@ -142,7 +142,10 @@ class Executer(object):
             exit(1)
 
         handler, action = self.actions[action_name]
+        
+        return self.evaluate_action(handler, action)
 
+    def evaluate_action(self, handler, action):
         handler_args = []
         for param in action.params:
             if isinstance(param, Arg):
