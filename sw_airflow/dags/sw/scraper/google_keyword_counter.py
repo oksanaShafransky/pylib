@@ -34,5 +34,5 @@ dag = DAG(dag_id='Scraping_GoogleKeywordCounter', default_args=dag_args, params=
 count = DockerBashOperator(task_id='CountKeywords',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scripts/infra.sh; hadoopexec {{ params.execution_dir }}/scraper scraper.jar com.similargroup.scraper.analyze.KeywordStatusCounter -d {{ ds }}'''
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/countGoogleKeywords.sh -d {{ ds }}'''
                             )
