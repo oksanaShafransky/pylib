@@ -62,7 +62,7 @@ ios_user_grouping = \
                        docker_name='''{{ params.cluster }}''',
                        bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/user_grouping user_grouping -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
                        )
-ios_user_grouping.set_upstream(should_run)
+ios_user_grouping.set_upstream(icon_cache_resolution)
 
 export_sources = DockerBashOperator(task_id='ExportSourcesForAnalyze',
                                     dag=dag,

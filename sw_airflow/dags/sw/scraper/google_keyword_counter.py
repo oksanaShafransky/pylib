@@ -25,14 +25,14 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Scraping_ExportPlaystoreCategoryLeaders', default_args=dag_args, params=dag_template_params, schedule_interval="30 1 1 * *")
+dag = DAG(dag_id='Scraping_GoogleKeywordCounter', default_args=dag_args, params=dag_template_params, schedule_interval="@daily")
 
 
 # define stages
 
 
-export = DockerBashOperator(task_id='ExportLeaders',
+count = DockerBashOperator(task_id='CountKeywords',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scraper/scripts/averageAppRanks.sh {{ macros.ds_format(macros.ds_add(ds, -1), '%Y-%m-%d', '%Y %m %d') }}'''
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/countGoogleKeywords.sh -d {{ ds }}'''
                             )

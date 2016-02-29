@@ -25,14 +25,23 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Scraping_ExportPlaystoreCategoryLeaders', default_args=dag_args, params=dag_template_params, schedule_interval="30 1 1 * *")
+dag = DAG(dag_id='Scraping_Quantcast', default_args=dag_args, params=dag_template_params, schedule_interval="0 20 * * *")
 
 
 # define stages
 
 
-export = DockerBashOperator(task_id='ExportLeaders',
+
+scrape = DockerBashOperator(task_id='ScrapeQuantcast',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scraper/scripts/averageAppRanks.sh {{ macros.ds_format(macros.ds_add(ds, -1), '%Y-%m-%d', '%Y %m %d') }}'''
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/quantcast.sh -m snapshot -d {{ macros.first_day_of_last_month(ds) }} -td {{ macros.first_day_of_last_month(ds) }}'''
                             )
+
+check = DockerBashOperator(task_id='CheckQuantcast',
+                            dag=dag,
+                            docker_name='''{{ params.cluster }}''',
+                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/CheckLearningSet.sh -d {{ macros.first_day_of_last_month(ds) }} -ls quantcast -c 999,840,826,804,818,756,752,724,710,702,643,642,616,620,604,554,528,504,484,458,392,380,376,372,356,360,300,276,250,203,208,170,191,156,158,152,100,76,56,40,36,32'''
+)
+
+check.set_upstream(scrape)

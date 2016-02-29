@@ -108,15 +108,19 @@ class DeltaExternalTaskSensor(BaseExternalTaskSensor):
     """
 
     ui_color = '#e6f1f2'
-    template_fields = ('execution_delta',)
 
     @apply_defaults
-    def __init__(self, execution_delta=0, *args, **kwargs):
+    def __init__(self, execution_delta=None, *args, **kwargs):
         super(DeltaExternalTaskSensor, self).__init__(*args, **kwargs)
         self.execution_delta = execution_delta
 
     def poke(self, context):
-        return super(DeltaExternalTaskSensor, self).internal_poke([(context['execution_date'] - self.execution_delta)])
+        if self.execution_delta:
+            dttm = context['execution_date'] - self.execution_delta
+        else:
+            dttm = context['execution_date']
+
+        return super(DeltaExternalTaskSensor, self).internal_poke([dttm])
 
 
 class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
