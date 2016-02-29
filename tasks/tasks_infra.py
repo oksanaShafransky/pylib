@@ -90,6 +90,11 @@ class ContextualizedTasksInfra(TasksInfra):
     def run_mobile_hadoop(self, command_params):
         return self.run_bash(self.__compose_mobile_hadoop_runner_command(command_params))
 
+    def run_hadoop(self, jar_path, jar_name, main_class, command_params):
+        return self.run_bash(
+                self.__compose_hadoop_runner_command(jar_path=jar_path, jar_name=jar_name, main_class=main_class, command_params=command_params)
+        )
+
     def run_bash(self, command):
         print ("Running '%s'" % command)
         sys.stdout.flush()
