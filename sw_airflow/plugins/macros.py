@@ -45,7 +45,7 @@ def first_day_of_last_month(date):
         date = datetime.strptime(date, '%Y-%m-%d')
     ndt = date.replace(day=1)
     ndt = ndt - timedelta(days=1)
-    return ndt.replace(day=1)
+    return datetime.strftime(ndt.replace(day=1), '%Y-%m-%d')
 
 
 def last_interval_day(ds, interval):
