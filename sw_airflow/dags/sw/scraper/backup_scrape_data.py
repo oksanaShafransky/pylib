@@ -34,5 +34,5 @@ dag = DAG(dag_id='Scraping_BackupScrapeData', default_args=dag_args, params=dag_
 backup = DockerBashOperator(task_id='BackupData',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scraper/scripts/backupScraperData.sh {{ macros.ds_format(macros.ds_add(ds, -1), '%Y-%m-%d', '%Y %m %d') }} -f'''
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/backupScraperData.sh {{ macros.ds_format(macros.ds_add(ds, -1), '%Y-%m-%d', '%Y %m %d') }}'''
                             )
