@@ -35,13 +35,13 @@ dag = DAG(dag_id='Scraping_Quantcast', default_args=dag_args, params=dag_templat
 scrape = DockerBashOperator(task_id='ScrapeQuantcast',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scraper/scripts/quantcast.sh -m snapshot -d {{ macros.first_day_of_last_month(ds) }} -td {{ macros.first_day_of_last_month(ds) }}'''
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/quantcast.sh -m snapshot -d {{ macros.ds_format(macros.first_day_of_last_month(ds), '%Y-%m-%d') }} -td {{ macros.ds_format(macros.first_day_of_last_month(ds), '%Y-%m-%d') }}'''
                             )
 
 check = DockerBashOperator(task_id='CheckQuantcast',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/CheckLearningSet.sh -d {{ macros.first_day_of_last_month(ds) }} -ls quantcast -c 999,840,826,804,818,756,752,724,710,702,643,642,616,620,604,554,528,504,484,458,392,380,376,372,356,360,300,276,250,203,208,170,191,156,158,152,100,76,56,40,36,32'''
+                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/CheckLearningSet.sh -d {{ macros.ds_format(macros.first_day_of_last_month(ds), '%Y-%m-%d') }} -ls quantcast -c 999,840,826,804,818,756,752,724,710,702,643,642,616,620,604,554,528,504,484,458,392,380,376,372,356,360,300,276,250,203,208,170,191,156,158,152,100,76,56,40,36,32'''
 )
 
 check.set_upstream(scrape)
