@@ -41,6 +41,8 @@ def last_day_of_month(date):
     return date.replace(month=date.month + 1, day=1) - timedelta(days=1)
 
 def first_day_of_last_month(date):
+    if isinstance(date, basestring):
+        date = datetime.strptime(date, '%Y-%m-%d')
     ndt = date.replace(day=1)
     ndt = ndt - timedelta(days=1)
     return ndt.replace(day=1)
