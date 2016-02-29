@@ -116,7 +116,7 @@ class DeltaExternalTaskSensor(BaseExternalTaskSensor):
 
     def poke(self, context):
         if self.execution_delta:
-            dttm = self.context['execution_date'] - self.execution_delta
+            dttm = context['execution_date'] - self.execution_delta
         else:
             dttm = context['execution_date']
 
