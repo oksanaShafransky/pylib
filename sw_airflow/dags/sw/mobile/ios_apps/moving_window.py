@@ -5,7 +5,7 @@ from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExternalTaskSensor
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/ios-analytics'
@@ -67,20 +67,20 @@ def generate_dag(mode):
     dag = DAG(dag_id='IosApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
-    mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='IosApps_Estimation',
-                                           dag=dag,
-                                           task_id='DailyEstimation',
-                                           external_task_id='Estimation',
-                                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
+    mobile_estimation = AggRangeExternalTaskSensor(external_dag_id='IosApps_Estimation',
+                                                   dag=dag,
+                                                   task_id='DailyEstimation',
+                                                   external_task_id='Estimation',
+                                                   agg_mode='''{{ params.mode_type }}''')
 
     # for now, wait for tables to be created by the android window
 
     hbase_tables_ready = \
         AdaptedExternalTaskSensor(external_dag_id='AndroidApps_%s' % mode_dag_name(),
-                           dag=dag,
-                           task_id='PrepareHBaseTables',
-                           external_task_id='PrepareHBaseTables'
-                           )
+                                  dag=dag,
+                                  task_id='PrepareHBaseTables',
+                                  external_task_id='PrepareHBaseTables'
+                                  )
 
     ##################
     # App Engagement #

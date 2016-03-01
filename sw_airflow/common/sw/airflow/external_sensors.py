@@ -108,6 +108,7 @@ class DeltaExternalTaskSensor(BaseExternalTaskSensor):
     """
 
     ui_color = '#e6f1f2'
+    template_fields = ('external_delta',)
 
     @apply_defaults
     def __init__(self, execution_delta=None, *args, **kwargs):
