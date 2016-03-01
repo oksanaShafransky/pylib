@@ -34,13 +34,13 @@ dag = DAG(dag_id='Scraping_AddPlaystoreAppsToScrape', default_args=dag_args, par
 export = DockerBashOperator(task_id='ExportApps',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-info/add_apps_to_scrape.sh -d {{ macros.ds_add(ds, -1) }}'''
+                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-info/add_apps_to_scrape.sh -d {{ ds }}'''
                             )
 
 check = DockerBashOperator(task_id='ExportAverage',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-info/add_apps_to_scrape.sh -d {{ macros.ds_add(ds, -1) }} -p report'''
+                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-info/add_apps_to_scrape.sh -d {{ ds }} -p report'''
 )
 
 check.set_upstream(export)

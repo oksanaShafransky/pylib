@@ -34,5 +34,5 @@ dag = DAG(dag_id='Scraping_ExportAppAverageRank', default_args=dag_args, params=
 export = DockerBashOperator(task_id='ExportAverage',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scraper/scripts/averageAppRanks.sh {{ macros.ds_format(macros.ds_add(ds, -1), '%Y-%m-%d', '%Y %m 01') }}'''
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/averageAppRanks.sh {{ macros.ds_format(ds, '%Y-%m-%d', '%Y %m 01') }}'''
                             )

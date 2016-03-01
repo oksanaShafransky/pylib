@@ -34,5 +34,5 @@ dag = DAG(dag_id='Scraping_ExportPlaystoreCategoryLeaders', default_args=dag_arg
 export = DockerBashOperator(task_id='ExportLeaders',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scraper/scripts/averageAppRanks.sh {{ macros.ds_format(macros.ds_add(ds, -1), '%Y-%m-%d', '%Y %m %d') }}'''
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/averageAppRanks.sh {{ macros.ds_format(ds, '%Y-%m-%d', '%Y %m %d') }}'''
                             )
