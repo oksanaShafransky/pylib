@@ -34,12 +34,12 @@ dag = DAG(dag_id='Scraping_GetItunesEPF', default_args=dag_args, params=dag_temp
 getepf = DockerBashOperator(task_id='GetEPF',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scraper/scripts/runepf.sh {{ macros.ds_format(macros.ds_add(ds, -1), '%Y-%m-%d', '%Y%m%d') }} -f'''
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/runepf.sh {{ macros.ds_format(ds, '%Y-%m-%d', '%Y%m%d') }} -f'''
                             )
 
 process = DockerBashOperator(task_id='ProcessEPF',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scraper/scripts/processepf.sh {{ macros.ds_format(macros.ds_add(ds, -1), '%Y-%m-%d', '%Y%m%d') }} -f'''
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/processepf.sh {{ macros.ds_format(ds, '%Y-%m-%d', '%Y%m%d') }} -f'''
 )
 process.set_upstream(getepf)

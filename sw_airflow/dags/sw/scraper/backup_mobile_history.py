@@ -34,5 +34,5 @@ dag = DAG(dag_id='Scraping_BackupMobileHistory', default_args=dag_args, params=d
 backup = DockerBashOperator(task_id='BackupData',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/copy_mobile_history_s3.sh -s {{ macros.ds_add(ds, -1) }} -e {{ macros.ds_add(ds, -1) }}'''
+                            bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/copy_mobile_history_s3.sh -s {{ ds }} -e {{ ds }}'''
                             )
