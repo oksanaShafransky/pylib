@@ -2,10 +2,8 @@
 
 import argparse
 from datetime import datetime
-import traceback
 
-import common
-from multiprocessing.pool import ThreadPool as Pool
+from common import Stage
 
 CONCURRENCY = 6
 
@@ -122,7 +120,10 @@ class Executer(object):
 
     def add_action(self, action_name, action_handler, action_params, kw_params=None, help=None):
         action = Action(action_name, action_params, self.subparsers, kw_params=kw_params, parent_parser=self.common_parser, action_help=help)
-        self.actions[action_name] = action_handler, action
+        self.add_stage(action_name, [(action_handler, action)])
+
+    def add_stage(self, stage_name, handler_action_list):
+        self.actions[stage_name] = handler_action_list
 
     def execute(self):
 
@@ -141,9 +142,13 @@ class Executer(object):
             self.common_parser.error('Action %s is not supported by this executor' % action_name)
             exit(1)
 
-        handler, action = self.actions[action_name]
-        
-        return self.evaluate_action(handler, action)
+        handler_action_list = self.actions[action_name]
+
+        queries_list = []
+        for handler, action in handler_action_list:
+            queries_list.append(self.evaluate_action(handler, action))
+
+        return [Stage(queries_list)]
 
     def evaluate_action(self, handler, action):
         handler_args = []
