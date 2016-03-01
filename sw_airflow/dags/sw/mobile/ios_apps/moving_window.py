@@ -71,7 +71,7 @@ def generate_dag(mode):
                                                    dag=dag,
                                                    task_id='DailyEstimation',
                                                    external_task_id='Estimation',
-                                                   agg_mode=dag.params.get('mode_type')
+                                                   agg_mode='''{{ params.mode_type }}'''
                                                    )
 
     # for now, wait for tables to be created by the android window

@@ -136,7 +136,7 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
     def __init__(self, agg_mode='last-28', *args, **kwargs):
         super(AggRangeExternalTaskSensor, self).__init__(*args, **kwargs)
         if agg_mode != 'monthly' and not agg_mode.startswith('last'):
-            raise AirflowException('AggRangeExternalTaskSensor: unsupported agg_mode=%s' % self.agg_mode)
+            raise AirflowException('AggRangeExternalTaskSensor: unsupported agg_mode=%s' % agg_mode)
         self.agg_mode = agg_mode
 
     def poke(self, context):
