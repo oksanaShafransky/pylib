@@ -84,21 +84,21 @@ def generate_dags(mode):
     daily_aggregation = AggRangeExternalTaskSensor(external_dag_id='Desktop_Preliminary',
                                                    external_task_id='Preliminary',
                                                    task_id='Preliminary',
-                                                   agg_mode='''{{ params.mode_type }}''',
+                                                   agg_mode=dag.params.get('mode_type'),
                                                    dag=dag)
     daily_aggregation.set_upstream(hbase_tables)
 
     daily_estimation = AggRangeExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
                                                   external_task_id='DailyTrafficEstimation',
                                                   task_id='DailyTrafficEstimation',
-                                                  agg_mode='''{{ params.mode_type }}''',
+                                                  agg_mode=dag.params.get('mode_type'),
                                                   dag=dag)
     daily_estimation.set_upstream(hbase_tables)
 
     daily_incoming = AggRangeExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
                                                 external_task_id='DailyIncoming',
                                                 task_id='DailyIncomingEstimation',
-                                                agg_mode='''{{ params.mode_type }}''',
+                                                agg_mode=dag.params.get('mode_type'),
                                                 dag=dag)
     daily_incoming.set_upstream(hbase_tables)
 
