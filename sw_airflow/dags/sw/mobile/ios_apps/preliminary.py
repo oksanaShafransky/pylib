@@ -45,6 +45,14 @@ should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         execution_timeout=timedelta(minutes=240)
                                         )
 
+backup_raw_data = \
+    DockerBashOperator(task_id='BackupRawData',
+                       dag=dag,
+                       docker_name='''mrp.retention''',
+                       bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/backup_raw_data backup_raw_data -d {{ ds }} -b {{ params.base_hdfs_dir}}''',
+                       start_date=datetime(2015, 1, 3),
+                       )
+
 
 icon_cache_resolution = \
     DockerBashOperator(task_id='IconCacheResolution',

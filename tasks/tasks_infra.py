@@ -3,6 +3,7 @@ import time
 import os
 import datetime
 import types
+import ConfigParser
 
 from hadoop.hdfs_util import *
 
@@ -109,7 +110,7 @@ class ContextualizedTasksInfra(TasksInfra):
         year_str = str(d.year)[2:]
         return 'year=%s/month=%s/day=%s' % (year_str, str(d.month).zfill(2), str(d.day).zfill(2))
 
-    #module is either 'mobile' or 'analytics'
+    # module is either 'mobile' or 'analytics'
     def run_spark(self, main_class, module, queue, app_name, command_params, jars_from_lib=None):
         jar = './mobile.jar' if module == 'mobile' else './analytics.jar'
         jar_path = '%s/%s' % (self.execution_dir, 'mobile' if module == 'mobile' else 'analytics')
@@ -122,3 +123,8 @@ class ContextualizedTasksInfra(TasksInfra):
                   (jar_path, queue, app_name, jars, main_class, jar)
         command = TasksInfra.add_command_params(command,command_params)
         return self.run_bash(command)
+
+    def read_s3_configuration(self, property):
+        config = ConfigParser.ConfigParser()
+        config.read('%s/scripts/.s3cfg' % self.execution_dir)
+        return config.get('default', property)
