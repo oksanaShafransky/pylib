@@ -71,9 +71,17 @@ def assemble_process(mode, dag):
         first_stage_agg = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily', dag=dag,
                                                     task_id="MobileWeb_Daily_first_stage_agg",
                                                     external_task_id='first_stage_agg')
-        compare_est_to_qc = factory.build(task_id='compare_est_to_qc',
-                                          core_command='compare_estimations_to_qc.sh -sm')
-        compare_est_to_qc.set_upstream(first_stage_agg)
+
+        prepare_first_stage_for_test = factory.build(task_id='prepare_fs_for_test',
+                                          core_command='compare_estimations_to_qc.sh -env main -p prepare_first_stage_for_test')
+        prepare_first_stage_for_test.set_upstream(first_stage_agg)
+
+        prepare_qc_for_test = factory.build(task_id='prepare_qc_for_test',
+                                                     core_command='compare_estimations_to_qc.sh -env main -p prepare_qc_for_test')
+
+        check_collaboration = factory.build(task_id='prepare_qc_for_test',
+                                            core_command='compare_estimations_to_qc.sh -env main -p check_collaboration')
+        check_collaboration.set_upstream([prepare_qc_for_test, prepare_first_stage_for_test])
 
         estimation = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
                                                task_id="MobileWeb_Estimation",
@@ -83,7 +91,7 @@ def assemble_process(mode, dag):
                                                   core_command='first_stage_agg.sh')
         first_stage_agg_for_model.set_upstream(estimation)
 
-        mobile_web.set_upstream([predict_validate, compare_est_to_qc, first_stage_agg_for_model])
+        mobile_web.set_upstream([predict_validate, check_collaboration, first_stage_agg_for_model])
 
 
 def add_calc_subdomains(factory, upstreams):
