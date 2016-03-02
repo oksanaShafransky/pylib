@@ -8,8 +8,8 @@ from inspect import isfunction
 
 from common import Stage, logger
 import hive_runner
-
-from executer import Executer, Arg, Pool, CONCURRENCY
+from multiprocessing.pool import ThreadPool as Pool
+from executer import Executer, Arg, CONCURRENCY
 
 
 class HiveExecuter(Executer):
@@ -92,6 +92,7 @@ class HiveExecuter(Executer):
                 p = Pool(CONCURRENCY)
                 stage_args = [(name, query_str, args) for name, query_str in stage.queries.items()]
                 p.map(self.run_query_helper, stage_args)
+                p.close()
         except:
             self.results[str(stage)] = 'failure'
             logger.error('Error! Stage failed.')
