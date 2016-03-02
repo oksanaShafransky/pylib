@@ -203,6 +203,13 @@ def table_location(table):
         if "Location:" in line:
             return line.split("\t")[1]
 
+def hbase_table_name(table):
+    cmd = ['hive', '-e', '"describe formatted %s;"' % table]
+    output, _ = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
+    for line in output.split("\n"):
+        if "hbase.table.name" in line:
+            return line.split("\t")[2]
+
 
 def delete_path(path):
     subprocess.call(("hadoop", "fs", "-rm", "-r", path))
@@ -225,6 +232,19 @@ def temp_table_cmds_internal(orig_table_name, temp_root):
                        'short_table_name': table_name.split('.')[-1]}
     return table_name, drop_cmd, create_cmd
 
+def temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name):
+    table_name = '%s_temp_%s' % (orig_table_name, random.randint(10000, 99999))
+    drop_cmd = '\nDROP TABLE IF EXISTS %s;\n' % table_name
+    create_cmd = '''\n
+                    CREATE EXTERNAL TABLE %(table_name)s
+                    LIKE %(orig_table_name)s
+                    WITH TBLPROPERTIES("hbase.table.name" = "%(full_hbase_table_name)s");
+                    \n
+                ''' % {'table_name': table_name,
+                       'orig_table_name': orig_table_name,
+                       'full_hbase_table_name': full_hbase_table_name}
+    return table_name, drop_cmd, create_cmd
+
 
 def should_create_external_table(orig_table_name, location):
     # Remove hdfs:// where needed for comparison
@@ -234,6 +254,19 @@ def should_create_external_table(orig_table_name, location):
     table_loc = urlparse(table_loc).path
     return table_loc != location
 
+def should_create_external_hbase_table(orig_table_name, hbase_table_name_val):
+    table_name = hbase_table_name(orig_table_name)
+    return table_name != hbase_table_name_val
+
+def temp_hbase_table_cmds(orig_table_name, hbase_root_table_name, mode, mode_type, date):
+    full_hbase_table_name = hbase_root_table_name + hbase_table_suffix(date, mode, mode_type)
+    logger.info("Checking whether to create external table %s for HBase table %s:" % (orig_table_name, full_hbase_table_name))
+    if should_create_external_hbase_table(orig_table_name, full_hbase_table_name):
+        logger.info("Writing to an external table with the given name.")
+        return temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name)
+    else:
+        logger.info("Writing to the original table.")
+        return orig_table_name, ''
 
 def temp_table_cmds(orig_table_name, root):
     logger.info("Checking whether to create external table %s in location %s:" % (orig_table_name, root))
@@ -284,6 +317,12 @@ def list_days(end_date, mode, mode_type):
         return None
 
     return [end_date - timedelta(days=x) for x in range(0, delta.days)]
+
+def hbase_table_suffix(date, mode, mode_type):
+    in_date_fmt='%Y-%m' if mode == 'snapshot' else '%Y-%m-%d'
+    date_fmt = '_%y_%m' if mode == 'snapshot' else '_%y_%m_%d'
+    date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
+    return date_suffix if mode == 'snapshot' else '_%s%s' % (mode_type, date_suffix)
 
 
 class Stage(object):
