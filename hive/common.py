@@ -287,4 +287,4 @@ class Stage(object):
         self.queries = queries
 
     def __str__(self):
-        return '\n\n'.join(['\n'.join(self.queries.items())])
+        return '\n\n'.join(['\n'.join(x for x in self.queries)])

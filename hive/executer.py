@@ -146,7 +146,7 @@ class Executer(object):
 
         queries_list = []
         for handler, action in handler_action_list:
-            queries_list.append(self.evaluate_action(handler, action))
+            queries_list.append((action.name, self.evaluate_action(handler, action)))
 
         return [Stage(queries_list)]
 
