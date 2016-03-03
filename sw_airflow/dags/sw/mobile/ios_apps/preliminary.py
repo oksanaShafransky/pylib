@@ -53,6 +53,8 @@ backup_raw_data = \
                        start_date=datetime(2015, 1, 3),
                        )
 
+backup_raw_data.set_upstream(should_run)
+
 
 icon_cache_resolution = \
     DockerBashOperator(task_id='IconCacheResolution',
@@ -111,5 +113,5 @@ daily_aggregation.set_upstream(user_apps_export)
 daily_aggregation.set_upstream(export_sources)
 
 preliminary = DummyOperator(task_id='Preliminary', dag=dag)
-preliminary.set_upstream(daily_aggregation)
+preliminary.set_upstream([daily_aggregation,backup_raw_data])
 
