@@ -258,6 +258,13 @@ def jar_location(branch='master'):
     return "/similargroup/jars/%s/" % branch
 
 
+def get_date_where(year, month, day=None):
+    if day:
+        return 'year=%02d and month=%02d and day=%02d ' % (year, month, day)
+    else:
+        return 'year=%02d and month=%02d ' % (year, month)
+
+
 def list_days(end_date, mode, mode_type):
     if mode == 'snapshot':
         if mode_type == 'monthly':
