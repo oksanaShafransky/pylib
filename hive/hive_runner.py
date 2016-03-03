@@ -208,6 +208,7 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
     else:
         raise ValueError('Unknown compression type %s' % compression)
 
+    # TODO: check if these are needed
     cmd = ["hive", "-S", "-e", '"%s"' % hql,
        "-hiveconf", "mapreduce.job.name=" + job_name,
        "-hiveconf", "mapreduce.job.reduces=" + str(num_of_reducers),
@@ -225,7 +226,9 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
        "-hiveconf", "hive.vectorized.execution.enabled=true",
        "-hiveconf", "hive.vectorized.execution.reduce.enabled=true",
        "-hiveconf", "hive.cbo.enable=true",
-       "-hiveconf", "hive.stats.fetch.column.stats=true"
+       "-hiveconf", "hive.stats.fetch.column.stats=true",
+       "-hiveconf", "mapreduce.reduce.java.opts=-Xmx4096m -Xms4096m",
+       "-hiveconf", "mapreduce.reduce.memory.mb=5320"
     ]
 
     if codec:
