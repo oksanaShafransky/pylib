@@ -1,4 +1,4 @@
-__author__ = 'Felix Vaisman'
+__author__ = 'Iddo Aviram'
 
 from datetime import datetime, timedelta
 
