@@ -79,7 +79,7 @@ def assemble_process(mode, dag):
         prepare_qc_for_test = factory.build(task_id='prepare_qc_for_test',
                                                      core_command='compare_estimations_to_qc.sh -env main -p prepare_qc_for_test')
 
-        check_collaboration = factory.build(task_id='prepare_qc_for_test',
+        check_collaboration = factory.build(task_id='check_collaboration',
                                             core_command='compare_estimations_to_qc.sh -env main -p check_collaboration')
         check_collaboration.set_upstream([prepare_qc_for_test, prepare_first_stage_for_test])
 
