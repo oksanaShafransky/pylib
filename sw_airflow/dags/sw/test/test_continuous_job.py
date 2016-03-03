@@ -3,7 +3,7 @@ __author__ = 'Felix Vaisman'
 from datetime import datetime, timedelta
 
 from airflow.models import DAG
-from airflow.operators import TimeDeltaSensor, TriggerDagRunOperator
+from airflow.operators import BaseSensorOperator, TriggerDagRunOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data'
@@ -26,6 +26,19 @@ dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DO
 
 dag = DAG(dag_id='TestContinuousJob', default_args=dag_args, params=dag_template_params, schedule_interval=None)
 
+
+class TimeDeltaSensor(BaseSensorOperator):
+    template_fields = tuple()
+
+    def __init__(self, delta, *args, **kwargs):
+        super(TimeDeltaSensor, self).__init__(*args, **kwargs)
+        self.delta = delta
+
+    def poke(self, context):
+        dag = context['dag']
+        target_dttm = context['execution_date']
+        target_dttm += self.delta
+        return datetime.now() > target_dttm
 
 # define stages
 
