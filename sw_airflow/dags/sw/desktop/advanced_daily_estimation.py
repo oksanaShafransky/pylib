@@ -127,7 +127,7 @@ sum_estimation_parameters.set_upstream(values_est)
 
 register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          dag=dag,
-                                         path='''services/estimation/data-available/{{ ds }}''',
+                                         path='''services/advanced-stats-estimation/data-available/{{ ds }}''',
                                          env='''{{ params.run_environment }}'''
                                          )
 
