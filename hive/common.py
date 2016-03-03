@@ -39,7 +39,7 @@ def getPartitionString(mode, mode_type, year, month, day, **kwargs):
     if mode == "window" or mode_type == "weekly":
         partition_parts = "year=%s, month=%02d, day=%02d, type='%s'" % (year, month, day, mode_type)
     elif mode == "daily":
-        partition_parts = "year=%s, month=%02d, day='%s'" % (year, month, day)
+        partition_parts = "year=%s, month=%02d, day=%02d" % (year, month, day)
     else:
         partition_parts = "year=%s, month=%02d, type='%s'" % (year, month, mode_type)
 
