@@ -227,8 +227,9 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
        "-hiveconf", "hive.vectorized.execution.reduce.enabled=true",
        "-hiveconf", "hive.cbo.enable=true",
        "-hiveconf", "hive.stats.fetch.column.stats=true",
-       "-hiveconf", "mapreduce.reduce.java.opts=-Xmx4096m -Xms4096m",
-       "-hiveconf", "mapreduce.reduce.memory.mb=5320"
+       "-hiveconf", "mapreduce.child.java.opts=-Xmx4096m -Xms4096m",
+       "-hiveconf", "mapreduce.reduce.memory.mb=5320",
+       "-hiveconf", "mapreduce.map.memory.mb=5320"
     ]
 
     if codec:
