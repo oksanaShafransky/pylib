@@ -116,6 +116,7 @@ class DockerCopyHbaseTableOperator(BashOperator):
     @apply_defaults
     def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args,
                  **kwargs):
+        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=None, *args, **kwargs)
         self.docker_name = docker_name
         bash_cmd = DockerCopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
                                                                 'target_cluster': target_cluster,
@@ -147,6 +148,7 @@ class CompareHBaseTablesOperator(BashOperator):
 
     @apply_defaults
     def __init__(self, docker_name, source_cluster, target_clusters, tables, is_forced=False, *args, **kwargs):
+        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=None, *args, **kwargs)
         self.docker_name = docker_name
         bash_cmd = ' && '.join(
                         [CompareHBaseTablesOperator.cmp_template %
