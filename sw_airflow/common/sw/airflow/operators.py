@@ -13,7 +13,7 @@ from airflow.plugins_manager import AirflowPlugin
 from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
 
-from sw.airflow.docker_bash_operator import DockerBashOperator, dock_cmd_template
+from sw.airflow.docker_bash_operator import DockerBashOperator
 
 
 class BashSensor(BaseSensorOperator):
@@ -106,7 +106,7 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
             self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
 
 
-class DockerCopyHbaseTableOperator(BashOperator):
+class DockerCopyHbaseTableOperator(DockerBashOperator):
     ui_color = '#0099FF'
     cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh &&
                       hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s'''
@@ -114,42 +114,21 @@ class DockerCopyHbaseTableOperator(BashOperator):
     template_fields = ('bash_command', 'docker_name')
 
     @apply_defaults
-    def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args,
-                 **kwargs):
-        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=None, *args, **kwargs)
-        self.docker_name = docker_name
+    def __init__(self, source_cluster, target_cluster, table_name_template, *args, **kwargs):
         bash_cmd = DockerCopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
                                                                 'target_cluster': target_cluster,
                                                                 'table_name': table_name_template}
-        if is_forced:
-            bash_cmd += ' --force'
-
-        rand = str(random.randint(10000, 99999))
-        self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
-                                                                       'task_id': self.task_id, 'rand': rand}
-        random_string = str(datetime.utcnow().strftime('%s'))
-        docker_command = dock_cmd_template % {'random': random_string,
-                                              'container_name': self.container_name,
-                                              'docker': docker_name,
-                                              'bash_command': bash_cmd}
-        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
-
-        # Add echo to everything if we have dryrun in request
-        if self.dag.params and '--dryrun' in self.dag.params.get('transients', ''):
-            logging.info("Dry rub requested. Don't really copy table")
-            self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
+        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
 
 
-class CompareHBaseTablesOperator(BashOperator):
+class CompareHBaseTablesOperator(DockerBashOperator):
     ui_color = '#80ff00'
     cmp_template = '''python {{ params.execution_dir }}/scripts/hbase/compare_tables.py  %(source_cluster)s.%(table_name)s %(target_cluster)s.%(table_name)s '''
 
     template_fields = ('bash_command', 'docker_name')
 
     @apply_defaults
-    def __init__(self, docker_name, source_cluster, target_clusters, tables, is_forced=False, *args, **kwargs):
-        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=None, *args, **kwargs)
-        self.docker_name = docker_name
+    def __init__(self, source_cluster, target_clusters, tables, *args, **kwargs):
         bash_cmd = ' && '.join(
                         [CompareHBaseTablesOperator.cmp_template %
                         {
@@ -160,24 +139,7 @@ class CompareHBaseTablesOperator(BashOperator):
                         for (table, target_cluster) in
                         itertools.product([tables.split(',')], [target_clusters.split(',')])
                         ])
-
-        if is_forced:
-            bash_cmd += ' --force'
-
-        rand = str(random.randint(10000, 99999))
-        self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
-                                                                       'task_id': self.task_id, 'rand': rand}
-        random_string = str(datetime.utcnow().strftime('%s'))
-        docker_command = dock_cmd_template % {'random': random_string,
-                                              'container_name': self.container_name,
-                                              'docker': docker_name,
-                                              'bash_command': bash_cmd}
-        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
-
-        # Add echo to everything if we have dryrun in request
-        if self.dag.params and '--dryrun' in self.dag.params.get('transients', ''):
-            logging.info("Dry rub requested. Don't really copy table")
-            self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
+        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
 
 
 class SuccedOrSkipOperator(PythonOperator):
