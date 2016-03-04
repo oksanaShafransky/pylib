@@ -597,6 +597,7 @@ def generate_dag(mode):
         copy_to_prod = CompareHBaseTablesOperator(source_cluster='mrp',
                                                   target_clusters=','.join(deploy_targets),
                                                   tables=','.join(['%s_%s' % (table, hbase_suffix_template) for table in copied_tables]),
+                                                  docker_name='''{{ params.cluster }}''',
                                                   task_id='CopyToProd',
                                                   dag=dag
                                                   )
