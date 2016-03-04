@@ -76,14 +76,16 @@ def generate_dag(mode):
                                                    dag=dag,
                                                    task_id='Estimation',
                                                    external_task_id='Estimation',
-                                                   agg_mode=dag.params.get('mode_type')
+                                                   agg_mode=dag.params.get('mode_type'),
+                                                   timeout=12 * 60 * 60
                                                    )
 
     mobile_preliminary_daily_aggregation = AggRangeExternalTaskSensor(external_dag_id='Mobile_Preliminary',
                                                                       dag=dag,
                                                                       task_id='MobileDailyAggregation',
                                                                       external_task_id='DailyAggregation',
-                                                                      agg_mode=dag.params.get('mode_type')
+                                                                      agg_mode=dag.params.get('mode_type'),
+                                                                      timeout=12 * 60 * 60
                                                                       )
 
     ########################
