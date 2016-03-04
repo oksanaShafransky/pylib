@@ -596,7 +596,7 @@ def generate_dag(mode):
         copied_tables = ['app_sdk_stats', 'app_sdk_category_stats', 'app_sdk_category_lead', 'app_eng_rank', 'cat_mod_app_rank']
         copy_to_prod = CompareHBaseTablesOperator(task_id='CopyToProd',
                                                   source_cluster='mrp',
-                                                  target_cluster=','.join(deploy_targets),
+                                                  target_clusters=','.join(deploy_targets),
                                                   tables=','.join(['%s_%s' % (table, hbase_suffix_template) for table in copied_tables]),
                                                   dag=dag
                                                   )
