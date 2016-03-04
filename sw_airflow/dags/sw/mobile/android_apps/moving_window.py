@@ -8,7 +8,7 @@ from airflow.operators.python_operator import BranchPythonOperator
 from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.key_value import *
 from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExternalTaskSensor
-from sw.airflow.operators import DockerCopyHbaseTableOperator
+from sw.airflow.operators import DockerCopyHbaseTableOperator, CompareHBaseTablesOperator
 from airflow.models import Variable
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -532,11 +532,6 @@ def generate_dag(mode):
         '''{{macros.ds_format(ds, "%Y-%m-%d", "%y_%m")}}''')
 
     if is_prod_env():
-        # TODO configure parallelism setting for this task, which is heavier (30 slots)
-        copy_to_prod = DummyOperator(task_id='CopyToProd',
-                                     dag=dag
-                                     )
-        copy_to_prod.set_upstream(apps)
 
         copy_to_prod_app_sdk = \
             DockerCopyHbaseTableOperator(
@@ -598,6 +593,14 @@ def generate_dag(mode):
             )
         copy_to_prod_rank.set_upstream([usage_ranks, trends])
 
+        copied_tables = ['app_sdk_stats', 'app_sdk_category_stats', 'app_sdk_category_lead', 'app_eng_rank', 'cat_mod_app_rank']
+        copy_to_prod = CompareHBaseTablesOperator(task_id='CopyToProd',
+                                                  source_cluster='mrp',
+                                                  target_cluster=','.join(deploy_targets),
+                                                  tables=','.join(['%s_%s' % (table, hbase_suffix_template) for table in copied_tables]),
+                                                  dag=dag
+                                                  )
+        copy_to_prod.set_upstream(apps)
         copy_to_prod.set_upstream([copy_to_prod_app_sdk, copy_to_prod_cats, copy_to_prod_leaders, copy_to_prod_engage, copy_to_prod_rank])
 
     ################
