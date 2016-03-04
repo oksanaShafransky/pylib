@@ -2,6 +2,7 @@ import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
 import itertools
+import random
 
 from airflow import settings, utils
 from airflow.models import TaskInstance, Log
@@ -122,8 +123,12 @@ class DockerCopyHbaseTableOperator(BashOperator):
         if is_forced:
             bash_cmd += ' --force'
 
+        rand = str(random.randint(10000, 99999))
+        self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
+                                                                       'task_id': self.task_id, 'rand': rand}
         random_string = str(datetime.utcnow().strftime('%s'))
         docker_command = dock_cmd_template % {'random': random_string,
+                                              'container_name': self.container_name,
                                               'docker': docker_name,
                                               'bash_command': bash_cmd}
         super(DockerCopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
@@ -157,8 +162,12 @@ class CompareHBaseTablesOperator(BashOperator):
         if is_forced:
             bash_cmd += ' --force'
 
+        rand = str(random.randint(10000, 99999))
+        self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
+                                                                       'task_id': self.task_id, 'rand': rand}
         random_string = str(datetime.utcnow().strftime('%s'))
         docker_command = dock_cmd_template % {'random': random_string,
+                                              'container_name': self.container_name,
                                               'docker': docker_name,
                                               'bash_command': bash_cmd}
         super(DockerCopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
