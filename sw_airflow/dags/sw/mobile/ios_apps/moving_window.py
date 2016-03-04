@@ -20,7 +20,7 @@ IS_PROD = True
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['iddo.aviram@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
+    'email': ['iddo.aviram@similarweb.com', 'felixv@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
