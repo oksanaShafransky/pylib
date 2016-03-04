@@ -45,9 +45,9 @@ class DockerBashOperator(BashOperator, object):
         rand = str(random.randint(10000, 99999))
         self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
                                                                        'task_id': self.task_id, 'rand': rand}
-        docker_command = DockerBashOperator.dock_cmd_template % {'random': rand, 'container_name': self.container_name,
-                                                                 'docker': self.docker_name,
-                                                                 'bash_command': bash_command}
+        docker_command = dock_cmd_template % {'random': rand, 'container_name': self.container_name,
+                                              'docker': self.docker_name,
+                                              'bash_command': bash_command}
         self.kill_cmd = DockerBashOperator.kill_cmd_template % {'container_name': self.container_name}
         self.bash_command = docker_command
 
