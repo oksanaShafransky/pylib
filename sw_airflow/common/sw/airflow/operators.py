@@ -116,9 +116,9 @@ class DockerCopyHbaseTableOperator(BashOperator):
     def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args,
                  **kwargs):
         self.docker_name = docker_name
-        bash_cmd = dock_cmd_template % {'source_cluster': source_cluster,
-                                        'target_cluster': target_cluster,
-                                        'table_name': table_name_template}
+        bash_cmd = DockerCopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
+                                                                'target_cluster': target_cluster,
+                                                                'table_name': table_name_template}
         if is_forced:
             bash_cmd += ' --force'
 
