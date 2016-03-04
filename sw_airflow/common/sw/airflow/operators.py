@@ -139,7 +139,7 @@ class CompareHBaseTablesOperator(DockerBashOperator):
                         for (table, target_cluster) in
                         itertools.product([tables.split(',')], [target_clusters.split(',')])
                         ])
-        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
+        super(CompareHBaseTablesOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
 
 
 class SuccedOrSkipOperator(PythonOperator):
