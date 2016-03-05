@@ -20,7 +20,7 @@ run \
 --name=%(container_name)s \
 --sig-proxy=false \
 --user=`id -u` \
--e DOCKER_GATE={{ docker_manager }} \
+-e DOCKER_GATE={{ params.docker_gate }} \
 -e GELF_HOST="runsrv2.sg.internal" \
 -e HOME=/tmp \
 bigdata/centos6.cdh5.%(docker)s bash -c " \

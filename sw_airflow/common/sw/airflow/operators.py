@@ -90,8 +90,7 @@ class DockerBashSensor(BashSensor):
 
 class CopyHbaseTableOperator(BashOperator):
     ui_color = '#0099FF'
-    cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh
-hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
+    cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
     '''
 
     @apply_defaults
