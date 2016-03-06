@@ -73,12 +73,20 @@ def generate_dags(mode):
               params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
+    sum_estimation_parameters = \
+        DockerBashOperator(task_id='SumEstimation',
+                           dag=dag,
+                           docker_name='''{{ params.cluster }}''',
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p monthly_sum_estimation_parameters'''
+                           )
+
     hbase_tables = \
         DockerBashOperator(task_id='HBaseTables',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
                            )
+    hbase_tables.set_upstream(sum_estimation_parameters)
 
     daily_aggregation = AggRangeExternalTaskSensor(external_dag_id='Advanced_Preliminary',
                                                    external_task_id='Preliminary',
