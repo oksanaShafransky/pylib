@@ -34,5 +34,5 @@ dag = DAG(dag_id='Scraping_GetItunesAppRating', default_args=dag_args, params=da
 upload = DockerBashOperator(task_id='GetAppRating',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command='''{{ params.execution_dir }}/scraper/scripts/runSingleInstanceScript.sh "Itunes.Get App Rating" "com.similargroup.scraper.mobile.itunes.GetItunesAppRatingJob"'''
+                            bash_command="{{ params.execution_dir }}/scraper/scripts/runSingleInstanceScript.sh 'Itunes.Get App Rating' 'com.similargroup.scraper.mobile.itunes.GetItunesAppRatingJob'"
                             )
