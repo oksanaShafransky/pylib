@@ -5,14 +5,14 @@ from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerBashOperator
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExternalTaskSensor
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/ios-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 WINDOW_MODE = 'window'
-SNAPHOT_MODE = 'snapshot'
+SNAPSHOT_MODE = 'snapshot'
 WINDOW_MODE_TYPE = 'last-28'
 SNAPSHOT_MODE_TYPE = 'monthly'
 IS_PROD = True
@@ -20,7 +20,7 @@ IS_PROD = True
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['iddo.aviram@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
+    'email': ['iddo.aviram@similarweb.com', 'felixv@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
@@ -38,7 +38,7 @@ def generate_dag(mode):
         return mode == WINDOW_MODE
 
     def is_snapshot_dag():
-        return mode == SNAPHOT_MODE
+        return mode == SNAPSHOT_MODE
 
     def mode_dag_name():
         if is_window_dag():
@@ -62,25 +62,26 @@ def generate_dag(mode):
         dag_template_params_for_mode.update({'mode': WINDOW_MODE, 'mode_type': WINDOW_MODE_TYPE})
 
     if is_snapshot_dag():
-        dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
+        dag_template_params_for_mode.update({'mode': SNAPSHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
     dag = DAG(dag_id='IosApps_' + mode_dag_name(), default_args=dag_args_for_mode, params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
-    mobile_estimation = AdaptedExternalTaskSensor(external_dag_id='IosApps_Estimation',
-                                           dag=dag,
-                                           task_id='DailyEstimation',
-                                           external_task_id='Estimation',
-                                           external_execution_date = '''{{ macros.last_interval_day(ds, dag.schedule_interval) }}''')
+    mobile_estimation = AggRangeExternalTaskSensor(external_dag_id='IosApps_Estimation',
+                                                   dag=dag,
+                                                   task_id='DailyEstimation',
+                                                   external_task_id='Estimation',
+                                                   agg_mode=dag.params.get('mode_type')
+                                                   )
 
     # for now, wait for tables to be created by the android window
 
     hbase_tables_ready = \
         AdaptedExternalTaskSensor(external_dag_id='AndroidApps_%s' % mode_dag_name(),
-                           dag=dag,
-                           task_id='PrepareHBaseTables',
-                           external_task_id='PrepareHBaseTables'
-                           )
+                                  dag=dag,
+                                  task_id='PrepareHBaseTables',
+                                  external_task_id='PrepareHBaseTables'
+                                  )
 
     ##################
     # App Engagement #
@@ -205,5 +206,5 @@ def generate_dag(mode):
     return dag
 
 
-globals()['dag_ios_apps_moving_window_snapshot'] = generate_dag(SNAPHOT_MODE)
+globals()['dag_ios_apps_moving_window_snapshot'] = generate_dag(SNAPSHOT_MODE)
 globals()['dag_ios_apps_moving_window_daily'] = generate_dag(WINDOW_MODE)

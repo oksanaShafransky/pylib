@@ -40,11 +40,18 @@ def last_day_of_month(date):
         return date.replace(day=31)
     return date.replace(month=date.month + 1, day=1) - timedelta(days=1)
 
+def first_day_of_last_month(date):
+    if isinstance(date, basestring):
+        date = datetime.strptime(date, '%Y-%m-%d')
+    ndt = date.replace(day=1)
+    ndt = ndt - timedelta(days=1)
+    return datetime.strftime(ndt.replace(day=1), '%Y-%m-%d')
+
 
 def last_interval_day(ds, interval):
-    if interval == "@daily":
+    if interval == '@daily':
         return ds
-    if interval == "@monthly":
+    if interval == '@monthly':
         dsd = datetime.strptime(ds, '%Y-%m-%d')
         return last_day_of_month(dsd).isoformat()[:10]
 
@@ -68,4 +75,4 @@ class SWMacroAirflowPluginManager(AirflowPlugin):
     name = 'SWMacros'
 
     macros = [date_partition, generalized_date_partition, type_date_partition, hbase_table_suffix_partition,
-              dss_in_same_month, last_interval_day]
+              dss_in_same_month, last_interval_day, first_day_of_last_month]

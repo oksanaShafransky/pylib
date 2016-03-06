@@ -12,7 +12,7 @@ SNAPSHOT_MODE_TYPE = 'monthly'
 dag_args = {
     'owner': 'MobileWeb',
     'depends_on_past': False,
-    'email': ['barakg@similarweb.com'],
+    'email': ['barakg@similarweb.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'start_date': datetime(2016, 1, 20),

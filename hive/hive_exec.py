@@ -9,12 +9,12 @@ from inspect import isfunction
 from common import Stage, logger
 import hive_runner
 
-from executer import Executer, Arg, Pool, CONCURRENCY
+from tasks.executer import Executer, Arg, Pool, CONCURRENCY
 
 
 class HiveExecuter(Executer):
-    def get_common_params(self):
 
+    def get_common_params(self):
         date_param = Arg('-d', '--date', 'date', Arg.date_arg, 'Date to use in %Y-%m-%d or %Y-%m format', required=True)
         mode_param = Arg('-m', '--mode', 'mode', ('daily', 'window', 'snapshot'), 'Job mode', required=True)
         mode_type_param = Arg('-mt', '--mode-type', 'mode_type', (
