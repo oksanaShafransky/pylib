@@ -9,7 +9,7 @@ from inspect import isfunction
 from common import Stage, logger
 import hive_runner
 from multiprocessing.pool import ThreadPool as Pool
-from executer import Executer, Arg, CONCURRENCY
+from tasks.executer import Executer, Arg, CONCURRENCY
 
 
 class HiveExecuter(Executer):
