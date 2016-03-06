@@ -125,15 +125,15 @@ sum_estimation_parameters = \
                        )
 sum_estimation_parameters.set_upstream(values_est)
 
-register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
-                                         dag=dag,
-                                         path='''services/advanced-stats-estimation/data-available/{{ ds }}''',
-                                         env='''{{ params.run_environment }}'''
-                                         )
-
-register_available.set_upstream(values_est)
-register_available.set_upstream(check)
-register_available.set_upstream(daily_incoming)
+# register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
+#                                          dag=dag,
+#                                          path='''services/advanced-stats-estimation/data-available/{{ ds }}''',
+#                                          env='''{{ params.run_environment }}'''
+#                                          )
+#
+# register_available.set_upstream(values_est)
+# register_available.set_upstream(check)
+# register_available.set_upstream(daily_incoming)
 
 ###########
 # Wrap-up #
@@ -144,7 +144,6 @@ wrap_up = \
                   dag=dag
                   )
 
-wrap_up.set_upstream(est_repair)
 wrap_up.set_upstream(incoming_repair)
-wrap_up.set_upstream(register_available)
+wrap_up.set_upstream(check)
 wrap_up.set_upstream(sum_estimation_parameters)
