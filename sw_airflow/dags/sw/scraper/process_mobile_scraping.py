@@ -25,7 +25,8 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2016, 01, 21),
     'depends_on_past': False,
-    'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
+    'email': ['felixv@similarweb.com', 'jonathan@similarweb.com', 'yotamg@similarweb.com',
+              'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 4,
@@ -34,7 +35,7 @@ dag_args = {
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER, 'hdfs': DEFAULT_HDFS,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER,
-                       'problem_num': CHECK_DATA_PROBLEM_NUM}
+                       'problem_num': CHECK_DATA_PROBLEM_NUM, 'base_data_dir': BASE_DIR, 'mode': 'window', 'mode_type': 'last-28'}
 
 dag = DAG(dag_id='Scraping_ProcessMobileScraping', default_args=dag_args, params=dag_template_params)
 

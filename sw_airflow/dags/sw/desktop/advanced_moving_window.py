@@ -11,8 +11,8 @@ from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExter
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerCopyHbaseTableOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data/analytics'
+DEFAULT_EXECUTION_DIR = '/similargroup/adv_trk'
+BASE_DIR = '/similargroup/data/advanced-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 WINDOW_MODE = 'window'
@@ -26,8 +26,7 @@ DEPLOY_TARGETS = Variable.get("hbase_deploy_targets", deserialize_json=True)
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['kfire@similarweb.com', 'amitr@similarweb.com', 'andrews@similarweb.com',
-              'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
+    'email': ['kfire@similarweb.com', 'andrews@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
@@ -58,10 +57,10 @@ def generate_dags(mode):
 
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 1, 17)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 3, 1)})
 
     if is_snapshot_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 1, 17)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 3, 1)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     if is_window_dag():
@@ -70,7 +69,7 @@ def generate_dags(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-    dag = DAG(dag_id='Desktop_MovingWindow_' + mode_dag_name(), default_args=dag_args_for_mode,
+    dag = DAG(dag_id='Advanced_MovingWindow_' + mode_dag_name(), default_args=dag_args_for_mode,
               params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
@@ -81,21 +80,21 @@ def generate_dags(mode):
                            bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
                            )
 
-    daily_aggregation = AggRangeExternalTaskSensor(external_dag_id='Desktop_Preliminary',
+    daily_aggregation = AggRangeExternalTaskSensor(external_dag_id='Advanced_Preliminary',
                                                    external_task_id='Preliminary',
                                                    task_id='Preliminary',
                                                    agg_mode=dag.params.get('mode_type'),
                                                    dag=dag)
     daily_aggregation.set_upstream(hbase_tables)
 
-    daily_estimation = AggRangeExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+    daily_estimation = AggRangeExternalTaskSensor(external_dag_id='Advanced_DailyEstimation',
                                                   external_task_id='DailyTrafficEstimation',
                                                   task_id='DailyTrafficEstimation',
                                                   agg_mode=dag.params.get('mode_type'),
                                                   dag=dag)
     daily_estimation.set_upstream(hbase_tables)
 
-    daily_incoming = AggRangeExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+    daily_incoming = AggRangeExternalTaskSensor(external_dag_id='Advanced_DailyEstimation',
                                                 external_task_id='DailyIncoming',
                                                 task_id='DailyIncomingEstimation',
                                                 agg_mode=dag.params.get('mode_type'),
@@ -910,5 +909,5 @@ def generate_dags(mode):
     return dag
 
 
-globals()['dag_desktop_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
-globals()['dag_desktop_moving_window_daily'] = generate_dags(WINDOW_MODE)
+globals()['dag_advanced_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
+globals()['dag_advanced_moving_window_daily'] = generate_dags(WINDOW_MODE)

@@ -177,6 +177,15 @@ class JobBuilder:
 
         return self
 
+    def with_task_cores(self, cores, task_type='all'):
+        if task_type == 'all' or task_type == 'map':
+            self.args += ['--jobconf', 'mapreduce.map.cpu.vcores=%d' % cores]
+
+        if task_type == 'all' or task_type == 'reduce':
+            self.args += ['--jobconf', 'mapreduce.reduce.cpu.vcores=%d' % cores]
+
+        return self
+
     def with_task_memory(self, megabytes, task_type='all'):
         self.args += ['--jobconf', ('mapred.child.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
 

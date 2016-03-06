@@ -3,6 +3,7 @@ import time
 import os
 import datetime
 import types
+import ConfigParser
 
 from hadoop.hdfs_util import *
 
@@ -55,35 +56,45 @@ class ContextualizedTasksInfra(TasksInfra):
         self.ctx = ctx
         self.execution_dir = execution_dir
 
-    def get_common_args(self):
-        return self.ctx.config.config['common_args']
-
-    def compose_infra_command(self, command):
+    def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh' % execution_dir
-        if self.get_common_args()['dry_run']:
+        if self.__get_common_args()['dry_run']:
             ans += " && setDryRun"
         ans += " && " + command
         return ans
 
-    def compose_hadoop_exec_command(self, jar_path, jar_name, main_class, command_params):
-        command = self.compose_infra_command('execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
-                                                 {
+    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params):
+        command = self.__compose_infra_command('execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
+                                               {
                                                      'base_dir': execution_dir,
                                                      'jar_relative_path': jar_path,
                                                      'jar': jar_name,
                                                      'class': main_class
                                                  }
-                                             )
+                                               )
         command = self.add_command_params(command, command_params)
         return command
 
-    def compose_hadoop_runner_command(self, command_params):
-        return self.compose_hadoop_exec_command(jar_path='mobile', jar_name='mobile.jar', main_class='com.similargroup.mobile.main.MobileRunner', command_params=command_params)
+    #Todo: Move it to the mobile project
+    def __compose_mobile_hadoop_runner_command(self, command_params):
+        return self.__compose_hadoop_runner_command(jar_path='mobile', jar_name='mobile.jar', main_class='com.similargroup.mobile.main.MobileRunner', command_params=command_params)
 
-    def compose_python_runner_command(self, python_executable, command_params):
-        command = self.compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
+    def __compose_python_runner_command(self, python_executable, command_params):
+        command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
         command = self.add_command_params(command, command_params)
         return command
+
+    def __get_common_args(self):
+        return self.ctx.config.config['common_args']
+
+    #Todo: Move it to the mobile project
+    def run_mobile_hadoop(self, command_params):
+        return self.run_bash(self.__compose_mobile_hadoop_runner_command(command_params))
+
+    def run_hadoop(self, jar_path, jar_name, main_class, command_params):
+        return self.run_bash(
+                self.__compose_hadoop_runner_command(jar_path=jar_path, jar_name=jar_name, main_class=main_class, command_params=command_params)
+        )
 
     def run_bash(self, command):
         print ("Running '%s'" % command)
@@ -91,7 +102,29 @@ class ContextualizedTasksInfra(TasksInfra):
         time.sleep(1)
         self.ctx.run(command)
 
+    def run_python(self, python_executable, command_params):
+        return self.run_bash(self.__compose_python_runner_command(python_executable, command_params))
+
     def year_month_day(self):
-        d = self.get_common_args()['date']
+        d = self.__get_common_args()['date']
         year_str = str(d.year)[2:]
         return 'year=%s/month=%s/day=%s' % (year_str, str(d.month).zfill(2), str(d.day).zfill(2))
+
+    # module is either 'mobile' or 'analytics'
+    def run_spark(self, main_class, module, queue, app_name, command_params, jars_from_lib=None):
+        jar = './mobile.jar' if module == 'mobile' else './analytics.jar'
+        jar_path = '%s/%s' % (self.execution_dir, 'mobile' if module == 'mobile' else 'analytics')
+        if jars_from_lib is None:
+            jars_from_lib = os.listdir('%s/lib' % (jar_path))
+        else:
+            jars_from_lib = map(lambda x: '%s.jar' % x, jars_from_lib)
+        jars = ','.join(map(lambda x: './lib/%s'%x, jars_from_lib))
+        command = 'cd %s;spark-submit --queue %s --name "%s" --master yarn-cluster --deploy-mode cluster --jars %s --class %s %s ' %\
+                  (jar_path, queue, app_name, jars, main_class, jar)
+        command = TasksInfra.add_command_params(command,command_params)
+        return self.run_bash(command)
+
+    def read_s3_configuration(self, property):
+        config = ConfigParser.ConfigParser()
+        config.read('%s/scripts/.s3cfg' % self.execution_dir)
+        return config.get('default', property)

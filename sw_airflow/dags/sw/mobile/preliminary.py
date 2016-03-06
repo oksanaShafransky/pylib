@@ -18,7 +18,7 @@ dag_args = {
     'start_date': datetime(2016, 1, 14),
     'depends_on_past': False,
     'email': ['felixv@similarweb.com', 'iddoav@similarweb.com', 'barakg@similarweb.com', 'amitr@similarweb.com',
-              'n7i6d2a2m1h2l3f6@similar.slack.com'],
+              'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 8,
@@ -103,7 +103,7 @@ combine_system_apps.set_upstream(system_app_detection)
 daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
                                        dag=dag,
                                        docker_name=DEFAULT_CLUSTER,
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 3200 -rmem 1536'''
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 4500 -rmem 1536'''
                                        )
 daily_aggregation.set_upstream(sources_for_analyze)
 daily_aggregation.set_upstream(blocked_ips)

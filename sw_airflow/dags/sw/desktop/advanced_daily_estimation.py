@@ -7,15 +7,15 @@ from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 from sw.airflow.key_value import *
 from sw.airflow.docker_bash_operator import DockerBashOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data/analytics'
+DEFAULT_EXECUTION_DIR = '/similargroup/adv_trk'
+BASE_DIR = '/similargroup/data/advanced-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 
 dag_args = {
     'owner': 'similarweb',
-    'start_date': datetime(2016, 1, 21),
-    'depends_on_past': True,
+    'start_date': datetime(2016, 3, 1),
+    'depends_on_past': False,
     'email': ['andrews@similarweb.com', 'kfire@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com',
               'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
@@ -27,14 +27,14 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Desktop_DailyEstimation', default_args=dag_args, params=dag_template_params,
+dag = DAG(dag_id='Advanced_DailyEstimation', default_args=dag_args, params=dag_template_params,
           schedule_interval=timedelta(days=1))
 
 
-preliminary = AdaptedExternalTaskSensor(external_dag_id='Desktop_Preliminary',
-                                 external_task_id='Preliminary',
-                                 dag=dag,
-                                 task_id="Preliminary")
+preliminary = AdaptedExternalTaskSensor(external_dag_id='Advanced_Preliminary',
+                                        external_task_id='Preliminary',
+                                        dag=dag,
+                                        task_id="Preliminary")
 #########################
 # estimation
 #########################
@@ -127,7 +127,7 @@ sum_estimation_parameters.set_upstream(values_est)
 
 register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
                                          dag=dag,
-                                         path='''services/estimation/data-available/{{ ds }}''',
+                                         path='''services/advanced-stats-estimation/data-available/{{ ds }}''',
                                          env='''{{ params.run_environment }}'''
                                          )
 
