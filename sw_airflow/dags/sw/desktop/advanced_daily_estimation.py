@@ -32,7 +32,7 @@ dag = DAG(dag_id='Advanced_DailyEstimation', default_args=dag_args, params=dag_t
 
 
 preliminary = AdaptedExternalTaskSensor(external_dag_id='Advanced_Preliminary',
-                                        external_task_id='DesktopPreliminary',
+                                        external_task_id='Preliminary',
                                         dag=dag,
                                         task_id="Preliminary")
 #########################
