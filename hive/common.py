@@ -251,7 +251,6 @@ def should_create_external_table(orig_table_name, location):
     if 'hdfs://' in location:
         location = urlparse(location).path
     table_loc = table_location(orig_table_name)
-    table_loc = urlparse(table_loc).path
     return table_loc != location
 
 def should_create_external_hbase_table(orig_table_name, hbase_table_name_val):
@@ -318,10 +317,11 @@ def list_days(end_date, mode, mode_type):
 
     return [end_date - timedelta(days=x) for x in range(0, delta.days)]
 
-def hbase_table_suffix(date, mode, mode_type):
-    in_date_fmt='%Y-%m' if mode == 'snapshot' else '%Y-%m-%d'
+def hbase_table_suffix(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
+    #in_date_fmt='%Y-%m' if mode == 'snapshot' else '%Y-%m-%d'
     date_fmt = '_%y_%m' if mode == 'snapshot' else '_%y_%m_%d'
-    date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
+    #date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
+    date_suffix = datetime.strftime(date, date_fmt)
     return date_suffix if mode == 'snapshot' else '_%s%s' % (mode_type, date_suffix)
 
 
