@@ -72,15 +72,16 @@ def assemble_process(mode, dag):
                                                     task_id="MobileWeb_Daily_first_stage_agg",
                                                     external_task_id='first_stage_agg')
 
-        prepare_first_stage_for_test = factory.build(task_id='prepare_fs_for_test',
-                                          core_command='compare_estimations_to_qc.sh -env main -p prepare_first_stage_for_test')
+        prepare_first_stage_for_test = \
+            factory.build(task_id='prepare_fs_for_test',
+                          core_command='compare_estimations_to_qc.sh -p prepare_first_stage_for_test')
         prepare_first_stage_for_test.set_upstream(first_stage_agg)
 
         prepare_qc_for_test = factory.build(task_id='prepare_qc_for_test',
-                                                     core_command='compare_estimations_to_qc.sh -env main -p prepare_qc_for_test')
+                                            core_command='compare_estimations_to_qc.sh -p prepare_qc_for_test')
 
         check_collaboration = factory.build(task_id='check_collaboration',
-                                            core_command='compare_estimations_to_qc.sh -env main -p check_collaboration')
+                                            core_command='compare_estimations_to_qc.sh -p check_collaboration')
         check_collaboration.set_upstream([prepare_qc_for_test, prepare_first_stage_for_test])
 
         estimation = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Estimation', dag=dag,
