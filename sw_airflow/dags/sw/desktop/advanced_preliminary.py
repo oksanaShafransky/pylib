@@ -92,7 +92,7 @@ register_available.set_upstream(daily_aggregation)
 ###########
 
 wrap_up = \
-    DummyOperator(task_id='DesktopPreliminary',
+    DummyOperator(task_id='Preliminary',
                   dag=dag
                   )
 wrap_up.set_upstream([repair_tables, register_available])

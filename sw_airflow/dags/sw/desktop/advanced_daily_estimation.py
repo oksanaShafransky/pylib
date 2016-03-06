@@ -32,7 +32,7 @@ dag = DAG(dag_id='Advanced_DailyEstimation', default_args=dag_args, params=dag_t
 
 
 preliminary = AdaptedExternalTaskSensor(external_dag_id='Advanced_Preliminary',
-                                        external_task_id='DesktopPreliminary',
+                                        external_task_id='Preliminary',
                                         dag=dag,
                                         task_id="Preliminary")
 #########################
@@ -117,23 +117,15 @@ incoming_repair = \
 
 incoming_repair.set_upstream(daily_incoming)
 
-sum_estimation_parameters = \
-    DockerBashOperator(task_id='SumEstimation',
-                       dag=dag,
-                       docker_name='''{{ params.cluster }}''',
-                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ ds }} -bd {{ params.base_hdfs_dir }} -m window -mt last-28 -p monthly_sum_estimation_parameters'''
-                       )
-sum_estimation_parameters.set_upstream(values_est)
-
-register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
-                                         dag=dag,
-                                         path='''services/advanced-stats-estimation/data-available/{{ ds }}''',
-                                         env='''{{ params.run_environment }}'''
-                                         )
-
-register_available.set_upstream(values_est)
-register_available.set_upstream(check)
-register_available.set_upstream(daily_incoming)
+# register_available = KeyValueSetOperator(task_id='MarkDataAvailability',
+#                                          dag=dag,
+#                                          path='''services/advanced-stats-estimation/data-available/{{ ds }}''',
+#                                          env='''{{ params.run_environment }}'''
+#                                          )
+#
+# register_available.set_upstream(values_est)
+# register_available.set_upstream(check)
+# register_available.set_upstream(daily_incoming)
 
 ###########
 # Wrap-up #
@@ -144,7 +136,6 @@ wrap_up = \
                   dag=dag
                   )
 
-wrap_up.set_upstream(est_repair)
 wrap_up.set_upstream(incoming_repair)
-wrap_up.set_upstream(register_available)
-wrap_up.set_upstream(sum_estimation_parameters)
+wrap_up.set_upstream(check)
+wrap_up.set_upstream(values_est)
