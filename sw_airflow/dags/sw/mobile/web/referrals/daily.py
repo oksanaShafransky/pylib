@@ -79,10 +79,9 @@ calculate_user_event_transitions.set_upstream([count_user_site2_events, build_us
 #                dag=dag,
 #                hdfs_conn_id='hdfs_%s' % dag_template_params['cluster'],
 #                filepath='''{{ params.base_data_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''')
-adjust_calc_redist_ready = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily',
-                                                     dag=dag,
-                                                     task_id="redist",
-                                                     external_task_id='MobileWeb_Daily_redist')
+adjust_calc_redist_ready = AdaptedExternalTaskSensor(task_id='MobileWeb_Daily_redist',
+                                                     external_dag_id='MobileWeb_Daily', dag=dag,
+                                                     external_task_id='redist')
 
 adjust_direct_pvs = factory.build(task_id='adjust_direct_pvs',
                                   core_command='aggregation.sh -p adjust_direct_pvs')
