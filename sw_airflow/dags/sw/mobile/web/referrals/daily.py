@@ -34,6 +34,7 @@ dag = DAG(dag_id='MobileWeb_ReferralsDaily', default_args=dag_args, params=dag_t
 factory = DockerBashOperatorFactory(use_defaults=True,
                                     dag=dag,
                                     script_path='''{{ params.execution_dir }}/mobile/scripts/web/referrals''',
+                                    force=True,
                                     additional_cmd_components=['-env main'])
 
 opera_raw_data_ready = KeyValueSensor(task_id='opera_raw_data_ready',
