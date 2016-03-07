@@ -8,7 +8,7 @@ from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 dag_args = {
     'owner': 'MobileWeb',
     'start_date': datetime(2016, 2, 8),
-    'depends_on_past': True,
+    'depends_on_past': False,
     'email': ['barakg@similarweb.com', 'amitr@similarweb.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
