@@ -34,6 +34,7 @@ dag = DAG(dag_id='MobileWeb_ReferralsDaily', default_args=dag_args, params=dag_t
 factory = DockerBashOperatorFactory(use_defaults=True,
                                     dag=dag,
                                     script_path='''{{ params.execution_dir }}/mobile/scripts/web/referrals''',
+                                    force=True,
                                     additional_cmd_components=['-env main'])
 
 opera_raw_data_ready = KeyValueSensor(task_id='opera_raw_data_ready',
@@ -73,16 +74,14 @@ calculate_user_event_transitions = factory.build(task_id='calculate_user_event_t
                                                  core_command='aggregation.sh -p calculate_user_event_transitions ')
 calculate_user_event_transitions.set_upstream([count_user_site2_events, build_user_transitions])
 
-# daily adjustment - this is calculated in one of MobileWeb_ processes, either Window or snapshot in adjust_calc_redist
-adjust_calc_redist_ready = \
-    HdfsSensor(task_id='adjust_calc_redist_ready',
-               dag=dag,
-               hdfs_conn_id='hdfs_%s' % dag_template_params['cluster'],
-               filepath='''{{ params.base_data_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''')
-# adjust_calc_redist_ready = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Window',
-#                                               dag=dag,
-#                                               task_id="adjust_calc_redist",
-#                                               external_task_id='adjust_calc_redist')
+# adjust_calc_redist_ready = \
+#     HdfsSensor(task_id='adjust_calc_redist_ready',
+#                dag=dag,
+#                hdfs_conn_id='hdfs_%s' % dag_template_params['cluster'],
+#                filepath='''{{ params.base_data_dir }}/daily/predict/mobile-web/predkey=SiteCountryKey/{{ macros.date_partition(ds) }}/_SUCCESS''')
+adjust_calc_redist_ready = AdaptedExternalTaskSensor(task_id='MobileWeb_Daily_redist',
+                                                     external_dag_id='MobileWeb_Daily', dag=dag,
+                                                     external_task_id='redist')
 
 adjust_direct_pvs = factory.build(task_id='adjust_direct_pvs',
                                   core_command='aggregation.sh -p adjust_direct_pvs')
