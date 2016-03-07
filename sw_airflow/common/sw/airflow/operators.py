@@ -136,7 +136,7 @@ class CompareHBaseTablesOperator(DockerBashOperator):
                             'table_name': table
                         }
                         for (table, target_cluster) in
-                        itertools.product([tables.split(TEMPLATE_LIST_SEPARATOR)], [target_clusters.split(TEMPLATE_LIST_SEPARATOR)])
+                        itertools.product(tables.split(TEMPLATE_LIST_SEPARATOR), target_clusters.split(TEMPLATE_LIST_SEPARATOR))
                         ])
 
         super(CompareHBaseTablesOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
@@ -196,7 +196,3 @@ class SWAAirflowPluginManager(AirflowPlugin):
 
     operators = [BashSensor, DockerBashOperator, DockerBashSensor, CopyHbaseTableOperator, SuccedOrSkipOperator]
 
-
-if __name__ == '__main__':
-    blah = CompareHBaseTablesOperator('mrp', 'hbp1,hbp3' 'app_eng_rank,cat_mod_app_rank')
-    print blah.bash_cmd
