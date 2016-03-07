@@ -107,7 +107,7 @@ class CopyHbaseTableOperator(BashOperator):
 
 class DockerCopyHbaseTableOperator(DockerBashOperator):
     ui_color = '#0099FF'
-    cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh &&
+    cmd_template = '''source {{ params.execution_dir }}/scripts/common.sh &&
                       hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s'''
 
     template_fields = ('bash_command', 'docker_name')
@@ -128,7 +128,7 @@ class CompareHBaseTablesOperator(DockerBashOperator):
 
     @apply_defaults
     def __init__(self, source_cluster, target_clusters, tables, *args, **kwargs):
-        bash_cmd = ' && '.join(
+        cmp_cmd = ' && '.join(
                         [CompareHBaseTablesOperator.cmp_template %
                         {
                             'source_cluster': source_cluster,
@@ -138,7 +138,7 @@ class CompareHBaseTablesOperator(DockerBashOperator):
                         for (table, target_cluster) in
                         itertools.product(tables.split(TEMPLATE_LIST_SEPARATOR), target_clusters.split(TEMPLATE_LIST_SEPARATOR))
                         ])
-
+        bash_cmd = 'source {{ params.execution_dir }}/scripts/common.sh && %s' % cmp_cmd
         super(CompareHBaseTablesOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
 
 
