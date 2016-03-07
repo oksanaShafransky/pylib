@@ -25,14 +25,21 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Scraping_GetItunesAppRating', default_args=dag_args, params=dag_template_params, schedule_interval="0 0 * * 5")
+dag = DAG(dag_id='Scraping_GetItunesEPF', default_args=dag_args, params=dag_template_params, schedule_interval="50 19 * * *")
 
 
 # define stages
 
 
-upload = DockerBashOperator(task_id='GetAppRating',
+getepf = DockerBashOperator(task_id='GetEPF',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command="{{ params.execution_dir }}/scraper/scripts/runSingleInstanceScript.sh 'Itunes.Get App Rating' 'com.similargroup.scraper.mobile.itunes.GetItunesAppRatingJob'"
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/runepf.sh {{ macros.ds_format(ds, '%Y-%m-%d', '%Y%m%d') }} -f'''
                             )
+
+process = DockerBashOperator(task_id='ProcessEPF',
+                            dag=dag,
+                            docker_name='''{{ params.cluster }}''',
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/processepf.sh {{ macros.ds_format(ds, '%Y-%m-%d', '%Y%m%d') }} -f'''
+)
+process.set_upstream(getepf)

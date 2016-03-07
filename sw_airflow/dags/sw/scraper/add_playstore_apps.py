@@ -25,14 +25,22 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Scraping_GetItunesAppRating', default_args=dag_args, params=dag_template_params, schedule_interval="0 0 * * 5")
+dag = DAG(dag_id='Scraping_AddPlaystoreAppsToScrape', default_args=dag_args, params=dag_template_params, schedule_interval="0 0 * * 5")
 
 
 # define stages
 
 
-upload = DockerBashOperator(task_id='GetAppRating',
+export = DockerBashOperator(task_id='ExportApps',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command="{{ params.execution_dir }}/scraper/scripts/runSingleInstanceScript.sh 'Itunes.Get App Rating' 'com.similargroup.scraper.mobile.itunes.GetItunesAppRatingJob'"
+                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-info/add_apps_to_scrape.sh -d {{ ds }}'''
                             )
+
+check = DockerBashOperator(task_id='ExportAverage',
+                            dag=dag,
+                            docker_name='''{{ params.cluster }}''',
+                            bash_command='''{{ params.execution_dir }}/mobile/scripts/app-info/add_apps_to_scrape.sh -d {{ ds }} -p report'''
+)
+
+check.set_upstream(export)

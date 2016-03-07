@@ -13,7 +13,7 @@ SNAPSHOT_MODE = 'snapshot'
 dag_args = {
     'owner': 'MobileWeb',
     'depends_on_past': False,
-    'email': ['amitr@similarweb.com', 'barakg@similarweb.com'],
+    'email': ['amitr@similarweb.com', 'barakg@similarweb.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'start_date': datetime(2016, 2, 14),
@@ -24,7 +24,6 @@ dag_args = {
 dag_template_params = {'execution_dir': '/similargroup/production',
                        'docker_gate': 'docker-a02.sg.internal',
                        'base_data_dir': '/similargroup/data/mobile-analytics',
-                       'run_environment': 'PRODUCTION',
                        'cluster': 'mrp'
                        }
 

@@ -25,14 +25,14 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Scraping_GetItunesAppRating', default_args=dag_args, params=dag_template_params, schedule_interval="0 0 * * 5")
+dag = DAG(dag_id='Scraping_BackupScrapeData', default_args=dag_args, params=dag_template_params, schedule_interval="0 1 * * *")
 
 
 # define stages
 
 
-upload = DockerBashOperator(task_id='GetAppRating',
+backup = DockerBashOperator(task_id='BackupData',
                             dag=dag,
                             docker_name='''{{ params.cluster }}''',
-                            bash_command="{{ params.execution_dir }}/scraper/scripts/runSingleInstanceScript.sh 'Itunes.Get App Rating' 'com.similargroup.scraper.mobile.itunes.GetItunesAppRatingJob'"
+                            bash_command='''{{ params.execution_dir }}/scraper/scripts/backupScraperData.sh {{ macros.ds_format(ds, '%Y-%m-%d', '%Y %m %d') }}'''
                             )

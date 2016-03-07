@@ -108,15 +108,19 @@ class DeltaExternalTaskSensor(BaseExternalTaskSensor):
     """
 
     ui_color = '#e6f1f2'
-    template_fields = ('execution_delta',)
 
     @apply_defaults
-    def __init__(self, execution_delta=0, *args, **kwargs):
+    def __init__(self, execution_delta=None, *args, **kwargs):
         super(DeltaExternalTaskSensor, self).__init__(*args, **kwargs)
         self.execution_delta = execution_delta
 
     def poke(self, context):
-        return super(DeltaExternalTaskSensor, self).internal_poke([(context['execution_date'] - self.execution_delta)])
+        if self.execution_delta:
+            dttm = context['execution_date'] - self.execution_delta
+        else:
+            dttm = context['execution_date']
+
+        return super(DeltaExternalTaskSensor, self).internal_poke([dttm])
 
 
 class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
@@ -131,14 +135,14 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
     def __init__(self, agg_mode='last-28', *args, **kwargs):
         super(AggRangeExternalTaskSensor, self).__init__(*args, **kwargs)
         if agg_mode != 'monthly' and not agg_mode.startswith('last'):
-            raise AirflowException('AggRangeExternalTaskSensor: unsupported agg_mode=%s' % self.agg_mode)
+            raise AirflowException('AggRangeExternalTaskSensor: unsupported agg_mode=%s' % agg_mode)
         self.agg_mode = agg_mode
 
     def poke(self, context):
         dt = datetime.date(context['execution_date'])  # this truncates hours, minutes, seconds
         if self.agg_mode == 'monthly':
-            days_in_month = calendar.monthrange(dt.year, dt.month)[1]
-            dates_to_query = self.get_days(days_in_month, days_in_month)
+            cal = calendar.Calendar()
+            dates_to_query = [day for day in cal.itermonthdates(dt.year, dt.month) if (day.year, day.month) == (dt.year, dt.month)]  # check in the end required since the method returns extra days to complete even weeks
         elif self.agg_mode.startswith('last'):
             num_days_in_range = int(self.agg_mode.split('-')[1])
             dates_to_query = self.get_days(dt, num_days_in_range)
@@ -151,7 +155,7 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
         returns list of datetime objects for each day in range starting from end and going backwards.
         end date is included
 
-        :param end: this param is aimed for dag execution_date. for usacases where we need dates from current date and back
+        :param end: this param is aimed for dag execution_date. for use cases where we need dates from current date and back
         :param days_back: how many days to go back
         """
         truncated_end = date(end.year, end.month, end.day)

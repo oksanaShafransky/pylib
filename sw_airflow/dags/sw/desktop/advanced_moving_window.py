@@ -11,8 +11,8 @@ from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExter
 from sw.airflow.key_value import *
 from sw.airflow.operators import DockerCopyHbaseTableOperator
 
-DEFAULT_EXECUTION_DIR = '/similargroup/production'
-BASE_DIR = '/similargroup/data/analytics'
+DEFAULT_EXECUTION_DIR = '/similargroup/adv_trk'
+BASE_DIR = '/similargroup/data/advanced-analytics'
 DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_CLUSTER = 'mrp'
 WINDOW_MODE = 'window'
@@ -22,12 +22,13 @@ SNAPSHOT_MODE_TYPE = 'monthly'
 DEFAULT_HBASE_CLUSTER = 'hbp1'
 IS_PROD = True
 DEPLOY_TARGETS = Variable.get("hbase_deploy_targets", deserialize_json=True)
+TABLE_PREFIX = 'adv_trk'
+HIVE_DB = 'advanced'
 
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['kfire@similarweb.com', 'amitr@similarweb.com', 'andrews@similarweb.com',
-              'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
+    'email': ['kfire@similarweb.com', 'andrews@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
@@ -36,7 +37,8 @@ dag_args = {
 
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION',
-                       'cluster': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER}
+                       'cluster': DEFAULT_CLUSTER, 'hbase_cluster': DEFAULT_HBASE_CLUSTER,
+                       'table_prefix': TABLE_PREFIX, 'hive_db': HIVE_DB}
 
 
 def generate_dags(mode):
@@ -58,10 +60,10 @@ def generate_dags(mode):
 
     dag_args_for_mode = dag_args.copy()
     if is_window_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 1, 17)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 3, 1)})
 
     if is_snapshot_dag():
-        dag_args_for_mode.update({'start_date': datetime(2016, 1, 17)})
+        dag_args_for_mode.update({'start_date': datetime(2016, 2, 1)})
 
     dag_template_params_for_mode = dag_template_params.copy()
     if is_window_dag():
@@ -70,7 +72,7 @@ def generate_dags(mode):
     if is_snapshot_dag():
         dag_template_params_for_mode.update({'mode': SNAPHOT_MODE, 'mode_type': SNAPSHOT_MODE_TYPE})
 
-    dag = DAG(dag_id='Desktop_MovingWindow_' + mode_dag_name(), default_args=dag_args_for_mode,
+    dag = DAG(dag_id='Advanced_MovingWindow_' + mode_dag_name(), default_args=dag_args_for_mode,
               params=dag_template_params_for_mode,
               schedule_interval="@daily" if is_window_dag() else "@monthly")
 
@@ -78,24 +80,24 @@ def generate_dags(mode):
         DockerBashOperator(task_id='HBaseTables',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p tables'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p tables'''
                            )
 
-    daily_aggregation = AggRangeExternalTaskSensor(external_dag_id='Desktop_Preliminary',
+    daily_aggregation = AggRangeExternalTaskSensor(external_dag_id='Advanced_Preliminary',
                                                    external_task_id='Preliminary',
                                                    task_id='Preliminary',
                                                    agg_mode=dag.params.get('mode_type'),
                                                    dag=dag)
     daily_aggregation.set_upstream(hbase_tables)
 
-    daily_estimation = AggRangeExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+    daily_estimation = AggRangeExternalTaskSensor(external_dag_id='Advanced_DailyEstimation',
                                                   external_task_id='DailyTrafficEstimation',
                                                   task_id='DailyTrafficEstimation',
                                                   agg_mode=dag.params.get('mode_type'),
                                                   dag=dag)
     daily_estimation.set_upstream(hbase_tables)
 
-    daily_incoming = AggRangeExternalTaskSensor(external_dag_id='Desktop_DailyEstimation',
+    daily_incoming = AggRangeExternalTaskSensor(external_dag_id='Advanced_DailyEstimation',
                                                 external_task_id='DailyIncoming',
                                                 task_id='DailyIncomingEstimation',
                                                 agg_mode=dag.params.get('mode_type'),
@@ -106,7 +108,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='Info',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_info_table'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p create_info_table'''
                            )
     info.set_upstream(hbase_tables)
 
@@ -114,7 +116,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='InsertDailyIncomingToHBase',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p insert_daily_incoming'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p insert_daily_incoming'''
                            )
     insert_daily_incoming.set_upstream(daily_incoming)
 
@@ -122,7 +124,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='SumSpecialReferrerValues',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p sum_special_referrer_values'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p sum_special_referrer_values'''
                            )
     sum_special_referrer_values.set_upstream(daily_aggregation)
 
@@ -132,7 +134,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='MonthlySumEstimationParameters',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p monthly_sum_estimation_parameters'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p monthly_sum_estimation_parameters'''
                                )
         monthly_sum_estimation_parameters.set_upstream(daily_estimation)
     else:
@@ -145,7 +147,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='SiteCountrySpecialReferrerDistribution',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p site_country_special_referrer_distribution'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p site_country_special_referrer_distribution'''
                            )
     site_country_special_referrer_distribution.set_upstream(sum_special_referrer_values)
     site_country_special_referrer_distribution.set_upstream(monthly_sum_estimation_parameters)
@@ -155,7 +157,7 @@ def generate_dags(mode):
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
                            email_on_failure = False,
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p traffic_distro'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p traffic_distro'''
                            )
     traffic_distro.set_upstream(site_country_special_referrer_distribution)
 
@@ -163,7 +165,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='TrafficDistroToHBase',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p traffic_distro_to_hbase'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p traffic_distro_to_hbase'''
                            )
     traffic_distro_to_hbase.set_upstream(traffic_distro)
 
@@ -171,7 +173,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='TrafficDistroExportFromHBase',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p export_traffic_distro_from_hbase'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p export_traffic_distro_from_hbase'''
                            )
     traffic_distro_export_from_hbase.set_upstream(traffic_distro_to_hbase)
 
@@ -179,7 +181,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='IncomingEstimation',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_incoming'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p estimate_incoming'''
                            )
     incoming_estimate.set_upstream(site_country_special_referrer_distribution)
 
@@ -187,7 +189,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='KeywordsEstimation',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_incoming_keywords'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p estimate_incoming_keywords'''
                            )
     keywords_estimation.set_upstream(site_country_special_referrer_distribution)
 
@@ -195,7 +197,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='KeywordsAddTotals',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p add_totals_to_keys'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p add_totals_to_keys'''
                            )
     keywords_add_totals.set_upstream(keywords_estimation)
 
@@ -203,7 +205,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='IncomingAddTotals',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p add_totals_to_incoming'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p add_totals_to_incoming'''
                            )
     incoming_add_totals.set_upstream(incoming_estimate)
 
@@ -211,7 +213,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='AlsoVisited',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p also_visited'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p also_visited'''
                            )
     also_visited.set_upstream(incoming_add_totals)
 
@@ -219,7 +221,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='IncomingToHBase',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p top_site_to_hbase'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p top_site_to_hbase'''
                            )
     incoming_to_hbase.set_upstream(incoming_add_totals)
 
@@ -227,7 +229,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='IncomingPaid',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p prepare_ad_links_incoming'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p prepare_ad_links_incoming'''
                            )
     incoming_paid.set_upstream(incoming_add_totals)
 
@@ -235,7 +237,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='IncomingPaidToHBase',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p top_site_paid_to_hbase'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p top_site_paid_to_hbase'''
                            )
     incoming_paid_to_hbase.set_upstream(incoming_paid)
 
@@ -251,7 +253,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='OutgoingEstimation',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_outgoing'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p estimate_outgoing'''
                            )
     outgoing_estimation.set_upstream(incoming_estimate)
 
@@ -259,7 +261,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='OutgoingAddTotals',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p add_totals_to_outgoing'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p add_totals_to_outgoing'''
                            )
     outgoing_add_totals.set_upstream(outgoing_estimation)
 
@@ -267,7 +269,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='OutgoingToHBase',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p top_site'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p top_site'''
                            )
     outgoing_to_hbase.set_upstream(outgoing_add_totals)
 
@@ -275,7 +277,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='OutgoingPaid',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p prepare_ad_links'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p prepare_ad_links'''
                            )
     outgoing_paid.set_upstream(outgoing_add_totals)
 
@@ -283,7 +285,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='OutgoingPaidToHBase',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p top_site_paid'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p top_site_paid'''
                            )
     outgoing_paid_to_hbase.set_upstream(outgoing_paid)
 
@@ -298,7 +300,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='KeywordsPaid',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p sec_paid'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p sec_paid'''
                            )
     keywords_paid.set_upstream(keywords_add_totals)
 
@@ -306,7 +308,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='KeywordsOrganic',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p sec_organic'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p sec_organic'''
                            )
     keywords_organic.set_upstream(keywords_add_totals)
 
@@ -314,7 +316,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='KeywordsTop',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p top_value_site_keyword'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p top_value_site_keyword'''
                            )
     keywords_top.set_upstream(keywords_add_totals)
 
@@ -330,7 +332,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='SocialReceiving',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/social-receiving.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_social_receiving,add_totals_to_social_receiving,top_site,top_site_paid'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/social-receiving.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p estimate_social_receiving,add_totals_to_social_receiving,top_site,top_site_paid'''
                            )
     social_receiving.set_upstream(site_country_special_referrer_distribution)
 
@@ -338,7 +340,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='SendingPages',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sending-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p estimate_sending_pages,add_totals_to_sending_pages,prepare_sending_pages_social,top_values_sending_pages_social'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sending-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p estimate_sending_pages,add_totals_to_sending_pages,prepare_sending_pages_social,top_values_sending_pages_social'''
                            )
     sending_pages.set_upstream(incoming_estimate)
 
@@ -346,7 +348,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='Ranks',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_ranks,export_top_lists,topsites_for_testing'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p calculate_ranks,export_top_lists,topsites_for_testing'''
                            )
 
     if is_window_dag():
@@ -358,7 +360,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CalculateProDates',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_pro_dates'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p calculate_pro_dates'''
                                )
         calculate_pro_dates.set_upstream(info)
         calculate_pro_dates.set_upstream(monthly_sum_estimation_parameters)
@@ -368,7 +370,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='Misc',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/misc.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p calculate_subdomains,insert_worldwide_traffic,insert_daily_data,insert_info_counts'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/misc.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p calculate_subdomains,insert_worldwide_traffic,insert_daily_data,insert_info_counts'''
                            )
     misc.set_upstream(monthly_sum_estimation_parameters)
 
@@ -389,7 +391,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='ExportRest',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p export_rest'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p export_rest'''
                            )
     export_rest.set_upstream(misc)
     export_rest.set_upstream(ranks)
@@ -398,7 +400,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='PopularPages',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/popular-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/popular-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}'''
                            )
     popular_pages.set_upstream(daily_aggregation)
 
@@ -407,7 +409,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='InfoLite',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_info_lite'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p create_info_lite'''
                                )
         info_lite.set_upstream(hbase_tables)
 
@@ -415,7 +417,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CheckSnapshotEst',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/SnapshotSiteAndCountryEstimation.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/SnapshotSiteAndCountryEstimation.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}'''
                                )
         check_snapshot_est.set_upstream(monthly_sum_estimation_parameters)
 
@@ -423,7 +425,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CheckCustomerSnapshotEst',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/SnapshotCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/qa/SnapshotCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}'''
                                )
         check_customer_snapshot_est.set_upstream(monthly_sum_estimation_parameters)
 
@@ -431,7 +433,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='Mobile',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/mobile.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/mobile.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}'''
                                )
         mobile.set_upstream(conditionals)
         mobile.set_upstream(export_rest)
@@ -440,7 +442,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='SitesLite',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sites-lite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sites-lite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}'''
                                )
         sites_lite.set_upstream(conditionals)
 
@@ -448,11 +450,13 @@ def generate_dags(mode):
             DockerBashOperator(task_id='IndustryAnalysis',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/categories.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/categories.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}'''
                                )
         industry_analysis.set_upstream(export_rest)
 
     if is_prod_env():
+
+        hbase_prefix_template = TABLE_PREFIX
 
         hbase_suffix_template = (
         '''{{ params.mode_type }}_{{ macros.ds_format(macros.last_interval_day(ds, dag.schedule_interval), "%Y-%m-%d", "%y_%m_%d")}}''' if is_window_dag() else
@@ -469,7 +473,7 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=','.join(DEPLOY_TARGETS),
-                    table_name_template='top_lists_' + hbase_suffix_template
+                    table_name_template=hbase_prefix_template + 'top_lists_' + hbase_suffix_template
             )
         copy_to_prod_top_lists.set_upstream(ranks)
 
@@ -480,7 +484,7 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=','.join(DEPLOY_TARGETS),
-                    table_name_template='sites_stat_' + hbase_suffix_template
+                    table_name_template=hbase_prefix_template + 'sites_stat_' + hbase_suffix_template
             )
         copy_to_prod_sites_stat.set_upstream(popular_pages)
         copy_to_prod_sites_stat.set_upstream(export_rest)
@@ -494,7 +498,7 @@ def generate_dags(mode):
                     docker_name='''{{ params.cluster }}''',
                     source_cluster='mrp',
                     target_cluster=','.join(DEPLOY_TARGETS),
-                    table_name_template='sites_info_' + hbase_suffix_template
+                    table_name_template=hbase_prefix_template + 'sites_info_' + hbase_suffix_template
             )
         copy_to_prod_sites_info.set_upstream(export_rest)
 
@@ -508,7 +512,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CrossCacheCalc',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p create_hive'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p create_hive'''
                                )
         cross_cache_calc.set_upstream(export_rest)
 
@@ -516,7 +520,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CrossCacheStage',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p update_bucket'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et staging -p update_bucket'''
                                )
         cross_cache_stage.set_upstream(cross_cache_calc)
 
@@ -524,7 +528,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CrossCacheProd',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_bucket'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/cross-cache.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et production -p update_bucket'''
                                )
         cross_cache_prod.set_upstream(cross_cache_calc)
 
@@ -537,7 +541,7 @@ def generate_dags(mode):
                     DockerBashOperator(task_id='DynamicProd_%s' % target,
                                        dag=dag,
                                        docker_name='''{{ params.cluster }}-%s''' % target,
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_pro,update_special_referrers_prod'''
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et production -p update_pro,update_special_referrers_prod'''
                                        )
                 dynamic_prod_per_target.set_upstream(copy_to_prod)
                 dynamic_prod.set_upstream(dynamic_prod_per_target)
@@ -553,7 +557,7 @@ def generate_dags(mode):
                     DockerBashOperator(task_id='DynamicCrossProd_%s' % target,
                                        dag=dag,
                                        docker_name='''{{ params.cluster }}-%s''' % target,
-                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et production -p update_cross_cache'''
+                                       bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et production -p update_cross_cache'''
                                        )
                 dynamic_cross_prod_per_target.set_upstream(dynamic_prod)
                 dynamic_cross_prod_per_target.set_upstream(cross_cache_prod)
@@ -566,7 +570,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='DynamicStage',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p update_pro,update_special_referrers_stage'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et staging -p update_pro,update_special_referrers_stage'''
                                )
         dynamic_stage.set_upstream(export_rest)
         dynamic_stage.set_upstream(popular_pages)
@@ -577,7 +581,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='DynamicCacheStage',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p update_cross_cache'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et staging -p update_cross_cache'''
                                )
         dynamic_cross_stage.set_upstream(cross_cache_stage)
         dynamic_cross_stage.set_upstream(dynamic_stage)
@@ -590,7 +594,7 @@ def generate_dags(mode):
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
                         target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='mobile_keyword_apps_' + hbase_suffix_template
+                        table_name_template=hbase_prefix_template + 'mobile_keyword_apps_' + hbase_suffix_template
                 )
             copy_to_prod_mobile_keyword_apps.set_upstream(mobile)
 
@@ -601,7 +605,7 @@ def generate_dags(mode):
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
                         target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='app_stat_' + hbase_suffix_template
+                        table_name_template=hbase_prefix_template + 'app_stat_' + hbase_suffix_template
                 )
             copy_to_prod_app_stat.set_upstream(mobile)
 
@@ -612,7 +616,7 @@ def generate_dags(mode):
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
                         target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='top_app_keywords_' + hbase_suffix_template
+                        table_name_template=hbase_prefix_template + 'top_app_keywords_' + hbase_suffix_template
                 )
             copy_to_prod_top_app_keywords.set_upstream(mobile)
 
@@ -630,7 +634,7 @@ def generate_dags(mode):
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
                         target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='categories_' + hbase_suffix_template
+                        table_name_template=hbase_prefix_template + 'categories_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_industry.set_upstream(industry_analysis)
 
@@ -641,7 +645,7 @@ def generate_dags(mode):
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
                         target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='sites_scrape_stat_' + hbase_suffix_template
+                        table_name_template=hbase_prefix_template + 'sites_scrape_stat_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_sites_scrape_stat.set_upstream(conditionals)
 
@@ -652,7 +656,7 @@ def generate_dags(mode):
                         docker_name='''{{ params.cluster }}''',
                         source_cluster='mrp',
                         target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='sites_lite_' + hbase_suffix_template
+                        table_name_template=hbase_prefix_template + 'sites_lite_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_sites_lite.set_upstream(conditionals)
 
@@ -667,7 +671,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='DynamicStageLite',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p update_lite'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et staging -p update_lite'''
                                    )
             dynamic_stage_lite.set_upstream(sites_lite)
 
@@ -675,7 +679,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='DynamicStageIndustry',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p update_categories'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/dynamic-settings.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et staging -p update_categories'''
                                    )
             dynamic_stage_industry.set_upstream(industry_analysis)
 
@@ -715,7 +719,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='RepairMobile',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/mobile.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/mobile.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p repair'''
                                    )
             repair_mobile.set_upstream(mobile)
 
@@ -723,7 +727,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='Sitemap',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sitemap.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sitemap.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}'''
                                    )
             sitemap.set_upstream(dynamic_prod_lite)
             sitemap.set_upstream(dynamic_prod_industry)
@@ -732,7 +736,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='WebAutocompleteImport',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/web_autocomplete.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p import_autocomplete'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/web_autocomplete.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et staging -p import_autocomplete'''
                                    )
             web_autocomplete_import.set_upstream(export_rest)
 
@@ -740,7 +744,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='WebAutocompleteStage',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/web_autocomplete.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -et staging -p create_index,insert_index,update_alias'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/web_autocomplete.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -et staging -p create_index,insert_index,update_alias'''
                                    )
             web_autocomplete_stage.set_upstream(web_autocomplete_import)
 
@@ -750,7 +754,7 @@ def generate_dags(mode):
 
         register_success = KeyValueSetOperator(task_id='RegisterSuccessOnETCD',
                                                dag=dag,
-                                               path='''services/bigdata_orchestration/{{ params.mode }}/{{ macros.last_interval_day(ds, dag.schedule_interval) }}''',
+                                               path='''services/bigdata_orchestration_advanced/{{ params.mode }}/{{ macros.last_interval_day(ds, dag.schedule_interval) }}''',
                                                env='PRODUCTION'
                                                )
         register_success.set_upstream(dynamic_prod)
@@ -786,7 +790,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='RepairIncomingTables',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p repair'''
                                )
         repair_incoming_tables.set_upstream(repair_tables)
 
@@ -794,7 +798,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='RepairOutgoingTables',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/outgoing.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p repair'''
                                )
         repair_outgoing_tables.set_upstream(repair_tables)
 
@@ -802,7 +806,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='RepairKeywordsTables',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming-keywords.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p repair'''
                                )
         repair_keywords_tables.set_upstream(repair_tables)
 
@@ -810,7 +814,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='RepairRanksTables',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/ranks.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p repair'''
                                )
         repair_ranks_tables.set_upstream(repair_tables)
 
@@ -818,7 +822,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='RepairSrTables',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/start-month.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p repair'''
                                )
         repair_sr_tables.set_upstream(repair_tables)
 
@@ -826,7 +830,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='RepairSendingPagesTables',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sending-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/sending-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p repair'''
                                )
         repair_sending_pages_tables.set_upstream(repair_tables)
 
@@ -834,7 +838,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='RepairPopularPagesTables',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/popular-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/popular-pages.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p repair'''
                                )
         repair_popular_pages_tables.set_upstream(repair_tables)
 
@@ -842,7 +846,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='RepairSocialReceivingTables',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/social-receiving.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -p repair'''
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/social-receiving.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p repair'''
                                )
         repair_social_receiving_tables.set_upstream(repair_tables)
 
@@ -850,7 +854,7 @@ def generate_dags(mode):
             DockerBashOperator(task_id='CheckDistros',
                                dag=dag,
                                docker_name='''{{ params.cluster }}''',
-                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}''',
+                               bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}''',
                                email_on_failure=False
                                )
         check_distros.set_upstream(non_operationals)
@@ -860,7 +864,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='CheckCustomersEst',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerEstimationPerSite.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}'''
                                    )
             check_customers_est.set_upstream(non_operationals)
 
@@ -868,7 +872,7 @@ def generate_dags(mode):
                 DockerBashOperator(task_id='CheckCustomerDistros',
                                    dag=dag,
                                    docker_name='''{{ params.cluster }}''',
-                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }}'''
+                                   bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/qa/checkCustomerSiteDistro.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }}'''
                                    )
             check_customer_distros.set_upstream(non_operationals)
 
@@ -888,7 +892,7 @@ def generate_dags(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-stat \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t {{ params.table_prefix }}app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
     sites_stat_hist_register.set_upstream(popular_pages)
@@ -902,7 +906,7 @@ def generate_dags(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-info \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t {{ params.table_prefix }}app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
     site_info_hist_register.set_upstream(info)
@@ -910,5 +914,5 @@ def generate_dags(mode):
     return dag
 
 
-globals()['dag_desktop_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
-globals()['dag_desktop_moving_window_daily'] = generate_dags(WINDOW_MODE)
+globals()['dag_advanced_moving_window_snapshot'] = generate_dags(SNAPHOT_MODE)
+globals()['dag_advanced_moving_window_daily'] = generate_dags(WINDOW_MODE)

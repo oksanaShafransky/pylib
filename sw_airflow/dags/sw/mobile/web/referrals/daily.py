@@ -12,7 +12,7 @@ dag_args = {
     'owner': 'MobileWeb',
     'start_date': datetime(2016, 2, 1),
     'depends_on_past': False,
-    'email': ['amitr@similarweb.com', 'barakg@similarweb.com'],
+    'email': ['amitr@similarweb.com', 'barakg@similarweb.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 8,
