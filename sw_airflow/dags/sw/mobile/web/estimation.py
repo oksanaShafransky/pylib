@@ -34,7 +34,7 @@ factory = DockerBashOperatorFactory(dag=dag,
                                     date_template='''{{ ds }}''',
                                     cluster='''{{ params.cluster }}''',
                                     script_path='''{{ params.execution_dir }}/mobile/scripts/web''',
-                                    additional_cmd_components='-f'
+                                    force=True
                                     )
 
 
