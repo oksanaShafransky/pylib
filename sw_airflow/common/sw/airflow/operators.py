@@ -138,6 +138,7 @@ class CompareHBaseTablesOperator(DockerBashOperator):
                         for (table, target_cluster) in
                         itertools.product([tables.split(',')], [target_clusters.split(',')])
                         ])
+        bash_cmd = '"%s"' % bash_cmd  # for templating purposes
         super(CompareHBaseTablesOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
 
 
