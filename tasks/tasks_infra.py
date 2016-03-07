@@ -104,6 +104,11 @@ class ContextualizedTasksInfra(TasksInfra):
         year_str = str(d.year)[2:]
         return 'year=%s/month=%s/day=%s' % (year_str, str(d.month).zfill(2), str(d.day).zfill(2))
 
+    def year_month(self):
+        d = self.__get_common_args()['date']
+        year_str = str(d.year)[2:]
+        return 'year=%s/month=%s' % (year_str, str(d.month).zfill(2))
+
     def run_spark(self, jars_from_lib, main_class, module, command_params):
         jar = './mobile.jar' if module=='mobile' else './analytics.jar'
         jars = ','.join(map(lambda x: './lib/%s.jar'%x, jars_from_lib))
@@ -111,3 +116,12 @@ class ContextualizedTasksInfra(TasksInfra):
                   (self.execution_dir, jars, main_class, jar)
         command = TasksInfra.add_command_params(command,command_params)
         return self.run_bash(command)
+
+    #TODO: handle additional configs
+    def run_py_spark(self, files, py_files, main_py_file, command_params):
+        command = "spark-submit --master yarn-cluster --files %s --py-files %s %s " % \
+                  (self.execution_dir, ','.join(files), ','.join(py_files), main_py_file)
+        command = TasksInfra.add_command_params(command,command_params)
+
+        print command
+        #return self.run_bash(command)
