@@ -8,8 +8,8 @@ from hive.table_utils import *
 
 
 @formatted
-@TableProvided(name='target_table', table_name='felix.sample_app_metrics', path_param='output_table_path')
-@TableProvided(name='metrics_table', table_name='mobile.daily_app_metrics', path_param='metrics_table_path')
+@TableProvided(alias='target_table', table_name_resolver='felix.sample_app_metrics', path_param='output_table_path')
+@TableProvided(alias='metrics_table', table_name_resolver='mobile.daily_app_metrics', path_param='metrics_table_path')
 def sample_user_data(date, metrics_table_path, output_table_path, limit=10, **kwargs):
     year, month, day = common.parse_date(date)
     partition_str = common.getDatePartitionString(year, month, day)

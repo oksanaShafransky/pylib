@@ -6,10 +6,7 @@ from airflow.operators.bash_operator import BashOperator
 from airflow.utils import apply_defaults
 
 
-class DockerBashOperator(BashOperator, object):
-    ui_color = '#FFFF66'
-    template_fields = ('bash_command', 'kill_cmd')
-    cmd_template = '''docker \
+dock_cmd_template = '''docker \
 -H=tcp://{{ params.docker_gate }}:2375 \
 run \
 -v {{ params.execution_dir }}:/tmp/dockexec/%(random)s \
@@ -23,7 +20,7 @@ run \
 --name=%(container_name)s \
 --sig-proxy=false \
 --user=`id -u` \
--e DOCKER_GATE={{ docker_manager }} \
+-e DOCKER_GATE={{ params.docker_gate }} \
 -e GELF_HOST="runsrv2.sg.internal" \
 -e HOME=/tmp \
 bigdata/centos6.cdh5.%(docker)s bash -c " \
@@ -31,6 +28,11 @@ bigdata/centos6.cdh5.%(docker)s bash -c " \
  sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && \
  %(bash_command)s"
 '''
+
+
+class DockerBashOperator(BashOperator, object):
+    ui_color = '#FFFF66'
+    template_fields = ('bash_command', 'kill_cmd')
 
     kill_cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 rm -f %(container_name)s'''
 
@@ -43,9 +45,9 @@ bigdata/centos6.cdh5.%(docker)s bash -c " \
         rand = str(random.randint(10000, 99999))
         self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
                                                                        'task_id': self.task_id, 'rand': rand}
-        docker_command = DockerBashOperator.cmd_template % {'random': rand, 'container_name': self.container_name,
-                                                            'docker': self.docker_name,
-                                                            'bash_command': bash_command}
+        docker_command = dock_cmd_template % {'random': rand, 'container_name': self.container_name,
+                                              'docker': self.docker_name,
+                                              'bash_command': bash_command}
         self.kill_cmd = DockerBashOperator.kill_cmd_template % {'container_name': self.container_name}
         self.bash_command = docker_command
 

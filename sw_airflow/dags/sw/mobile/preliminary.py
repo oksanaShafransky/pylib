@@ -18,7 +18,7 @@ dag_args = {
     'start_date': datetime(2016, 1, 14),
     'depends_on_past': False,
     'email': ['felixv@similarweb.com', 'iddoav@similarweb.com', 'barakg@similarweb.com', 'amitr@similarweb.com',
-              'n7i6d2a2m1h2l3f6@similar.slack.com'],
+              'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 8,

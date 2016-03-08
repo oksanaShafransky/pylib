@@ -1,6 +1,8 @@
 import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
+import itertools
+import random
 
 from airflow import settings, utils
 from airflow.models import TaskInstance, Log
@@ -76,36 +78,19 @@ class BashSensor(BaseSensorOperator):
 
 class DockerBashSensor(BashSensor):
     template_fields = ('bash_command', 'docker_name')
-    cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
--v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
--v /etc/localtime:/etc/localtime:ro                           \
--v /tmp/logs:/tmp/logs                                        \
--v /var/lib/sss:/var/lib/sss                                  \
--v /etc/localtime:/etc/localtime:ro                           \
--v /usr/bin:/opt/old_bin                                      \
--v /var/run/similargroup:/var/run/similargroup                \
---rm                                                          \
---sig-proxy=false                                             \
---user=`id -u`                                                \
--e DOCKER_GATE={{ docker_manager }}                           \
--e GELF_HOST="runsrv2.sg.internal"                            \
--e HOME=/tmp                                                  \
-bigdata/centos6.cdh5.%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
-    '''
 
     @apply_defaults
     def __init__(self, docker_name, bash_command, *args, **kwargs):
         self.docker_name = docker_name
         random_string = str(datetime.utcnow().strftime('%s'))
-        docker_command = DockerBashOperator.cmd_template % {'random': random_string, 'docker': docker_name,
-                                                            'bash_command': bash_command}
+        docker_command = DockerBashOperator.dock_cmd_template % {'random': random_string, 'docker': docker_name,
+                                                                 'bash_command': bash_command}
         super(DockerBashSensor, self).__init__(bash_command=docker_command, *args, **kwargs)
 
 
 class CopyHbaseTableOperator(BashOperator):
     ui_color = '#0099FF'
-    cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh
-hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
+    cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
     '''
 
     @apply_defaults
@@ -120,49 +105,41 @@ hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s
             self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
 
 
-class DockerCopyHbaseTableOperator(BashOperator):
+class DockerCopyHbaseTableOperator(DockerBashOperator):
     ui_color = '#0099FF'
     cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh &&
                       hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s'''
 
     template_fields = ('bash_command', 'docker_name')
-    dock_cmd_template = '''docker -H=tcp://{{ params.docker_gate }}:2375 run       \
--v {{ params.execution_dir }}:/tmp/dockexec/%(random)s        \
--v /etc/localtime:/etc/localtime:ro                           \
--v /tmp/logs:/tmp/logs                                        \
--v /var/lib/sss:/var/lib/sss                                  \
--v /etc/localtime:/etc/localtime:ro                           \
--v /usr/bin:/opt/old_bin                                      \
--v /var/run/similargroup:/var/run/similargroup                \
---rm                                                          \
---sig-proxy=false                                             \
---user=`id -u`                                                \
--e DOCKER_GATE={{ params.docker_gate }}                           \
--e GELF_HOST="runsrv2.sg.internal"                            \
--e HOME=/tmp                                                  \
-bigdata/centos6.cdh5.%(docker)s bash -c "sudo mkdir -p {{ params.execution_dir }} && sudo cp -r /tmp/dockexec/%(random)s/* {{ params.execution_dir }} && %(bash_command)s"
-    '''
 
     @apply_defaults
-    def __init__(self, docker_name, source_cluster, target_cluster, table_name_template, is_forced=False, *args,
-                 **kwargs):
-        self.docker_name = docker_name
+    def __init__(self, source_cluster, target_cluster, table_name_template, *args, **kwargs):
         bash_cmd = DockerCopyHbaseTableOperator.cmd_template % {'source_cluster': source_cluster,
                                                                 'target_cluster': target_cluster,
                                                                 'table_name': table_name_template}
-        if is_forced:
-            bash_cmd += ' --force'
+        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
 
-        random_string = str(datetime.utcnow().strftime('%s'))
-        docker_command = DockerCopyHbaseTableOperator.dock_cmd_template % {'random': random_string,
-                                                                           'docker': docker_name,
-                                                                           'bash_command': bash_cmd}
-        super(DockerCopyHbaseTableOperator, self).__init__(bash_command=docker_command, *args, **kwargs)
 
-        # Add echo to everything if we have dryrun in request
-        if self.dag.params and '--dryrun' in self.dag.params.get('transients', ''):
-            logging.info("Dry rub requested. Don't really copy table")
-            self.bash_command = '\n'.join(['echo ' + line for line in self.bash_command.splitlines()])
+class CompareHBaseTablesOperator(DockerBashOperator):
+    ui_color = '#80ff00'
+    cmp_template = '''python {{ params.execution_dir }}/scripts/hbase/compare_tables.py  %(source_cluster)s.%(table_name)s %(target_cluster)s.%(table_name)s '''
+
+    template_fields = ('bash_command', 'docker_name')
+
+    @apply_defaults
+    def __init__(self, source_cluster, target_clusters, tables, *args, **kwargs):
+        bash_cmd = ' && '.join(
+                        [CompareHBaseTablesOperator.cmp_template %
+                        {
+                            'source_cluster': source_cluster,
+                            'target_cluster': target_cluster,
+                            'table_name': table
+                        }
+                        for (table, target_cluster) in
+                        itertools.product([tables.split(',')], [target_clusters.split(',')])
+                        ])
+        bash_cmd = '"%s"' % bash_cmd  # for templating purposes
+        super(CompareHBaseTablesOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
 
 
 class SuccedOrSkipOperator(PythonOperator):

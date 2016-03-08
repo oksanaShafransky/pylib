@@ -6,6 +6,7 @@ import subprocess
 import random
 import logging
 from urlparse import urlparse
+from inspect import isfunction
 
 
 class ContextFilter(logging.Filter):
@@ -63,7 +64,7 @@ def should_create_external_table(orig_table_name, location):
 # returns (table_to_use, pre_operations, post_operations)
 def temp_table_cmds(orig_table_name, root):
     logger.info('Checking whether to create external table %s in location %s:' % (orig_table_name, root))
-    if should_create_external_table(orig_table_name, root):
+    if root is not None and should_create_external_table(orig_table_name, root):
         logger.info('Writing to an external table in the given location.')
         table_name, drop_cmd, create_cmd = temp_table_cmds_internal(orig_table_name, root)
         return table_name, (drop_cmd + create_cmd), drop_cmd
@@ -74,17 +75,21 @@ def temp_table_cmds(orig_table_name, root):
 
 
 class TableProvided:
-    def __init__(self, name, table_name, path_param):
-        self.name = name
-        self.table_name = table_name
+    def __init__(self, alias, table_name_resolver, path_param):
+        self.table_alias = alias
         self.param = path_param
 
+        if isfunction(table_name_resolver):
+            self.table_name = table_name_resolver
+        else:
+            self.table_name = lambda **kwargs: table_name_resolver
+
     def assign_table_from_params(self, **kwargs):
-        return temp_table_cmds(self.table_name, kwargs[self.param])
+        return temp_table_cmds(self.table_name(**kwargs), kwargs[self.param])
 
     def invoke_fnc(self, f, *args, **kwargs):
         effective_table_name, pre_cmd, post_cmd = self.assign_table_from_params(**kwargs)
-        kwargs[self.name] = effective_table_name
+        kwargs[self.table_alias] = effective_table_name
         return pre_cmd + f(*args, **kwargs) + post_cmd
 
     def __call__(self, fnc):

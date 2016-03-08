@@ -20,7 +20,7 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2015, 11, 1),
     'depends_on_past': False,
-    'email': ['iddo.aviram@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
+    'email': ['iddo.aviram@similarweb.com', 'felixv@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
@@ -45,6 +45,16 @@ should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
                                         execution_timeout=timedelta(minutes=240)
                                         )
 
+backup_raw_data = \
+    DockerBashOperator(task_id='BackupRawData',
+                       dag=dag,
+                       docker_name='''mrp.retention''',
+                       bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/backup_raw_data backup_raw_data -d {{ ds }} -b {{ params.base_hdfs_dir}}''',
+                       start_date=datetime(2015, 1, 3),
+                       )
+
+backup_raw_data.set_upstream(should_run)
+
 
 icon_cache_resolution = \
     DockerBashOperator(task_id='IconCacheResolution',
@@ -62,7 +72,7 @@ ios_user_grouping = \
                        docker_name='''{{ params.cluster }}''',
                        bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/preliminary/ios/user_grouping user_grouping -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
                        )
-ios_user_grouping.set_upstream(should_run)
+ios_user_grouping.set_upstream(icon_cache_resolution)
 
 export_sources = DockerBashOperator(task_id='ExportSourcesForAnalyze',
                                     dag=dag,
@@ -103,5 +113,5 @@ daily_aggregation.set_upstream(user_apps_export)
 daily_aggregation.set_upstream(export_sources)
 
 preliminary = DummyOperator(task_id='Preliminary', dag=dag)
-preliminary.set_upstream(daily_aggregation)
+preliminary.set_upstream([daily_aggregation,backup_raw_data])
 
