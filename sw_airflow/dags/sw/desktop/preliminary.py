@@ -64,7 +64,6 @@ daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
                                        docker_name='''{{ params.cluster }}''',
                                        bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -p aggregate'''
                                        )
-daily_aggregation.set_upstream(group_raw)
 daily_aggregation.set_upstream(blocked_ips)
 
 repair_tables = DockerBashOperator(task_id='RepairDailyTables',
