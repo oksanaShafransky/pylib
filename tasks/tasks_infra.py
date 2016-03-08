@@ -123,9 +123,7 @@ class ContextualizedTasksInfra(TasksInfra):
         for key, value in kwargs.iteritems():
             additional_configs += ' --%s %s' % (key, value)
 
-        command = "cd %s;spark-submit --master yarn-cluster --files %s --py-files %s %s " % \
-                  (self.execution_dir, ','.join(files), ','.join(py_files), main_py_file)
+        command = "cd %s/mobile;spark-submit --master yarn-cluster --files %s --py-files %s %s %s " % \
+                  (self.execution_dir, ','.join(files), ','.join(py_files), additional_configs, main_py_file)
         command = TasksInfra.add_command_params(command,command_params)
-
-        print command
-        #return self.run_bash(command)
+        return self.run_bash(command)
