@@ -117,9 +117,13 @@ class ContextualizedTasksInfra(TasksInfra):
         command = TasksInfra.add_command_params(command,command_params)
         return self.run_bash(command)
 
-    #TODO: handle additional configs
-    def run_py_spark(self, files, py_files, main_py_file, command_params):
-        command = "spark-submit --master yarn-cluster --files %s --py-files %s %s " % \
+    #TODO: handle additional configs, execution dir
+    def run_py_spark(self, files, py_files, main_py_file, command_params, **kwargs):
+        additional_configs = ''
+        for key, value in kwargs.iteritems():
+            additional_configs += ' --%s %s' % (key, value)
+
+        command = "cd %s;spark-submit --master yarn-cluster --files %s --py-files %s %s " % \
                   (self.execution_dir, ','.join(files), ','.join(py_files), main_py_file)
         command = TasksInfra.add_command_params(command,command_params)
 
