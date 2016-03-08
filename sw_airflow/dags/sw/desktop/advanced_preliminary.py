@@ -63,7 +63,6 @@ daily_visit_detection = DockerBashOperator(task_id='DailyVisitDetection',
                                            docker_name='''{{ params.cluster }}''',
                                            bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/dailyAggregation.sh -d {{ ds }} -p create_visits -cd {{ params.base_hdfs_dir }}'''
                                            )
-daily_visit_detection.set_upstream(group_raw)
 daily_visit_detection.set_upstream(blocked_ips)
 
 daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
