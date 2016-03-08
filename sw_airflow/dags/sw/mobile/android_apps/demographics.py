@@ -41,7 +41,7 @@ group_apps = DockerBashOperator(task_id='GroupAppsByAdvId',
                             docker_name='''{{ params.cluster }}''',
                             bash_command='''invoke -c {{ params.execution_dir }}/mobile/scripts/demographics/android/adv_id_user_grouping adv_id_user_grouping -d {{ ds }} -b {{ params.base_hdfs_dir}}'''
                             )
-upload.set_upstream(preliminary)
+group_apps.set_upstream(preliminary)
 
 done = DummyOperator(task_id='AndroidApps_Demographics', dag=dag, sla=timedelta(hours=6))
 done.set_upstream(group_apps)
