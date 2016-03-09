@@ -1,9 +1,7 @@
 __author__ = 'lajonat'
 
-from datetime import datetime, timedelta
-
 from airflow.models import DAG
-
+from datetime import datetime, timedelta
 from sw.airflow.docker_bash_operator import DockerBashOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -14,7 +12,7 @@ DEFAULT_CLUSTER = 'mrp'
 dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2016, 2, 28),
-    'depends_on_past': False,
+    'depends_on_past': True,
     'email': ['spiders@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
     'email_on_failure': True,
     'email_on_retry': False,
