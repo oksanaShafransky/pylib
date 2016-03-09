@@ -39,7 +39,7 @@ copy_estimation = \
     DockerBashOperator(task_id='CopyEstimation',
                        dag=dag,
                        docker_name='''{{ params.docker_image }}''',
-                       bash_command='''python {{ params.execution_dir }}/analytics/scripts/daily/copy_estimation_from_simple_to_advanced.sh -d {{ ds }}'''
+                       bash_command='''{{ params.execution_dir }}/analytics/scripts/daily/copy_estimation_from_simple_to_advanced.sh -d {{ ds }}'''
                        )
 copy_estimation.set_upstream(estimation)
 
