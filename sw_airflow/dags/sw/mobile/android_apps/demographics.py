@@ -17,10 +17,10 @@ dag_args = {
     'owner': 'similarweb',
     'start_date': datetime(2016, 3, 7),
     'depends_on_past': False,
-    'email': ['bigdata@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com'],
+    'email': ['bigdata@similarweb.com'],
     'email_on_failure': True,
     'email_on_retry': False,
-    'retries': 8,
+    'retries': 1,
     'retry_delay': timedelta(minutes=15)
 }
 
