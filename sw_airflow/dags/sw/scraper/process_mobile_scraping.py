@@ -331,7 +331,7 @@ copy_app_lite.set_upstream(deploy_prod)
 copied_tables = ['app_details', 'app_top_list', 'mobile_app_keyword_positions', 'app_lite']
 copy_to_prod_done = CompareHBaseTablesOperator(source_cluster='mrp',
                                                target_clusters=TEMPLATE_LIST_SEPARATOR.join(deploy_targets),
-                                               tables='''TEMPLATE_LIST_SEPARATOR.join(["%s_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}" % table for table in copied_tables])''',
+                                               tables=TEMPLATE_LIST_SEPARATOR.join(["%s_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}" % table for table in copied_tables]),
                                                docker_name='''{{ params.cluster }}''',
                                                task_id='copy_prod',
                                                dag=dag
