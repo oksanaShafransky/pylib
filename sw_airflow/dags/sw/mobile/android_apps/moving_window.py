@@ -26,7 +26,7 @@ IS_PROD = True
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['iddo.aviram@similarweb.com','felixv@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
+    'email': ['iddo.aviram@similarweb.com', 'felixv@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
@@ -544,7 +544,7 @@ def generate_dag(mode):
                 table_name_template='app_sdk_stats_' + hbase_suffix_template,
                 is_forced=True
             )
-        copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store])
+        copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store, usage_raw_totals])
 
         copy_to_prod_cats = \
             DockerCopyHbaseTableOperator(
