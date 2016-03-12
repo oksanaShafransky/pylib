@@ -283,7 +283,6 @@ check_data = DockerBashOperator(task_id='CheckDataBeforeProd',
                                 )
 
 check_data.set_upstream(deploy_prod)
-check_data.set_downstream(deploy_prod_done)
 
 
 
@@ -340,10 +339,12 @@ copy_to_prod_done = CompareHBaseTablesOperator(source_cluster='mrp',
                                                task_id='deploy_prod_done',
                                                dag=dag
                                                )
+copy_to_prod_done.set_upstream(check_data)
 copy_to_prod_done.set_upstream(copy_app_details)
 copy_to_prod_done.set_upstream(copy_app_top_list)
 copy_to_prod_done.set_upstream(copy_mobile_app_keyword_positions)
 copy_to_prod_done.set_upstream(copy_app_lite)
+
 
 #################################################
 ###    Wrap Up                                  #
