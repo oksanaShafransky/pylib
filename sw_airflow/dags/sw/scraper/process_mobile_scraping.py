@@ -55,9 +55,6 @@ wrap_up = DummyOperator(task_id='FinishProcess',
 
 deploy_prod = DummyOperator(task_id='deploy_prod', dag=dag)
 
-deploy_prod_done.set_upstream(deploy_prod)
-deploy_prod_done.set_downstream(wrap_up)
-
 #################################################
 ###    Ranks Related Jobs                       #
 #################################################
@@ -336,14 +333,18 @@ copy_to_prod_done = CompareHBaseTablesOperator(source_cluster='mrp',
                                                target_clusters=TEMPLATE_LIST_SEPARATOR.join(deploy_targets),
                                                tables=TEMPLATE_LIST_SEPARATOR.join(['''%s_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}''' % table for table in copied_tables]),
                                                docker_name='''{{ params.cluster }}''',
-                                               task_id='deploy_prod_done',
+                                               task_id='copy_prod',
                                                dag=dag
                                                )
-copy_to_prod_done.set_upstream(check_data)
 copy_to_prod_done.set_upstream(copy_app_details)
 copy_to_prod_done.set_upstream(copy_app_top_list)
 copy_to_prod_done.set_upstream(copy_mobile_app_keyword_positions)
 copy_to_prod_done.set_upstream(copy_app_lite)
+
+deploy_prod_done = DummyOperator(task_id='deploy_prod_done', dag=dag)
+copy_to_prod_done.set_upstream(check_data)
+deploy_prod_done.set_upstream(copy_to_prod_done)
+deploy_prod_done.set_downstream(wrap_up)
 
 
 #################################################
