@@ -23,12 +23,24 @@ class TasksInfra(object):
         return test_size(directory, valid_output_min_size_bytes)
 
     @staticmethod
+    def is_output_successful(directory):
+        return test_size('%s/%s' % (directory, '_SUCCESS'), 0)
+
+    @staticmethod
+    def is_valid_output_exists(directory, valid_output_min_size_bytes):
+        return test_size(directory, valid_output_min_size_bytes)
+
+    @staticmethod
     def assert_input_validity(directory, valid_input_min_size_bytes):
-        assert test_size(directory, valid_input_min_size_bytes) is True, 'Input dir is not valid, given dir is %s' % directory
+        assert test_size(directory, valid_input_min_size_bytes) is True, 'Input is not valid, given value is %s' % directory
 
     @staticmethod
     def assert_output_validity(directory, valid_output_min_size_bytes):
-        assert test_size(directory, valid_output_min_size_bytes) is True, 'Output dir is not valid, given dir is %s' % directory
+        assert test_size(directory, valid_output_min_size_bytes) is True, 'Output is not valid, given value is %s' % directory
+
+    @staticmethod
+    def assert_output_success(directory):
+        assert test_size('%s/%s' % (directory, '_SUCCESS'), 0) is True, 'Output is not valid, given value is %s' % directory
 
 
     @staticmethod
