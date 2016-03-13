@@ -23,7 +23,7 @@ dag_args = {
 dag_template_params = {'execution_dir': DEFAULT_EXECUTION_DIR, 'docker_gate': DOCKER_MANAGER,
                        'base_hdfs_dir': BASE_DIR, 'run_environment': 'PRODUCTION', 'cluster': DEFAULT_CLUSTER}
 
-dag = DAG(dag_id='Scraping_PlaystoreRanks', default_args=dag_args, params=dag_template_params, schedule_interval="0 1/12 * * *")
+dag = DAG(dag_id='Scraping_PlaystoreRanks', default_args=dag_args, params=dag_template_params, schedule_interval=timedelta(hours=12))
 
 
 # define stages
