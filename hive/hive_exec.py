@@ -88,7 +88,7 @@ class HiveExecuter(Executer):
                                args=args
                                )
 
-            elif isinstance(stage, Stage):
+            else:
                 p = Pool(CONCURRENCY)
                 stage_args = [(name, query_str, args) for name, query_str in stage.queries]
                 p.map(self.run_query_helper, stage_args)
