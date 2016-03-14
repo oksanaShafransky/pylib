@@ -11,7 +11,8 @@ ETCD_PATHS = {'production': 'v1/production', 'staging': 'v1/staging', 'dev': 'v1
 from etcd_kv import EtcdProxy
 PROXY_CLASS = EtcdProxy
 
-REQUIRED_DATES_SIZE = 3
+MINIMAL_VIABLE_DATES_SIZE = 2
+DESRIED_DATES_SIZE = 3
 
 
 def init_env(env_type, changes=[], deletes=[]):
@@ -61,7 +62,9 @@ if __name__ == '__main__':
 
     for name, artifact in get_artifacts().iteritems():
         num_dates = len(artifact.dates)
-        if num_dates < REQUIRED_DATES_SIZE:
+        if num_dates < MINIMAL_VIABLE_DATES_SIZE:
             raise Exception('%s is in a dangerous state with %d valid days' % (name, num_dates))
+        elif num_dates < DESRIED_DATES_SIZE:
+            print '%s is in danger with only %d valid days' % (name, num_dates)
         else:
             print '%s is OK with %d valid days' % (name, num_dates)
