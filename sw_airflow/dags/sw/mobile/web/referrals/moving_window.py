@@ -19,7 +19,6 @@ dag_args = {
 dag_template_params = {'execution_dir': '/similargroup/production',
                        'docker_gate': 'docker-a02.sg.internal',
                        'base_data_dir': '/similargroup/data/mobile-analytics',
-                       'run_environment': 'PRODUCTION',
                        'cluster': 'mrp',
                        'mode': 'snapshot',
                        'mode_type': 'monthly'
@@ -31,24 +30,24 @@ snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, 
 
 def assemble_process(dag):
     calculate_user_event_rates = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
-                                                    dag=dag, task_id="calculate_user_event_rates",
-                                                    external_task_id='calculate_user_event_rates')
+                                                           dag=dag, task_id="calculate_user_event_rates",
+                                                           external_task_id='calculate_user_event_rates')
 
     calculate_user_event_transitions = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
-                                                          dag=dag, task_id="calculate_user_event_transitions",
-                                                          external_task_id='calculate_user_event_transitions')
+                                                                 dag=dag, task_id="calculate_user_event_transitions",
+                                                                 external_task_id='calculate_user_event_transitions')
 
     estimate_site_pvs = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
-                                           dag=dag, task_id="estimate_site_pvs",
-                                           external_task_id='estimate_site_pvs')
+                                                  dag=dag, task_id="estimate_site_pvs",
+                                                  external_task_id='estimate_site_pvs')
 
     adjust_direct_pvs = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
-                                           dag=dag, task_id="adjust_direct_pvs",
-                                           external_task_id='adjust_direct_pvs')
+                                                  dag=dag, task_id="adjust_direct_pvs",
+                                                  external_task_id='adjust_direct_pvs')
 
-    adjust_calc_redist = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Snapshot',
-                                            dag=dag, task_id="adjust_calc_redist",
-                                            external_task_id='adjust_calc_redist')
+    adjust_calc_redist = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily',
+                                                   dag=dag, task_id="redist",
+                                                   external_task_id='redist')
 
     #########
     # Logic #
@@ -56,6 +55,7 @@ def assemble_process(dag):
     factory = DockerBashOperatorFactory(use_defaults=True,
                                         dag=dag,
                                         script_path='''{{ params.execution_dir }}/mobile/scripts/web/referrals''',
+                                        force=True,
                                         additional_cmd_components=['-env main'])
 
     sum_user_event_rates = factory.build(task_id='sum_user_event_rates',
@@ -86,9 +86,10 @@ def assemble_process(dag):
     ##################
     # load to hbase #
     ##################
-    prepare_hbase_tables = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Window',
-                                              dag=dag, task_id="prepare_hbase_tables",
-                                              external_task_id='prepare_hbase_tables')
+    mw_dag_id = 'MobileWeb_Snapshot' if dag.params.get('mode') == 'snapshot' else 'MobileWeb_Window'
+    prepare_hbase_tables = AdaptedExternalTaskSensor(external_dag_id=mw_dag_id,
+                                                     dag=dag, task_id="prepare_hbase_tables",
+                                                     external_task_id='prepare_hbase_tables')
 
     load_site_referrers_with_totals = factory.build(task_id='load_site_referrers_with_totals',
                                                     core_command='mwr_load.sh -p load_site_referrers_with_totals')
@@ -97,8 +98,8 @@ def assemble_process(dag):
                                                  core_command='mwr_load.sh -p calculate_traffic_dist_month')
     calculate_traffic_dist_month.set_upstream([calculate_site_referrers_with_totals, prepare_hbase_tables])
 
-    mobile_web_referrals_mw = DummyOperator(task_id=dag.dag_id, dag=dag)
-    mobile_web_referrals_mw.set_upstream([load_site_referrers_with_totals, calculate_traffic_dist_month])
+    mobile_web_referrals = DummyOperator(task_id=dag.dag_id, dag=dag)
+    mobile_web_referrals.set_upstream([load_site_referrers_with_totals, calculate_traffic_dist_month])
 
 
 assemble_process(snapshot_dag)
