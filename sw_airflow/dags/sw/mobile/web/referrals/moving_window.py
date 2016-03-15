@@ -1,6 +1,6 @@
 from airflow.models import DAG
 from airflow.operators.dummy_operator import DummyOperator
-from sw.airflow.external_sensors import AdaptedExternalTaskSensor
+from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExternalTaskSensor
 from datetime import timedelta, datetime
 
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
@@ -29,25 +29,26 @@ snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, 
 
 
 def assemble_process(dag):
-    calculate_user_event_rates = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
-                                                           dag=dag, task_id="calculate_user_event_rates",
-                                                           external_task_id='calculate_user_event_rates')
+    calculate_user_event_rates = AggRangeExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
+                                                            dag=dag, task_id="calculate_user_event_rates",
+                                                            external_task_id='calculate_user_event_rates')
 
-    calculate_user_event_transitions = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
-                                                                 dag=dag, task_id="calculate_user_event_transitions",
-                                                                 external_task_id='calculate_user_event_transitions')
+    calculate_user_event_transitions = AggRangeExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
+                                                                  dag=dag, task_id="calculate_user_event_transitions",
+                                                                  external_task_id='calculate_user_event_transitions')
 
-    estimate_site_pvs = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
-                                                  dag=dag, task_id="estimate_site_pvs",
-                                                  external_task_id='estimate_site_pvs')
+    estimate_site_pvs = AggRangeExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
+                                                   dag=dag, task_id="estimate_site_pvs",
+                                                   external_task_id='estimate_site_pvs')
 
-    adjust_direct_pvs = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
-                                                  dag=dag, task_id="adjust_direct_pvs",
-                                                  external_task_id='adjust_direct_pvs')
+    adjust_direct_pvs = AggRangeExternalTaskSensor(external_dag_id='MobileWeb_ReferralsDaily',
+                                                   dag=dag, task_id="adjust_direct_pvs",
+                                                   external_task_id='adjust_direct_pvs')
 
-    adjust_calc_redist = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily',
-                                                   dag=dag, task_id="redist",
-                                                   external_task_id='redist')
+    redist = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily',
+                                       dag=dag, task_id='last_redist',
+                                       external_task_id='redist',
+                                       external_execution_date='''{{macros.last_day_of_month(dt) }}''')
 
     #########
     # Logic #
@@ -76,7 +77,7 @@ def assemble_process(dag):
 
     calculate_site_referrers = factory.build(task_id='calculate_site_referrers',
                                              core_command='estimation.sh -p calculate_site_referrers')
-    calculate_site_referrers.set_upstream([calculate_joint_estimates, adjust_direct_pvs, adjust_calc_redist])
+    calculate_site_referrers.set_upstream([calculate_joint_estimates, adjust_direct_pvs, redist])
 
     calculate_site_referrers_with_totals = \
         factory.build(task_id='calculate_site_referrers_with_totals',
