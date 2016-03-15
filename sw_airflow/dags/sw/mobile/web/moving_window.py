@@ -29,7 +29,7 @@ snapshot_template_params = dag_template_params.copy()
 snapshot_template_params.update({'mode': SNAPSHOT_MODE, 'mode_type': 'monthly'})
 
 snapshot_dag = DAG(dag_id='MobileWeb_Snapshot', default_args=dag_args, params=snapshot_template_params,
-                   schedule_interval='@monthly')
+                   schedule_interval='59 23 L * *')
 
 window_dag = DAG(dag_id='MobileWeb_Window', default_args=dag_args, params=window_template_params,
                  schedule_interval='@daily')

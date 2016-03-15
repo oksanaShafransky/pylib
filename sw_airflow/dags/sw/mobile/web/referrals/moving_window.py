@@ -25,7 +25,7 @@ dag_template_params = {'execution_dir': '/similargroup/production',
                        }
 
 snapshot_dag = DAG(dag_id='MobileWeb_ReferralsSnapshot', default_args=dag_args, params=dag_template_params,
-                   schedule_interval='@monthly')
+                   schedule_interval='59 23 L * *')
 
 
 def assemble_process(dag):
@@ -48,7 +48,7 @@ def assemble_process(dag):
     redist = AdaptedExternalTaskSensor(external_dag_id='MobileWeb_Daily',
                                        dag=dag, task_id='last_redist',
                                        external_task_id='redist',
-                                       external_execution_date='''{{macros.last_day_of_month(dt) }}''')
+                                       external_execution_date='''{{ macros.last_day_of_month(ds) }}''')
 
     #########
     # Logic #
