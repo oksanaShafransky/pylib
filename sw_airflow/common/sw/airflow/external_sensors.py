@@ -39,7 +39,7 @@ class BaseExternalTaskSensor(BaseSensorOperator):
             external_task_id,
             allowed_states=None,
             dates_to_query=None,
-            task_existence_check_interval=timedelta(minutes=10),
+            task_existence_check_interval=timedelta(hours=2),
             *args, **kwargs):
         super(BaseExternalTaskSensor, self).__init__(*args, **kwargs)
         self.allowed_states = allowed_states or [State.SUCCESS]
@@ -142,9 +142,9 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
     def poke(self, context):
         dt = datetime.date(context['execution_date'])  # this truncates hours, minutes, seconds
         if self.agg_mode == 'monthly':
-            cal = calendar.Calendar()
-            dates_to_query = [day for day in cal.itermonthdates(dt.year, dt.month) if (day.year, day.month) == (
-            dt.year, dt.month)]  # check in the end required since the method returns extra days to complete even weeks
+            days_in_month = calendar.monthrange(dt.year, dt.month)[1]
+            last_date_in_month = datetime(dt.year, dt.month, days_in_month)
+            dates_to_query = self.get_days(last_date_in_month, days_in_month)
         elif self.agg_mode.startswith('last'):
             num_days_in_range = int(self.agg_mode.split('-')[1])
             dates_to_query = self.get_days(dt, num_days_in_range)

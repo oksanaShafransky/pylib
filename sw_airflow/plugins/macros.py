@@ -1,3 +1,5 @@
+import calendar
+
 __author__ = 'Felix'
 
 from datetime import datetime
@@ -23,9 +25,9 @@ def type_date_partition(date, mode_type, **kwargs):
     return 'type=%s/%s' % (mode_type, date_partition(date, **kwargs))
 
 
-def hbase_table_suffix_partition(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
+def hbase_table_suffix_partition(dt, mode, mode_type, in_date_fmt='%Y-%m-%d'):
     date_fmt = '_%y_%m' if mode == 'snapshot' else '_%y_%m_%d'
-    date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
+    date_suffix = datetime.strftime(datetime.strptime(dt, in_date_fmt), date_fmt)
     return date_suffix if mode == 'snapshot' else '_%s%s' % (mode_type, date_suffix)
 
 
@@ -35,10 +37,10 @@ def dss_in_same_month(ds1, ds2):
     return '%s' % str(ds1s.month == ds2s.month)
 
 
-def last_day_of_month(date):
-    if date.month == 12:
-        return date.replace(day=31)
-    return date.replace(month=date.month + 1, day=1) - timedelta(days=1)
+def last_day_of_month(dt):
+    days_in_month = calendar.monthrange(dt.year, dt.month)[1]
+    return datetime(year=dt.year, month=dt.month, day=days_in_month)
+
 
 def first_day_of_last_month(date):
     if isinstance(date, basestring):
