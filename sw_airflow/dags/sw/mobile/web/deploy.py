@@ -58,6 +58,9 @@ def assemble_process(mode, dag):
                                                               dag=dag, task_id='MobileWeb_ReferralsSnapshot',
                                                               external_task_id='MobileWeb_ReferralsSnapshot')
         full_mobile_web_data_ready.set_upstream(mobile_web_referrals_data)
+        sla = None
+    else:
+        sla = timedelta(hours=25)
 
     factory = DockerBashOperatorFactory(use_defaults=True, dag=dag,
                                         script_path='''{{ params.execution_dir }}/mobile/scripts''')
@@ -80,7 +83,7 @@ def assemble_process(mode, dag):
                             env='STAGING')
     register_success_stage.set_upstream(full_mobile_web_data_ready)
 
-    stage_is_set = DummyOperator(task_id='stage_is_set', dag=dag, sla=timedelta(hours=24))
+    stage_is_set = DummyOperator(task_id='stage_is_set', dag=dag, sla=sla)
     stage_is_set.set_upstream([register_success_stage, update_dynamic_settings_stage])
 
     if airflow_env == 'prod':
@@ -94,7 +97,7 @@ def assemble_process(mode, dag):
         )
         copy_to_prod.set_upstream(full_mobile_web_data_ready)
 
-        prod_is_set = DummyOperator(task_id='prod_is_set', dag=dag, sla=timedelta(hours=25))
+        prod_is_set = DummyOperator(task_id='prod_is_set', dag=dag, sla=sla)
 
         if mode == WINDOW_MODE:
             update_dynamic_settings_prod = \
