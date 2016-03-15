@@ -907,7 +907,7 @@ def generate_dags(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-stat \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t sites_stat{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
     sites_stat_hist_register.set_upstream(popular_pages)
@@ -921,7 +921,7 @@ def generate_dags(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-info \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t sites_info{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
     site_info_hist_register.set_upstream(info)
