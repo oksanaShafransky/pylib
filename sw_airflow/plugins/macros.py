@@ -34,10 +34,11 @@ def dss_in_same_month(ds1, ds2):
     return '%s' % str(ds1s.month == ds2s.month)
 
 
-def last_day_of_month(ds, in_date_fmt='%Y-%m-%d'):
+def last_day_of_month(ds, in_date_fmt='%Y-%m-%d', out_date_fmt='%Y-%m-%d'):
     dt = datetime.strptime(ds, in_date_fmt)
     days_in_month = calendar.monthrange(dt.year, dt.month)[1]
-    return datetime(year=dt.year, month=dt.month, day=days_in_month)
+    ndt = datetime(year=dt.year, month=dt.month, day=days_in_month)
+    return ndt.strftime(out_date_fmt)
 
 
 def first_day_of_last_month(ds):
@@ -53,11 +54,11 @@ def last_interval_day(ds, interval):
         return ds
     if interval == '@monthly':
         dsd = datetime.strptime(ds, '%Y-%m-%d')
-        return last_day_of_month(dsd).isoformat()[:10]
+        return last_day_of_month(dsd)
 
 
 class SWMacroAirflowPluginManager(AirflowPlugin):
     name = 'SWMacros'
 
     macros = [date_partition, generalized_date_partition, type_date_partition, hbase_table_suffix_partition,
-              dss_in_same_month, last_interval_day, first_day_of_last_month]
+              dss_in_same_month, last_interval_day, last_day_of_month, first_day_of_last_month]
