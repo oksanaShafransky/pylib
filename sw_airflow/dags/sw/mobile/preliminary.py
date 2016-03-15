@@ -126,5 +126,5 @@ set_data_available_date = KeyValueSetOperator(task_id='SetDataAvailableDate',
                                               )
 set_data_available_date.set_upstream(daily_aggregation)
 
-preliminary = DummyOperator(task_id='Preliminary', dag=dag, sla=timedelta(hours=6))
+preliminary = DummyOperator(task_id='Preliminary', dag=dag, sla=timedelta(hours=8))
 preliminary.set_upstream([register_success_on_etcd, set_data_available_date])

@@ -65,5 +65,5 @@ weights_check.set_upstream(weights)
 
 main_estimation = register_sums_and_estimation(factory, env='main')
 
-process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=8))
+process_complete = DummyOperator(task_id='Estimation', dag=dag, sla=timedelta(hours=10))
 process_complete.set_upstream([main_estimation, weights])
