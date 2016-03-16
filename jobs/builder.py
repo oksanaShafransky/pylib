@@ -83,7 +83,11 @@ class JobBuilder:
 
         self.add_follow_up(PostJobHandler([PrintRecorder()]).handle_job)
 
-    def with_combined_text_input(self):
+    def with_combined_text_input(self, split_size=128 * 1024 * 1024):
+        self.args += ['--hadoop-arg', '-libjars']
+        self.args += ['--hadoop-arg', '/usr/lib/hadoop-mapreduce/hadoop-mapreduce-client-core.jar']
+        self.args += ['--jobconf', ('mapreduce.input.fileinputformat.split.maxsize=%d' % split_size)]
+
         self.input_type = 'text_combined'
         return self
 
@@ -346,7 +350,7 @@ class JobBuilder:
         job = job_cls(self.args)
 
         if self.input_type == 'text_combined':
-            job.HADOOP_INPUT_FORMAT = 'org.apache.mapreduce.lib.input.CombineTextInputFormat'
+            job.HADOOP_INPUT_FORMAT = 'org.apache.hadoop.mapred.lib.CombineTextInputFormat'
         elif self.input_type == 'avro':
             job.HADOOP_INPUT_FORMAT = 'org.apache.avro.mapred.AvroAsTextInputFormat'
         elif self.input_type == 'sequence':

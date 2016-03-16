@@ -342,7 +342,7 @@ copy_to_prod_done.set_upstream(copy_mobile_app_keyword_positions)
 copy_to_prod_done.set_upstream(copy_app_lite)
 
 deploy_prod_done = DummyOperator(task_id='deploy_prod_done', dag=dag)
-copy_to_prod_done.set_upstream(check_data)
+deploy_prod_done.set_upstream(check_data)
 deploy_prod_done.set_upstream(copy_to_prod_done)
 deploy_prod_done.set_downstream(wrap_up)
 
