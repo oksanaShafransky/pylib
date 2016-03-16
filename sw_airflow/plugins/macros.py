@@ -8,7 +8,7 @@ __author__ = 'Felix'
 
 
 def date_partition(ds, in_date_fmt='%Y-%m-%d', **kwargs):
-    return generalized_date_partition(ds, 'daily', in_date_fmt, kwargs)
+    return generalized_date_partition(ds, 'daily', in_date_fmt, **kwargs)
 
 
 def generalized_date_partition(ds, mode, in_date_fmt='%Y-%m-%d', **kwargs):
