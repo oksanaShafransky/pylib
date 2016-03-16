@@ -53,8 +53,7 @@ def last_interval_day(ds, interval):
     if interval == '@daily':
         return ds
     if interval == '@monthly':
-        dsd = datetime.strptime(ds, '%Y-%m-%d')
-        return last_day_of_month(dsd)
+        return last_day_of_month(ds)
 
 
 class SWMacroAirflowPluginManager(AirflowPlugin):
