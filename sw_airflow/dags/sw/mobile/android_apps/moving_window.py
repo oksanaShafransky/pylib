@@ -9,6 +9,7 @@ from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.key_value import *
 from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExternalTaskSensor
 from sw.airflow.operators import DockerCopyHbaseTableOperator, CompareHBaseTablesOperator
+from sw.airflow.defs import TEMPLATE_LIST_SEPARATOR
 from airflow.models import Variable
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -25,7 +26,7 @@ IS_PROD = True
 dag_args = {
     'owner': 'similarweb',
     'depends_on_past': False,
-    'email': ['iddo.aviram@similarweb.com','felixv@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
+    'email': ['iddo.aviram@similarweb.com', 'felixv@similarweb.com', 'n7i6d2a2m1h2l3f6@similar.slack.com', 'airflow@similarweb.pagerduty.com'],
     'email_on_failure': True,
     'email_on_retry': False,
     'retries': 3,
@@ -543,7 +544,7 @@ def generate_dag(mode):
                 table_name_template='app_sdk_stats_' + hbase_suffix_template,
                 is_forced=True
             )
-        copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store])
+        copy_to_prod_app_sdk.set_upstream([app_engagement, app_affinity, retention_store, app_usage_pattern_store, usage_raw_totals])
 
         copy_to_prod_cats = \
             DockerCopyHbaseTableOperator(
@@ -595,8 +596,8 @@ def generate_dag(mode):
 
         copied_tables = ['app_sdk_stats', 'app_sdk_category_stats', 'app_sdk_category_lead', 'app_eng_rank', 'cat_mod_app_rank']
         copy_to_prod = CompareHBaseTablesOperator(source_cluster='mrp',
-                                                  target_clusters=','.join(deploy_targets),
-                                                  tables=','.join(['%s_%s' % (table, hbase_suffix_template) for table in copied_tables]),
+                                                  target_clusters=TEMPLATE_LIST_SEPARATOR.join(deploy_targets),
+                                                  tables=TEMPLATE_LIST_SEPARATOR.join(['%s_%s' % (table, hbase_suffix_template) for table in copied_tables]),
                                                   docker_name='''{{ params.cluster }}''',
                                                   task_id='CopyToProd',
                                                   dag=dag

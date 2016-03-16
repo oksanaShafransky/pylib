@@ -5,7 +5,6 @@ import subprocess
 from airflow.operators.bash_operator import BashOperator
 from airflow.utils import apply_defaults
 
-
 dock_cmd_template = '''docker \
 -H=tcp://{{ params.docker_gate }}:2375 \
 run \
@@ -71,6 +70,7 @@ class DockerBashOperatorFactory(object):
                  mode=None,
                  mode_type=None,
                  script_path=None,
+                 force=False,
                  use_defaults=False,
                  additional_cmd_components=[]
                  ):
@@ -82,6 +82,7 @@ class DockerBashOperatorFactory(object):
         self.mode = mode
         self.mode_type = mode_type
         self.script_path = script_path
+        self.force = force
         self.additional_cmd_components = additional_cmd_components
         if not dag:
             raise DockerBashCommandBuilderException('target dag to register operator is mandatory')
@@ -151,6 +152,9 @@ class DockerBashOperatorFactory(object):
 
         if self.mode_type:
             full_command += ' -mt ' + self.mode_type
+
+        if self.force:
+            full_command += ' -f '
 
         full_command += ' ' + ' '.join(self.additional_cmd_components)
 

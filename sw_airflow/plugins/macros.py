@@ -1,31 +1,30 @@
-__author__ = 'Felix'
-
+import calendar
 from datetime import datetime
 from datetime import timedelta
 
 from airflow.plugins_manager import AirflowPlugin
 
-
-def date_partition(date, in_date_fmt='%Y-%m-%d', **kwargs):
-    date_parts = datetime.strftime(datetime.strptime(date, in_date_fmt), 'year=%y/month=%m/day=%d')
-    other_partitions = ['%s=%s' % (key, value) for (key, value) in kwargs.iteritems()]
-    return '/'.join([date_parts] + other_partitions)
+__author__ = 'Felix'
 
 
-def generalized_date_partition(date, mode, in_date_fmt='%Y-%m-%d', **kwargs):
+def date_partition(ds, in_date_fmt='%Y-%m-%d', **kwargs):
+    return generalized_date_partition(ds, 'daily', in_date_fmt, **kwargs)
+
+
+def generalized_date_partition(ds, mode, in_date_fmt='%Y-%m-%d', **kwargs):
     pattern = 'year=%y/month=%m' if mode == 'snapshot' else 'year=%y/month=%m/day=%d'
-    date_parts = datetime.strftime(datetime.strptime(date, in_date_fmt), pattern)
+    date_parts = datetime.strftime(datetime.strptime(ds, in_date_fmt), pattern)
     other_partitions = ['%s=%s' % (key, value) for (key, value) in kwargs.iteritems()]
     return '/'.join([date_parts] + other_partitions)
 
 
-def type_date_partition(date, mode_type, **kwargs):
-    return 'type=%s/%s' % (mode_type, date_partition(date, **kwargs))
+def type_date_partition(ds, mode_type, **kwargs):
+    return 'type=%s/%s' % (mode_type, date_partition(ds, **kwargs))
 
 
-def hbase_table_suffix_partition(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
+def hbase_table_suffix_partition(ds, mode, mode_type, in_date_fmt='%Y-%m-%d'):
     date_fmt = '_%y_%m' if mode == 'snapshot' else '_%y_%m_%d'
-    date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
+    date_suffix = datetime.strftime(datetime.strptime(ds, in_date_fmt), date_fmt)
     return date_suffix if mode == 'snapshot' else '_%s%s' % (mode_type, date_suffix)
 
 
@@ -35,15 +34,17 @@ def dss_in_same_month(ds1, ds2):
     return '%s' % str(ds1s.month == ds2s.month)
 
 
-def last_day_of_month(date):
-    if date.month == 12:
-        return date.replace(day=31)
-    return date.replace(month=date.month + 1, day=1) - timedelta(days=1)
+def last_day_of_month(ds, in_date_fmt='%Y-%m-%d', out_date_fmt='%Y-%m-%d'):
+    dt = datetime.strptime(ds, in_date_fmt)
+    days_in_month = calendar.monthrange(dt.year, dt.month)[1]
+    ndt = datetime(year=dt.year, month=dt.month, day=days_in_month)
+    return ndt.strftime(out_date_fmt)
 
-def first_day_of_last_month(date):
-    if isinstance(date, basestring):
-        date = datetime.strptime(date, '%Y-%m-%d')
-    ndt = date.replace(day=1)
+
+def first_day_of_last_month(ds):
+    if isinstance(ds, basestring):
+        ds = datetime.strptime(ds, '%Y-%m-%d')
+    ndt = ds.replace(day=1)
     ndt = ndt - timedelta(days=1)
     return datetime.strftime(ndt.replace(day=1), '%Y-%m-%d')
 
@@ -53,26 +54,11 @@ def last_interval_day(ds, interval):
         return ds
     if interval == '@monthly':
         dsd = datetime.strptime(ds, '%Y-%m-%d')
-        return last_day_of_month(dsd).isoformat()[:10]
-
-
-def get_days(end, days_back=1):
-    """
-    returns list of datetime objects for each day in range starting from end and going backwards.
-    end date is included
-
-    :param end: this param is aimed for dag execution_date. for usacases where we need dates from current date and back
-    :param days_back: how many days to go back
-    """
-    truncated_end = datetime.date(end.year, end.month, end.day)
-    days = []
-    for i in range(0, days_back):
-        days.append(truncated_end - timedelta(days=i))
-    return days
+        return last_day_of_month(dsd)
 
 
 class SWMacroAirflowPluginManager(AirflowPlugin):
     name = 'SWMacros'
 
     macros = [date_partition, generalized_date_partition, type_date_partition, hbase_table_suffix_partition,
-              dss_in_same_month, last_interval_day, first_day_of_last_month]
+              dss_in_same_month, last_interval_day, last_day_of_month, first_day_of_last_month]

@@ -2,7 +2,6 @@ import logging
 from subprocess import PIPE, STDOUT, Popen
 from tempfile import NamedTemporaryFile, gettempdir
 import itertools
-import random
 
 from airflow import settings, utils
 from airflow.models import TaskInstance, Log
@@ -14,6 +13,7 @@ from airflow.utils import TemporaryDirectory, apply_defaults, State
 from datetime import datetime
 
 from sw.airflow.docker_bash_operator import DockerBashOperator
+from sw.airflow.defs import TEMPLATE_LIST_SEPARATOR
 
 
 class BashSensor(BaseSensorOperator):
@@ -107,7 +107,7 @@ class CopyHbaseTableOperator(BashOperator):
 
 class DockerCopyHbaseTableOperator(DockerBashOperator):
     ui_color = '#0099FF'
-    cmd_template = '''source {{ params.execution_dir }}/scripts/infra.sh &&
+    cmd_template = '''source {{ params.execution_dir }}/scripts/common.sh &&
                       hbasecopy %(source_cluster)s %(target_cluster)s %(table_name)s'''
 
     template_fields = ('bash_command', 'docker_name')
@@ -128,7 +128,7 @@ class CompareHBaseTablesOperator(DockerBashOperator):
 
     @apply_defaults
     def __init__(self, source_cluster, target_clusters, tables, *args, **kwargs):
-        bash_cmd = ' && '.join(
+        cmp_cmd = ' && '.join(
                         [CompareHBaseTablesOperator.cmp_template %
                         {
                             'source_cluster': source_cluster,
@@ -136,9 +136,9 @@ class CompareHBaseTablesOperator(DockerBashOperator):
                             'table_name': table
                         }
                         for (table, target_cluster) in
-                        itertools.product([tables.split(',')], [target_clusters.split(',')])
+                        itertools.product(tables.split(TEMPLATE_LIST_SEPARATOR), target_clusters.split(TEMPLATE_LIST_SEPARATOR))
                         ])
-        bash_cmd = '"%s"' % bash_cmd  # for templating purposes
+        bash_cmd = 'source {{ params.execution_dir }}/scripts/common.sh && %s' % cmp_cmd
         super(CompareHBaseTablesOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
 
 
@@ -190,7 +190,9 @@ class SuccedOrSkipOperator(PythonOperator):
                     test_mode=True,
                     force=force, )
 
+
 class SWAAirflowPluginManager(AirflowPlugin):
     name = 'SWOperators'
 
     operators = [BashSensor, DockerBashOperator, DockerBashSensor, CopyHbaseTableOperator, SuccedOrSkipOperator]
+

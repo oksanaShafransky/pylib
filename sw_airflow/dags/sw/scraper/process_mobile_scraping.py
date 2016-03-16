@@ -7,9 +7,10 @@ from airflow.operators.dummy_operator import DummyOperator
 
 from airflow.operators.sensors import HdfsSensor
 
-from sw.airflow.operators import DockerCopyHbaseTableOperator
+from sw.airflow.operators import DockerCopyHbaseTableOperator, CompareHBaseTablesOperator
 from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
+from sw.airflow.defs import TEMPLATE_LIST_SEPARATOR
 from sw.airflow.key_value import *
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
@@ -53,10 +54,6 @@ wrap_up = DummyOperator(task_id='FinishProcess',
                         dag=dag)
 
 deploy_prod = DummyOperator(task_id='deploy_prod', dag=dag)
-deploy_prod_done = DummyOperator(task_id='deploy_prod_done', dag=dag)
-
-deploy_prod_done.set_upstream(deploy_prod)
-deploy_prod_done.set_downstream(wrap_up)
 
 #################################################
 ###    Ranks Related Jobs                       #
@@ -283,7 +280,6 @@ check_data = DockerBashOperator(task_id='CheckDataBeforeProd',
                                 )
 
 check_data.set_upstream(deploy_prod)
-check_data.set_downstream(deploy_prod_done)
 
 
 
@@ -301,7 +297,6 @@ copy_app_details = DockerCopyHbaseTableOperator(
     table_name_template="app_details_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
 )
 copy_app_details.set_upstream(deploy_prod)
-copy_app_details.set_downstream(deploy_prod_done)
 
 copy_app_top_list = DockerCopyHbaseTableOperator(
     task_id='copy_app_top_list',
@@ -312,7 +307,6 @@ copy_app_top_list = DockerCopyHbaseTableOperator(
     table_name_template="app_top_list_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
 )
 copy_app_top_list.set_upstream(deploy_prod)
-copy_app_top_list.set_downstream(deploy_prod_done)
 
 copy_mobile_app_keyword_positions = DockerCopyHbaseTableOperator(
     task_id='copy_mobile_app_keyword_positions',
@@ -323,7 +317,6 @@ copy_mobile_app_keyword_positions = DockerCopyHbaseTableOperator(
     table_name_template="mobile_app_keyword_positions_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
 )
 copy_mobile_app_keyword_positions.set_upstream(deploy_prod)
-copy_mobile_app_keyword_positions.set_downstream(deploy_prod_done)
 
 copy_app_lite = DockerCopyHbaseTableOperator(
     task_id='copy_app_lite',
@@ -334,7 +327,24 @@ copy_app_lite = DockerCopyHbaseTableOperator(
     table_name_template="app_lite_{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}"
 )
 copy_app_lite.set_upstream(deploy_prod)
-copy_app_lite.set_downstream(deploy_prod_done)
+
+copied_tables = ['app_details', 'app_top_list', 'mobile_app_keyword_positions', 'app_lite']
+copy_to_prod_done = CompareHBaseTablesOperator(source_cluster='mrp',
+                                               target_clusters=TEMPLATE_LIST_SEPARATOR.join(deploy_targets),
+                                               tables=TEMPLATE_LIST_SEPARATOR.join(['%s_%s' % (table, "{{ macros.ds_format(ds, '%Y-%m-%d', '%y_%m_%d') }}") for table in copied_tables]),
+                                               docker_name='''{{ params.cluster }}''',
+                                               task_id='copy_prod',
+                                               dag=dag
+                                               )
+copy_to_prod_done.set_upstream(copy_app_details)
+copy_to_prod_done.set_upstream(copy_app_top_list)
+copy_to_prod_done.set_upstream(copy_mobile_app_keyword_positions)
+copy_to_prod_done.set_upstream(copy_app_lite)
+
+deploy_prod_done = DummyOperator(task_id='deploy_prod_done', dag=dag)
+copy_to_prod_done.set_upstream(check_data)
+deploy_prod_done.set_upstream(copy_to_prod_done)
+deploy_prod_done.set_downstream(wrap_up)
 
 
 #################################################

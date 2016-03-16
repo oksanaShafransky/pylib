@@ -5,7 +5,6 @@ from datetime import timedelta, datetime
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExternalTaskSensor
 
-WINDOW_MODE = 'window'
 SNAPSHOT_MODE = 'snapshot'
 dag_args = {
     'owner': 'MobileWeb',
@@ -25,18 +24,18 @@ dag_template_params = {'execution_dir': '/similargroup/production',
                        }
 
 window_template_params = dag_template_params.copy()
-window_template_params.update({'mode': WINDOW_MODE, 'mode_type': 'last-28'})
+window_template_params.update({'mode': 'window', 'mode_type': 'last-28'})
 snapshot_template_params = dag_template_params.copy()
 snapshot_template_params.update({'mode': SNAPSHOT_MODE, 'mode_type': 'monthly'})
 
 snapshot_dag = DAG(dag_id='MobileWeb_Snapshot', default_args=dag_args, params=snapshot_template_params,
-                   schedule_interval='@monthly')
+                   schedule_interval='59 23 L * *')
 
 window_dag = DAG(dag_id='MobileWeb_Window', default_args=dag_args, params=window_template_params,
                  schedule_interval='@daily')
 
 
-def assemble_process(mode, dag):
+def assemble_process(dag):
     factory = DockerBashOperatorFactory(use_defaults=True,
                                         dag=dag,
                                         script_path='''{{ params.execution_dir }}/mobile/scripts/web''',
@@ -57,7 +56,7 @@ def assemble_process(mode, dag):
     mobile_web = DummyOperator(task_id=dag.dag_id, dag=dag, sla=timedelta(hours=12))
     mobile_web.set_upstream([adjust_store, calc_subdomains, popular_pages_top_store])
 
-    if mode == SNAPSHOT_MODE:
+    if dag.params.get('mode') == SNAPSHOT_MODE:
         predict_validate_preparation = \
             factory.build(task_id='predict_validate_preparation',
                           core_command='second_stage_tests.sh -wenv daily-cut -p prepare_total_device_count')
@@ -135,5 +134,5 @@ def add_popular_pages(dag, factory, prepare_hbase_tables):
     return popular_pages_top_store
 
 
-assemble_process(SNAPSHOT_MODE, snapshot_dag)
-assemble_process(WINDOW_MODE, window_dag)
+assemble_process(snapshot_dag)
+assemble_process(window_dag)

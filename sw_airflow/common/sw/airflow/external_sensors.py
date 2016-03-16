@@ -39,7 +39,7 @@ class BaseExternalTaskSensor(BaseSensorOperator):
             external_task_id,
             allowed_states=None,
             dates_to_query=None,
-            task_existence_check_interval=timedelta(minutes=10),
+            task_existence_check_interval=timedelta(hours=2),
             *args, **kwargs):
         super(BaseExternalTaskSensor, self).__init__(*args, **kwargs)
         self.allowed_states = allowed_states or [State.SUCCESS]
@@ -48,7 +48,7 @@ class BaseExternalTaskSensor(BaseSensorOperator):
         self.task_existence_check_interval = task_existence_check_interval
         self.dates_to_query = dates_to_query
 
-        self.last_check_date = datetime.now()
+        self.last_check_date = datetime(year=1970, month=01, day=01)
 
     def poke(self, context):
         return self.internal_poke(self.dates_to_query)
@@ -65,6 +65,7 @@ class BaseExternalTaskSensor(BaseSensorOperator):
             dag_bag = DagBag(cli.DAGS_FOLDER)
             dag_bag.dags[self.external_dag_id].get_task(self.external_task_id)
             logging.info('The referenced task was validated and found to be ok')
+            self.last_check_date = datetime.now()
 
         TI = TaskInstance
         session = settings.Session()
@@ -141,8 +142,9 @@ class AggRangeExternalTaskSensor(BaseExternalTaskSensor):
     def poke(self, context):
         dt = datetime.date(context['execution_date'])  # this truncates hours, minutes, seconds
         if self.agg_mode == 'monthly':
-            cal = calendar.Calendar()
-            dates_to_query = [day for day in cal.itermonthdates(dt.year, dt.month) if (day.year, day.month) == (dt.year, dt.month)]  # check in the end required since the method returns extra days to complete even weeks
+            days_in_month = calendar.monthrange(dt.year, dt.month)[1]
+            last_date_in_month = datetime(dt.year, dt.month, days_in_month)
+            dates_to_query = self.get_days(last_date_in_month, days_in_month)
         elif self.agg_mode.startswith('last'):
             num_days_in_range = int(self.agg_mode.split('-')[1])
             dates_to_query = self.get_days(dt, num_days_in_range)
