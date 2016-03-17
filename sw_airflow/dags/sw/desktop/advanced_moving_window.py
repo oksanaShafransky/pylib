@@ -205,7 +205,7 @@ def generate_dags(mode):
         DockerBashOperator(task_id='IncomingAddTotals',
                            dag=dag,
                            docker_name='''{{ params.cluster }}''',
-                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p add_totals_to_incoming'''
+                           bash_command='''{{ params.execution_dir }}/analytics/scripts/monthly/incoming.sh -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} -bd {{ params.base_hdfs_dir }} -m {{ params.mode }} -mt {{ params.mode_type }} -tp {{ params.table_prefix }} -hdb {{ params.hive_db }} -p add_totals_to_incoming,add_totals_to_direct'''
                            )
     incoming_add_totals.set_upstream(incoming_estimate)
 
