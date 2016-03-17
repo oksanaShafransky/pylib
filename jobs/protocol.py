@@ -200,7 +200,7 @@ class TsvProtocol(object):
 
     def read(self, line):
         fields = line.split(TsvProtocol.TAB_SEPARATOR)
-        idx = 0
+        idx = 1 if 'combine' in os.environ['mapred_input_format_class'].lower() else 0
 
         key = self.get_instance(self.determine_key_class())
         idx = TsvProtocol.read_value(key, fields, idx)

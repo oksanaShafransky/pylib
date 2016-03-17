@@ -42,6 +42,7 @@ desktop_estimation_aggregation = AdaptedExternalTaskSensor(external_dag_id='Desk
 factory = DockerBashOperatorFactory(use_defaults=True,
                                     dag=dag,
                                     script_path='''{{ params.execution_dir }}/mobile/scripts/web''',
+                                    force=True,
                                     additional_cmd_components=['-env main'])
 
 first_stage_agg = factory.build(task_id='first_stage_agg', core_command='first_stage_agg.sh')

@@ -82,9 +82,15 @@ class JobBuilder:
 
         self.add_follow_up(PostJobHandler([PrintRecorder()]).handle_job)
 
+    def with_combined_text_input(self, split_size=128 * 1024 * 1024):
+        self.args += ['--hadoop-arg', '-libjars']
+        self.args += ['--hadoop-arg', '/usr/lib/hadoop-mapreduce/hadoop-mapreduce-client-core.jar']
+        self.args += ['--jobconf', ('mapreduce.input.fileinputformat.split.maxsize=%d' % split_size)]
+
+        self.input_type = 'text_combined'
+        return self
+
     def with_avro_input(self):
-        # self.args += ['-hadoop_input_format', 'org.apache.avro.mapred.AvroAsTextInputFormat']
-        # refactor laster to add jars normally
         self.input_type = 'avro'
         self.args += ['--hadoop-arg', '-libjars']
         self.args += ['--hadoop-arg', '/usr/lib/avro/avro-mapred-hadoop2.jar']
@@ -155,8 +161,8 @@ class JobBuilder:
     def compress_output(self, codec='gz'):
         if codec == 'gz':
             codec_name = 'org.apache.hadoop.io.compress.GzipCodec'
-        elif codec == 'bz':
-            codec_name = 'org.apache.hadoop.io.compress.BzipCodec'
+        elif codec == 'bz2':
+            codec_name = 'org.apache.hadoop.io.compress.BZip2Codec'
         elif codec == 'snappy':
             codec_name = 'org.apache.hadoop.io.compress.SnappyCodec'
         else:
@@ -342,10 +348,12 @@ class JobBuilder:
 
         job = job_cls(self.args)
 
-        if self.input_type == 'avro':
+        if self.input_type == 'text_combined':
+            job.HADOOP_INPUT_FORMAT = 'org.apache.hadoop.mapred.lib.CombineTextInputFormat'
+        elif self.input_type == 'avro':
             job.HADOOP_INPUT_FORMAT = 'org.apache.avro.mapred.AvroAsTextInputFormat'
         elif self.input_type == 'sequence':
-            job.HADOOP_INPUT_FORMAT = 'org.apache.hadoop.mapred.SequenceFileAsTextInputFormat'
+            job.HADOOP_INPUT_FORMAT = 'org.apache.hadoop.mapreduce.lib.input.SequenceFileAsTextInputFormat'
 
         job.log_dir = None
         job.follow_ups = []

@@ -9,7 +9,8 @@ from airflow.operators.dummy_operator import DummyOperator
 from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.external_sensors import AdaptedExternalTaskSensor, AggRangeExternalTaskSensor
 from sw.airflow.key_value import *
-from sw.airflow.operators import DockerCopyHbaseTableOperator
+from sw.airflow.operators import DockerCopyHbaseTableOperator, CompareHBaseTablesOperator
+from sw.airflow.defs import TEMPLATE_LIST_SEPARATOR
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/analytics'
@@ -464,23 +465,23 @@ def generate_dags(mode):
 
         copy_to_prod_top_lists = \
             DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdTopLists',
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=','.join(DEPLOY_TARGETS),
-                    table_name_template='top_lists_' + hbase_suffix_template
+                task_id='CopyToProdTopLists',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(DEPLOY_TARGETS),
+                table_name_template='top_lists_' + hbase_suffix_template
             )
         copy_to_prod_top_lists.set_upstream(ranks)
 
         copy_to_prod_sites_stat = \
             DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdSitesStat',
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=','.join(DEPLOY_TARGETS),
-                    table_name_template='sites_stat_' + hbase_suffix_template
+                task_id='CopyToProdSitesStat',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(DEPLOY_TARGETS),
+                table_name_template='sites_stat_' + hbase_suffix_template
             )
         copy_to_prod_sites_stat.set_upstream(popular_pages)
         copy_to_prod_sites_stat.set_upstream(export_rest)
@@ -489,17 +490,23 @@ def generate_dags(mode):
 
         copy_to_prod_sites_info = \
             DockerCopyHbaseTableOperator(
-                    task_id='CopyToProdSitesInfo',
-                    dag=dag,
-                    docker_name='''{{ params.cluster }}''',
-                    source_cluster='mrp',
-                    target_cluster=','.join(DEPLOY_TARGETS),
-                    table_name_template='sites_info_' + hbase_suffix_template
+                task_id='CopyToProdSitesInfo',
+                dag=dag,
+                docker_name='''{{ params.cluster }}''',
+                source_cluster='mrp',
+                target_cluster=','.join(DEPLOY_TARGETS),
+                table_name_template='sites_info_' + hbase_suffix_template
             )
         copy_to_prod_sites_info.set_upstream(export_rest)
 
-        copy_to_prod = DummyOperator(task_id='CopyToProd',
-                                     dag=dag)
+        copied_tables = ['sites_stat', 'top_lists', 'sites_info']
+        copy_to_prod = CompareHBaseTablesOperator(source_cluster='mrp',
+                                                  target_clusters=TEMPLATE_LIST_SEPARATOR.join(DEPLOY_TARGETS),
+                                                  tables=TEMPLATE_LIST_SEPARATOR.join(['%s_%s' % (table, hbase_suffix_template) for table in copied_tables]),
+                                                  docker_name='''{{ params.cluster }}''',
+                                                  task_id='CopyToProd',
+                                                  dag=dag
+                                                  )
         copy_to_prod.set_upstream(copy_to_prod_top_lists)
         copy_to_prod.set_upstream(copy_to_prod_sites_stat)
         copy_to_prod.set_upstream(copy_to_prod_sites_info)
@@ -585,39 +592,45 @@ def generate_dags(mode):
         if is_snapshot_dag():
             copy_to_prod_mobile_keyword_apps = \
                 DockerCopyHbaseTableOperator(
-                        task_id='CopyToProdMobileKeywordApps',
-                        dag=dag,
-                        docker_name='''{{ params.cluster }}''',
-                        source_cluster='mrp',
-                        target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='mobile_keyword_apps_' + hbase_suffix_template
+                    task_id='CopyToProdMobileKeywordApps',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(DEPLOY_TARGETS),
+                    table_name_template='mobile_keyword_apps_' + hbase_suffix_template
                 )
             copy_to_prod_mobile_keyword_apps.set_upstream(mobile)
 
             copy_to_prod_app_stat = \
                 DockerCopyHbaseTableOperator(
-                        task_id='CopyToProdMobileAppStat',
-                        dag=dag,
-                        docker_name='''{{ params.cluster }}''',
-                        source_cluster='mrp',
-                        target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='app_stat_' + hbase_suffix_template
+                    task_id='CopyToProdMobileAppStat',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(DEPLOY_TARGETS),
+                    table_name_template='app_stat_' + hbase_suffix_template
                 )
             copy_to_prod_app_stat.set_upstream(mobile)
 
             copy_to_prod_top_app_keywords = \
                 DockerCopyHbaseTableOperator(
-                        task_id='CopyToProdMobileAppKeywords',
-                        dag=dag,
-                        docker_name='''{{ params.cluster }}''',
-                        source_cluster='mrp',
-                        target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='top_app_keywords_' + hbase_suffix_template
+                    task_id='CopyToProdMobileAppKeywords',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(DEPLOY_TARGETS),
+                    table_name_template='top_app_keywords_' + hbase_suffix_template
                 )
             copy_to_prod_top_app_keywords.set_upstream(mobile)
 
-            copy_to_prod_mobile = DummyOperator(task_id='CopyToProdMobile',
-                                                dag=dag)
+            mobile_tables = ['mobile_keyword_apps', 'app_stat', 'top_app_keywords']
+            copy_to_prod_mobile = CompareHBaseTablesOperator(source_cluster='mrp',
+                                                             target_clusters=TEMPLATE_LIST_SEPARATOR.join(DEPLOY_TARGETS),
+                                                             tables=TEMPLATE_LIST_SEPARATOR.join(['%s_%s' % (table, hbase_suffix_template) for table in mobile_tables]),
+                                                             docker_name='''{{ params.cluster }}''',
+                                                             task_id='CopyToProdMobile',
+                                                             dag=dag
+                                                             )
             copy_to_prod_mobile.set_upstream(copy_to_prod_mobile_keyword_apps)
             copy_to_prod_mobile.set_upstream(copy_to_prod_top_app_keywords)
             copy_to_prod_mobile.set_upstream(copy_to_prod_app_stat)
@@ -625,43 +638,49 @@ def generate_dags(mode):
 
             copy_to_prod_snapshot_industry = \
                 DockerCopyHbaseTableOperator(
-                        task_id='CopyToProdSnapshotIndustry',
-                        dag=dag,
-                        docker_name='''{{ params.cluster }}''',
-                        source_cluster='mrp',
-                        target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='categories_' + hbase_suffix_template
+                    task_id='CopyToProdSnapshotIndustry',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(DEPLOY_TARGETS),
+                    table_name_template='categories_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_industry.set_upstream(industry_analysis)
 
             copy_to_prod_snapshot_sites_scrape_stat = \
                 DockerCopyHbaseTableOperator(
-                        task_id='CopyToProdSnapshotSitesScrapeStat',
-                        dag=dag,
-                        docker_name='''{{ params.cluster }}''',
-                        source_cluster='mrp',
-                        target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='sites_scrape_stat_' + hbase_suffix_template
+                    task_id='CopyToProdSnapshotSitesScrapeStat',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(DEPLOY_TARGETS),
+                    table_name_template='sites_scrape_stat_' + hbase_suffix_template
                 )
             copy_to_prod_snapshot_sites_scrape_stat.set_upstream(conditionals)
 
             copy_to_prod_snapshot_sites_lite = \
                 DockerCopyHbaseTableOperator(
-                        task_id='CopyToProdSnapshotSitesLite',
-                        dag=dag,
-                        docker_name='''{{ params.cluster }}''',
-                        source_cluster='mrp',
-                        target_cluster=','.join(DEPLOY_TARGETS),
-                        table_name_template='sites_lite_' + hbase_suffix_template
+                    task_id='CopyToProdSnapshotSitesLite',
+                    dag=dag,
+                    docker_name='''{{ params.cluster }}''',
+                    source_cluster='mrp',
+                    target_cluster=','.join(DEPLOY_TARGETS),
+                    table_name_template='sites_lite_' + hbase_suffix_template
                 )
-            copy_to_prod_snapshot_sites_lite.set_upstream(conditionals)
+            copy_to_prod_snapshot_sites_lite.set_upstream(sites_lite)
+            copy_to_prod_snapshot_sites_lite.set_upstream(info_lite)
 
-            copy_to_prod_snapshot = DummyOperator(task_id='CopyToProdSnapshot',
-                                                  dag=dag)
+            snapshot_tables = ['sites_scrape_stat', 'categories', 'sites_lite']
+            copy_to_prod_snapshot = CompareHBaseTablesOperator(source_cluster='mrp',
+                                                               target_clusters=TEMPLATE_LIST_SEPARATOR.join(DEPLOY_TARGETS),
+                                                               tables=TEMPLATE_LIST_SEPARATOR.join(['%s_%s' % (table, hbase_suffix_template) for table in snapshot_tables]),
+                                                               docker_name='''{{ params.cluster }}''',
+                                                               task_id='CopyToProdSnapshot',
+                                                               dag=dag
+                                                               )
             copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_industry)
             copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_sites_scrape_stat)
             copy_to_prod_snapshot.set_upstream(copy_to_prod_snapshot_sites_lite)
-            copy_to_prod.set_upstream(copy_to_prod_snapshot)
 
             dynamic_stage_lite = \
                 DockerBashOperator(task_id='DynamicStageLite',
@@ -888,7 +907,7 @@ def generate_dags(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-stat \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t sites_stat{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
     sites_stat_hist_register.set_upstream(popular_pages)
@@ -902,7 +921,7 @@ def generate_dags(mode):
                                            -in {{ params.base_hdfs_dir }}/{{ params.mode }}/histogram/type={{ params.mode_type }}/{{ macros.generalized_date_partition(ds, params.mode) }}/sites-info \
                                            -d {{ macros.last_interval_day(ds, dag.schedule_interval) }} \
                                            -k 2000000 \
-                                           -t app_sdk_stats{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
+                                           -t sites_info{{ macros.hbase_table_suffix_partition(ds, params.mode, params.mode_type) }}
                                         '''
                            )
     site_info_hist_register.set_upstream(info)

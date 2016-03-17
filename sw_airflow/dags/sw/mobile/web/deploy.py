@@ -33,7 +33,7 @@ snapshot_template_params = dag_template_params.copy()
 snapshot_template_params.update({'mode': SNAPSHOT_MODE, 'mode_type': 'monthly'})
 
 snapshot_dag = DAG(dag_id='MobileWeb_SnapshotDeploy', default_args=dag_args, params=snapshot_template_params,
-                   schedule_interval='@monthly')
+                   schedule_interval='59 23 L * *')
 
 window_dag = DAG(dag_id='MobileWeb_WindowDeploy', default_args=dag_args, params=window_template_params,
                  schedule_interval='@daily')
@@ -59,6 +59,9 @@ def assemble_process(mode, dag):
                                                               dag=dag, task_id='MobileWeb_ReferralsSnapshot',
                                                               external_task_id='MobileWeb_ReferralsSnapshot')
         full_mobile_web_data_ready.set_upstream(mobile_web_referrals_data)
+        sla = None
+    else:
+        sla = timedelta(hours=25)
 
     factory = DockerBashOperatorFactory(use_defaults=True, dag=dag,
                                         script_path='''{{ params.execution_dir }}/mobile/scripts''')
@@ -73,6 +76,7 @@ def assemble_process(mode, dag):
                                                   core_command='dynamic-settings.sh -et staging -p mobile_web')
     update_dynamic_settings_stage.set_upstream(full_mobile_web_data_ready)
 
+    # TODO check if this stage can be deleted
     register_success_stage = \
         KeyValueSetOperator(task_id='register_success_stage',
                             dag=dag,
@@ -80,7 +84,7 @@ def assemble_process(mode, dag):
                             env='STAGING')
     register_success_stage.set_upstream(full_mobile_web_data_ready)
 
-    stage_is_set = DummyOperator(task_id='stage_is_set', dag=dag, sla=timedelta(hours=24))
+    stage_is_set = DummyOperator(task_id='stage_is_set', dag=dag, sla=sla)
     stage_is_set.set_upstream([register_success_stage, update_dynamic_settings_stage])
 
     if airflow_env == 'prod':
@@ -94,7 +98,7 @@ def assemble_process(mode, dag):
         )
         copy_to_prod.set_upstream(full_mobile_web_data_ready)
 
-        prod_is_set = DummyOperator(task_id='prod_is_set', dag=dag, sla=timedelta(hours=25))
+        prod_is_set = DummyOperator(task_id='prod_is_set', dag=dag, sla=sla)
 
         if mode == WINDOW_MODE:
             update_dynamic_settings_prod = \
@@ -103,6 +107,7 @@ def assemble_process(mode, dag):
             update_dynamic_settings_prod.set_upstream(copy_to_prod)
             prod_is_set.set_upstream(update_dynamic_settings_prod)
 
+        # TODO check if this stage can be deleted
         register_success_prod = \
             KeyValueSetOperator(task_id='register_success_prod',
                                 dag=dag,

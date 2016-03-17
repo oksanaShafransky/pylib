@@ -46,7 +46,7 @@ should_run = KeyValueCompoundDateSensor(task_id='RawDataReady',
 group_raw_data_by_user = DockerBashOperator(task_id='GroupRawDataByUser',
                                             dag=dag,
                                             docker_name='''{{ params.cluster }}''',
-                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/group_raw.sh -d {{ ds }} -p group -rt 2101 -rmem 1536'''
+                                            bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/group_raw.sh -d {{ ds }} -p group -rt 2501 -rmem 1536'''
                                             )
 group_raw_data_by_user.set_upstream(should_run)
 
@@ -103,7 +103,7 @@ combine_system_apps.set_upstream(system_app_detection)
 daily_aggregation = DockerBashOperator(task_id='DailyAggregation',
                                        dag=dag,
                                        docker_name=DEFAULT_CLUSTER,
-                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 4500 -rmem 1536'''
+                                       bash_command='''{{ params.execution_dir }}/mobile/scripts/preliminary/collection.sh -d {{ ds }} -p aggregation -rt 1201 -mmem 2560 -rmem 1536'''
                                        )
 daily_aggregation.set_upstream(sources_for_analyze)
 daily_aggregation.set_upstream(blocked_ips)
@@ -126,5 +126,5 @@ set_data_available_date = KeyValueSetOperator(task_id='SetDataAvailableDate',
                                               )
 set_data_available_date.set_upstream(daily_aggregation)
 
-preliminary = DummyOperator(task_id='Preliminary', dag=dag, sla=timedelta(hours=6))
+preliminary = DummyOperator(task_id='Preliminary', dag=dag, sla=timedelta(hours=8))
 preliminary.set_upstream([register_success_on_etcd, set_data_available_date])
