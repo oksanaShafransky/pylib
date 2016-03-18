@@ -42,8 +42,8 @@ class DockerBashOperator(BashOperator, object):
         self.docker_name = docker_name
 
         rand = str(random.randint(10000, 99999))
-        self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
-                                                                       'task_id': self.task_id, 'rand': rand}
+        self.container_name = '''Airflow.%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
+                                                                               'task_id': self.task_id, 'rand': rand}
         docker_command = dock_cmd_template % {'random': rand, 'container_name': self.container_name,
                                               'docker': self.docker_name,
                                               'bash_command': bash_command}
@@ -138,20 +138,20 @@ class DockerBashOperatorFactory(object):
             full_command = self.script_path + '/' + full_command
 
         if self.base_data_dir:
-            full_command += ' -bd ' + self.base_data_dir
+            full_command += ' -bd \'' + self.base_data_dir + '\''
         else:
             raise DockerBashCommandBuilderException('base_data_dir is mandatory')
 
         if date_template:
-            full_command += ' -d ' + date_template
+            full_command += ' -d \'' + date_template + '\''
         elif self.date_template:
-            full_command += ' -d ' + self.date_template
+            full_command += ' -d \'' + self.date_template + '\''
 
         if self.mode:
-            full_command += ' -m ' + self.mode
+            full_command += ' -m \'' + self.mode + '\''
 
         if self.mode_type:
-            full_command += ' -mt ' + self.mode_type
+            full_command += ' -mt \'' + self.mode_type + '\''
 
         if self.force:
             full_command += ' -f '
