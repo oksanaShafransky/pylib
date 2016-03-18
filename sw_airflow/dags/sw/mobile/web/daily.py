@@ -4,11 +4,6 @@ from datetime import timedelta, datetime
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
 from sw.airflow.external_sensors import AdaptedExternalTaskSensor
 
-WINDOW_MODE = 'window'
-WINDOW_MODE_TYPE = 'last-28'
-SNAPSHOT_MODE = 'snapshot'
-SNAPSHOT_MODE_TYPE = 'monthly'
-
 dag_args = {
     'owner': 'MobileWeb',
     'depends_on_past': False,
