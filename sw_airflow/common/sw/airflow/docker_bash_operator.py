@@ -42,8 +42,8 @@ class DockerBashOperator(BashOperator, object):
         self.docker_name = docker_name
 
         rand = str(random.randint(10000, 99999))
-        self.container_name = '''%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
-                                                                       'task_id': self.task_id, 'rand': rand}
+        self.container_name = '''Airflow.%(dag_id)s.%(task_id)s.%(rand)s''' % {'dag_id': self.dag.dag_id,
+                                                                               'task_id': self.task_id, 'rand': rand}
         docker_command = dock_cmd_template % {'random': rand, 'container_name': self.container_name,
                                               'docker': self.docker_name,
                                               'bash_command': bash_command}
@@ -72,8 +72,10 @@ class DockerBashOperatorFactory(object):
                  script_path=None,
                  force=False,
                  use_defaults=False,
-                 additional_cmd_components=[]
+                 additional_cmd_components=None
                  ):
+        if additional_cmd_components is None:
+            additional_cmd_components = []
         self.base_data_dir = base_data_dir
         self.core_command = core_command
         self.dag = dag
@@ -90,16 +92,27 @@ class DockerBashOperatorFactory(object):
             self.fill_in_defaults()
 
     def fill_in_defaults(self):
+        unset_params = []
+
+        def with_validation(param_name):
+            if param_name not in self.dag.params:
+                unset_params.append(param_name)
+            return param_name
+
         if not self.base_data_dir:
-            self.base_data_dir = '''{{ params.base_data_dir }}'''
+            self.base_data_dir = '''{{ params.%s }}''' % with_validation('base_data_dir')
         if not self.mode:
-            self.mode = '''{{ params.mode }}'''
+            self.mode = '''{{ params.%s }}''' % with_validation('mode')
         if not self.mode_type:
-            self.mode_type = '''{{ params.mode_type }}'''
+            self.mode_type = '''{{ params.%s }}''' % with_validation('mode_type')
         if not self.date_template:
             self.date_template = '''{{ ds }}'''
         if not self.cluster:
-            self.cluster = '''{{ params.cluster }}'''
+            self.cluster = '''{{ params.%s }}''' % with_validation('cluster')
+
+        if unset_params:
+            raise DockerBashCommandBuilderException(str(unset_params) + ' is/are expected to be set in dag.params')
+
         return self
 
     def add_cmd_component(self, cmd_component):
@@ -138,20 +151,20 @@ class DockerBashOperatorFactory(object):
             full_command = self.script_path + '/' + full_command
 
         if self.base_data_dir:
-            full_command += ' -bd ' + self.base_data_dir
+            full_command += ' -bd \'' + self.base_data_dir + '\''
         else:
             raise DockerBashCommandBuilderException('base_data_dir is mandatory')
 
         if date_template:
-            full_command += ' -d ' + date_template
+            full_command += ' -d \'' + date_template + '\''
         elif self.date_template:
-            full_command += ' -d ' + self.date_template
+            full_command += ' -d \'' + self.date_template + '\''
 
         if self.mode:
-            full_command += ' -m ' + self.mode
+            full_command += ' -m \'' + self.mode + '\''
 
         if self.mode_type:
-            full_command += ' -mt ' + self.mode_type
+            full_command += ' -mt \'' + self.mode_type + '\''
 
         if self.force:
             full_command += ' -f '

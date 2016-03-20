@@ -163,7 +163,7 @@ class JobBuilder:
         if codec == 'gz':
             codec_name = 'org.apache.hadoop.io.compress.GzipCodec'
         elif codec == 'bz2':
-            codec_name = 'org.apache.hadoop.io.compress.Bzip2Codec'
+            codec_name = 'org.apache.hadoop.io.compress.BZip2Codec'
         elif codec == 'snappy':
             codec_name = 'org.apache.hadoop.io.compress.SnappyCodec'
         else:
