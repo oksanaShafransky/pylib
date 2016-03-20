@@ -54,9 +54,9 @@ class BashSensor(BaseSensorOperator):
                              "location :{0}".format(script_location))
                 logging.info("Running command: " + bash_command)
                 sp = Popen(
-                        ['bash', fname],
-                        stdout=PIPE, stderr=STDOUT,
-                        cwd=tmp_dir, env=self.env)
+                    ['bash', fname],
+                    stdout=PIPE, stderr=STDOUT,
+                    cwd=tmp_dir, env=self.env)
 
                 self.sp = sp
 
@@ -122,20 +122,22 @@ class DockerCopyHbaseTableOperator(DockerBashOperator):
 
 class CompareHBaseTablesOperator(DockerBashOperator):
     ui_color = '#80ff00'
-    cmp_template = '''python {{ params.execution_dir }}/scripts/hbase/compare_tables.py  %(source_cluster)s.%(table_name)s %(target_table_name)s '''
+    cmp_template = '''python {{ params.execution_dir }}/scripts/hbase/compare_tables.py  %(source_cluster)s.%(table_name)s %(target_tables)s '''
 
     template_fields = ('bash_command', 'docker_name')
 
     @apply_defaults
     def __init__(self, source_cluster, target_clusters, tables, *args, **kwargs):
         cmp_cmd = ' && '.join(
-                        [CompareHBaseTablesOperator.cmp_template %
-                        {
-                            'source_cluster': source_cluster,
-                            'target_table_name': ','.join(['%s.%s' % (target_cluster, table) for target_cluster in target_clusters.split(TEMPLATE_LIST_SEPARATOR)])
-                        }
-                        for table in tables.split(TEMPLATE_LIST_SEPARATOR)
-                        ])
+            [CompareHBaseTablesOperator.cmp_template %
+             {
+                 'source_cluster': source_cluster,
+                 'table_name': table,
+                 'target_tables': ','.join(['%s.%s' % (target_cluster, table) for target_cluster in
+                                            target_clusters.split(TEMPLATE_LIST_SEPARATOR)])
+             }
+             for table in tables.split(TEMPLATE_LIST_SEPARATOR)
+             ])
         bash_cmd = 'source {{ params.execution_dir }}/scripts/common.sh && %s' % cmp_cmd
         super(CompareHBaseTablesOperator, self).__init__(bash_command=bash_cmd, *args, **kwargs)
 
@@ -155,7 +157,7 @@ class SuccedOrSkipOperator(PythonOperator):
             if task.task_id not in (skip_list + success_list):
                 continue
             ti = TaskInstance(
-                    task, execution_date=context['ti'].execution_date)
+                task, execution_date=context['ti'].execution_date)
             ti.start_date = datetime.now()
             ti.end_date = datetime.now()
             if task.task_id in skip_list:
@@ -170,7 +172,7 @@ class SuccedOrSkipOperator(PythonOperator):
         session.close()
         if self.task_id not in success_list:
             raise ValueError(
-                    "Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
+                "Skipped this, so we don't want to succed in this task")  # Need to throw an exception otherwise task will succeed
         logging.info("Done.")
 
     def run(self, start_date=None, end_date=None, ignore_dependencies=False, force=False, mark_success=False):
@@ -183,14 +185,13 @@ class SuccedOrSkipOperator(PythonOperator):
         # We mark our own successes if needed. Run in "test" mode
         for dt in utils.date_range(start_date, end_date, self.schedule_interval):
             TaskInstance(self, dt).run(
-                    mark_success=False,
-                    ignore_dependencies=ignore_dependencies,
-                    test_mode=True,
-                    force=force, )
+                mark_success=False,
+                ignore_dependencies=ignore_dependencies,
+                test_mode=True,
+                force=force, )
 
 
 class SWAAirflowPluginManager(AirflowPlugin):
     name = 'SWOperators'
 
     operators = [BashSensor, DockerBashOperator, DockerBashSensor, CopyHbaseTableOperator, SuccedOrSkipOperator]
-
