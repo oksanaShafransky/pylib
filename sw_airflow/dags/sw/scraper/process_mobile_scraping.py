@@ -1,17 +1,14 @@
 __author__ = 'Felix'
 
-from datetime import datetime, timedelta
-
 from airflow.models import DAG, Variable
 from airflow.operators.dummy_operator import DummyOperator
-
 from airflow.operators.sensors import HdfsSensor
-
-from sw.airflow.operators import DockerCopyHbaseTableOperator, CompareHBaseTablesOperator
+from datetime import datetime, timedelta
+from sw.airflow.defs import TEMPLATE_LIST_SEPARATOR
 from sw.airflow.docker_bash_operator import DockerBashOperator
 from sw.airflow.docker_bash_operator import DockerBashOperatorFactory
-from sw.airflow.defs import TEMPLATE_LIST_SEPARATOR
 from sw.airflow.key_value import *
+from sw.airflow.operators import DockerCopyHbaseTableOperator, CompareHBaseTablesOperator
 
 DEFAULT_EXECUTION_DIR = '/similargroup/production'
 BASE_DIR = '/similargroup/data/mobile-analytics'
@@ -19,7 +16,7 @@ DOCKER_MANAGER = 'docker-a02.sg.internal'
 DEFAULT_DOCKER = 'mrp'
 DEFAULT_HDFS = 'mrp'
 DEFAULT_CLUSTER = 'mrp'
-CHECK_DATA_PROBLEM_NUM = '20'
+CHECK_DATA_PROBLEM_NUM = '30'
 DEPLOY_TO_PROD = True
 
 dag_args = {
