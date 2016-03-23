@@ -2,9 +2,9 @@ import sys
 import time
 import os
 import datetime
+import calendar
 import types
 import ConfigParser
-from calendar import monthrange
 
 from hadoop.hdfs_util import *
 
@@ -33,12 +33,12 @@ class TasksInfra(object):
 
     @staticmethod
     def assert_input_validity(directories, valid_input_min_size_bytes):
-        if isinstance([], directories):
+        if isinstance(directories, list):
             for dir in directories:
-                assert_input_validity(dir, valid_input_min_size_bytes)
+                TasksInfra.assert_input_validity(dir, valid_input_min_size_bytes)
 
-
-        assert test_size(directory, valid_input_min_size_bytes) is True, 'Input is not valid, given value is %s' % directory
+        print 'testing %s' % directories
+        assert test_size(directories, valid_input_min_size_bytes) is True, 'Input is not valid, given value is %s' % directories
 
     @staticmethod
     def assert_output_validity(directory, valid_output_min_size_bytes):
@@ -134,11 +134,20 @@ class ContextualizedTasksInfra(TasksInfra):
         return 'year=%s/month=%s' % (year_str, str(d.month).zfill(2))
 
     def days_in_range(self):
-        d = self.__get_common_args()['date']
-        year_str = str(d.year)[2:]
-        return 'year=%s/month=%s' % (year_str, str(d.month).zfill(2))
+        end_date = self.__get_common_args()['date']
+        mode_type = self.__get_common_args()['mode_type']
 
+        if mode_type == "last-28":
+            start_date = end_date - datetime.timedelta(days=27)
+        elif mode_type == "monthly":
+            # get last day in month
+            last = calendar.monthrange(end_date.year,end_date.month)[1]
+            end_date = datetime.datetime(end_date.year, end_date.month, last).date()
+            start_date = datetime.datetime(end_date.year, end_date.month, 1).date()
 
+        for i in range((end_date - start_date).days + 1):
+            curr_date = start_date + datetime.timedelta(days=i)
+            yield 'year=%s/month=%s/day=%s' % (str(curr_date.year)[2:], str(curr_date.month).zfill(2), str(curr_date.day).zfill(2))
 
     # module is either 'mobile' or 'analytics'
     def run_spark(self, main_class, module, queue, app_name, command_params, jars_from_lib=None):
