@@ -129,8 +129,14 @@ class ContextualizedTasksInfra(TasksInfra):
         config.read('%s/scripts/.s3cfg' % self.execution_dir)
         return config.get('default', property)
 
-    def consolidate_dir(self, path, ioformat, codec):
-        command = self.__compose_infra_command('execute ConsolidateDir %s %s %s' % (path, ioformat, codec))
+    def consolidate_dir(self, path, io_format=None, codec=None):
+        if io_format is not None:
+            if codec is not None:
+                command = self.__compose_infra_command('execute ConsolidateDir %s %s %s' % (path, io_format, codec))
+            else:
+                command = self.__compose_infra_command('execute ConsolidateDir %s %s' % (path, io_format))
+        else:
+            command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
 
     def repair_table(self, db, table):
