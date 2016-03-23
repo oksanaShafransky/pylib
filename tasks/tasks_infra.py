@@ -128,3 +128,10 @@ class ContextualizedTasksInfra(TasksInfra):
         config = ConfigParser.ConfigParser()
         config.read('%s/scripts/.s3cfg' % self.execution_dir)
         return config.get('default', property)
+
+    def consolidate_dir(self, path, ioformat, codec):
+        command = self.__compose_infra_command('execute ConsolidateDir %s %s %s' % (path, ioformat, codec))
+        self.run_bash(command)
+
+    def repair_table(self, db, table):
+        self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db,table))
