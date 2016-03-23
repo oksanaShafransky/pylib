@@ -4,6 +4,7 @@ import os
 import datetime
 import types
 import ConfigParser
+import re
 
 from hadoop.hdfs_util import *
 
@@ -130,6 +131,16 @@ class ContextualizedTasksInfra(TasksInfra):
         return config.get('default', property)
 
     def consolidate_dir(self, path, io_format=None, codec=None):
+
+        # several sanity checks over the given path
+        assert path is not None
+        assert type(path) is str
+        p1 = re.compile('\/similarweb\/data/analytics\/.+')
+        p2 = re.compile('\/similarweb\/data/mobile-analytics\/.+')
+        p3 = re.compile('\/similarweb\/data/ios-analytics\/.+')
+        p4 = re.compile('\/user\/.+\/.+')
+        assert p1.match(path) is not None or p2.match(path) is not None or p3.match(path) is not None or p4.match(path) is not None
+
         if io_format is not None:
             if codec is not None:
                 command = self.__compose_infra_command('execute ConsolidateDir %s %s %s' % (path, io_format, codec))
