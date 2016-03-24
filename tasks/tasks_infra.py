@@ -37,7 +37,6 @@ class TasksInfra(object):
             for dir in directories:
                 TasksInfra.assert_input_validity(dir, valid_input_min_size_bytes)
 
-        print 'testing %s' % directories
         assert test_size(directories, valid_input_min_size_bytes) is True, 'Input is not valid, given value is %s' % directories
 
     @staticmethod
@@ -48,6 +47,15 @@ class TasksInfra(object):
     def assert_output_success(directory):
         assert test_size('%s/%s' % (directory, '_SUCCESS'), 0) is True, 'Output is not valid, given value is %s' % directory
 
+    @staticmethod
+    def year_month_day(date):
+        year_str = str(date.year)[2:]
+        return 'year=%s/month=%s/day=%s' % (year_str, str(date.month).zfill(2), str(date.day).zfill(2))
+
+    @staticmethod
+    def year_month(date):
+        year_str = str(date.year)[2:]
+        return 'year=%s/month=%s' % (year_str, str(date.month).zfill(2))
 
     @staticmethod
     def load_common_args_to_ctx(ctx, dry_run, force, base_dir, date, mode, mode_type):
@@ -102,6 +110,9 @@ class ContextualizedTasksInfra(TasksInfra):
         command = self.add_command_params(command, command_params)
         return command
 
+    def __compose_latest_monthly_success_date_command(self, directory, date, month_lookback):
+        return self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, date, month_lookback))
+
     def __get_common_args(self):
         return self.ctx.config.config['common_args']
 
@@ -114,24 +125,24 @@ class ContextualizedTasksInfra(TasksInfra):
                 self.__compose_hadoop_runner_command(jar_path=jar_path, jar_name=jar_name, main_class=main_class, command_params=command_params)
         )
 
-    def run_bash(self, command):
+    def run_bash(self, command, ret_property='return_code'):
         print ("Running '%s'" % command)
         sys.stdout.flush()
         time.sleep(1)
-        self.ctx.run(command)
+        return getattr(self.ctx.run(command), ret_property)
 
     def run_python(self, python_executable, command_params):
         return self.run_bash(self.__compose_python_runner_command(python_executable, command_params))
 
-    def year_month_day(self):
+    def latest_monthly_success_date(self, directory, month_lookback):
         d = self.__get_common_args()['date']
-        year_str = str(d.year)[2:]
-        return 'year=%s/month=%s/day=%s' % (year_str, str(d.month).zfill(2), str(d.day).zfill(2))
+        return self.run_bash(self.__compose_latest_monthly_success_date_command(directory, d, month_lookback), ret_property='stdout').strip()
+
+    def year_month_day(self):
+        return TasksInfra.year_month_day(self.__get_common_args()['date'])
 
     def year_month(self):
-        d = self.__get_common_args()['date']
-        year_str = str(d.year)[2:]
-        return 'year=%s/month=%s' % (year_str, str(d.month).zfill(2))
+        return TasksInfra.year_month(self.__get_common_args()['date'])
 
     def days_in_range(self):
         end_date = self.__get_common_args()['date']
@@ -146,8 +157,7 @@ class ContextualizedTasksInfra(TasksInfra):
             start_date = datetime.datetime(end_date.year, end_date.month, 1).date()
 
         for i in range((end_date - start_date).days + 1):
-            curr_date = start_date + datetime.timedelta(days=i)
-            yield 'year=%s/month=%s/day=%s' % (str(curr_date.year)[2:], str(curr_date.month).zfill(2), str(curr_date.day).zfill(2))
+            yield start_date + datetime.timedelta(days=i)
 
     # module is either 'mobile' or 'analytics'
     def run_spark(self, main_class, module, queue, app_name, command_params, jars_from_lib=None):
