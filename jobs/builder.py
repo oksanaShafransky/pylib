@@ -1,17 +1,16 @@
-from inspect import isclass
 import logging
-from mrjob.util import log_to_stream
-
-__author__ = 'Felix'
-
 import subprocess
 import sys
+from inspect import isclass
 
 from mrjob.job import MRJob
+from mrjob.util import log_to_stream
 
-from stats import PostJobHandler, PrintRecorder
-from protocol import HBaseProtocol, TsvProtocol
 from distcache import *
+from protocol import HBaseProtocol, TsvProtocol
+from stats import PostJobHandler, PrintRecorder
+
+__author__ = 'Felix'
 
 HADOOP_JAR_HOME = '/usr/lib/hadoop-0.20-mapreduce'
 
@@ -62,10 +61,10 @@ class JobBuilder:
             '--strict-protocols',
             '--cleanup', 'NONE',
             '--python-archive', '%s/%s' % (lib_path, lib_file),
-            '--jobconf', ('mapred.job.name=%s' % job_name),
-            '--jobconf', ('mapred.max.map.failures.percent=%d' % self.max_map_fail_percentage),
-            '--jobconf', ('mapred.map.max.attempts=%d' % self.max_map_task_fails),
-            '--jobconf', ('mapred.reduce.max.attempts=%d' % self.max_reduce_task_fails),
+            '--jobconf', ('mapreduce.job.name=%s' % job_name),
+            '--jobconf', ('mapreduce.map.failures.maxpercent=%d' % self.max_map_fail_percentage),
+            '--jobconf', ('mapreduce.map.maxattempts=%d' % self.max_map_task_fails),
+            '--jobconf', ('mapreduce.reduce.maxattempts=%d' % self.max_reduce_task_fails),
             '--setup', 'export PATH=$PATH:/usr/lib/python2.6/site-packages:/usr/lib64/python2.6/site-packages',
             '--setup', 'export PYTHONPATH=$PYTHONPATH:$PATH'
         ]
@@ -212,7 +211,7 @@ class JobBuilder:
         return self
 
     def num_reducers(self, reducers):
-        self.args += ['--jobconf', ('mapred.reduce.tasks=%s' % reducers)]
+        self.args += ['--jobconf', ('mapreduce.job.reduces=%s' % reducers)]
         return self
 
     def cache_files_keyed(self, key, path):
@@ -253,31 +252,31 @@ class JobBuilder:
         self.add_follow_up(cmd)
         return self
 
-    def include_file(self, file):
-        self.args += ['--file', file]
+    def include_file(self, file_name):
+        self.args += ['--file', file_name]
         return self
 
     def include_all_files(self, files):
-        for file in files:
-            self.include_file(file)
+        for current_file in files:
+            self.include_file(current_file)
 
         return self
 
     def get_next_gz(self):
         ret = '/tmp/%d.tar.gz' % JobBuilder.GZ_COUNTER
-        JobBuilder.GZ_COUNTER = JobBuilder.GZ_COUNTER + 1
+        JobBuilder.GZ_COUNTER += 1
         return ret
 
-    def include_dir(self, dir):
+    def include_dir(self, dir_path):
         archive_name = self.get_next_gz()
-        self.add_setup_cmd('tar -zcvf %s %s' % (archive_name, dir))
+        self.add_setup_cmd('tar -zcvf %s %s' % (archive_name, dir_path))
         self.args += ['--python-archive', '%s' % archive_name]
         self.add_follow_up_cmd('rm %s' % archive_name)
         return self
 
     def include_all_dirs(self, dirs):
-        for dir in dirs:
-            self.include_dir(dir)
+        for dir_path in dirs:
+            self.include_dir(dir_path)
 
         return self
 
@@ -309,10 +308,10 @@ class JobBuilder:
             self.args += ['-r', runner]
 
         if runner == 'hadoop' or runner == 'dry':
-            #Streaming jars are named differently in different CDH versions
-            streaming_jar_path ='%s/contrib/streaming/hadoop-streaming-mr1.jar' % HADOOP_JAR_HOME
+            # Streaming jars are named differently in different CDH versions
+            streaming_jar_path = '%s/contrib/streaming/hadoop-streaming-mr1.jar' % HADOOP_JAR_HOME
             if not os.path.exists(streaming_jar_path):
-                streaming_jar_path ='%s/contrib/streaming/hadoop-streaming.jar' % HADOOP_JAR_HOME
+                streaming_jar_path = '%s/contrib/streaming/hadoop-streaming.jar' % HADOOP_JAR_HOME
 
             hadoop_home = kwargs['hadoop_home'] if 'hadoop_home' in kwargs else std_hadoop_home
             os.environ['HADOOP_HOME'] = hadoop_home
