@@ -215,10 +215,8 @@ class JobBuilder:
         return self
 
     def cache_files_keyed(self, key, path):
-        files_to_cache = find_files(path)
-
-        self.args += ['--file', 'hdfs://%s' % path]
-
+        cache_dir, files_to_cache = find_files(path, prefix='%s_' % key)
+        self.args += ['--file', 'hdfs://%s#%s' % (path, cache_dir)]
         self.args += ['--setup', cache_files_cmd(files_to_cache, key)]
         return self
 
