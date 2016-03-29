@@ -216,3 +216,4 @@ class ContextualizedTasksInfra(TasksInfra):
 
     def repair_table(self, db, table):
         self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db,table))
+
