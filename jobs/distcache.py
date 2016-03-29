@@ -10,8 +10,8 @@ from stats import check_output
 CACHE_FILES_ENV = 'cached_files'
 
 
-def find_files(path):
-    dir_name = path.split('/')[-1:][0]
+def find_files(path, prefix=''):
+    dir_name = prefix + path.split('/')[-1:][0]
 
     ls_cmd = ['hadoop', 'fs', '-ls', path]
     ls = check_output(ls_cmd)
@@ -24,7 +24,7 @@ def find_files(path):
                 files += ['%s/%s' % (dir_name, file_name.split('/')[-1:][0])]
 
     print 'files to cache for path %s: %s' % (path, files)
-    return files
+    return dir_name, files
 
 
 def cache_files_cmd(files, key=''):
