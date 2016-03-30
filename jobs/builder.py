@@ -208,7 +208,8 @@ class JobBuilder:
         return self
 
     def pool(self, pool):
-        self.args += ['--jobconf', ('mapreduce.job.queuename=%s' % ('%s_%s' % (os.environ[yarn_queue_param], pool)) if yarn_queue_param in os.environ else pool)]
+        job_queue = '%s_%s' % (os.environ[yarn_queue_param], pool) if yarn_queue_param in os.environ else pool
+        self.args += ['--jobconf', ('mapreduce.job.queuename=%s' % job_queue)]
         return self
 
     def num_reducers(self, reducers):
