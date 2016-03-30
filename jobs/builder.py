@@ -18,6 +18,7 @@ std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
 
 user_path = 'USER'
+yarn_queue_param = 'JOB_QUEUE'
 
 lib_path = os.path.abspath(
     os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
@@ -207,7 +208,7 @@ class JobBuilder:
         return self
 
     def pool(self, pool):
-        self.args += ['--jobconf', ('mapreduce.job.queuename=%s' % pool)]
+        self.args += ['--jobconf', ('mapreduce.job.queuename=%s' % '%s_%s' % (os.environ[yarn_queue_param], pool) if yarn_queue_param in os.environ else pool)]
         return self
 
     def num_reducers(self, reducers):

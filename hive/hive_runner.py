@@ -10,6 +10,7 @@ import socket
 import warnings
 from xml.sax.saxutils import escape
 import os
+from jobs.builder import yarn_queue_param
 
 from jobs.stats import *
 
@@ -213,7 +214,7 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
     cmd = ["hive", "-S", "-e", '"%s"' % hql,
        "-hiveconf", "mapreduce.job.name=" + job_name,
        "-hiveconf", "mapreduce.job.reduces=" + str(num_of_reducers),
-       "-hiveconf", "mapreduce.job.queuename=" + calc_pool,
+       "-hiveconf", "mapreduce.job.queuename=" + '%s_%s' % (os.environ[yarn_queue_param], calc_pool) if yarn_queue_param in os.environ else calc_pool,
        "-hiveconf", "hive.exec.compress.output=" + compress,
        "-hiveconf", "io.seqfile.compression=BLOCK",
        "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
