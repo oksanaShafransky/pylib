@@ -1,6 +1,7 @@
 import subprocess
 import re
 import common
+from common import GracefulShutdownHandler
 
 import tempfile
 from urllib2 import urlopen
@@ -167,8 +168,21 @@ def run_hive(cmd, log_path=None):
     start_time = datetime.now()
     err_temp = tempfile.TemporaryFile()
     out_temp = tempfile.TemporaryFile()
+
+    def kill_jobs():
+        log_data = file(log_path, 'rb').read()
+        job_ids = re.findall('"(job_\d+_\d+)"', log_data)
+        job_ids = list(set(job_ids))
+
+        for job_id in job_ids:
+            common.logger.info('Killing job: %s' % job_id)
+            kill_cmd = 'mapred job -kill %s' % job_id
+            kill_p = subprocess.Popen(kill_cmd)
+            kill_p.wait()
+
     p = subprocess.Popen(cmd, stderr=err_temp.fileno(), stdout=out_temp.fileno())
-    p.wait()
+    with GracefulShutdownHandler(kill_jobs) as h:
+        p.wait()
 
     err_temp.seek(0)
     out_temp.seek(0)
@@ -191,8 +205,6 @@ def run_hive(cmd, log_path=None):
         print 'Hive stdout: %s' % stdoutdata
         print 'Hive stderr: %s' % stderrdata
         raise subprocess.CalledProcessError(p.returncode, cmd)
-
-    # TODO: check if need to return stdoutdata here
 
 
 def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation', consolidate_output=True, sync=True, compression='gz'):
