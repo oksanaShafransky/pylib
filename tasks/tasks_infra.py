@@ -56,6 +56,7 @@ class ContextualizedTasksInfra(TasksInfra):
     def __init__(self, ctx):
         self.ctx = ctx
         self.execution_dir = execution_dir
+        print ctx
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh' % execution_dir
