@@ -1,20 +1,22 @@
 #! /usr/bin/env python
 from invoke import Program, Argument, Config
-
+from invoke.config import *
+import datetime
 
 class TaskConfig(Config):
     @staticmethod
     def global_defaults():
         global_defaults = Config.global_defaults()
-        global_defaults['run']['date'] = None
-        global_defaults['run']['base_dir'] = '/similargroup/data'
-        global_defaults['run']['force'] = False
+        global_defaults['sw_common']=\
+            {'date': None,
+             'base_dir': '/similargroup/data',
+             'force': False}
         return global_defaults
 
 
 class TasksInvoker(Program):
-    def task_args(self):
-        core_args = super(TasksInvoker, self).task_args()
+    def core_args(self):
+        core_args = super(TasksInvoker, self).core_args()
         extra_args = [
             Argument(names=('date','dt'), help="The task's logical day in ISO yyyy-MM-dd format", optional=True),
             Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's output", optional=True),
@@ -25,34 +27,21 @@ class TasksInvoker(Program):
 
     @property
     def config(self):
-        run = {}
-        if self.args['warn-only'].value:
-            run['warn'] = True
-        if self.args.pty.value:
-            run['pty'] = True
-        if self.args.hide.value:
-            run['hide'] = self.args.hide.value
-        if self.args.echo.value:
-            run['echo'] = True
-        if self.args.date.value:
-            run['date'] = self.args.date.value
-        if self.args.base_dir.value:
-            run['base_dir'] = self.args.base_dir.value
-        if self.args.force.value:
-            run['force'] = self.args.force.value
-        tasks = {}
-        if self.args['no-dedupe'].value:
-            tasks['dedupe'] = False
-        overrides = {'run': run, 'tasks': tasks}
-        # Stand up config object
-        c = self.config_class(
-                overrides=overrides,
-                project_home=self.collection.loaded_from,
-                runtime_path=self.args.config.value,
-                env_prefix=self.env_prefix,
-        )
+        config = super(TasksInvoker, self).config
 
-        return c
+        sw_tasks = {}
+        if self.args.date.value:
+            sw_tasks['date'] = TasksInvoker.__parse_date(self.args.date.value)
+        if self.args.base_dir.value:
+            sw_tasks['base_dir'] = self.args.base_dir.value
+        if self.args.force.value:
+            sw_tasks['force'] = self.args.force.value
+        merge_dicts(config['sw_common'], sw_tasks)
+        return config
+
+    @staticmethod
+    def __parse_date(date_str):
+        return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
 
 def main():

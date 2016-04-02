@@ -56,12 +56,11 @@ class ContextualizedTasksInfra(TasksInfra):
     def __init__(self, ctx):
         self.ctx = ctx
         self.execution_dir = execution_dir
-        print ctx
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh' % execution_dir
-        if self.__get_common_args()['dry_run']:
-            ans += " && setDryRun"
+        #if self.__get_common_args()['dry_run']:
+        #    ans += " && setDryRun"
         ans += " && " + command
         return ans
 
@@ -87,7 +86,7 @@ class ContextualizedTasksInfra(TasksInfra):
         return command
 
     def __get_common_args(self):
-        return self.ctx.config.config['common_args']
+        return self.ctx.config.config['sw_common']
 
     #Todo: Move it to the mobile project
     def run_mobile_hadoop(self, command_params):
@@ -153,3 +152,15 @@ class ContextualizedTasksInfra(TasksInfra):
 
     def repair_table(self, db, table):
         self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db,table))
+
+    @property
+    def base_dir(self):
+        return self.__get_common_args()['base_dir']
+
+    @property
+    def force(self):
+        return self.__get_common_args()['force']
+
+    @property
+    def date(self):
+        return self.__get_common_args()['date']
