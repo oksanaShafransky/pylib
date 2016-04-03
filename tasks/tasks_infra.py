@@ -31,13 +31,6 @@ class TasksInfra(object):
     def assert_output_validity(directory, valid_output_min_size_bytes):
         assert test_size(directory, valid_output_min_size_bytes) is True, 'Output dir is not valid, given dir is %s' % directory
 
-
-    @staticmethod
-    def load_common_args_to_ctx(ctx, dry_run, force, base_dir, date):
-        d = {'dry_run': dry_run, 'force': force, 'base_dir': base_dir, 'date': date}
-        ctx.config['common_args'] = d
-        return ContextualizedTasksInfra(ctx)
-
     @staticmethod
     def add_command_params(command, command_params):
         ans = command
@@ -156,6 +149,10 @@ class ContextualizedTasksInfra(TasksInfra):
     @property
     def base_dir(self):
         return self.__get_common_args()['base_dir']
+
+    @property
+    def production_base_dir(self):
+        return '/similargroup/data'
 
     @property
     def force(self):

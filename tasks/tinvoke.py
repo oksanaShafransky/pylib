@@ -10,7 +10,7 @@ class TaskConfig(Config):
         global_defaults['sw_common']=\
             {'date': None,
              'base_dir': '/similargroup/data',
-             'force': False}
+             'force': True}
         return global_defaults
 
 
@@ -20,8 +20,8 @@ class TasksInvoker(Program):
         extra_args = [
             Argument(names=('date','dt'), help="The task's logical day in ISO yyyy-MM-dd format", optional=True),
             Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's output", optional=True),
-            Argument(names=('force', 'fr'), kind=bool, default=False,
-                     help="Force flag - when false, the task will skip if expected output exists at start")
+            Argument(names=('dont_force', 'df'), kind=bool,
+                     help="Don't force flag - when used, the task will skip if expected output exists at start")
         ]
         return core_args + extra_args
 
@@ -34,8 +34,8 @@ class TasksInvoker(Program):
             sw_tasks['date'] = TasksInvoker.__parse_date(self.args.date.value)
         if self.args.base_dir.value:
             sw_tasks['base_dir'] = self.args.base_dir.value
-        if self.args.force.value:
-            sw_tasks['force'] = self.args.force.value
+        if self.args.dont_force.value:
+            sw_tasks['force'] = False
         merge_dicts(config['sw_common'], sw_tasks)
         return config
 
