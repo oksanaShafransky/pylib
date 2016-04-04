@@ -77,7 +77,7 @@ class ContextualizedTasksInfra(TasksInfra):
         return command
 
     #Todo: Move it to the mobile project
-    def __compose_mobile_hadoop_runner_command(self, command_params):
+    def __compose_mobile_hadoop_runner_command(self, command_params, main_class='com.similargroup.mobile.main.MobileRunner'):
         return self.__compose_hadoop_runner_command(jar_path='mobile', jar_name='mobile.jar', main_class='com.similargroup.mobile.main.MobileRunner', command_params=command_params)
 
     def __compose_python_runner_command(self, python_executable, command_params):
@@ -89,8 +89,8 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.ctx.config.config['common_args']
 
     #Todo: Move it to the mobile project
-    def run_mobile_hadoop(self, command_params):
-        return self.run_bash(self.__compose_mobile_hadoop_runner_command(command_params))
+    def run_mobile_hadoop(self, command_params, main_class='com.similargroup.mobile.main.MobileRunner'):
+        return self.run_bash(self.__compose_mobile_hadoop_runner_command(command_params, main_class))
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
