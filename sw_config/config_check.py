@@ -21,9 +21,11 @@ def init_env(env_type, changes=[], deletes=[]):
     effective_cls = PROXY_CLASS
 
     for key, value in changes:
+        logging.info('simulating change of %s to %s' % (key, value))
         effective_cls = WithSet(key=key, value=value)(effective_cls)
 
     for key in deletes:
+        logging.info('simulating delete of %s' % key)
         effective_cls = WithDelete(key)(effective_cls)
 
     register_instance(KeyValueProxy, effective_cls('etcd.service.production', root_path=ETCD_PATHS[env_type]))
