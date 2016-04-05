@@ -78,7 +78,7 @@ class ContextualizedTasksInfra(TasksInfra):
 
     #Todo: Move it to the mobile project
     def __compose_mobile_hadoop_runner_command(self, command_params, main_class='com.similargroup.mobile.main.MobileRunner'):
-        return self.__compose_hadoop_runner_command(jar_path='mobile', jar_name='mobile.jar', main_class='com.similargroup.mobile.main.MobileRunner', command_params=command_params)
+        return self.__compose_hadoop_runner_command(jar_path='mobile', jar_name='mobile.jar', main_class=main_class, command_params=command_params)
 
     def __compose_python_runner_command(self, python_executable, command_params):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
