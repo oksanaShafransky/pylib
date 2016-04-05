@@ -33,7 +33,7 @@ class HiveExecuter(Executer):
         merge_out_param = Arg('-dmo', '--dont-merge-output', 'no_merge_output', bool, 'Whether To Merge Output Files',
                               required=False, default=False)
         pool_param = Arg('-cp', '--calc-pool', 'calc_pool', str, 'Calculation pool to user', required=False,
-                         default='calculation')
+                         default='calculation_at')
         compression_param = Arg('-cm', '--compression', 'compression', ('gz', 'bz2', 'none'), 'Compression type to use',
                                 required=False, default='bz2')
         slow_start_param = Arg('-sscmr', '--slow-start-rate', 'slow_start_ratio', str,
