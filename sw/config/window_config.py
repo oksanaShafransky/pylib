@@ -1,6 +1,6 @@
 __author__ = 'Felix'
 
-from data import *
+from pylib.sw.config.data import *
 
 MINIMAL_VIABLE_DATES_SIZE = 2
 DESRIED_DATES_SIZE = 3
