@@ -2,7 +2,7 @@ __author__ = 'Felix'
 
 import consulate
 
-from pylib.sw.config.kv import KeyValueProxy
+from kv import KeyValueProxy
 
 
 class ConsulProxy(KeyValueProxy):

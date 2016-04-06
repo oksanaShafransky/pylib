@@ -4,13 +4,13 @@ import sys
 import logging
 
 from common.dependency import register_instance
-from pylib.sw.config.mock import *
+from mock import *
 from kv import KeyValueProxy
 from window_config import SimilarWebWindowConfig
 
 
 ETCD_PATHS = {'production': 'v1/production', 'staging': 'v1/staging', 'dev': 'v1/dev'}
-from pylib.sw.config.etcd_kv import EtcdProxy
+from pylib.sw_config.etcd_kv import EtcdProxy
 PROXY_CLASS = EtcdProxy
 
 HEALTHY = 1

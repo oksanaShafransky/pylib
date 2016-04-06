@@ -1,7 +1,7 @@
 __author__ = 'Felix'
 
 from common.dependency import get_instance
-from pylib.sw.config.kv import KeyValueProxy
+from kv import KeyValueProxy
 
 
 def get_proxy():

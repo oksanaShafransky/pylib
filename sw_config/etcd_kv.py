@@ -2,7 +2,7 @@ __author__ = 'Felix'
 
 import etcd
 
-from pylib.sw.config.kv import KeyValueProxy
+from kv import KeyValueProxy
 
 
 class EtcdProxy(KeyValueProxy):
