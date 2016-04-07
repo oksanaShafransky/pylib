@@ -75,7 +75,7 @@ def test_size(path, min_size_required=None):
 
     try:
         space_consumed = hdfs_client.count([path]).next()['spaceConsumed']
-        if min_size_required or space_consumed >= min_size_required:
+        if min_size_required is None or space_consumed >= min_size_required:
             logger.info('it does')
             return True
         else:
