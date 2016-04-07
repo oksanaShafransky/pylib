@@ -31,13 +31,6 @@ class TasksInfra(object):
     def assert_output_validity(directory, valid_output_min_size_bytes):
         assert test_size(directory, valid_output_min_size_bytes) is True, 'Output dir is not valid, given dir is %s' % directory
 
-
-    @staticmethod
-    def load_common_args_to_ctx(ctx, dry_run, force, base_dir, date):
-        d = {'dry_run': dry_run, 'force': force, 'base_dir': base_dir, 'date': date}
-        ctx.config['common_args'] = d
-        return ContextualizedTasksInfra(ctx)
-
     @staticmethod
     def add_command_params(command, command_params):
         ans = command
@@ -59,8 +52,8 @@ class ContextualizedTasksInfra(TasksInfra):
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh' % execution_dir
-        if self.__get_common_args()['dry_run']:
-            ans += " && setDryRun"
+        #if self.__get_common_args()['dry_run']:
+        #    ans += " && setDryRun"
         ans += " && " + command
         return ans
 
@@ -86,7 +79,7 @@ class ContextualizedTasksInfra(TasksInfra):
         return command
 
     def __get_common_args(self):
-        return self.ctx.config.config['common_args']
+        return self.ctx.config.config['sw_common']
 
     #Todo: Move it to the mobile project
     def run_mobile_hadoop(self, command_params, main_class='com.similargroup.mobile.main.MobileRunner'):
@@ -152,3 +145,19 @@ class ContextualizedTasksInfra(TasksInfra):
 
     def repair_table(self, db, table):
         self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db,table))
+
+    @property
+    def base_dir(self):
+        return self.__get_common_args()['base_dir']
+
+    @property
+    def production_base_dir(self):
+        return '/similargroup/data'
+
+    @property
+    def force(self):
+        return self.__get_common_args()['force']
+
+    @property
+    def date(self):
+        return self.__get_common_args()['date']
