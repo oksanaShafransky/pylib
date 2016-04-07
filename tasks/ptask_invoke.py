@@ -2,6 +2,8 @@
 from invoke import Program, Argument, Config
 from invoke.config import *
 import datetime
+from invoke.exceptions import Failure, ParseError, Exit
+from invoke.util import debug
 
 class PtaskConfig(Config):
     @staticmethod
@@ -43,6 +45,16 @@ class PtaskInvoker(Program):
     def __parse_date(date_str):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
+    def run(self, argv=None):
+        try:
+            self._parse(argv)
+            self.execute()
+        except (Failure, Exit, ParseError) as e:
+            debug("Received a possibly-skippable exception: {0!r}".format(e))
+            # Print error message from parser if necessary.
+            if isinstance(e, ParseError):
+                sys.stderr.write("{0}\n".format(e))
+            sys.exit(1)
 
 def main():
     program = PtaskInvoker(config_class=PtaskConfig)
