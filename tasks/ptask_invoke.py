@@ -4,6 +4,7 @@ from invoke.config import *
 import datetime
 from invoke.exceptions import Failure, ParseError, Exit
 from invoke.util import debug
+from invoke import ctask
 import os
 import sys
 
@@ -16,6 +17,10 @@ class PtaskConfig(Config):
              'base_dir': '/similargroup/data',
              'force': True}
         return global_defaults
+
+
+def ptask(*args, **kwargs):
+    return ctask(*args, **kwargs)
 
 
 class PtaskInvoker(Program):
