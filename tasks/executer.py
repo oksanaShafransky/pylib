@@ -104,7 +104,7 @@ def upsert_param(params, new_param):
         raise argparse.ArgumentError('colliding params: ' + str(candidates))
 
     if len(candidates) == 1:
-        params.remove(candidates(0))
+        params.remove(candidates[0])
 
     return params + [new_param]
 
