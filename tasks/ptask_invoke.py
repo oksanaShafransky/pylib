@@ -4,6 +4,9 @@ from invoke.config import *
 import datetime
 from invoke.exceptions import Failure, ParseError, Exit
 from invoke.util import debug
+from invoke import ctask
+import os
+import sys
 
 class PtaskConfig(Config):
     @staticmethod
@@ -14,6 +17,10 @@ class PtaskConfig(Config):
              'base_dir': '/similargroup/data',
              'force': True}
         return global_defaults
+
+
+def ptask(*args, **kwargs):
+    return ctask(*args, **kwargs)
 
 
 class PtaskInvoker(Program):
@@ -47,6 +54,8 @@ class PtaskInvoker(Program):
 
     def run(self, argv=None):
         try:
+            # add pylib to path
+            sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
             self._parse(argv)
             self.execute()
         except (Failure, Exit, ParseError) as e:
