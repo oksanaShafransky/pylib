@@ -9,7 +9,7 @@ from inspect import isfunction
 from common import logger
 import hive_runner
 from multiprocessing.pool import ThreadPool as Pool
-from tasks.executer import Executer, Arg, CONCURRENCY
+from tasks.executer import Executer, Arg, Stage,CONCURRENCY
 
 
 class HiveExecuter(Executer):
@@ -57,7 +57,10 @@ class HiveExecuter(Executer):
 
         self.results = {}
 
-        if isinstance(steps, (list, tuple)):
+        if isinstance(steps, Stage):
+            for query in steps.queries:
+                self.run_step(query)
+        elif isinstance(steps, (list, tuple)):
             for step in steps:
                 self.run_step(step, self.args)
         elif isinstance(steps, basestring):
