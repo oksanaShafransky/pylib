@@ -3,8 +3,6 @@
 import argparse
 from datetime import datetime
 
-from common import Stage
-
 CONCURRENCY = 6
 
 
@@ -171,3 +169,11 @@ class Executer(object):
                 raise Exception('unrecognized handler parameter type: %s' % param.__class__.__name__)
 
         return handler(*handler_args, **handler_kwargs)
+
+
+class Stage(object):
+    def __init__(self, queries):
+        self.queries = queries
+
+    def __str__(self):
+        return '\n\n'.join(['\n'.join(x for x in self.queries)])

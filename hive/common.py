@@ -309,11 +309,3 @@ def list_days(end_date, mode, mode_type):
         return None
 
     return [end_date - timedelta(days=x) for x in range(0, delta.days)]
-
-
-class Stage(object):
-    def __init__(self, queries):
-        self.queries = queries
-
-    def __str__(self):
-        return '\n\n'.join(['\n'.join(x for x in self.queries)])
