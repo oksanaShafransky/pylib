@@ -96,6 +96,19 @@ class Stage(object):
         return '\n\n'.join(['\n'.join(x for x in self.queries)])
 
 
+def upsert_param(params, new_param):
+    """ Replace param if it is already in common params list with new definition. Check is done by target attr"""
+    candidates = [param for param in params if param.attr == new_param.attr]
+
+    if len(candidates) not in [0, 1]:
+        raise argparse.ArgumentError('colliding params: ' + str(candidates))
+
+    if len(candidates) == 1:
+        params.remove(candidates(0))
+
+    return params + [new_param]
+
+
 class Executer(object):
     def __init__(self):
         self.actions = {}
@@ -107,19 +120,6 @@ class Executer(object):
     # set common_params in subclasses to use for all their actions
     def get_common_params(self):
         return []
-
-    def upsert_common_param(self, new_param):
-        """ Replace param if it is already in common params list with new definition. Check is done by target attr"""
-        params = self.get_common_params()
-        candidates = [param for param in params if param.attr == new_param.attr]
-
-        if len(candidates) not in [0, 1]:
-            raise argparse.ArgumentError('colliding params: ' + str(candidates))
-
-        if len(candidates) == 1:
-            params.remove(candidates(0))
-
-        return params + [new_param]
 
     # define default values for arguments depending on values of others
     def get_arg_dependencies(self):
