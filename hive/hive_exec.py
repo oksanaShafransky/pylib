@@ -9,7 +9,7 @@ from inspect import isfunction
 from common import logger
 import hive_runner
 from multiprocessing.pool import ThreadPool as Pool
-from tasks.executer import Executer, Arg, Stage,CONCURRENCY
+from tasks.executer import Executer, Arg, Stage, CONCURRENCY
 
 
 class HiveExecuter(Executer):
@@ -57,10 +57,7 @@ class HiveExecuter(Executer):
 
         self.results = {}
 
-        if isinstance(steps, Stage):
-            for query in steps.queries:
-                self.run_step(query)
-        elif isinstance(steps, (list, tuple)):
+        if isinstance(steps, (list, tuple)):
             for step in steps:
                 self.run_step(step, self.args)
         elif isinstance(steps, basestring):
@@ -78,9 +75,15 @@ class HiveExecuter(Executer):
     def run_query_helper(self, arg_tuple):
         self.run_query(*arg_tuple)
 
-    def run_step(self, stage, args):
+    def run_step(self, stage, args, register=True):
         try:
-            if isfunction(stage):
+            if isinstance(stage, Stage):
+                for sub_stage in stage.queries:
+                    self.run_step(sub_stage, args, False)
+            elif isinstance(stage, (list, tuple)):
+                for sub_stage in stage:
+                    self.run_step(sub_stage, args, False)
+            elif isfunction(stage):
                 if args.dry_run:
                     logger.info('DryRun, Was meant to execute %s' % stage.__name__)
                 else:
@@ -97,7 +100,8 @@ class HiveExecuter(Executer):
                 p.map(self.run_query_helper, stage_args)
                 p.close()
         except:
-            self.results[str(stage)] = 'failure'
+            if register:
+                self.results[str(stage)] = 'failure'
             logger.error('Error! Stage failed.')
             traceback.print_exc()
 

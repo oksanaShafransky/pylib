@@ -166,7 +166,11 @@ class Executer(object):
 
         queries_list = []
         for handler, action in handler_action_list:
-            queries_list.append((action.name, self.evaluate_action(handler, action)))
+            from hive.common import deploy_jars as dj
+            if handler == dj:
+                handler()
+            else:
+                queries_list.append((action.name, self.evaluate_action(handler, action)))
 
         return [Stage(queries_list)]
 
