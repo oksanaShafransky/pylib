@@ -6,7 +6,7 @@ __author__ = 'Felix'
 
 from inspect import isfunction
 
-from common import Stage, logger
+from common import logger
 import hive_runner
 from multiprocessing.pool import ThreadPool as Pool
 from tasks.executer import Executer, Arg, CONCURRENCY

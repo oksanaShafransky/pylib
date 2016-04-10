@@ -87,6 +87,14 @@ class Action:
                 param.add_argument(action_parser)
 
 
+class Stage(object):
+    def __init__(self, queries):
+        self.queries = queries
+
+    def __str__(self):
+        return '\n\n'.join(['\n'.join(x for x in self.queries)])
+
+
 class Executer(object):
 
     def __init__(self):
@@ -169,11 +177,3 @@ class Executer(object):
                 raise Exception('unrecognized handler parameter type: %s' % param.__class__.__name__)
 
         return handler(*handler_args, **handler_kwargs)
-
-
-class Stage(object):
-    def __init__(self, queries):
-        self.queries = queries
-
-    def __str__(self):
-        return '\n\n'.join(['\n'.join(x for x in self.queries)])
