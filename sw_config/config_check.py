@@ -10,7 +10,7 @@ from window_config import SimilarWebWindowConfig
 
 
 ETCD_PATHS = {'production': 'v1/production', 'staging': 'v1/staging', 'dev': 'v1/dev'}
-from pylib.sw_config.etcd_kv import EtcdProxy
+from etcd_kv import EtcdProxy
 PROXY_CLASS = EtcdProxy
 
 HEALTHY = 1
