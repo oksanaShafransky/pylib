@@ -286,7 +286,7 @@ def temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name):
     create_cmd = '''\n
                     CREATE EXTERNAL TABLE %(table_name)s
                     LIKE %(orig_table_name)s
-                    WITH TBLPROPERTIES("hbase.table.name" = "%(full_hbase_table_name)s");
+                    TBLPROPERTIES("hbase.table.name" = "%(full_hbase_table_name)s");
                     \n
                 ''' % {'table_name': table_name,
                        'orig_table_name': orig_table_name,
