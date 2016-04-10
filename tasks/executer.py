@@ -14,7 +14,6 @@ def parse_date(date_str):
 
 
 class Arg:
-
     @staticmethod
     def date_arg(date_str):
         try:
@@ -46,25 +45,27 @@ class Arg:
 
     def add_argument(self, target_parser):
         if self.type == 'choice':
-            target_parser.add_argument(self.short, self.long, choices=self.choices, dest=self.attr, required=self.required, default=self.default_value, help=self.help)
+            target_parser.add_argument(self.short, self.long, choices=self.choices, dest=self.attr,
+                                       required=self.required, default=self.default_value, help=self.help)
         elif self.type == bool:
-            target_parser.add_argument(self.short, self.long, action='store_true', dest=self.attr, required=self.required, default=self.default_value, help=self.help)
+            target_parser.add_argument(self.short, self.long, action='store_true', dest=self.attr,
+                                       required=self.required, default=self.default_value, help=self.help)
         elif type == str:
-            target_parser.add_argument(self.short, self.long, dest=self.attr, required=self.required, default=self.default_value, help=self.help)
+            target_parser.add_argument(self.short, self.long, dest=self.attr, required=self.required,
+                                       default=self.default_value, help=self.help)
         else:
-            target_parser.add_argument(self.short, self.long, type=self.type, dest=self.attr, required=self.required, default=self.default_value, help=self.help)
+            target_parser.add_argument(self.short, self.long, type=self.type, dest=self.attr, required=self.required,
+                                       default=self.default_value, help=self.help)
 
         self.registered = True
 
 
 class Const:
-
     def __init__(self, value):
         self.value = value
 
 
 class Action:
-
     def __init__(self, action_name, action_params, group, kw_params=None, parent_parser=None, action_help=None):
 
         self.name = action_name
@@ -96,7 +97,6 @@ class Stage(object):
 
 
 class Executer(object):
-
     def __init__(self):
         self.actions = {}
         self.base_parser = argparse.ArgumentParser('executer.py')
@@ -107,6 +107,19 @@ class Executer(object):
     # set common_params in subclasses to use for all their actions
     def get_common_params(self):
         return []
+
+    def upsert_common_param(self, new_param):
+        """ Replace param if it is already in common params list with new definition. Check is done by target attr"""
+        params = self.get_common_params()
+        candidates = [param for param in params if param.attr == new_param.attr]
+
+        if len(candidates) not in [0, 1]:
+            raise argparse.ArgumentError('colliding params: ' + str(candidates))
+
+        if len(candidates) == 1:
+            params.remove(candidates(0))
+
+        return params + [new_param]
 
     # define default values for arguments depending on values of others
     def get_arg_dependencies(self):
@@ -125,7 +138,8 @@ class Executer(object):
                 return common_param
 
     def add_action(self, action_name, action_handler, action_params, kw_params=None, help=None):
-        action = Action(action_name, action_params, self.subparsers, kw_params=kw_params, parent_parser=self.common_parser, action_help=help)
+        action = Action(action_name, action_params, self.subparsers, kw_params=kw_params,
+                        parent_parser=self.common_parser, action_help=help)
         self.add_stage(action_name, [(action_handler, action)])
 
     def add_stage(self, stage_name, handler_action_list):
