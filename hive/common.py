@@ -317,7 +317,7 @@ def temp_hbase_table_cmds(orig_table_name, hbase_root_table_name, mode, mode_typ
         return temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name)
     else:
         logger.info("Writing to the original table.")
-        return orig_table_name, ''
+        return orig_table_name, '', ''
 
 
 def temp_table_cmds(orig_table_name, root):
