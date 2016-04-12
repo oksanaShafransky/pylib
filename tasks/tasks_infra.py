@@ -175,11 +175,12 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.run_bash(command)
 
     #TODO: handle additional configs, execution dir
-    def run_py_spark(self, files, py_files, main_py_file, command_params, spark_confgis, **kwargs):
+    def run_py_spark(self, files, py_files, main_py_file, command_params, spark_confgis=None, **kwargs):
         additional_configs = ''
 
-        for key, value in spark_confgis.iteritems():
-            additional_configs += ' --conf %s=%s' % (key, value)
+        if spark_confgis is not None:
+            for key, value in spark_confgis.iteritems():
+                additional_configs += ' --conf %s=%s' % (key, value)
 
         for key, value in kwargs.iteritems():
             additional_configs += ' --%s %s' % (key, value)
