@@ -48,6 +48,7 @@ def list_collectors(base_dir, date=None, output_prefix='aggkey'):
 if __name__ == '__main__':
     daily_agg_dir = sys.argv[1]
     date = datetime.strptime(sys.argv[2], '%Y-%m-%d')
+    threshold = float(sys.argv[4]) if len(sys.argv) > 4 else 0.05
     report = ''
     for col in list_collectors(daily_agg_dir, date=date):
         curr_size = get_size('%s/%s/%s' % (daily_agg_dir, 'aggkey=%s' % col, date_suffix(date)))
@@ -60,7 +61,8 @@ if __name__ == '__main__':
 
         slope = (change - last_week_change) / last_week_change
 
-        report += '%s changed %.3f from yesterday, as opposed to %.3f daily a week ago, representing a %.2f slope\n' % (col, change, last_week_change, slope)
+        if change > threshold:
+            report += '%s changed %.3f from yesterday, as opposed to %.3f daily a week ago, representing a %.2f slope\n' % (col, change, last_week_change, slope)
 
     print report
     if len(sys.argv) > 3:
