@@ -74,6 +74,9 @@ if __name__ == '__main__':
         if change > threshold:
             report += '%s changed %.3f from yesterday, as opposed to %.3f daily a week ago, representing a %.2f slope\n' % (col, change, last_week_change, slope)
 
+    # check if report is in fact empty
+    if report == '':
+        report = 'No Significant Changes'
     print report
     if args.mail_to is not None:
         send_report(report, args.check_date, args.mail_to)
