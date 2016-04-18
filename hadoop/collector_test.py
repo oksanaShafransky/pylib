@@ -1,6 +1,7 @@
 __author__ = 'Felix'
 
 import sys
+import argparse
 from datetime import datetime, timedelta
 from snakebite.errors import FileNotFoundException
 from hdfs_util import create_client, get_size
@@ -46,9 +47,18 @@ def list_collectors(base_dir, date=None, output_prefix='aggkey'):
 
 
 if __name__ == '__main__':
-    daily_agg_dir = sys.argv[1]
-    date = datetime.strptime(sys.argv[2], '%Y-%m-%d')
-    threshold = float(sys.argv[4]) if len(sys.argv) > 4 else 0.05
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('agg_dir', metavar='TABLE', help='Name of HBase table 1, can be cluster.table_name (default is mrp)')
+    parser.add_argument('check_date', metavar='TABLE', help='Name of HBase table 2, can be cluster.table_name')
+    parser.add_argument('-m', '--mailing-list', dest='mail_to', required=False, default=None, help='mail report recipients, mail not sent in case this arg is not passed')
+    parser.add_argument('-t', '--threshold', dest='threshold', required=False, default=0.05, help='change threshold to report')
+
+    args = parser.parse_args()
+
+    daily_agg_dir = args.agg_dir
+    date = datetime.strptime(args.check_date, '%Y-%m-%d')
+    threshold = args.threshold
     report = ''
     for col in list_collectors(daily_agg_dir, date=date):
         curr_size = get_size('%s/%s/%s' % (daily_agg_dir, 'aggkey=%s' % col, date_suffix(date)))
@@ -65,5 +75,5 @@ if __name__ == '__main__':
             report += '%s changed %.3f from yesterday, as opposed to %.3f daily a week ago, representing a %.2f slope\n' % (col, change, last_week_change, slope)
 
     print report
-    if len(sys.argv) > 3:
-        send_report(report, sys.argv[2], sys.argv[3])
+    if args.mail_to is not None:
+        send_report(report, args.check_date, args.mail_to)
