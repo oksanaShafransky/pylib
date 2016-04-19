@@ -43,6 +43,10 @@ class TasksInfra(object):
                 ans += '"%s"' % value if type(value) != types.BooleanType else ""
         return ans
 
+    @staticmethod
+    def __with_rerun_root_queue(command):
+        return 'setRootQueue reruns && %s' %command
+
 
 class ContextualizedTasksInfra(TasksInfra):
 
@@ -57,7 +61,7 @@ class ContextualizedTasksInfra(TasksInfra):
         ans += " && " + command
         return ans
 
-    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params):
+    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, rerun_root_queue=False):
         command = self.__compose_infra_command('execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
                                                {
                                                      'base_dir': execution_dir,
@@ -67,11 +71,9 @@ class ContextualizedTasksInfra(TasksInfra):
                                                  }
                                                )
         command = self.add_command_params(command, command_params)
+        if rerun_root_queue:
+            command = self.__with_rerun_root_queue(command)
         return command
-
-    #Todo: Move it to the mobile project
-    def __compose_mobile_hadoop_runner_command(self, command_params, main_class='com.similargroup.mobile.main.MobileRunner'):
-        return self.__compose_hadoop_runner_command(jar_path='mobile', jar_name='mobile.jar', main_class=main_class, command_params=command_params)
 
     def __compose_python_runner_command(self, python_executable, command_params):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
@@ -81,14 +83,21 @@ class ContextualizedTasksInfra(TasksInfra):
     def __get_common_args(self):
         return self.ctx.config.config['sw_common']
 
-    #Todo: Move it to the mobile project
-    def run_mobile_hadoop(self, command_params, main_class='com.similargroup.mobile.main.MobileRunner'):
-        return self.run_bash(self.__compose_mobile_hadoop_runner_command(command_params, main_class))
-
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
-                self.__compose_hadoop_runner_command(jar_path=jar_path, jar_name=jar_name, main_class=main_class, command_params=command_params)
+                self.__compose_hadoop_runner_command(jar_path=jar_path,
+                                                     jar_name=jar_name,
+                                                     main_class=main_class,
+                                                     command_params=command_params,
+                                                     rerun_root_queue=self.rerun)
         )
+
+    #Todo: Move it to the mobile project
+    def run_mobile_hadoop(self, command_params, main_class='com.similargroup.mobile.main.MobileRunner', rerun_root_queue=False):
+        return self.run_hadoop(jar_path='mobile',
+                               jar_name='mobile.jar',
+                               main_class=main_class,
+                               command_params=command_params)
 
     def run_bash(self, command):
         print ("Running '%s'" % command)
@@ -161,3 +170,7 @@ class ContextualizedTasksInfra(TasksInfra):
     @property
     def date(self):
         return self.__get_common_args()['date']
+
+    @property
+    def rerun(self):
+        return self.__get_common_args()['rerun']

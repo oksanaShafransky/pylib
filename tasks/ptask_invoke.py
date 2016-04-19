@@ -15,7 +15,8 @@ class PtaskConfig(Config):
         global_defaults['sw_common']=\
             {'date': None,
              'base_dir': '/similargroup/data',
-             'force': True}
+             'force': True,
+             'rerun': False}
         return global_defaults
 
 
@@ -30,7 +31,9 @@ class PtaskInvoker(Program):
             Argument(names=('date','dt'), help="The task's logical day in ISO yyyy-MM-dd format", optional=True),
             Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's output", optional=True),
             Argument(names=('dont_force', 'df'), kind=bool,
-                     help="Don't force flag - when used, the task will skip if expected output exists at start")
+                     help="Don't force flag - when used, the task will skip if expected output exists at start"),
+            Argument(names=('rerun', 'rr'), kind=bool,
+                     help="Rerun flag - when used, the task will use YARN reruns root queue")
         ]
         return core_args + extra_args
 
@@ -45,6 +48,9 @@ class PtaskInvoker(Program):
             sw_tasks['base_dir'] = self.args.base_dir.value
         if self.args.dont_force.value:
             sw_tasks['force'] = False
+        if self.args.rerun.value:
+            sw_tasks['rerun'] = True
+
         merge_dicts(config['sw_common'], sw_tasks)
         return config
 
