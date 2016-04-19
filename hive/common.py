@@ -11,6 +11,7 @@ from urlparse import urlparse
 
 from dateutil.relativedelta import relativedelta
 import sys
+import signal
 
 GLOBAL_DRYRUN = False  # This is crazy ugly, should allow executor to deploy jars
 
@@ -33,6 +34,51 @@ logger.addFilter(ContextFilter())
 
 MOBILE_ALL_CATEGORY = '\"\"'
 UNRANKED = -1
+
+
+class GracefulShutdownHandler:
+    def __init__(self, on_kill, sig=signal.SIGTERM):
+        self.on_kill = on_kill
+        self.sig = sig
+
+    def __enter__(self):
+        self.interrupted = False
+        self.released = False
+
+        logger.info('Registering for graceful shutdown hook...')
+
+        self.original_handler = signal.getsignal(self.sig)
+
+        def handler(signum, frame):
+            self.release()
+            self.interrupted = True
+
+        signal.signal(self.sig, handler)
+
+        return self
+
+    def __exit__(self, type, value, tb):
+
+        logger.info('Unregistering from graceful shutdown hook...')
+        self.release()
+
+    def release(self):
+        if self.released:
+            return False
+
+        try:
+            logger.info('SIGINT received, killing task...')
+            self.on_kill()
+        except:
+            pass
+        finally:
+            pass
+
+        signal.signal(self.sig, self.original_handler)
+
+        self.released = True
+
+        return True
 
 
 def getPartitionString(mode, mode_type, year, month, day, **kwargs):
@@ -114,7 +160,7 @@ def get_range_where_clause(year, month, day, mode, mode_type):
         start_date = datetime(int(year), int(month) - ((int(month) - 1) % 3), 1).date()
         end_date = start_date + timedelta(days=63)
         return '(year=%02d and month <= %02d and month >= %02d' % (
-        end_date.year % 100, start_date.month, end_date.month)
+            end_date.year % 100, start_date.month, end_date.month)
     elif mode_type == "annually":
         return " (year = %02d) " % (end_date.year % 100)
 
@@ -138,7 +184,7 @@ def get_where_between_dates(start_date, end_date):
         if where_clause != "":
             where_clause += " or "
         where_clause += ' (year=%02d and month=%02d and day=%02d) ' % (
-        curr_date.year % 100, curr_date.month, curr_date.day)
+            curr_date.year % 100, curr_date.month, curr_date.day)
         curr_date = curr_date + timedelta(days=1)
         if curr_date > end_date:
             break
@@ -203,6 +249,7 @@ def table_location(table):
         if "Location:" in line:
             return line.split("\t")[1]
 
+
 def hbase_table_name(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
     output, _ = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
@@ -232,13 +279,14 @@ def temp_table_cmds_internal(orig_table_name, temp_root):
                        'short_table_name': table_name.split('.')[-1]}
     return table_name, drop_cmd, create_cmd
 
+
 def temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name):
     table_name = '%s_temp_%s' % (orig_table_name, random.randint(10000, 99999))
     drop_cmd = '\nDROP TABLE IF EXISTS %s;\n' % table_name
     create_cmd = '''\n
                     CREATE EXTERNAL TABLE %(table_name)s
                     LIKE %(orig_table_name)s
-                    WITH TBLPROPERTIES("hbase.table.name" = "%(full_hbase_table_name)s");
+                    TBLPROPERTIES("hbase.table.name" = "%(full_hbase_table_name)s");
                     \n
                 ''' % {'table_name': table_name,
                        'orig_table_name': orig_table_name,
@@ -253,19 +301,24 @@ def should_create_external_table(orig_table_name, location):
     table_loc = table_location(orig_table_name)
     return table_loc != location
 
+
 def should_create_external_hbase_table(orig_table_name, hbase_table_name_val):
     table_name = hbase_table_name(orig_table_name)
     return table_name != hbase_table_name_val
 
+
 def temp_hbase_table_cmds(orig_table_name, hbase_root_table_name, mode, mode_type, date):
     full_hbase_table_name = hbase_root_table_name + hbase_table_suffix(date, mode, mode_type)
-    logger.info("Checking whether to create external table %s for HBase table %s:" % (orig_table_name, full_hbase_table_name))
+    logger.info(
+            "Checking whether to create external table %s for HBase table %s:" % (
+            orig_table_name, full_hbase_table_name))
     if should_create_external_hbase_table(orig_table_name, full_hbase_table_name):
         logger.info("Writing to an external table with the given name.")
         return temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name)
     else:
         logger.info("Writing to the original table.")
-        return orig_table_name, ''
+        return orig_table_name, '', ''
+
 
 def temp_table_cmds(orig_table_name, root):
     logger.info("Checking whether to create external table %s in location %s:" % (orig_table_name, root))
@@ -333,10 +386,11 @@ def list_days(end_date, mode, mode_type):
 
     return [end_date - timedelta(days=x) for x in range(0, delta.days)]
 
+
 def hbase_table_suffix(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
-    #in_date_fmt='%Y-%m' if mode == 'snapshot' else '%Y-%m-%d'
+    # in_date_fmt='%Y-%m' if mode == 'snapshot' else '%Y-%m-%d'
     date_fmt = '_%y_%m' if mode == 'snapshot' else '_%y_%m_%d'
-    #date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
+    # date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
     date_suffix = datetime.strftime(date, date_fmt)
     return date_suffix if mode == 'snapshot' else '_%s%s' % (mode_type, date_suffix)
 
