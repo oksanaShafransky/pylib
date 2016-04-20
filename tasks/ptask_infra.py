@@ -35,12 +35,16 @@ class TasksInfra(object):
     def add_command_params(command, command_params):
         ans = command
         for key, value in command_params.iteritems():
-            if type(value) == types.BooleanType:
-                if value == True:
-                    ans += " -%s " % key
+            if isinstance(value, bool) and value:
+                ans += " -%s " % key
             else:
                 ans += " -%s " % key
-                ans += '"%s"' % value if type(value) != types.BooleanType else ""
+                ans += '"%s"' % value if isinstance(value, bool) else ""
+        return ans
+
+    @staticmethod
+    def __compose_infra_command(command):
+        ans = 'source %s/scripts/common.sh && %s' % (execution_dir, command)
         return ans
 
     @staticmethod
@@ -54,19 +58,16 @@ class ContextualizedTasksInfra(TasksInfra):
         self.ctx = ctx
         self.execution_dir = execution_dir
 
-    def __compose_infra_command(self, command):
-        ans = 'source %s/scripts/common.sh && %s' % (execution_dir, command)
-        return ans
-
     def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, rerun_root_queue=False):
-        command = self.__compose_infra_command('execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
-                                               {
-                                                     'base_dir': execution_dir,
-                                                     'jar_relative_path': jar_path,
-                                                     'jar': jar_name,
-                                                     'class': main_class
-                                                 }
-                                               )
+        command = self.__compose_infra_command(
+            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
+            {
+                'base_dir': execution_dir,
+                'jar_relative_path': jar_path,
+                'jar': jar_name,
+                'class': main_class
+            }
+        )
         command = self.add_command_params(command, command_params)
         if rerun_root_queue:
             command = self.__with_rerun_root_queue(command)
@@ -89,8 +90,10 @@ class ContextualizedTasksInfra(TasksInfra):
                                                      rerun_root_queue=self.rerun)
         )
 
-    #Todo: Move it to the mobile project
-    def run_mobile_hadoop(self, command_params, main_class='com.similargroup.mobile.main.MobileRunner', rerun_root_queue=False):
+    # Todo: Move it to the mobile project
+    def run_mobile_hadoop(self, command_params,
+                          main_class='com.similargroup.mobile.main.MobileRunner',
+                          rerun_root_queue=False):
         return self.run_hadoop(jar_path='mobile',
                                jar_name='mobile.jar',
                                main_class=main_class,
@@ -115,7 +118,7 @@ class ContextualizedTasksInfra(TasksInfra):
         jar = './mobile.jar' if module == 'mobile' else './analytics.jar'
         jar_path = '%s/%s' % (self.execution_dir, 'mobile' if module == 'mobile' else 'analytics')
         if jars_from_lib is None:
-            jars_from_lib = os.listdir('%s/lib' % (jar_path))
+            jars_from_lib = os.listdir('%s/lib' % jar_path)
         else:
             jars_from_lib = map(lambda x: '%s.jar' % x, jars_from_lib)
         jars = ','.join(map(lambda x: './lib/%s'%x, jars_from_lib))
@@ -150,7 +153,7 @@ class ContextualizedTasksInfra(TasksInfra):
         self.run_bash(command)
 
     def repair_table(self, db, table):
-        self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db,table))
+        self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db, table))
 
     @property
     def base_dir(self):
