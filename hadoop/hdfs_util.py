@@ -18,16 +18,23 @@ def create_client():
 
 # needed because the regular client throws an exception when a parent directory doesnt exist either
 def directory_exists(dir_name):
-        hdfs_client = create_client()
+    hdfs_client = create_client()
 
-        try:
-            return hdfs_client.test(dir_name, directory=True)
-        except FileNotFoundException:
-            return False
+    try:
+        return hdfs_client.test(dir_name, directory=True)
+    except FileNotFoundException:
+        return False
+
+
+def file_exists(file_parh):
+    hdfs_client = create_client()
+    try:
+        return hdfs_client.test(path=file_parh)
+    except FileNotFoundException:
+        return False
 
 
 def upload_file_to_hdfs(file_path, target_path):
-
     if not directory_exists(target_path):
         mkdir_cmd = 'hadoop fs -mkdir -p %s' % target_path
         subprocess.call(mkdir_cmd.split(' '))
@@ -82,5 +89,5 @@ def test_size(path, min_size_required=None):
             logger.info('it does not')
             return False
     except FileNotFoundException:
-            logger.info('it does not')
-            return False
+        logger.info('it does not')
+        return False

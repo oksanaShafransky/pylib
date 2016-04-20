@@ -9,13 +9,11 @@ import re
 
 from hadoop.hdfs_util import *
 
-
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../..'
 
 
 class TasksInfra(object):
-
     @staticmethod
     def parse_date(date_str):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -29,6 +27,27 @@ class TasksInfra(object):
         return test_size('%s/%s' % (directory, '_SUCCESS'), 0)
 
     @staticmethod
+    def _assert_dir_contains_success(directory):
+        client = create_client()
+        expected_success_path = directory + "/_SUCCESS"
+        if not client.test(path=expected_success_path):
+            raise AssertionError(expected_success_path + " doesn't contain _SUCCESS file")
+
+    @staticmethod
+    def assert_input_with_success(directory):
+        """
+        validates that hdfs directory contains _SUCCESS file. input marker function
+        """
+        return TasksInfra._assert_dir_contains_success(directory)
+
+    @staticmethod
+    def assert_output_with_success(directory):
+        """
+        validates that hdfs directory contains _SUCCESS file. output marker function
+        """
+        return TasksInfra._assert_dir_contains_success(directory)
+
+    @staticmethod
     def is_valid_output_exists(directory, valid_output_min_size_bytes):
         return test_size(directory, valid_output_min_size_bytes)
 
@@ -38,15 +57,18 @@ class TasksInfra(object):
             for dir in directories:
                 TasksInfra.assert_input_validity(dir, valid_input_min_size_bytes)
 
-        assert test_size(directories, valid_input_min_size_bytes) is True, 'Input is not valid, given value is %s' % directories
+        assert test_size(directories,
+                         valid_input_min_size_bytes) is True, 'Input is not valid, given value is %s' % directories
 
     @staticmethod
     def assert_output_validity(directory, valid_output_min_size_bytes):
-        assert test_size(directory, valid_output_min_size_bytes) is True, 'Output is not valid, given value is %s' % directory
+        assert test_size(directory,
+                         valid_output_min_size_bytes) is True, 'Output is not valid, given value is %s' % directory
 
     @staticmethod
     def assert_output_success(directory):
-        assert test_size('%s/%s' % (directory, '_SUCCESS'), 0) is True, 'Output is not valid, given value is %s' % directory
+        assert test_size('%s/%s' % (directory, '_SUCCESS'),
+                         0) is True, 'Output is not valid, given value is %s' % directory
 
     @staticmethod
     def year_month_day(date):
@@ -60,7 +82,13 @@ class TasksInfra(object):
 
     @staticmethod
     def load_common_args_to_ctx(ctx, dry_run, force, base_dir, date, mode, mode_type):
-        d = {'dry_run': dry_run, 'force': force, 'base_dir': base_dir, 'date': date, 'mode': mode, 'mode_type': mode_type}
+        d = {'dry_run': dry_run,
+             'force': force,
+             'base_dir': base_dir,
+             'date': date,
+             'mode': mode,
+             'mode_type': mode_type
+             }
         ctx.config['common_args'] = d
         return ContextualizedTasksInfra(ctx)
 
@@ -78,7 +106,6 @@ class TasksInfra(object):
 
 
 class ContextualizedTasksInfra(TasksInfra):
-
     def __init__(self, ctx):
         self.ctx = ctx
         self.execution_dir = execution_dir
@@ -91,20 +118,23 @@ class ContextualizedTasksInfra(TasksInfra):
         return ans
 
     def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params):
-        command = self.__compose_infra_command('execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
-                                               {
-                                                     'base_dir': execution_dir,
-                                                     'jar_relative_path': jar_path,
-                                                     'jar': jar_name,
-                                                     'class': main_class
-                                                 }
-                                               )
+        command = self.__compose_infra_command(
+            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
+            {
+                'base_dir': execution_dir,
+                'jar_relative_path': jar_path,
+                'jar': jar_name,
+                'class': main_class
+            }
+        )
         command = self.add_command_params(command, command_params)
         return command
 
-    #Todo: Move it to the mobile project
+    # Todo: Move it to the mobile project
     def __compose_mobile_hadoop_runner_command(self, command_params):
-        return self.__compose_hadoop_runner_command(jar_path='mobile', jar_name='mobile.jar', main_class='com.similargroup.mobile.main.MobileRunner', command_params=command_params)
+        return self.__compose_hadoop_runner_command(jar_path='mobile', jar_name='mobile.jar',
+                                                    main_class='com.similargroup.mobile.main.MobileRunner',
+                                                    command_params=command_params)
 
     def __compose_python_runner_command(self, python_executable, command_params):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
@@ -117,13 +147,14 @@ class ContextualizedTasksInfra(TasksInfra):
     def __get_common_args(self):
         return self.ctx.config.config['common_args']
 
-    #Todo: Move it to the mobile project
+    # Todo: Move it to the mobile project
     def run_mobile_hadoop(self, command_params):
         return self.run_bash(self.__compose_mobile_hadoop_runner_command(command_params))
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
-                self.__compose_hadoop_runner_command(jar_path=jar_path, jar_name=jar_name, main_class=main_class, command_params=command_params)
+            self.__compose_hadoop_runner_command(jar_path=jar_path, jar_name=jar_name, main_class=main_class,
+                                                 command_params=command_params)
         )
 
     def run_bash(self, command, ret_property='return_code'):
@@ -137,7 +168,8 @@ class ContextualizedTasksInfra(TasksInfra):
 
     def latest_monthly_success_date(self, directory, month_lookback):
         d = self.__get_common_args()['date']
-        return self.run_bash(self.__compose_latest_monthly_success_date_command(directory, d, month_lookback), ret_property='stdout').strip()
+        return self.run_bash(self.__compose_latest_monthly_success_date_command(directory, d, month_lookback),
+                             ret_property='stdout').strip()
 
     def year_month_day(self):
         return TasksInfra.year_month_day(self.__get_common_args()['date'])
@@ -153,7 +185,7 @@ class ContextualizedTasksInfra(TasksInfra):
             start_date = end_date - datetime.timedelta(days=27)
         elif mode_type == "monthly":
             # get last day in month
-            last = calendar.monthrange(end_date.year,end_date.month)[1]
+            last = calendar.monthrange(end_date.year, end_date.month)[1]
             end_date = datetime.datetime(end_date.year, end_date.month, last).date()
             start_date = datetime.datetime(end_date.year, end_date.month, 1).date()
 
@@ -164,30 +196,80 @@ class ContextualizedTasksInfra(TasksInfra):
     def run_spark(self, main_class, module, queue, app_name, command_params, jars_from_lib=None):
         jar = './mobile.jar' if module == 'mobile' else './analytics.jar'
         jar_path = '%s/%s' % (self.execution_dir, 'mobile' if module == 'mobile' else 'analytics')
-        if jars_from_lib is None:
-            jars_from_lib = os.listdir('%s/lib' % (jar_path))
-        else:
-            jars_from_lib = map(lambda x: '%s.jar' % x, jars_from_lib)
-        jars = ','.join(map(lambda x: './lib/%s'%x, jars_from_lib))
-        command = 'cd %s;spark-submit --queue %s --name "%s" --master yarn-cluster --deploy-mode cluster --jars %s --class %s %s ' % \
-                  (jar_path, queue, app_name, jars, main_class, jar)
-        command = TasksInfra.add_command_params(command,command_params)
+        command = 'cd %(jar_path)s;spark-submit' \
+                  ' --queue %(queue)s' \
+                  ' --name "%(app_name)s"' \
+                  ' --master yarn-cluster' \
+                  ' --deploy-mode cluster' \
+                  ' --jars %(jars)s' \
+                  ' --class %(main_class)s' \
+                  ' %(jar)s ' % \
+                  {'jar_path': jar_path,
+                   'queue': queue,
+                   'app_name': app_name,
+                   'jars': self.get_jars_list(jar_path, jars_from_lib),
+                   'main_class': main_class,
+                   'jar': jar}
+        command = TasksInfra.add_command_params(command, command_params)
         return self.run_bash(command)
 
-    #TODO: handle additional configs, execution dir
-    def run_py_spark(self, files, py_files, main_py_file, command_params, spark_confgis=None, **kwargs):
+    @staticmethod
+    def get_jars_list(module_dir, jars_from_lib):
+        if jars_from_lib:
+            jars_from_lib = map(lambda x: '%s.jar' % x, jars_from_lib)
+        else:
+            jars_from_lib = os.listdir('%s/lib' % module_dir)
+        jars = ','.join(map(lambda x: module_dir + '/lib/' + x, jars_from_lib))
+        return jars
+
+    def run_py_spark(self,
+                     main_py_file,
+                     app_name=None,
+                     command_params=None,
+                     files=None,
+                     jars_from_lib=None,
+                     module='mobile',
+                     named_spark_args=None,
+                     py_files=None,
+                     spark_configs=None,
+                     use_bigdata_defaults=False
+                     ):
+        if files is None:
+            files = []
         additional_configs = ''
+        module_dir = self.execution_dir + '/' + module
 
-        if spark_confgis is not None:
-            for key, value in spark_confgis.iteritems():
+        if spark_configs:
+            for key, value in spark_configs.iteritems():
                 additional_configs += ' --conf %s=%s' % (key, value)
+        if named_spark_args:
+            for key, value in named_spark_args.iteritems():
+                additional_configs += ' --%s %s' % (key, value)
 
-        for key, value in kwargs.iteritems():
-            additional_configs += ' --%s %s' % (key, value)
+        if use_bigdata_defaults:
+            main_py_file = 'python/' + main_py_file
+            if not py_files and os.path.exists(module_dir + '/python/' + module + '.py.zip'):
+                py_files = [module_dir + '/python/' + module + '.py.zip']
 
-        command = "cd %s/mobile;spark-submit --master yarn-cluster --files %s --py-files %s %s %s " % \
-                  (self.execution_dir, ','.join(files), ','.join(py_files), additional_configs, main_py_file)
-        command = TasksInfra.add_command_params(command,command_params)
+        command = "spark-submit" \
+                  " --name '%(app_name)s'" \
+                  " --master yarn-cluster" \
+                  " --deploy-mode cluster" \
+                  " --jars '%(jars)s'" \
+                  " --files '%(files)s'" \
+                  " --py-files '%(py-files)s'" \
+                  " %(spark-confs)s" \
+                  " '%(execution_dir)s/%(main_py)s'" \
+                  % {'app_name': app_name if app_name else os.path.basename(main_py_file),
+                     'execution_dir': module_dir,
+                     'files': "','".join(files),
+                     'py-files': ','.join(py_files),
+                     'spark-confs': additional_configs,
+                     'jars': self.get_jars_list(module_dir, jars_from_lib),
+                     'main_py': main_py_file
+                     }
+
+        command = TasksInfra.add_command_params(command, command_params)
         return self.run_bash(command)
 
     def read_s3_configuration(self, property):
@@ -196,7 +278,6 @@ class ContextualizedTasksInfra(TasksInfra):
         return config.get('default', property)
 
     def consolidate_dir(self, path, io_format=None, codec=None):
-
         # several sanity checks over the given path
         assert path is not None
         assert type(path) is str
@@ -204,7 +285,8 @@ class ContextualizedTasksInfra(TasksInfra):
         p2 = re.compile('\/similargroup\/data/mobile-analytics\/.+')
         p3 = re.compile('\/similargroup\/data/ios-analytics\/.+')
         p4 = re.compile('\/user\/.+\/.+')
-        assert p1.match(path) is not None or p2.match(path) is not None or p3.match(path) is not None or p4.match(path) is not None
+        assert p1.match(path) is not None or p2.match(path) is not None or p3.match(path) is not None or p4.match(
+            path) is not None
 
         if io_format is not None:
             if codec is not None:
@@ -216,5 +298,16 @@ class ContextualizedTasksInfra(TasksInfra):
         self.run_bash(command)
 
     def repair_table(self, db, table):
-        self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db,table))
+        self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db, table))
 
+
+def logged(func):
+    def logging_wrapper(*args, **kwargs):
+        task_name = func.__name__
+        print 'Starting %s' % task_name
+        print "Arguments are: %s, %s" % (args, kwargs)
+        retval = func(*args, **kwargs)
+        print '%s is finished' % task_name
+        return retval
+
+    return logging_wrapper
