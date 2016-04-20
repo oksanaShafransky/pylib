@@ -45,7 +45,7 @@ class TasksInfra(object):
 
     @staticmethod
     def __with_rerun_root_queue(command):
-        return 'setRootQueue reruns && %s' %command
+        return 'setRootQueue reruns && %s' % command
 
 
 class ContextualizedTasksInfra(TasksInfra):
@@ -55,10 +55,7 @@ class ContextualizedTasksInfra(TasksInfra):
         self.execution_dir = execution_dir
 
     def __compose_infra_command(self, command):
-        ans = 'source %s/scripts/common.sh' % execution_dir
-        #if self.__get_common_args()['dry_run']:
-        #    ans += " && setDryRun"
-        ans += " && " + command
+        ans = 'source %s/scripts/common.sh && %s' % (execution_dir, command)
         return ans
 
     def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, rerun_root_queue=False):
