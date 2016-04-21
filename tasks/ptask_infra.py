@@ -42,6 +42,9 @@ class TasksInfra(object):
                 ans += '"%s"' % value if isinstance(value, bool) else ""
         return ans
 
+
+class ContextualizedTasksInfra(TasksInfra):
+
     @staticmethod
     def __compose_infra_command(command):
         ans = 'source %s/scripts/common.sh && %s' % (execution_dir, command)
@@ -50,9 +53,6 @@ class TasksInfra(object):
     @staticmethod
     def __with_rerun_root_queue(command):
         return 'setRootQueue reruns && %s' % command
-
-
-class ContextualizedTasksInfra(TasksInfra):
 
     def __init__(self, ctx):
         self.ctx = ctx
