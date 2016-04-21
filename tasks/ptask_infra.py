@@ -36,10 +36,9 @@ class TasksInfra(object):
         ans = command
         for key, value in command_params.iteritems():
             if isinstance(value, bool) and value:
-                ans += " -%s " % key
+                ans += " -%s" % key
             else:
-                ans += " -%s " % key
-                ans += '"%s"' % value if isinstance(value, bool) else ""
+                ans += " -%s %s" % (key, value)
         return ans
 
 
