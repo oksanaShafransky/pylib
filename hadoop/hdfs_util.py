@@ -73,6 +73,11 @@ def delete_dirs(*args):
         delete_dir(path)
 
 
+def get_size(path):
+    hdfs_client = create_client()
+    return hdfs_client.count([path]).next()['spaceConsumed']
+
+
 def test_size(path, min_size_required=None):
     hdfs_client = create_client()
     if min_size_required is not None:
@@ -82,7 +87,7 @@ def test_size(path, min_size_required=None):
 
     try:
         space_consumed = hdfs_client.count([path]).next()['spaceConsumed']
-        if min_size_required or space_consumed >= min_size_required:
+        if min_size_required is None or space_consumed >= min_size_required:
             logger.info('it does')
             return True
         else:

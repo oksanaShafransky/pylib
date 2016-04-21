@@ -46,6 +46,8 @@ def run(job):
             whole_log += line
             sys.stdout.write(line)
 
+        # revert stderr
+        sys.stderr = sys.__stderr__
         job_ids = re.findall('job_\d+_\d+', whole_log)
 
         # for now, assume only one job existed, patch later if needed

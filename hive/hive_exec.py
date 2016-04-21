@@ -6,10 +6,10 @@ __author__ = 'Felix'
 
 from inspect import isfunction
 
-from common import Stage, logger
+from common import logger
 import hive_runner
-
-from tasks.executer import Executer, Arg, Pool, CONCURRENCY
+from multiprocessing.pool import ThreadPool as Pool
+from tasks.executer import Executer, Arg, Stage, CONCURRENCY
 
 
 class HiveExecuter(Executer):
@@ -39,9 +39,10 @@ class HiveExecuter(Executer):
         slow_start_param = Arg('-sscmr', '--slow-start-rate', 'slow_start_ratio', str,
                                'mapreduce.job.reduce.slowstart.completedmaps',
                                required=False, default=None)
+        hive_db = Arg('-hdb', '--hive-database', 'hive_db', str, 'hive db to use', required=False, default='analytics')
 
         return [date_param, mode_param, mode_type_param, num_reducers_param, sync_param, dry_run_param,
-                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param]
+                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param, hive_db]
 
     def get_arg_dependencies(self):
 
@@ -74,9 +75,15 @@ class HiveExecuter(Executer):
     def run_query_helper(self, arg_tuple):
         self.run_query(*arg_tuple)
 
-    def run_step(self, stage, args):
+    def run_step(self, stage, args, register=True):
         try:
-            if isfunction(stage):
+            if isinstance(stage, Stage):
+                for sub_stage in stage.queries:
+                    self.run_step(sub_stage, args, False)
+            elif isinstance(stage, (list, tuple)):
+                for sub_stage in stage:
+                    self.run_step(sub_stage, args, False)
+            elif isfunction(stage):
                 if args.dry_run:
                     logger.info('DryRun, Was meant to execute %s' % stage.__name__)
                 else:
@@ -87,12 +94,14 @@ class HiveExecuter(Executer):
                                args=args
                                )
 
-            elif isinstance(stage, Stage):
+            else:
                 p = Pool(CONCURRENCY)
-                stage_args = [(name, query_str, args) for name, query_str in stage.queries.items()]
+                stage_args = [(name, query_str, args) for name, query_str in stage.queries]
                 p.map(self.run_query_helper, stage_args)
+                p.close()
         except:
-            self.results[str(stage)] = 'failure'
+            if register:
+                self.results[str(stage)] = 'failure'
             logger.error('Error! Stage failed.')
             traceback.print_exc()
 

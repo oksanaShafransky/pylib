@@ -51,7 +51,7 @@ class HBaseProtocol(object):
             cf = None
 
         if not self.HBASE_SERVER_ENV in os.environ:
-            raise ValueError('Must specify hbase servers to write to')
+            raise ValueError('Must specify hbase server to write to')
         else:
             servers_str = os.environ[self.HBASE_SERVER_ENV]
             servers = servers_str.split(',')

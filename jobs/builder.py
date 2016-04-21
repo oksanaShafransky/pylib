@@ -352,7 +352,7 @@ class JobBuilder:
         elif self.input_type == 'avro':
             job.HADOOP_INPUT_FORMAT = 'org.apache.avro.mapred.AvroAsTextInputFormat'
         elif self.input_type == 'sequence':
-            job.HADOOP_INPUT_FORMAT = 'org.apache.hadoop.mapreduce.lib.input.SequenceFileAsTextInputFormat'
+            job.HADOOP_INPUT_FORMAT = 'org.apache.hadoop.mapred.SequenceFileAsTextInputFormat'
 
         job.log_dir = None
         job.follow_ups = []

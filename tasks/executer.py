@@ -2,10 +2,6 @@
 
 import argparse
 from datetime import datetime
-import traceback
-
-import common
-from multiprocessing.pool import ThreadPool as Pool
 
 CONCURRENCY = 6
 
@@ -18,7 +14,6 @@ def parse_date(date_str):
 
 
 class Arg:
-
     @staticmethod
     def date_arg(date_str):
         try:
@@ -50,25 +45,27 @@ class Arg:
 
     def add_argument(self, target_parser):
         if self.type == 'choice':
-            target_parser.add_argument(self.short, self.long, choices=self.choices, dest=self.attr, required=self.required, default=self.default_value, help=self.help)
+            target_parser.add_argument(self.short, self.long, choices=self.choices, dest=self.attr,
+                                       required=self.required, default=self.default_value, help=self.help)
         elif self.type == bool:
-            target_parser.add_argument(self.short, self.long, action='store_true', dest=self.attr, required=self.required, default=self.default_value, help=self.help)
+            target_parser.add_argument(self.short, self.long, action='store_true', dest=self.attr,
+                                       required=self.required, default=self.default_value, help=self.help)
         elif type == str:
-            target_parser.add_argument(self.short, self.long, dest=self.attr, required=self.required, default=self.default_value, help=self.help)
+            target_parser.add_argument(self.short, self.long, dest=self.attr, required=self.required,
+                                       default=self.default_value, help=self.help)
         else:
-            target_parser.add_argument(self.short, self.long, type=self.type, dest=self.attr, required=self.required, default=self.default_value, help=self.help)
+            target_parser.add_argument(self.short, self.long, type=self.type, dest=self.attr, required=self.required,
+                                       default=self.default_value, help=self.help)
 
         self.registered = True
 
 
 class Const:
-
     def __init__(self, value):
         self.value = value
 
 
 class Action:
-
     def __init__(self, action_name, action_params, group, kw_params=None, parent_parser=None, action_help=None):
 
         self.name = action_name
@@ -91,8 +88,28 @@ class Action:
                 param.add_argument(action_parser)
 
 
-class Executer(object):
+class Stage(object):
+    def __init__(self, queries):
+        self.queries = queries
 
+    def __str__(self):
+        return '\n\n'.join(['\n'.join(x for x in self.queries)])
+
+
+def upsert_param(params, new_param):
+    """ Replace param if it is already in common params list with new definition. Check is done by target attr"""
+    candidates = [param for param in params if param.attr == new_param.attr]
+
+    if len(candidates) not in [0, 1]:
+        raise argparse.ArgumentError('colliding params: ' + str(candidates))
+
+    if len(candidates) == 1:
+        params.remove(candidates[0])
+
+    return params + [new_param]
+
+
+class Executer(object):
     def __init__(self):
         self.actions = {}
         self.base_parser = argparse.ArgumentParser('executer.py')
@@ -121,8 +138,12 @@ class Executer(object):
                 return common_param
 
     def add_action(self, action_name, action_handler, action_params, kw_params=None, help=None):
-        action = Action(action_name, action_params, self.subparsers, kw_params=kw_params, parent_parser=self.common_parser, action_help=help)
-        self.actions[action_name] = action_handler, action
+        action = Action(action_name, action_params, self.subparsers, kw_params=kw_params,
+                        parent_parser=self.common_parser, action_help=help)
+        self.add_stage(action_name, [(action_handler, action)])
+
+    def add_stage(self, stage_name, handler_action_list):
+        self.actions[stage_name] = handler_action_list
 
     def execute(self):
 
@@ -141,8 +162,19 @@ class Executer(object):
             self.common_parser.error('Action %s is not supported by this executor' % action_name)
             exit(1)
 
-        handler, action = self.actions[action_name]
+        handler_action_list = self.actions[action_name]
 
+        queries_list = []
+        for handler, action in handler_action_list:
+            from hive.common import deploy_jars as dj
+            if handler == dj:
+                handler()
+            else:
+                queries_list.append((action.name, self.evaluate_action(handler, action)))
+
+        return [Stage(queries_list)]
+
+    def evaluate_action(self, handler, action):
         handler_args = []
         for param in action.params:
             if isinstance(param, Arg):

@@ -84,6 +84,8 @@ class GracefulShutdownHandler:
 def getPartitionString(mode, mode_type, year, month, day, **kwargs):
     if mode == "window" or mode_type == "weekly":
         partition_parts = "year=%s, month=%02d, day=%02d, type='%s'" % (year, month, day, mode_type)
+    elif mode == "daily":
+        partition_parts = "year=%s, month=%02d, day=%02d" % (year, month, day)
     else:
         partition_parts = "year=%s, month=%02d, type='%s'" % (year, month, mode_type)
 
@@ -363,6 +365,13 @@ def jar_location(branch='master'):
     return "/similargroup/jars/%s/" % branch
 
 
+def get_date_where(year, month, day=None):
+    if day:
+        return 'year=%02d and month=%02d and day=%02d ' % (year, month, day)
+    else:
+        return 'year=%02d and month=%02d ' % (year, month)
+
+
 def list_days(end_date, mode, mode_type):
     if mode == 'snapshot':
         if mode_type == 'monthly':
@@ -386,18 +395,9 @@ def list_days(end_date, mode, mode_type):
 
     return [end_date - timedelta(days=x) for x in range(0, delta.days)]
 
-
 def hbase_table_suffix(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
     # in_date_fmt='%Y-%m' if mode == 'snapshot' else '%Y-%m-%d'
     date_fmt = '_%y_%m' if mode == 'snapshot' else '_%y_%m_%d'
     # date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
     date_suffix = datetime.strftime(date, date_fmt)
     return date_suffix if mode == 'snapshot' else '_%s%s' % (mode_type, date_suffix)
-
-
-class Stage(object):
-    def __init__(self, queries):
-        self.queries = queries
-
-    def __str__(self):
-        return '\n\n'.join(['\n'.join(self.queries.items())])
