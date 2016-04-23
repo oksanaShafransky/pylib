@@ -5,6 +5,10 @@ import sys
 import subprocess
 import random
 import logging
+import pyhs2
+import getpass
+from datetime import datetime
+from dateutil import parser
 from urlparse import urlparse
 from inspect import isfunction
 
@@ -24,6 +28,69 @@ logging.basicConfig(format='%(asctime)s [ %(process)s : %(count)s ] %(filename)s
 
 logger = logging.getLogger(os.path.basename(__file__))
 logger.addFilter(ContextFilter())
+
+
+def trim(s):
+    return s.strip(' \t\r\n')
+
+HIVE_SERVER = 'hive-server2-mrp.service.production'
+hive_conn = pyhs2.connect(HIVE_SERVER, authMechanism='PLAIN', user=getpass.getuser())
+
+
+def get_databases():
+    with hive_conn.cursor() as curr:
+        curr.execute('show databases')
+        return [item[0] for item in curr.fetch()]
+
+
+def get_tables(db):
+    with hive_conn.cursor() as curr:
+        curr.execute('use %s' % db)
+        curr.execute('show tables')
+        return [item[0] for item in curr.fetch()]
+
+
+def repair_table(table_name):
+        with hive_conn.cursor() as curr:
+            curr.execute('msck repair table %s' % table_name)
+
+
+def get_table_partitions(table_name):
+        with hive_conn.cursor() as curr:
+            curr.execute('show partitions %s' % table_name)
+            return [dict([fld.split('=') for fld in part_def]) for part_def in [partition[0].split('/') for partition in curr.fetch()]]
+
+
+def get_table_dates(table_name):
+    return [datetime.strptime('%02d-%02d-%02d' % (int(partition['year']) % 100, int(partition['month']), int(partition.get('day', 1))), '%y-%m-%d') for
+            partition in get_table_partitions(table_name)
+            ]
+
+
+def create_temp_table(original_table_name, cloned_table_name, location):
+    with hive_conn.cursor() as curr:
+        curr.execute('create external table %s like %s location \'%s\'' % (cloned_table_name, original_table_name, location))
+
+
+def get_table_info(table_name):
+    with hive_conn.cursor() as curr:
+        curr.execute('desc formatted %s' % table_name)
+        return list(curr.fetch())
+
+
+def is_external_table(table_name):
+    is_ext_info = [line for line in get_table_info(table_name) if trim(line[0]) == 'Table Type:'][0]
+    return trim(is_ext_info[1]).lower() == 'external_table'
+
+
+def get_table_create_time(table_name):
+    create_time_info = [line for line in get_table_info(table_name) if trim(line[0]) == 'CreateTime:'][0]
+    return parser.parse(create_time_info[1])
+
+
+def delete_table(table_name):
+    with hive_conn.cursor() as curr:
+        curr.execute('drop table %s' % table_name)
 
 
 def table_location(table):
@@ -94,3 +161,7 @@ class TableProvided:
 
     def __call__(self, fnc):
         return lambda *args, **kwargs: self.invoke_fnc(fnc, *args, **kwargs)
+
+
+if __name__ == '__main__':
+    print get_table_partitions('mobile.daily_app_metrics')
