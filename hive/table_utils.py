@@ -1,33 +1,13 @@
 __author__ = 'Felix'
 
-import os
-import sys
 import subprocess
 import random
-import logging
 import pyhs2
 import getpass
 from datetime import datetime
 from dateutil import parser
 from urlparse import urlparse
 from inspect import isfunction
-
-
-class ContextFilter(logging.Filter):
-    CURRENT_LOG_NUM = 1
-
-    def filter(self, record):
-        record.count = self.CURRENT_LOG_NUM
-        self.CURRENT_LOG_NUM += 1
-        return True
-
-logging.basicConfig(format='%(asctime)s [ %(process)s : %(count)s ] %(filename)s %(levelname)s %(message)s',
-                    # datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.DEBUG,
-                    stream=sys.stdout)
-
-logger = logging.getLogger(os.path.basename(__file__))
-logger.addFilter(ContextFilter())
 
 
 def trim(s):
@@ -130,13 +110,13 @@ def should_create_external_table(orig_table_name, location):
 
 # returns (table_to_use, pre_operations, post_operations)
 def temp_table_cmds(orig_table_name, root):
-    logger.info('Checking whether to create external table %s in location %s:' % (orig_table_name, root))
+    print 'Checking whether to create external table %s in location %s:' % (orig_table_name, root)
     if root is not None and should_create_external_table(orig_table_name, root):
         logger.info('Writing to an external table in the given location.')
         table_name, drop_cmd, create_cmd = temp_table_cmds_internal(orig_table_name, root)
         return table_name, (drop_cmd + create_cmd), drop_cmd
     else:
-        logger.info('Writing to the original table in place. The location which was passed is being discarded.')
+        print 'Writing to the original table in place. The location which was passed is being discarded.'
         repair_cmd = 'MSCK REPAIR TABLE %s;\n' % orig_table_name
         return orig_table_name, repair_cmd, ''
 
