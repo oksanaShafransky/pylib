@@ -30,10 +30,10 @@ class SimilarWebWindowConfig:
 
     @staticmethod
     def min_viable_options():
-        return 2
+        return 8
 
     @staticmethod
     def min_healthy_options():
-        return 3
+        return 8
 
 
