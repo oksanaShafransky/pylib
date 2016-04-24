@@ -18,14 +18,7 @@ class TasksInfra(object):
     def parse_date(date_str):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
-    @staticmethod
-    def is_valid_output_exists(directory, valid_output_min_size_bytes):
-        return test_size(directory, valid_output_min_size_bytes)
-
-    @staticmethod
-    def is_output_successful(directory):
-        return test_size('%s/%s' % (directory, '_SUCCESS'), 0)
-
+    #Todo: move the HDFS-specific code to hadoop.hdfs_util
     @staticmethod
     def _assert_dir_contains_success(directory):
         client = create_client()
@@ -34,41 +27,46 @@ class TasksInfra(object):
             raise AssertionError(expected_success_path + " doesn't contain _SUCCESS file")
 
     @staticmethod
-    def assert_input_with_success(directory):
-        """
-        validates that hdfs directory contains _SUCCESS file. input marker function
-        """
-        return TasksInfra._assert_dir_contains_success(directory)
-
-    @staticmethod
-    def assert_output_with_success(directory):
-        """
-        validates that hdfs directory contains _SUCCESS file. output marker function
-        """
-        return TasksInfra._assert_dir_contains_success(directory)
-
-    @staticmethod
-    def is_valid_output_exists(directory, valid_output_min_size_bytes):
-        return test_size(directory, valid_output_min_size_bytes)
-
-    @staticmethod
-    def assert_input_validity(directories, valid_input_min_size_bytes):
+    def is_hdfs_collection_valid(directories,
+                                 valid_output_min_size_bytes=0,
+                                 validate_marker=False):
+        ans = True
         if isinstance(directories, list):
             for directory in directories:
-                TasksInfra.assert_input_validity(directory, valid_input_min_size_bytes)
-
-        assert test_size(directories,
-                         valid_input_min_size_bytes) is True, 'Input is not valid, given value is %s' % directories
-
-    @staticmethod
-    def assert_output_validity(directory, valid_output_min_size_bytes):
-        assert test_size(directory,
-                         valid_output_min_size_bytes) is True, 'Output is not valid, given value is %s' % directory
+                ans = ans and TasksInfra.is_hdfs_collection_valid(directory, valid_output_min_size_bytes, validate_marker)
+        else:
+            directory = directories
+            if validate_marker:
+                ans = ans and TasksInfra._assert_dir_contains_success(directory)
+            ans = ans and test_size(directory, valid_output_min_size_bytes)
+        return ans
 
     @staticmethod
-    def assert_output_success(directory):
-        assert test_size('%s/%s' % (directory, '_SUCCESS'),
-                         0) is True, 'Output is not valid, given value is %s' % directory
+    def is_valid_output_exists(directories,
+                               valid_output_min_size_bytes=0,
+                               validate_marker=False):
+        return TasksInfra.is_hdfs_collection_valid(directories,
+                                                   valid_output_min_size_bytes,
+                                                   validate_marker)
+
+    @staticmethod
+    def assert_input_validity(directories,
+                              valid_input_min_size_bytes=0,
+                              validate_marker=False):
+        assert TasksInfra.is_hdfs_collection_valid(directories,
+                                                   valid_input_min_size_bytes,
+                                                  validate_marker) is True,\
+            'Input is not valid, given value is %s' % directories
+
+
+    @staticmethod
+    def assert_output_validity(directories,
+                               valid_input_min_size_bytes=0,
+                               validate_marker=False):
+        assert TasksInfra.is_hdfs_collection_valid(directories,
+                                                   valid_input_min_size_bytes,
+                                                   validate_marker) is True, \
+            'Output is not valid, given value is %s' % directories
 
     @staticmethod
     def year_month_day(date):
@@ -79,18 +77,6 @@ class TasksInfra(object):
     def year_month(date):
         year_str = str(date.year)[2:]
         return 'year=%s/month=%s' % (year_str, str(date.month).zfill(2))
-
-    @staticmethod
-    def load_common_args_to_ctx(ctx, dry_run, force, base_dir, date, mode, mode_type):
-        d = {'dry_run': dry_run,
-             'force': force,
-             'base_dir': base_dir,
-             'date': date,
-             'mode': mode,
-             'mode_type': mode_type
-             }
-        ctx.config['sw_common'] = d
-        return ContextualizedTasksInfra(ctx)
 
     @staticmethod
     def add_command_params(command, command_params):
