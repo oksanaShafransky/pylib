@@ -97,15 +97,10 @@ class TasksInfra(object):
         ans = command
         for key, value in command_params.iteritems():
             if isinstance(value, bool) and value:
-                ans += " -%s " % key
+                ans += " -%s" % key
             else:
-                ans += " -%s " % key
-                ans += '"%s"' % value if isinstance(value, bool) else ""
+                ans += " -%s %s" % (key, value)
         return ans
-
-    @staticmethod
-    def __with_rerun_root_queue(command):
-        return 'setRootQueue reruns && %s' % command
 
 
 class ContextualizedTasksInfra(TasksInfra):
@@ -113,12 +108,14 @@ class ContextualizedTasksInfra(TasksInfra):
         self.ctx = ctx
         self.execution_dir = execution_dir
 
-    def __compose_infra_command(self, command):
-        ans = 'source %s/scripts/common.sh' % execution_dir
-        if self.__get_common_args()['dry_run']:
-            ans += " && setDryRun"
-        ans += " && " + command
+    @staticmethod
+    def __compose_infra_command(command):
+        ans = 'source %s/scripts/common.sh && %s' % (execution_dir, command)
         return ans
+
+    @staticmethod
+    def __with_rerun_root_queue(command):
+        return 'setRootQueue reruns && %s' % command
 
     def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, rerun_root_queue=False):
         command = self.__compose_infra_command(
