@@ -1,5 +1,6 @@
 import ConfigParser
 import calendar
+import logging
 import os
 import re
 import sys
@@ -7,7 +8,7 @@ import time
 
 import datetime
 
-from hadoop.hdfs_util import *
+from hadoop.hdfs_util import create_client, test_size
 
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../..'
@@ -18,13 +19,17 @@ class TasksInfra(object):
     def parse_date(date_str):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
-    #Todo: move the HDFS-specific code to hadoop.hdfs_util
+    # Todo: move the HDFS-specific code to hadoop.hdfs_util
     @staticmethod
     def __is_dir_contains_success(directory):
         client = create_client()
         expected_success_path = directory + "/_SUCCESS"
-        if not client.test(path=expected_success_path):
-            raise AssertionError(expected_success_path + " doesn't contain _SUCCESS file")
+        ans = client.test(path=expected_success_path)
+        if ans:
+            logging.warn(expected_success_path + " contains _SUCCESS file")
+        else:
+            logging.warn(expected_success_path + " doesn't contain _SUCCESS file")
+        return ans
 
     @staticmethod
     def __is_hdfs_collection_valid(directories,
@@ -39,7 +44,8 @@ class TasksInfra(object):
             if validate_marker:
                 ans = ans and TasksInfra.__is_dir_contains_success(directory)
             print directory
-            ans = ans and test_size(directory, min_valid_size_bytes)
+            if min_valid_size_bytes:
+                ans = ans and test_size(directory, min_valid_size_bytes)
         return ans
 
     @staticmethod
@@ -56,9 +62,8 @@ class TasksInfra(object):
                               validate_marker=False):
         assert TasksInfra.__is_hdfs_collection_valid(directories,
                                                      min_valid_size_bytes=valid_input_min_size_bytes,
-                                                     validate_marker=validate_marker) is True,\
+                                                     validate_marker=validate_marker) is True, \
             'Input is not valid, given value is %s' % directories
-
 
     @staticmethod
     def assert_output_validity(directories,
