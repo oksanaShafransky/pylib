@@ -38,7 +38,7 @@ class TasksInfra(object):
             directory = directories
             if validate_marker:
                 ans = ans and TasksInfra.__assert_dir_contains_success(directory)
-            ans = ans and test_size(directory, valid_output_min_size_bytes)
+            ans = ans and test_size(directory, min_valid_size_bytes)
         return ans
 
     @staticmethod
