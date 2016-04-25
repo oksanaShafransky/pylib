@@ -28,12 +28,12 @@ class TasksInfra(object):
 
     @staticmethod
     def __is_hdfs_collection_valid(directories,
-                                   valid_output_min_size_bytes=0,
+                                   min_valid_size_bytes=0,
                                    validate_marker=False):
         ans = True
         if isinstance(directories, list):
             for directory in directories:
-                ans = ans and TasksInfra.__is_hdfs_collection_valid(directory, valid_output_min_size_bytes, validate_marker)
+                ans = ans and TasksInfra.__is_hdfs_collection_valid(directory, min_valid_size_bytes, validate_marker)
         else:
             directory = directories
             if validate_marker:
@@ -46,26 +46,26 @@ class TasksInfra(object):
                                valid_output_min_size_bytes=0,
                                validate_marker=False):
         return TasksInfra.__is_hdfs_collection_valid(directories,
-                                                     valid_output_min_size_bytes,
-                                                     validate_marker)
+                                                     min_valid_size_bytes=valid_output_min_size_bytes,
+                                                     validate_marker=validate_marker)
 
     @staticmethod
     def assert_input_validity(directories,
                               valid_input_min_size_bytes=0,
                               validate_marker=False):
         assert TasksInfra.__is_hdfs_collection_valid(directories,
-                                                     valid_input_min_size_bytes,
-                                                     validate_marker) is True,\
+                                                     min_valid_size_bytes=valid_input_min_size_bytes,
+                                                     validate_marker=validate_marker) is True,\
             'Input is not valid, given value is %s' % directories
 
 
     @staticmethod
     def assert_output_validity(directories,
-                               valid_input_min_size_bytes=0,
+                               valid_output_min_size_bytes=0,
                                validate_marker=False):
         assert TasksInfra.__is_hdfs_collection_valid(directories,
-                                                     valid_input_min_size_bytes,
-                                                     validate_marker) is True, \
+                                                     min_valid_size_bytes=valid_output_min_size_bytes,
+                                                     validate_marker=validate_marker) is True, \
             'Output is not valid, given value is %s' % directories
 
     @staticmethod
