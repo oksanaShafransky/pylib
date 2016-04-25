@@ -50,6 +50,7 @@ class PtaskInvoker(Program):
             sw_tasks['force'] = False
         if self.args.rerun.value:
             sw_tasks['rerun'] = True
+        sw_tasks['task_name']=self.tasks[0].name
 
         merge_dicts(config['sw_common'], sw_tasks)
         return config
@@ -63,7 +64,11 @@ class PtaskInvoker(Program):
             # add pylib to path
             sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
             self._parse(argv)
+            # Restrict a run to one task at a time
+            assert len(self.tasks) == 1
+            print 'Starting ptask {0}'.format(self.tasks[0].name)
             self.execute()
+            print 'Finished successfuly ptask {0}'.format(self.tasks[0].name)
         except (Failure, Exit, ParseError) as e:
             debug("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.

@@ -20,7 +20,7 @@ class TasksInfra(object):
 
     #Todo: move the HDFS-specific code to hadoop.hdfs_util
     @staticmethod
-    def __assert_dir_contains_success(directory):
+    def __is_dir_contains_success(directory):
         client = create_client()
         expected_success_path = directory + "/_SUCCESS"
         if not client.test(path=expected_success_path):
@@ -37,7 +37,8 @@ class TasksInfra(object):
         else:
             directory = directories
             if validate_marker:
-                ans = ans and TasksInfra.__assert_dir_contains_success(directory)
+                ans = ans and TasksInfra.__is_dir_contains_success(directory)
+            print directory
             ans = ans and test_size(directory, min_valid_size_bytes)
         return ans
 
@@ -308,14 +309,6 @@ class ContextualizedTasksInfra(TasksInfra):
     def rerun(self):
         return self.__get_common_args()['rerun']
 
-
-def logged(func):
-    def logging_wrapper(*args, **kwargs):
-        task_name = func.__name__
-        print 'Starting %s' % task_name
-        print "Arguments are: %s, %s" % (args, kwargs)
-        retval = func(*args, **kwargs)
-        print '%s is finished' % task_name
-        return retval
-
-    return logging_wrapper
+    @property
+    def task_name(self):
+        return self.__get_common_args()['task_name']
