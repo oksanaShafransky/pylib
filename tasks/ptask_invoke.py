@@ -1,12 +1,15 @@
 #! /usr/bin/env python
+import logging
 import os
 import sys
 
 import datetime
 from invoke import Program, Argument, Config
 from invoke import ctask
+from invoke.config import merge_dicts
 from invoke.exceptions import Failure, ParseError, Exit
-from invoke.util import merge_dicts, debug
+
+log = logging.getLogger('ptask_invoke')
 
 
 class PtaskConfig(Config):
@@ -51,7 +54,7 @@ class PtaskInvoker(Program):
             sw_tasks['force'] = False
         if self.args.rerun.value:
             sw_tasks['rerun'] = True
-        sw_tasks['task_name']=self.tasks[0].name
+        sw_tasks['task_name'] = self.tasks[0].name
 
         merge_dicts(config['sw_common'], sw_tasks)
         return config
@@ -71,7 +74,7 @@ class PtaskInvoker(Program):
             self.execute()
             print 'Finished successfuly ptask {0}'.format(self.tasks[0].name)
         except (Failure, Exit, ParseError) as e:
-            debug("Received a possibly-skippable exception: {0!r}".format(e))
+            log.warn("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.
             if isinstance(e, ParseError):
                 sys.stderr.write("{0}\n".format(e))
