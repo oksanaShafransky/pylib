@@ -11,6 +11,9 @@ from invoke.exceptions import Failure, ParseError, Exit
 
 log = logging.getLogger('ptask_invoke')
 
+# TODO: should check cross validation?
+known_modes = ['snapshot', 'window', 'daily']
+known_mode_types = ['monthly', 'last-28', 'daily']
 
 class PtaskConfig(Config):
     @staticmethod
@@ -34,6 +37,8 @@ class PtaskInvoker(Program):
         extra_args = [
             Argument(names=('date', 'dt'), help="The task's logical day in ISO yyyy-MM-dd format", optional=True),
             Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's output", optional=True),
+            Argument(names=('mode', 'm'), help="Run mode (snapshot/window/daily)", optional=True),
+            Argument(names=('mode_type', 'mt'), help="Run mode type (monthly/window/daily)", optional=True),
             Argument(names=('dont_force', 'df'), kind=bool,
                      help="Don't force flag - when used, the task will skip if expected output exists at start"),
             Argument(names=('rerun', 'rr'), kind=bool,
@@ -50,6 +55,12 @@ class PtaskInvoker(Program):
             sw_tasks['date'] = PtaskInvoker.__parse_date(self.args.date.value)
         if self.args.base_dir.value:
             sw_tasks['base_dir'] = self.args.base_dir.value
+        if self.args.mode.value:
+            assert (self.args.mode.value in known_modes)
+            sw_tasks['mode'] = self.args.mode.value
+        if self.args.mode_type.value:
+            assert (self.args.mode_type.value in known_mode_types)
+            sw_tasks['mode_type'] = self.args.mode_type.value
         if self.args.dont_force.value:
             sw_tasks['force'] = False
         if self.args.rerun.value:
