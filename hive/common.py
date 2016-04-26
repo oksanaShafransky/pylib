@@ -246,18 +246,20 @@ def wait_on_processes(processes):
 
 def table_location(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
-    output, _ = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
+    output, err = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
     for line in output.split("\n"):
         if "Location:" in line:
             return line.split("\t")[1]
+    raise Exception('Cannot find the location for table %s stdout[%s] stderr[%s]')
 
 
 def hbase_table_name(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
-    output, _ = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
+    output, err = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
     for line in output.split("\n"):
         if "hbase.table.name" in line:
             return line.split("\t")[2]
+    raise Exception('Cannot find the name for table %s stdout[%s] stderr[%s]')
 
 
 def delete_path(path):
