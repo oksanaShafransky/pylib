@@ -225,7 +225,8 @@ class ContextualizedTasksInfra(TasksInfra):
                      named_spark_args=None,
                      py_files=None,
                      spark_configs=None,
-                     use_bigdata_defaults=False
+                     use_bigdata_defaults=False,
+                     queue=None
                      ):
         if files is None:
             files = []
@@ -247,6 +248,7 @@ class ContextualizedTasksInfra(TasksInfra):
         command = "spark-submit" \
                   " --name '%(app_name)s'" \
                   " --master yarn-cluster" \
+                  ' --queue %(queue)s' \
                   " --deploy-mode cluster" \
                   " --jars '%(jars)s'" \
                   " --files '%(files)s'" \
@@ -255,6 +257,7 @@ class ContextualizedTasksInfra(TasksInfra):
                   " '%(execution_dir)s/%(main_py)s'" \
                   % {'app_name': app_name if app_name else os.path.basename(main_py_file),
                      'execution_dir': module_dir,
+                     'queue': queue,
                      'files': "','".join(files),
                      'py-files': ','.join(py_files),
                      'spark-confs': additional_configs,
