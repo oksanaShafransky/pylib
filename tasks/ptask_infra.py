@@ -167,8 +167,12 @@ class ContextualizedTasksInfra(TasksInfra):
     def year_month_day(self):
         return TasksInfra.year_month_day(self.__get_common_args()['date'])
 
+    ymd = year_month_day
+
     def year_month(self):
         return TasksInfra.year_month(self.__get_common_args()['date'])
+
+    ym = year_month
 
     def days_in_range(self):
         end_date = self.__get_common_args()['date']
