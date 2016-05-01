@@ -89,11 +89,9 @@ class Action:
 
 
 class Stage(object):
-    def __init__(self, queries):
+    def __init__(self, name, queries):
+        self.name = name
         self.queries = queries
-
-    def __str__(self):
-        return '\n\n'.join(['\n'.join(x for x in self.queries)])
 
 
 def upsert_param(params, new_param):
@@ -170,9 +168,9 @@ class Executer(object):
             if handler == dj:
                 handler()
             else:
-                queries_list.append((action.name, self.evaluate_action(handler, action)))
+                queries_list.append(Stage(name = action.name, queries=self.evaluate_action(handler, action)))
 
-        return [Stage(queries_list)]
+        return queries_list
 
     def evaluate_action(self, handler, action):
         handler_args = []

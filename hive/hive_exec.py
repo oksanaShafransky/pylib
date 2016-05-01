@@ -68,9 +68,9 @@ class HiveExecuter(Executer):
         self.report_results()
 
         if 'failure' in self.results.values():
-            return (1)
+            return 1
 
-        return (0)
+        return 0
 
     def run_query_helper(self, arg_tuple):
         self.run_query(*arg_tuple)
@@ -78,8 +78,7 @@ class HiveExecuter(Executer):
     def run_step(self, stage, args, register=True):
         try:
             if isinstance(stage, Stage):
-                for sub_stage in stage.queries:
-                    self.run_step(sub_stage, args, False)
+                self.run_step(stage.queries, args, False)
             elif isinstance(stage, (list, tuple)):
                 for sub_stage in stage:
                     self.run_step(sub_stage, args, False)
