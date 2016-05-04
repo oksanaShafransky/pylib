@@ -80,6 +80,10 @@ class TasksInfra(object):
         return 'year=%s/month=%s/day=%s' % (year_str, str(date.month).zfill(2), str(date.day).zfill(2))
 
     @staticmethod
+    def year_month_day_country(date, country):
+        return '%s/country=%s' % (TasksInfra.year_month_day(date), country)
+
+    @staticmethod
     def year_month(date):
         year_str = str(date.year)[2:]
         return 'year=%s/month=%s' % (year_str, str(date.month).zfill(2))
@@ -166,6 +170,9 @@ class ContextualizedTasksInfra(TasksInfra):
 
     def year_month_day(self):
         return TasksInfra.year_month_day(self.__get_common_args()['date'])
+
+    def year_month_day_country(self, country):
+        return TasksInfra.year_month_day_country(self.__get_common_args()['date'], country)
 
     def year_month(self):
         return TasksInfra.year_month(self.__get_common_args()['date'])
