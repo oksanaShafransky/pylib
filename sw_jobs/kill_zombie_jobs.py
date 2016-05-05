@@ -42,7 +42,7 @@ class ZombieKiller:
                     #raise ZombieJobFoundException(task_id)
 
                     app_kill_url = kill_app_template % {'server': job_rm, 'port': job_rm_port, 'app_id': id}
-                    r = requests.put(app_kill_url, data=json.dumps({'state': 'KILLED'}))
+                    r = requests.put(app_kill_url, headers={"content-type", "application/json"}, data=json.dumps({'state': 'KILLED'}))
                     r.raise_for_status()
 
             except Exception as e:
