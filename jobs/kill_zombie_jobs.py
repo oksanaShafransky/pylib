@@ -21,8 +21,8 @@ user = 'airflow'
 zombie_apps_template = '%(server)s:%(port)d/ws/v1/cluster/apps?user=%(user)s&states=%(states)s&applicationTags=%(task_id)s'
 kill_app_template = '%(server)s:%(port)d/ws/v1/cluster/apps/%(app_id)s/state'
 
-class ZombieKiller:
 
+class ZombieKiller:
     @staticmethod
     def kill_zombie_jobs(task_id):
         logger.info('checking if jobs with Airflow unique identifier %s is running...' % task_id)
@@ -39,7 +39,7 @@ class ZombieKiller:
                     logger.info('found and killing %s...' % id)
 
                     # For transition period, fail the job
-                    raise Exception('zombie job found, failing...')
+                    raise ZombieJobFoundException(task_id)
 
                     app_kill_url = kill_app_template % {'server': job_rm, 'port': job_rm_port, 'app_id': id}
                     r = requests.put(app_kill_url, data=json.dumps({'state': 'KILLED'}))
@@ -48,10 +48,14 @@ class ZombieKiller:
             except Exception as e:
                 logger.error('could not kill zombie job')
                 logger.error(traceback.format_exc())
-                sys.exit(1)
+                raise
         else:
             logger.info('no zombie job found')
 
+
+class ZombieJobFoundException(Exception):
+    def __init___(self, task_id):
+        super(ZombieJobFoundException, self).__init__(self, "Zombie job found for task id %s" % task_id)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
