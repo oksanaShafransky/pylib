@@ -39,7 +39,7 @@ class ZombieKiller:
                     logger.info('found and killing %s...' % id)
 
                     # For transition period, fail the job
-                    raise ZombieJobFoundException(task_id)
+                    #raise ZombieJobFoundException(task_id)
 
                     app_kill_url = kill_app_template % {'server': job_rm, 'port': job_rm_port, 'app_id': id}
                     r = requests.put(app_kill_url, data=json.dumps({'state': 'KILLED'}))
