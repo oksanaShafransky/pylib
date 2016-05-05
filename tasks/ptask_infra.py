@@ -321,6 +321,14 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.__get_common_args()['date']
 
     @property
+    def mode(self):
+        return self.__get_common_args()['mode']
+
+    @property
+    def mode_type(self):
+        return self.__get_common_args()['mode_type']
+
+    @property
     def rerun(self):
         return self.__get_common_args()['rerun']
 
