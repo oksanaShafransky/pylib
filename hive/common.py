@@ -209,7 +209,7 @@ def deploy_jar(deploy_path, jar_hdfs_location):
     subprocess.call(["hadoop", "fs", "-mkdir", "-p", jar_hdfs_location])
     subprocess.call(["hadoop", "fs", "-put", deploy_path + "/analytics.jar", jar_hdfs_location + "/analytics.jar"])
     subprocess.call(
-            ["hadoop", "fs", "-put", deploy_path + "/lib/common-1.0.jar", jar_hdfs_location + "/common.jar"])
+        ["hadoop", "fs", "-put", deploy_path + "/lib/common-1.0.jar", jar_hdfs_location + "/common.jar"])
 
 
 # use ['add jar %s' % jar for jar in detect_jars(...) ]
@@ -246,18 +246,22 @@ def wait_on_processes(processes):
 
 def table_location(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
-    output, _ = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
-    for line in output.split("\n"):
-        if "Location:" in line:
-            return line.split("\t")[1]
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, err = p.communicate()
+    if p.returncode == 0:
+        for line in output.split("\n"):
+            if "Location:" in line:
+                return line.split("\t")[1]
+    raise Exception('Cannot find the location for table %s \n stdout[%s] \n stderr[%s]' % (table, output, err))
 
 
 def hbase_table_name(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
-    output, _ = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
+    output, err = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
     for line in output.split("\n"):
         if "hbase.table.name" in line:
             return line.split("\t")[2]
+    raise Exception('Cannot find the name for table %s stdout[%s] stderr[%s]')
 
 
 def delete_path(path):
@@ -312,7 +316,7 @@ def should_create_external_hbase_table(orig_table_name, hbase_table_name_val):
 def temp_hbase_table_cmds(orig_table_name, hbase_root_table_name, mode, mode_type, date):
     full_hbase_table_name = hbase_root_table_name + hbase_table_suffix(date, mode, mode_type)
     logger.info(
-            "Checking whether to create external table %s for HBase table %s:" % (
+        "Checking whether to create external table %s for HBase table %s:" % (
             orig_table_name, full_hbase_table_name))
     if should_create_external_hbase_table(orig_table_name, full_hbase_table_name):
         logger.info("Writing to an external table with the given name.")
@@ -394,6 +398,7 @@ def list_days(end_date, mode, mode_type):
         return None
 
     return [end_date - timedelta(days=x) for x in range(0, delta.days)]
+
 
 def hbase_table_suffix(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
     # in_date_fmt='%Y-%m' if mode == 'snapshot' else '%Y-%m-%d'
