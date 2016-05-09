@@ -25,6 +25,10 @@ kill_app_template = '%(server)s:%(port)d/ws/v1/cluster/apps/%(app_id)s/state'
 class ZombieKiller:
     @staticmethod
     def kill_zombie_jobs(task_id):
+
+        if not task_id:
+            raise ValueError("task_id cannot be empty")
+
         logger.info('checking if jobs with Airflow unique identifier %s is running...' % task_id)
 
         job_url = zombie_apps_template % {'server': job_rm, 'port': job_rm_port, 'user': user, 'states': valid_states,
