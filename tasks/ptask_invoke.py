@@ -65,7 +65,9 @@ class PtaskInvoker(Program):
             sw_tasks['force'] = False
         if self.args.rerun.value:
             sw_tasks['rerun'] = True
-        sw_tasks['task_name'] = self.tasks[0].name
+        sw_tasks['dag_id'] = os.environ['TASK_ID'].split('.')[1]
+        sw_tasks['task_id'] = os.environ['TASK_ID'].split('.')[2]
+        sw_tasks['dt'] = os.environ['TASK_ID'].split('.')[3]
 
         merge_dicts(config['sw_common'], sw_tasks)
         return config
@@ -81,9 +83,9 @@ class PtaskInvoker(Program):
             self._parse(argv)
             # Restrict a run to one task at a time
             assert len(self.tasks) == 1
-            print 'Starting ptask {0}'.format(self.tasks[0].name)
+            print 'Starting ptask {0}'.format(os.environ['TASK_ID'])
             self.execute()
-            print 'Finished successfuly ptask {0}'.format(self.tasks[0].name)
+            print 'Finished successfuly ptask {0}'.format(os.environ['TASK_ID'].split('.')[2])
         except (Failure, Exit, ParseError) as e:
             log.warn("Received a possibly-skippable exception: {0!r}".format(e))
             # Print error message from parser if necessary.
