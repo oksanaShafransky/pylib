@@ -20,43 +20,6 @@ class TasksInfra(object):
     def parse_date(date_str):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
-    # Todo: move the HDFS-specific code to hadoop.hdfs_util
-    @staticmethod
-    def __is_dir_contains_success(directory):
-        client = create_client()
-        expected_success_path = directory + "/_SUCCESS"
-        ans = client.test(path=expected_success_path)
-        if ans:
-            logging.warn(expected_success_path + " contains _SUCCESS file")
-        else:
-            logging.warn(expected_success_path + " doesn't contain _SUCCESS file")
-        return ans
-
-    @staticmethod
-    def __is_hdfs_collection_valid(directories,
-                                   min_valid_size_bytes=0,
-                                   validate_marker=False):
-        ans = True
-        if isinstance(directories, list):
-            for directory in directories:
-                ans = ans and TasksInfra.__is_hdfs_collection_valid(directory, min_valid_size_bytes, validate_marker)
-        else:
-            directory = directories
-            if validate_marker:
-                ans = ans and TasksInfra.__is_dir_contains_success(directory)
-            print directory
-            if min_valid_size_bytes:
-                ans = ans and test_size(directory, min_valid_size_bytes)
-        return ans
-
-    @staticmethod
-    def is_valid_output_exists(directories,
-                               valid_output_min_size_bytes=0,
-                               validate_marker=False):
-        return TasksInfra.__is_hdfs_collection_valid(directories,
-                                                     min_valid_size_bytes=valid_output_min_size_bytes,
-                                                     validate_marker=validate_marker)
-
     @staticmethod
     def year_month_day(date):
         year_str = str(date.year)[2:]
@@ -111,6 +74,42 @@ class ContextualizedTasksInfra(TasksInfra):
             command = self.__with_rerun_root_queue(command)
         return command
 
+    # Todo: move the HDFS-specific code to hadoop.hdfs_util
+    @staticmethod
+    def __is_dir_contains_success(directory):
+        client = create_client()
+        expected_success_path = directory + "/_SUCCESS"
+        ans = client.test(path=expected_success_path)
+        if ans:
+            logging.warn(expected_success_path + " contains _SUCCESS file")
+        else:
+            logging.warn(expected_success_path + " doesn't contain _SUCCESS file")
+        return ans
+
+    @staticmethod
+    def __is_hdfs_collection_valid(directories,
+                                   min_valid_size_bytes=0,
+                                   validate_marker=False):
+        ans = True
+        if isinstance(directories, list):
+            for directory in directories:
+                ans = ans and ContextualizedTasksInfra.__is_hdfs_collection_valid(directory, min_valid_size_bytes, validate_marker)
+        else:
+            directory = directories
+            if validate_marker:
+                ans = ans and ContextualizedTasksInfra.__is_dir_contains_success(directory)
+            if min_valid_size_bytes:
+                ans = ans and test_size(directory, min_valid_size_bytes)
+        return ans
+
+    @staticmethod
+    def is_valid_output_exists(directories,
+                               valid_output_min_size_bytes=0,
+                               validate_marker=False):
+        return ContextualizedTasksInfra.__is_hdfs_collection_valid(directories,
+                                                     min_valid_size_bytes=valid_output_min_size_bytes,
+                                                     validate_marker=validate_marker)
+
     def __compose_python_runner_command(self, python_executable, command_params):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
         command = self.add_command_params(command, command_params)
@@ -122,7 +121,8 @@ class ContextualizedTasksInfra(TasksInfra):
     def log_lineage_hdfs(self, directories, direction):
         if self.execution_user != 'Airflow':
             return
-        lineage_value_template = '%(execution_user).%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction):hdfs::(directory)%s'
+        lineage_value_template = \
+            '%(execution_user)s.%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction)s:hdfs::%(directory)s'
 
         def lineage_value_log_hdfs_collection_template(directory, direction):
             return lineage_value_template % {
@@ -144,7 +144,6 @@ class ContextualizedTasksInfra(TasksInfra):
             directory = directories
             lineage_value = lineage_value_log_hdfs_collection_template(directory, direction)
             client.rpush(lineage_key, lineage_value)
-        client.close()
 
     def assert_input_validity(self, directories,
                               valid_input_min_size_bytes=0,
@@ -307,10 +306,10 @@ class ContextualizedTasksInfra(TasksInfra):
         command = TasksInfra.add_command_params(command, command_params)
         return self.run_bash(command)
 
-    def read_s3_configuration(self, property):
+    def read_s3_configuration(self, property_key):
         config = ConfigParser.ConfigParser()
         config.read('%s/scripts/.s3cfg' % self.execution_dir)
-        return config.get('default', property)
+        return config.get('default', property_key)
 
     def consolidate_dir(self, path, io_format=None, codec=None):
 
