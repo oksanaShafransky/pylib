@@ -65,9 +65,10 @@ class PtaskInvoker(Program):
             sw_tasks['force'] = False
         if self.args.rerun.value:
             sw_tasks['rerun'] = True
+        sw_tasks['execution_user'] = os.environ['TASK_ID'].split('.')[0]
         sw_tasks['dag_id'] = os.environ['TASK_ID'].split('.')[1]
         sw_tasks['task_id'] = os.environ['TASK_ID'].split('.')[2]
-        sw_tasks['dt'] = os.environ['TASK_ID'].split('.')[3]
+        sw_tasks['execution_dt'] = os.environ['TASK_ID'].split('.')[3]
 
         merge_dicts(config['sw_common'], sw_tasks)
         return config

@@ -9,6 +9,7 @@ import time
 import datetime
 
 from hadoop.hdfs_util import create_client, test_size
+from redis import StrictRedis as Redis
 
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../..'
@@ -55,24 +56,6 @@ class TasksInfra(object):
         return TasksInfra.__is_hdfs_collection_valid(directories,
                                                      min_valid_size_bytes=valid_output_min_size_bytes,
                                                      validate_marker=validate_marker)
-
-    @staticmethod
-    def assert_input_validity(directories,
-                              valid_input_min_size_bytes=0,
-                              validate_marker=False):
-        assert TasksInfra.__is_hdfs_collection_valid(directories,
-                                                     min_valid_size_bytes=valid_input_min_size_bytes,
-                                                     validate_marker=validate_marker) is True, \
-            'Input is not valid, given value is %s' % directories
-
-    @staticmethod
-    def assert_output_validity(directories,
-                               valid_output_min_size_bytes=0,
-                               validate_marker=False):
-        assert TasksInfra.__is_hdfs_collection_valid(directories,
-                                                     min_valid_size_bytes=valid_output_min_size_bytes,
-                                                     validate_marker=validate_marker) is True, \
-            'Output is not valid, given value is %s' % directories
 
     @staticmethod
     def year_month_day(date):
@@ -135,6 +118,51 @@ class ContextualizedTasksInfra(TasksInfra):
 
     def __get_common_args(self):
         return self.ctx.config.config['sw_common']
+
+    def log_lineage_hdfs(self, directories, direction):
+        if self.execution_user != 'Airflow':
+            return
+        lineage_value_template = '%(execution_user).%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction):hdfs::(directory)%s'
+
+        def lineage_value_log_hdfs_collection_template(directory, direction):
+            return lineage_value_template % {
+                'execution_user': self.execution_user,
+                'dag_id': self.dag_id,
+                'task_id': self.task_id,
+                'execution_dt': self.execution_dt,
+                'directory': directory,
+                'direction': direction
+            }
+
+        client = Redis(host='redis-bigdata.service.production')
+        lineage_key = 'LINEAGE_%s' % datetime.date.today().strftime('%y-%m-%d')
+        if isinstance(directories, list):
+            for directory in directories:
+                lineage_value = lineage_value_log_hdfs_collection_template(directory, direction)
+                client.rpush(lineage_key, lineage_value)
+        else:
+            directory = directories
+            lineage_value = lineage_value_log_hdfs_collection_template(directory, direction)
+            client.rpush(lineage_key, lineage_value)
+        client.close()
+
+    def assert_input_validity(self, directories,
+                              valid_input_min_size_bytes=0,
+                              validate_marker=False):
+        self.log_lineage_hdfs(directories, 'input')
+        assert TasksInfra.__is_hdfs_collection_valid(directories,
+                                                     min_valid_size_bytes=valid_input_min_size_bytes,
+                                                     validate_marker=validate_marker) is True, \
+            'Input is not valid, given value is %s' % directories
+
+    def assert_output_validity(self, directories,
+                               valid_output_min_size_bytes=0,
+                               validate_marker=False):
+        self.log_lineage_hdfs(directories, 'output')
+        assert TasksInfra.__is_hdfs_collection_valid(directories,
+                                                     min_valid_size_bytes=valid_output_min_size_bytes,
+                                                     validate_marker=validate_marker) is True, \
+            'Output is not valid, given value is %s' % directories
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
@@ -337,6 +365,10 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.__get_common_args()['rerun']
 
     @property
+    def execution_user(self):
+        return self.__get_common_args()['execution_user']
+
+    @property
     def task_id(self):
         return self.__get_common_args()['task_id']
 
@@ -345,5 +377,5 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.__get_common_args()['dag_id']
 
     @property
-    def task_ts(self):
-        return self.__get_common_args()['task_ts']
+    def execution_dt(self):
+        return self.__get_common_args()['execution_dt']
