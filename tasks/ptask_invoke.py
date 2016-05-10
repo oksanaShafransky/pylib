@@ -15,6 +15,7 @@ log = logging.getLogger('ptask_invoke')
 known_modes = ['snapshot', 'window', 'daily']
 known_mode_types = ['monthly', 'last-28', 'daily']
 
+
 class PtaskConfig(Config):
     @staticmethod
     def global_defaults():
@@ -85,7 +86,7 @@ class PtaskInvoker(Program):
             self.execute()
             print 'Finished successfuly ptask {0}'.format(self.tasks[0].name)
         except (Failure, Exit, ParseError) as e:
-            log.warn("Received a possibly-skippable exception: {0!r}".format(e))
+            log.warn('Received a possibly-skippable exception: {0!r}'.format(e))
             # Print error message from parser if necessary.
             if isinstance(e, ParseError):
                 sys.stderr.write("{0}\n".format(e))
@@ -97,5 +98,5 @@ def main():
     program.run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
