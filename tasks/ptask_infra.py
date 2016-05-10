@@ -119,7 +119,7 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.ctx.config.config['sw_common']
 
     def log_lineage_hdfs(self, directories, direction):
-        if self.execution_user != 'Airflow':
+        if self.execution_user != 'airflow':
             return
         lineage_value_template = \
             '%(execution_user)s.%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction)s:hdfs::%(directory)s'
