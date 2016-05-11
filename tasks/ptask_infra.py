@@ -149,7 +149,7 @@ class ContextualizedTasksInfra(TasksInfra):
                               valid_input_min_size_bytes=0,
                               validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
-        assert TasksInfra.__is_hdfs_collection_valid(directories,
+        assert self.__is_hdfs_collection_valid(directories,
                                                      min_valid_size_bytes=valid_input_min_size_bytes,
                                                      validate_marker=validate_marker) is True, \
             'Input is not valid, given value is %s' % directories
@@ -158,7 +158,7 @@ class ContextualizedTasksInfra(TasksInfra):
                                valid_output_min_size_bytes=0,
                                validate_marker=False):
         self.log_lineage_hdfs(directories, 'output')
-        assert TasksInfra.__is_hdfs_collection_valid(directories,
+        assert self.__is_hdfs_collection_valid(directories,
                                                      min_valid_size_bytes=valid_output_min_size_bytes,
                                                      validate_marker=validate_marker) is True, \
             'Output is not valid, given value is %s' % directories
