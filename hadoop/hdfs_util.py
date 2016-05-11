@@ -98,13 +98,6 @@ def test_size(path, min_size_required=None):
         return False
 
 
-def get_hive_partition_values(base_path, column_name):
-    hdfs_client = create_client()
-    all_paths = [v['path'] for v in hdfs_client.ls([base_path], recurse=True, include_toplevel=True)]
-    relevant_paths = filter(lambda p: '/_' not in p and '/.' not in p, all_paths)
-    return extract_hive_partition_values(relevant_paths, column_name)
-
-
 def extract_hive_partition_values(paths, column_name):
     assert isinstance(paths, list), "paths parameter should be instance of list, got " + paths
     values = []
@@ -117,3 +110,15 @@ def extract_hive_partition_values(paths, column_name):
                     assert '' != path_component_parts[1], 'Empty partition value is not expected here.' + path
                     values.append(path_component_parts[1])
     return sorted(list(set(values)))
+
+
+def get_hive_partition_values(base_path, column_name):
+    hdfs_client = create_client()
+    all_paths = [v['path'] for v in hdfs_client.ls([base_path], recurse=True, include_toplevel=True)]
+    relevant_paths = filter(lambda p: '/_' not in p and '/.' not in p, all_paths)
+    return extract_hive_partition_values(relevant_paths, column_name)
+
+
+def read_files(paths):
+    hdfs_client = create_client()
+    return hdfs_client.text(paths).next()

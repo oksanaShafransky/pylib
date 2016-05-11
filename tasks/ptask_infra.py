@@ -360,8 +360,16 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.__get_common_args()['mode_type']
 
     @property
+    def date_suffix(self):
+        return self.year_month() if self.mode == 'snapshot' else self.year_month_day()
+
+    @property
     def rerun(self):
         return self.__get_common_args()['rerun']
+
+    @property
+    def env_type(self):
+        return self.__get_common_args()['env_type']
 
     @property
     def execution_user(self):
