@@ -98,7 +98,14 @@ def test_size(path, min_size_required=None):
         return False
 
 
-def get_hive_partition_values(paths, column_name):
+def get_hive_partition_values(base_path, column_name):
+    hdfs_client = create_client()
+    all_paths = [v['path'] for v in hdfs_client.ls([base_path], recurse=True, include_toplevel=True)]
+    relevant_paths = filter(lambda p: '/_' not in p and '/.' not in p, all_paths)
+    return extract_hive_partition_values(relevant_paths, column_name)
+
+
+def extract_hive_partition_values(paths, column_name):
     assert isinstance(paths, list), "paths parameter should be instance of list, got " + paths
     values = []
     for path in paths:
