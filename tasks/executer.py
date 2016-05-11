@@ -138,6 +138,8 @@ class Executer(object):
                 return common_param
 
     def add_action(self, action_name, action_handler, action_params, kw_params=None, help=None):
+        print 'handler is'
+        print action_handler
         action = Action(action_name, action_params, self.subparsers, kw_params=kw_params,
                         parent_parser=self.common_parser, action_help=help)
         self.add_stage(action_name, [(action_handler, action)])
@@ -158,12 +160,11 @@ class Executer(object):
 
         action_name = self.args.action
 
-        if not action_name in self.actions:
+        if action_name not in self.actions:
             self.common_parser.error('Action %s is not supported by this executor' % action_name)
             exit(1)
 
         handler_action_list = self.actions[action_name]
-
         queries_list = []
         for handler, action in handler_action_list:
             from hive.common import deploy_jars as dj

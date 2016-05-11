@@ -350,8 +350,9 @@ class deploy_jars:
 
     def invoke_fnc(self, f, *args, **kwargs):
         upload_target = '/similargroup/jars/%s/' % date.strftime('%Y-%m-%d-%H-%M-%S')
-        deploy_cmd = lambda *args, **kwargs: deploy_all_jars(kwargs[self.param], upload_target)
-        return [deploy_cmd, f(*args, **kwargs)]
+        jars_to_add = deploy_all_jars(kwargs[self.param], upload_target)
+        add_jars_cmd = '\n'.join(['add jar hdfs://%s/%s;' % (upload_target, jar_name) for jar_name in jars_to_add])
+        return f(jars_to_add=add_jars_cmd, *args, **kwargs)
 
     def __call__(self, fnc):
         return lambda *args, **kwargs: self.invoke_fnc(fnc, *args, **kwargs)
