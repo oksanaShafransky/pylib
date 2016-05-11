@@ -341,5 +341,9 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.__get_common_args()['rerun']
 
     @property
+    def env_type(self):
+        return self.__get_common_args()['env_type']
+
+    @property
     def task_name(self):
         return self.__get_common_args()['task_name']

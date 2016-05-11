@@ -40,10 +40,9 @@ class PtaskInvoker(Program):
             Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's output", optional=True),
             Argument(names=('mode', 'm'), help="Run mode (snapshot/window/daily)", optional=True),
             Argument(names=('mode_type', 'mt'), help="Run mode type (monthly/window/daily)", optional=True),
-            Argument(names=('dont_force', 'df'), kind=bool,
-                     help="Don't force flag - when used, the task will skip if expected output exists at start"),
-            Argument(names=('rerun', 'rr'), kind=bool,
-                     help="Rerun flag - when used, the task will use YARN reruns root queue")
+            Argument(names=('dont_force', 'df'), kind=bool, help="Don't force flag - when used, the task will skip if expected output exists at start"),
+            Argument(names=('rerun', 'rr'), kind=bool, help="Rerun flag - when used, the task will use YARN reruns root queue"),
+            Argument(names=('env_type', 'et'), help="Environment type (dev/staging/production)", optional=True),
         ]
         return core_args + extra_args
 
@@ -66,6 +65,8 @@ class PtaskInvoker(Program):
             sw_tasks['force'] = False
         if self.args.rerun.value:
             sw_tasks['rerun'] = True
+        if self.args.env_type.value:
+            sw_tasks['env_type'] = self.args.env_type.value
         sw_tasks['task_name'] = self.tasks[0].name
 
         merge_dicts(config['sw_common'], sw_tasks)

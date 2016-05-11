@@ -96,3 +96,8 @@ def test_size(path, min_size_required=None):
     except FileNotFoundException:
         logger.info('it does not')
         return False
+
+
+def read_files(paths):
+    hdfs_client = create_client()
+    return hdfs_client.text(paths).next()
