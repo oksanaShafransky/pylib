@@ -96,3 +96,17 @@ def test_size(path, min_size_required=None):
     except FileNotFoundException:
         logger.info('it does not')
         return False
+
+
+def get_hive_partition_values(paths, column_name):
+    assert isinstance(paths, list), "paths parameter should be instance of list, got " + paths
+    values = []
+    for path in paths:
+        path_components = path.split('/')
+        for path_component in path_components:
+            if '=' in path_component:
+                path_component_parts = path_component.split('=')
+                if len(path_component_parts) == 2 and column_name == path_component_parts[0]:
+                    assert '' != path_component_parts[1], 'Empty partition value is not expected here.' + path
+                    values.append(path_component_parts[1])
+    return sorted(list(set(values)))
