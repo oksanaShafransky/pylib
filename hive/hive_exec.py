@@ -52,8 +52,15 @@ class HiveExecuter(Executer):
             ('mode', 'daily'): ('mode_type', 'last-1')
         }
 
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
     def execute(self):
         steps = super(HiveExecuter, self).execute()
+        self.setup()
 
         self.results = {}
 
@@ -66,6 +73,8 @@ class HiveExecuter(Executer):
             raise ValueError
 
         self.report_results()
+
+        self.cleanup()
 
         if 'failure' in self.results.values():
             return 1
@@ -142,3 +151,7 @@ class HiveExecuter(Executer):
         logger.info('reporting execution summary\n')
         for key in self.results:
             logger.info('%s: %s' % (key, self.results[key]))
+
+    def cache_file(self, path, name):
+        logger.info('caching file %s as %s' % (path, name if name is not None else path.split('/')[-1]))
+        hive_runner.cache_file(path, name)

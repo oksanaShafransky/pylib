@@ -167,6 +167,11 @@ def report(proc, log_path, stderrdata, start_time):
         warnings.warn('Cannot update Kibana. Exception during execution:\n %s' % traceback.format_exc())
 
 
+# caches an hdfs file ot each spawned job
+def cache_file(file_path, name_to_use=None):
+    pass
+
+
 def run_hive(cmd, log_path=None):
     start_time = datetime.now()
     err_temp = tempfile.TemporaryFile()
