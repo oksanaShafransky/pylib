@@ -341,21 +341,14 @@ def formatted(f):
     return lambda *args, **kwargs: dedent(f(*args, **kwargs))
 
 
-class deploy_jars:
-    def __init__(self, jar_path_param='deploy_path'):
-        self.param = jar_path_param
-
-    def assign_table_from_params(self, **kwargs):
-        return temp_table_cmds(self.table_name(**kwargs), kwargs[self.param])
-
-    def invoke_fnc(self, f, *args, **kwargs):
-        upload_target = '/similargroup/jars/%s/' % date.strftime('%Y-%m-%d-%H-%M-%S')
-        jars_to_add = deploy_all_jars(kwargs[self.param], upload_target)
+def deploy_jars(f):
+    def invoke(fnc, *args, **kwargs):
+        upload_target = '/similargroup/jars/%s/' % datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        jars_to_add = deploy_all_jars(kwargs['deploy_path'], upload_target)
         add_jars_cmd = '\n'.join(['add jar hdfs://%s/%s;' % (upload_target, jar_name) for jar_name in jars_to_add])
-        return f(jars_to_add=add_jars_cmd, *args, **kwargs)
+        return fnc(jars_to_add=add_jars_cmd, *args, **kwargs)
 
-    def __call__(self, fnc):
-        return lambda *args, **kwargs: self.invoke_fnc(fnc, *args, **kwargs)
+    return lambda *args, **kwargs: invoke(f, *args, **kwargs)
 
 
 def parse_date(dt):
@@ -395,6 +388,7 @@ def list_days(end_date, mode, mode_type):
         return None
 
     return [end_date - timedelta(days=x) for x in range(0, delta.days)]
+
 
 def hbase_table_suffix(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
     # in_date_fmt='%Y-%m' if mode == 'snapshot' else '%Y-%m-%d'
