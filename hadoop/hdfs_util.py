@@ -127,3 +127,8 @@ def list_files(paths):
 def read_files(paths):
     hdfs_client = create_client()
     return hdfs_client.text(paths).next()
+
+
+def get_file(file_path, local_name):
+    hdfs_client = create_client()
+    return hdfs_client.copyToLocal([file_path], local_name).next()
