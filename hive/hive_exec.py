@@ -175,4 +175,3 @@ class HiveExecuter(Executer):
         cached_file_name = name if name is not None else path.split('/')[-1]
         logger.info('caching file %s as %s' % (path, cached_file_name))
         self.cached_files += [cached_file_name]
-        hive_runner.cache_file(path, name)
