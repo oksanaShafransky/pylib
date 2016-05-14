@@ -175,3 +175,5 @@ class HiveExecuter(Executer):
         cached_file_name = name if name is not None else path.split('/')[-1]
         logger.info('caching file %s as %s' % (path, cached_file_name))
         self.cached_files += [cached_file_name]
+        from hadoop.hdfs_util import get_file
+        get_file(path, '%s/%s' % (self.cache_dir, cached_file_name))
