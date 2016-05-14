@@ -131,7 +131,7 @@ class HiveExecuter(Executer):
 
         # register cached files
         for cached_file in self.cached_files:
-            query_str = 'ADD FILE %s; \n%s' % (cached_file, query_str)
+            query_str = 'ADD FILE %s/%s; \n%s' % (self.cache_dir, cached_file, query_str)
 
         job_params = [args.date.strftime('%Y-%m-%d'), args.mode]
         if 'key' in vars(args):
