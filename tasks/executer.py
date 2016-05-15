@@ -138,8 +138,6 @@ class Executer(object):
                 return common_param
 
     def add_action(self, action_name, action_handler, action_params, kw_params=None, help=None):
-        print 'handler is'
-        print action_handler
         action = Action(action_name, action_params, self.subparsers, kw_params=kw_params,
                         parent_parser=self.common_parser, action_help=help)
         self.add_stage(action_name, [(action_handler, action)])
