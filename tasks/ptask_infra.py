@@ -89,6 +89,10 @@ class TasksInfra(object):
         return 'year=%s/month=%s' % (year_str, str(date.month).zfill(2))
 
     @staticmethod
+    def year_month_country(date, country):
+        return '%s/country=%s' % (TasksInfra.year_month(date), country)
+
+    @staticmethod
     def add_command_params(command, command_params):
         ans = command
         for key, value in command_params.iteritems():
