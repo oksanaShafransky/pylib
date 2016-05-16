@@ -1,6 +1,7 @@
 import shutil
 import tempfile
 import traceback
+from datetime import datetime
 
 __author__ = 'Felix'
 
@@ -13,6 +14,19 @@ from tasks.executer import Executer, Arg, Stage, CONCURRENCY
 
 
 class HiveExecuter(Executer):
+
+    CACHED_FILES_STAGING_DIR = '/tmp/hive/cached_files'
+
+    def __init__(self):
+        super(HiveExecuter, self).__init__()
+        self.cache_dir = '%s/%s' % (HiveExecuter.CACHED_FILES_STAGING_DIR, datetime.now().strftime('%Y.%m.%d.%H.%M.%S'))
+        self.cached_files = []
+        import subprocess
+        subprocess.call(['mkdir', '-p', self.cache_dir])
+
+    def __del__(self):
+        import subprocess
+        subprocess.call(['rm', '-r', '-f', self.cache_dir])
 
     def get_common_params(self):
         date_param = Arg('-d', '--date', 'date', Arg.date_arg, 'Date to use in %Y-%m-%d or %Y-%m format', required=True)
@@ -52,8 +66,15 @@ class HiveExecuter(Executer):
             ('mode', 'daily'): ('mode_type', 'last-1')
         }
 
+    def setup(self):
+        pass
+
+    def cleanup(self):
+        pass
+
     def execute(self):
         steps = super(HiveExecuter, self).execute()
+        self.setup()
 
         self.results = {}
 
@@ -66,6 +87,8 @@ class HiveExecuter(Executer):
             raise ValueError
 
         self.report_results()
+
+        self.cleanup()
 
         if 'failure' in self.results.values():
             return 1
@@ -106,6 +129,10 @@ class HiveExecuter(Executer):
 
     def run_query(self, query_name, query_str, args):
 
+        # register cached files
+        for cached_file in self.cached_files:
+            query_str = 'ADD FILE %s/%s; \n%s' % (self.cache_dir, cached_file, query_str)
+
         job_params = [args.date.strftime('%Y-%m-%d'), args.mode]
         if 'key' in vars(args):
             job_params.append(args.key)
@@ -142,3 +169,11 @@ class HiveExecuter(Executer):
         logger.info('reporting execution summary\n')
         for key in self.results:
             logger.info('%s: %s' % (key, self.results[key]))
+
+    # caches an hdfs file to each spawned job
+    def cache_file(self, path, name):
+        cached_file_name = name if name is not None else path.split('/')[-1]
+        logger.info('caching file %s as %s' % (path, cached_file_name))
+        self.cached_files += [cached_file_name]
+        from hadoop.hdfs_util import get_file
+        get_file(path, '%s/%s' % (self.cache_dir, cached_file_name))

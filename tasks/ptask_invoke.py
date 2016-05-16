@@ -15,6 +15,7 @@ log = logging.getLogger('ptask_invoke')
 known_modes = ['snapshot', 'window', 'daily']
 known_mode_types = ['monthly', 'last-28', 'daily']
 
+
 class PtaskConfig(Config):
     @staticmethod
     def global_defaults():
@@ -39,10 +40,9 @@ class PtaskInvoker(Program):
             Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's output", optional=True),
             Argument(names=('mode', 'm'), help="Run mode (snapshot/window/daily)", optional=True),
             Argument(names=('mode_type', 'mt'), help="Run mode type (monthly/window/daily)", optional=True),
-            Argument(names=('dont_force', 'df'), kind=bool,
-                     help="Don't force flag - when used, the task will skip if expected output exists at start"),
-            Argument(names=('rerun', 'rr'), kind=bool,
-                     help="Rerun flag - when used, the task will use YARN reruns root queue")
+            Argument(names=('dont_force', 'df'), kind=bool, help="Don't force flag - when used, the task will skip if expected output exists at start"),
+            Argument(names=('rerun', 'rr'), kind=bool, help="Rerun flag - when used, the task will use YARN reruns root queue"),
+            Argument(names=('env_type', 'et'), help="Environment type (dev/staging/production)", optional=True),
         ]
         return core_args + extra_args
 
@@ -65,7 +65,13 @@ class PtaskInvoker(Program):
             sw_tasks['force'] = False
         if self.args.rerun.value:
             sw_tasks['rerun'] = True
-        sw_tasks['task_name'] = self.tasks[0].name
+        if self.args.env_type.value:
+            sw_tasks['env_type'] = self.args.env_type.value
+
+        sw_tasks['execution_user'] = os.environ['TASK_ID'].split('.')[0]
+        sw_tasks['dag_id'] = os.environ['TASK_ID'].split('.')[1]
+        sw_tasks['task_id'] = os.environ['TASK_ID'].split('.')[2]
+        sw_tasks['execution_dt'] = os.environ['TASK_ID'].split('.')[3]
 
         merge_dicts(config['sw_common'], sw_tasks)
         return config
@@ -81,11 +87,11 @@ class PtaskInvoker(Program):
             self._parse(argv)
             # Restrict a run to one task at a time
             assert len(self.tasks) == 1
-            print 'Starting ptask {0}'.format(self.tasks[0].name)
+            print 'Starting ptask {0}'.format(os.environ['TASK_ID'])
             self.execute()
-            print 'Finished successfuly ptask {0}'.format(self.tasks[0].name)
+            print 'Finished successfuly ptask {0}'.format(os.environ['TASK_ID'].split('.')[2])
         except (Failure, Exit, ParseError) as e:
-            log.warn("Received a possibly-skippable exception: {0!r}".format(e))
+            log.warn('Received a possibly-skippable exception: {0!r}'.format(e))
             # Print error message from parser if necessary.
             if isinstance(e, ParseError):
                 sys.stderr.write("{0}\n".format(e))
@@ -97,5 +103,5 @@ def main():
     program.run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
