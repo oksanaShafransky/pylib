@@ -339,6 +339,15 @@ class ContextualizedTasksInfra(TasksInfra):
             command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
 
+    def write_to_hbase(self, key, table, col_family, col, value):
+        print 'writing %s to key %s column %s at table %s' % (value, key, '%s:%s' % (col_family, col), table)
+        import happybase
+        HBASE = 'mrp'   # TODO: allow for inference based on config
+        srv = 'hbase-%s.service.production' % HBASE
+        conn = happybase.Connection(srv)
+        conn.table(table).put(key, {'%s:%s' % (col_family, col): value})
+        conn.close()
+
     def repair_table(self, db, table):
         self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db, table))
 
@@ -369,6 +378,10 @@ class ContextualizedTasksInfra(TasksInfra):
     @property
     def date_suffix(self):
         return self.year_month() if self.mode == 'snapshot' else self.year_month_day()
+
+    @property
+    def table_suffix(self):
+        return '_%s' % self.date.strftime('%y_%m') if self.mode == 'snapshot' else '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
 
     @property
     def rerun(self):
