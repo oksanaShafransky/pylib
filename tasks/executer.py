@@ -156,12 +156,11 @@ class Executer(object):
 
         action_name = self.args.action
 
-        if not action_name in self.actions:
+        if action_name not in self.actions:
             self.common_parser.error('Action %s is not supported by this executor' % action_name)
             exit(1)
 
         handler_action_list = self.actions[action_name]
-
         queries_list = []
         for handler, action in handler_action_list:
             from hive.common import deploy_jars as dj
