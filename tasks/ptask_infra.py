@@ -174,7 +174,7 @@ class ContextualizedTasksInfra(TasksInfra):
                                                  main_class=main_class,
                                                  command_params=command_params,
                                                  rerun_root_queue=self.rerun)
-        )
+        ).ok
 
     # Todo: Move it to the mobile project
     def run_mobile_hadoop(self, command_params,
@@ -189,15 +189,15 @@ class ContextualizedTasksInfra(TasksInfra):
         print ("Running '%s'" % command)
         sys.stdout.flush()
         time.sleep(1)
-        self.ctx.run(command)
+        return self.ctx.run(command)
 
     def run_python(self, python_executable, command_params):
-        return self.run_bash(self.__compose_python_runner_command(python_executable, command_params))
+        return self.run_bash(self.__compose_python_runner_command(python_executable, command_params)).ok
 
     def latest_monthly_success_date(self, directory, month_lookback):
         d = self.__get_common_args()['date']
         command = self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, d, month_lookback))
-        return self.run_bash(command=command).strip()
+        return self.run_bash(command=command).stdout.strip()
 
     def year_month_day(self):
         return TasksInfra.year_month_day(self.__get_common_args()['date'])
@@ -249,7 +249,7 @@ class ContextualizedTasksInfra(TasksInfra):
                    'main_class': main_class,
                    'jar': jar}
         command = TasksInfra.add_command_params(command, command_params)
-        return self.run_bash(command)
+        return self.run_bash(command).ok
 
     @staticmethod
     def get_jars_list(module_dir, jars_from_lib):
@@ -311,7 +311,7 @@ class ContextualizedTasksInfra(TasksInfra):
                      }
 
         command = TasksInfra.add_command_params(command, command_params)
-        return self.run_bash(command)
+        return self.run_bash(command).ok
 
     def read_s3_configuration(self, property_key):
         config = ConfigParser.ConfigParser()
