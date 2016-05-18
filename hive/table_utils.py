@@ -112,11 +112,11 @@ def should_create_external_table(orig_table_name, location):
 def temp_table_cmds(orig_table_name, root):
     print 'Checking whether to create external table %s in location %s:' % (orig_table_name, root)
     if root is not None and should_create_external_table(orig_table_name, root):
-        logger.info('Writing to an external table in the given location.')
+        print 'Writing to an external table in the given location'
         table_name, drop_cmd, create_cmd = temp_table_cmds_internal(orig_table_name, root)
         return table_name, (drop_cmd + create_cmd), drop_cmd
     else:
-        print 'Writing to the original table in place. The location which was passed is being discarded.'
+        print 'Writing to the original table in place. The location which was passed is being discarded'
         repair_cmd = 'MSCK REPAIR TABLE %s;\n' % orig_table_name
         return orig_table_name, repair_cmd, ''
 
