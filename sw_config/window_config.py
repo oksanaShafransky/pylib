@@ -4,7 +4,7 @@ from data import *
 
 MINIMAL_VIABLE_DATES_SIZE = 2
 DESRIED_DATES_SIZE = 3
-
+LOOKBACK_SIZE = 10
 
 class SimilarWebWindowConfig:
 
@@ -35,5 +35,9 @@ class SimilarWebWindowConfig:
     @staticmethod
     def min_healthy_options():
         return DESRIED_DATES_SIZE
+
+    @staticmethod
+    def lookback_options():
+        return LOOKBACK_SIZE
 
 
