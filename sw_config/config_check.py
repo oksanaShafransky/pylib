@@ -70,5 +70,5 @@ if __name__ == '__main__':
 
     # TODO add artifacts option and filter the ones provided by the config
     sets, deletes = parse_modifications(sys.argv[1:])
-    if not check_config(SimilarWebWindowConfig, changes=sets, deletes=deletes):
+    if not check_config(SimilarWebWindowConfig, sets=sets, deletes=deletes):
         sys.exit(1)
