@@ -381,10 +381,7 @@ class ContextualizedTasksInfra(TasksInfra):
 
     @property
     def table_suffix(self):
-        if self.mode == 'snapshot':
-            return '_%s' % self.date.strftime('%y_%m')
-        else:
-            return '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
+        return '_%s' % self.date.strftime('%y_%m') if self.mode == 'snapshot' else '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
 
     @property
     def rerun(self):
