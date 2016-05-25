@@ -1,9 +1,10 @@
-__author__ = 'Felix'
+import logging
+import subprocess
 
 import snakebite.client
 from snakebite.errors import FileNotFoundException
-import subprocess
-import logging
+
+__author__ = 'Felix'
 
 MRP_HDFS_NAMENODE_PORT = 8020
 MRP_HDFS_NAMENODE_SERVER = 'active.hdfs-namenode-mrp.service.production'
@@ -17,19 +18,20 @@ def create_client():
 
 
 # needed because the regular client throws an exception when a parent directory doesnt exist either
-def directory_exists(dir_name):
-    hdfs_client = create_client()
-
+def directory_exists(dir_name, hdfs_client=None):
+    if not hdfs_client:
+        hdfs_client = create_client()
     try:
         return hdfs_client.test(dir_name, directory=True)
     except FileNotFoundException:
         return False
 
 
-def file_exists(file_parh):
-    hdfs_client = create_client()
+def file_exists(file_path, hdfs_client=None):
+    if not hdfs_client:
+        hdfs_client = create_client()
     try:
-        return hdfs_client.test(path=file_parh)
+        return hdfs_client.test(path=file_path)
     except FileNotFoundException:
         return False
 
@@ -121,7 +123,8 @@ def get_hive_partition_values(base_path, column_name):
 
 def list_files(paths):
     hdfs_client = create_client()
-    return [child['path'] for child in hdfs_client.ls([paths] if not isinstance(paths, list) else paths) if child['file_type'] == 'f']
+    return [child['path'] for child in hdfs_client.ls([paths] if not isinstance(paths, list) else paths) if
+            child['file_type'] == 'f']
 
 
 def read_files(paths):
@@ -132,3 +135,14 @@ def read_files(paths):
 def get_file(file_path, local_name):
     hdfs_client = create_client()
     return hdfs_client.copyToLocal([file_path], local_name).next()
+
+
+def mark_success(dir_path, create_missing_path=False):
+    hdfs_client = create_client()
+    if create_missing_path:
+        hdfs_client.mkdir(paths=[dir_path], create_parent=True).next()
+
+    if not isinstance(dir_path, basestring):
+        raise Exception('if you want different type to be supported, implement it yourself')
+
+    hdfs_client.touchz(paths=[dir_path + '/_SUCCESS']).next()
