@@ -54,9 +54,12 @@ class HiveExecuter(Executer):
                                'mapreduce.job.reduce.slowstart.completedmaps',
                                required=False, default=None)
         hive_db = Arg('-hdb', '--hive-database', 'hive_db', str, 'hive db to use', required=False, default='analytics')
+        local_hive_db = Arg('-lhdb', '--local-hive-database', 'local_hive_db', str, 'local hive db to use',
+                            required=False, default='analytics')
 
         return [date_param, mode_param, mode_type_param, num_reducers_param, sync_param, dry_run_param,
-                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param, hive_db]
+                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param,
+                hive_db, local_hive_db]
 
     def get_arg_dependencies(self):
 
