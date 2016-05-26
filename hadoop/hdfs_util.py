@@ -129,7 +129,7 @@ def list_files(paths):
 
 def read_files(paths):
     hdfs_client = create_client()
-    return hdfs_client.text(paths).next()
+    return ''.join(hdfs_client.text(paths))
 
 
 def get_file(file_path, local_name):
@@ -140,9 +140,15 @@ def get_file(file_path, local_name):
 def mark_success(dir_path, create_missing_path=False):
     hdfs_client = create_client()
     if create_missing_path:
-        hdfs_client.mkdir(paths=[dir_path], create_parent=True).next()
+        mkdir(dir_path, hdfs_client)
 
     if not isinstance(dir_path, basestring):
         raise Exception('if you want different type to be supported, implement it yourself')
 
     hdfs_client.touchz(paths=[dir_path + '/_SUCCESS']).next()
+
+
+def mkdir(dir_path, hdfs_client=None):
+    if not hdfs_client:
+        hdfs_client = create_client()
+    hdfs_client.mkdir(paths=[dir_path], create_parent=True).next()
