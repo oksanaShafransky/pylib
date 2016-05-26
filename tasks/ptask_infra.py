@@ -176,6 +176,12 @@ class ContextualizedTasksInfra(TasksInfra):
                                                  rerun_root_queue=self.rerun)
         ).ok
 
+    def fail(self, reason=None):
+        if reason is not None:
+            assert False, reason
+        else:
+            assert False
+
     # Todo: Move it to the mobile project
     def run_mobile_hadoop(self, command_params,
                           main_class='com.similargroup.mobile.main.MobileRunner',
