@@ -14,7 +14,6 @@ from tasks.executer import Executer, Arg, Stage, CONCURRENCY
 
 
 class HiveExecuter(Executer):
-
     CACHED_FILES_STAGING_DIR = '/tmp/hive/cached_files'
 
     def __init__(self):
@@ -56,7 +55,8 @@ class HiveExecuter(Executer):
         hive_db = Arg('-hdb', '--hive-database', 'hive_db', str, 'hive db to use', required=False, default='analytics')
 
         return [date_param, mode_param, mode_type_param, num_reducers_param, sync_param, dry_run_param,
-                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param, hive_db]
+                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param,
+                hive_db]
 
     def get_arg_dependencies(self):
 
@@ -139,12 +139,10 @@ class HiveExecuter(Executer):
         if 'type' in vars(args):
             job_params.append(args.type)
 
+        logger.info('Action Name:%s' % query_name)
         if args.dry_run:
-            logger.info('DryRun:\n%s' % query_str)
-            logger.info('Query is:\n%s' % query_str)
+            logger.info('DryRun Query :\n%s' % query_str)
             return
-        else:
-            logger.info('Action Name:%s' % query_name)
 
         log_dir = tempfile.gettempdir() + '/logs/hive_exec/' + tempfile._get_candidate_names().next()
         logger.info('Hive log is at: %s' % log_dir)
