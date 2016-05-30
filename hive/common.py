@@ -255,7 +255,7 @@ def wait_on_processes(processes):
         print p.communicate()
 
 
-def table_location(table):
+def get_table_location(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -316,14 +316,11 @@ def temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name):
 
 
 def should_create_temp_table(orig_table_name, table_loc):
-    def __norm_loc(location):
-        location = str(location)
-        if 'hdfs://' in location:
-            location = urlparse(location).path
-        return location.rstrip('/')
+    def __normalalize(location):
+        return os.path.normpath(urlparse(str(location)).path)
 
-    table_loc = __norm_loc(table_loc)
-    orig_table_loc = __norm_loc(table_location(orig_table_name))
+    table_loc = __normalalize(table_loc)
+    orig_table_loc = __normalalize(get_table_location(orig_table_name))
 
     logger.info("Checking that '%s' != '%s'" % (orig_table_loc, table_loc))
     return orig_table_loc != table_loc
