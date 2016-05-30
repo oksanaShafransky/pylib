@@ -259,9 +259,8 @@ def table_location(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
     try:
         p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    except WindowsError as e:
-        logger.warn(e.strerror + " 'hive'")
-        logger.warn("Usually happens in dev scenario. Returning empty string")
+    except OSError as e:
+        logger.warn("Unable to run 'hive'. This usually happens in dev scenario. Returning empty string")
         return ''
     output, err = p.communicate()
     if p.returncode == 0:
