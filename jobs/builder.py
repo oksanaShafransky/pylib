@@ -13,6 +13,7 @@ from stats import PostJobHandler, PrintRecorder
 __author__ = 'Felix'
 
 HADOOP_JAR_HOME = '/usr/lib/hadoop-0.20-mapreduce'
+PYTHON_HOME = '/opt/anaconda/envs/mrp27/bin/python'
 
 std_run_modes = ['local', 'emr', 'hadoop', 'inline']
 std_hadoop_home = '/usr/bin/hadoop'
@@ -66,7 +67,7 @@ class JobBuilder:
             '--jobconf', ('mapreduce.map.failures.maxpercent=%d' % self.max_map_fail_percentage),
             '--jobconf', ('mapreduce.map.maxattempts=%d' % self.max_map_task_fails),
             '--jobconf', ('mapreduce.reduce.maxattempts=%d' % self.max_reduce_task_fails),
-            '--setup', 'export PATH=$PATH:/usr/lib/python2.6/site-packages:/usr/lib64/python2.6/site-packages',
+            '--python-bin', PYTHON_HOME,
             '--setup', 'export PYTHONPATH=$PYTHONPATH:$PATH'
         ]
 
