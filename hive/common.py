@@ -82,10 +82,10 @@ class GracefulShutdownHandler:
 
 
 def getPartitionString(mode, mode_type, year, month, day, **kwargs):
-    if mode == "window" or mode_type == "weekly":
-        partition_parts = "year=%s, month=%02d, day=%02d, type='%s'" % (year, month, day, mode_type)
-    elif mode == "daily":
+    if mode == "daily":
         partition_parts = "year=%s, month=%02d, day=%02d" % (year, month, day)
+    elif mode == "window" or mode_type == "weekly":
+        partition_parts = "year=%s, month=%02d, day=%02d, type='%s'" % (year, month, day, mode_type)
     else:
         partition_parts = "year=%s, month=%02d, type='%s'" % (year, month, mode_type)
 
@@ -257,7 +257,12 @@ def wait_on_processes(processes):
 
 def table_location(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except WindowsError as e:
+        logger.warn(e.strerror + " 'hive'")
+        logger.warn("Usually happens in dev scenario. Returning empty string")
+        return ''
     output, err = p.communicate()
     if p.returncode == 0:
         for line in output.split("\n"):
@@ -311,7 +316,7 @@ def temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name):
     return table_name, drop_cmd, create_cmd
 
 
-def should_create_external_table(orig_table_name, table_loc):
+def should_create_temp_table(orig_table_name, table_loc):
     def __norm_loc(location):
         location = str(location)
         if 'hdfs://' in location:
@@ -344,8 +349,8 @@ def temp_hbase_table_cmds(orig_table_name, hbase_root_table_name, mode, mode_typ
 
 
 def temp_table_cmds(orig_table_name, table_location):
-    logger.info("Checking whether to create external table %s in location %s:" % (orig_table_name, table_location))
-    if should_create_external_table(orig_table_name, table_location):
+    logger.info("Checking whether to create temporary table %s over location %s:" % (orig_table_name, table_location))
+    if should_create_temp_table(orig_table_name, table_location):
         logger.info("Writing to temp table in the given location.")
         return temp_table_cmds_internal(orig_table_name, table_location)
     else:
