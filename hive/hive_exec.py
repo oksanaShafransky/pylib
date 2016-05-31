@@ -40,7 +40,7 @@ class HiveExecuter(Executer):
         dry_run_param = Arg('-dr', '--dry-run', 'dry_run', bool, 'If set, only output statements without running',
                             required=False, default=False)
         output_table_param = Arg('-o', '--output_table_path', 'output_table_path', str,
-                                 'Output path root (not including the partition path', required=True)
+                                 'Output path root (not including the partition path)', required=False)
         check_out_param = Arg('-co', '--check-output', 'check_output', bool, 'Return if output already exists',
                               required=False, default=False)
         merge_out_param = Arg('-dmo', '--dont-merge-output', 'no_merge_output', bool, 'Whether To Merge Output Files',
