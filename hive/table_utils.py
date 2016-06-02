@@ -97,7 +97,9 @@ class TableProvided:
         return temp_table_cmds(self.table_name(**kwargs), kwargs[self.param])
 
     def invoke_fnc(self, f, *args, **kwargs):
-        effective_table_name, pre_cmd, post_cmd = self.assign_table_from_params(**kwargs)
+        effective_table_name, drop_cmd, create_cmd = self.assign_table_from_params(**kwargs)
+        pre_cmd = drop_cmd + create_cmd
+        post_cmd = drop_cmd
         kwargs[self.table_alias] = effective_table_name
         return pre_cmd + f(*args, **kwargs) + post_cmd
 
