@@ -1,4 +1,4 @@
-from hive.common import temp_table_cmds
+from common import temp_table_cmds, temp_hbase_table_cmds
 
 try:
     import pyhs2
@@ -95,6 +95,30 @@ class TableProvided:
 
     def assign_table_from_params(self, **kwargs):
         return temp_table_cmds(self.table_name(**kwargs), kwargs[self.param])
+
+    def invoke_fnc(self, f, *args, **kwargs):
+        effective_table_name, drop_cmd, create_cmd = self.assign_table_from_params(**kwargs)
+        pre_cmd = drop_cmd + create_cmd
+        post_cmd = drop_cmd
+        kwargs[self.table_alias] = effective_table_name
+        return pre_cmd + f(*args, **kwargs) + post_cmd
+
+    def __call__(self, fnc):
+        return lambda *args, **kwargs: self.invoke_fnc(fnc, *args, **kwargs)
+
+
+class HBaseTableProvided:
+    def __init__(self, alias, table_name_resolver, mode_param='mode', mode_type_param='mode_type', date_param='date'):
+        self.table_alias = alias
+        self.mode_param, self.mode_type_param, self.date_param = mode_param, mode_type_param, date_param
+
+        if isfunction(table_name_resolver):
+            self.table_name = table_name_resolver
+        else:
+            self.table_name = lambda **kwargs: table_name_resolver
+
+    def assign_table_from_params(self, **kwargs):
+        return temp_hbase_table_cmds(self.table_name(**kwargs), kwargs[self.mode_param], kwargs[self.mode_type_param], kwargs[self.date_param])
 
     def invoke_fnc(self, f, *args, **kwargs):
         effective_table_name, drop_cmd, create_cmd = self.assign_table_from_params(**kwargs)
