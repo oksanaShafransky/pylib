@@ -368,7 +368,7 @@ def deploy_jars(f):
         upload_target = '/similargroup/jars/%s/' % datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         jars_to_add = deploy_all_jars(kwargs['deploy_path'], upload_target)
         add_jars_cmd = '\n'.join(['add jar hdfs://%s/%s;' % (upload_target, jar_name) for jar_name in jars_to_add])
-        return fnc(jars_to_add=add_jars_cmd, *args, **kwargs)
+        return add_jars_cmd + fnc(jars_to_add=add_jars_cmd, *args, **kwargs)
 
     return lambda *args, **kwargs: invoke(f, *args, **kwargs)
 
