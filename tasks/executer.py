@@ -28,7 +28,7 @@ class Arg:
     def __init__(self, short_name, long_name, attribute, type, help, required=True, default=None):
         self.short = short_name
         self.long = long_name
-        self.attr = attribute
+        self.attribute = attribute
 
         self.registered = False
 
@@ -45,16 +45,17 @@ class Arg:
 
     def add_argument(self, target_parser):
         if self.type == 'choice':
-            target_parser.add_argument(self.short, self.long, choices=self.choices, dest=self.attr,
+            target_parser.add_argument(self.short, self.long, choices=self.choices, dest=self.attribute,
                                        required=self.required, default=self.default_value, help=self.help)
         elif self.type == bool:
-            target_parser.add_argument(self.short, self.long, action='store_true', dest=self.attr,
+            target_parser.add_argument(self.short, self.long, action='store_true', dest=self.attribute,
                                        required=self.required, default=self.default_value, help=self.help)
         elif type == str:
-            target_parser.add_argument(self.short, self.long, dest=self.attr, required=self.required,
+            target_parser.add_argument(self.short, self.long, dest=self.attribute, required=self.required,
                                        default=self.default_value, help=self.help)
         else:
-            target_parser.add_argument(self.short, self.long, type=self.type, dest=self.attr, required=self.required,
+            target_parser.add_argument(self.short, self.long, type=self.type, dest=self.attribute,
+                                       required=self.required,
                                        default=self.default_value, help=self.help)
 
         self.registered = True
@@ -95,8 +96,8 @@ class Stage(object):
 
 
 def upsert_param(params, new_param):
-    """ Replace param if it is already in common params list with new definition. Check is done by target attr"""
-    candidates = [param for param in params if param.attr == new_param.attr]
+    """ Replace param if it is already in common params list with new definition. Check is done by target attribute"""
+    candidates = [param for param in params if param.attribute == new_param.attribute]
 
     if len(candidates) not in [0, 1]:
         raise argparse.ArgumentError('colliding params: ' + str(candidates))
@@ -132,7 +133,7 @@ class Executer(object):
 
     def common_param(self, param_name):
         for common_param in self.common_params:
-            if common_param.attr == param_name:
+            if common_param.attribute == param_name:
                 return common_param
 
     def add_action(self, action_name, action_handler, action_params, kw_params=None, help=None):
@@ -167,7 +168,7 @@ class Executer(object):
             if handler == dj:
                 handler()
             else:
-                queries_list.append(Stage(name = action.name, queries=self.evaluate_action(handler, action)))
+                queries_list.append(Stage(name=action.name, queries=self.evaluate_action(handler, action)))
 
         return queries_list
 
@@ -175,7 +176,7 @@ class Executer(object):
         handler_args = []
         for param in action.params:
             if isinstance(param, Arg):
-                handler_args += [getattr(self.args, param.attr)]
+                handler_args += [getattr(self.args, param.attribute)]
             elif isinstance(param, Const):
                 handler_args += [param.value]
             else:
@@ -185,7 +186,7 @@ class Executer(object):
         for named_param in action.kw_params:
             kw_param = action.kw_params[named_param]
             if isinstance(kw_param, Arg):
-                handler_kwargs[named_param] = getattr(self.args, kw_param.attr)
+                handler_kwargs[named_param] = getattr(self.args, kw_param.attribute)
             elif isinstance(kw_param, Const):
                 handler_kwargs[named_param] = kw_param.value
             else:
