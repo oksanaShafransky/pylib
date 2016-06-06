@@ -345,8 +345,9 @@ class ContextualizedTasksInfra(TasksInfra):
             command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
 
-    def write_to_hbase(self, key, table, col_family, col, value):
-        print 'writing %s to key %s column %s at table %s' % (value, key, '%s:%s' % (col_family, col), table)
+    def write_to_hbase(self, key, table, col_family, col, value, log=True):
+        if log:
+            print 'writing %s to key %s column %s at table %s' % (value, key, '%s:%s' % (col_family, col), table)
         import happybase
         HBASE = 'mrp'   # TODO: allow for inference based on config
         srv = 'hbase-%s.service.production' % HBASE
