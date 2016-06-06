@@ -39,8 +39,8 @@ class TasksInfra(object):
         return '%s/country=%s' % (TasksInfra.year_month(date), country)
 
     @staticmethod
-    def add_command_params(command, command_params):
-        ans = command
+    def add_command_params(command, command_params, *positional):
+        ans = command + ' ' + ' '.join(positional)
         for key, value in command_params.iteritems():
             if isinstance(value, bool) and value:
                 ans += " -%s" % key
@@ -114,9 +114,9 @@ class ContextualizedTasksInfra(TasksInfra):
                                                      min_valid_size_bytes=valid_output_min_size_bytes,
                                                      validate_marker=validate_marker)
 
-    def __compose_python_runner_command(self, python_executable, command_params):
+    def __compose_python_runner_command(self, python_executable, command_params, *positional):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
-        command = self.add_command_params(command, command_params)
+        command = self.add_command_params(command, command_params, *positional)
         return command
 
     def __get_common_args(self):
@@ -176,6 +176,12 @@ class ContextualizedTasksInfra(TasksInfra):
                                                  rerun_root_queue=self.rerun)
         ).ok
 
+    def fail(self, reason=None):
+        if reason is not None:
+            assert False, reason
+        else:
+            assert False
+
     # Todo: Move it to the mobile project
     def run_mobile_hadoop(self, command_params,
                           main_class='com.similargroup.mobile.main.MobileRunner',
@@ -191,8 +197,8 @@ class ContextualizedTasksInfra(TasksInfra):
         time.sleep(1)
         return self.ctx.run(command)
 
-    def run_python(self, python_executable, command_params):
-        return self.run_bash(self.__compose_python_runner_command(python_executable, command_params)).ok
+    def run_python(self, python_executable, command_params, *positional):
+        return self.run_bash(self.__compose_python_runner_command(python_executable, command_params, *positional)).ok
 
     def latest_monthly_success_date(self, directory, month_lookback):
         d = self.__get_common_args()['date']
@@ -381,7 +387,10 @@ class ContextualizedTasksInfra(TasksInfra):
 
     @property
     def table_suffix(self):
-        return '_%s' % self.date.strftime('%y_%m') if self.mode == 'snapshot' else '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
+        if self.mode == 'snapshot':
+            return '_%s' % self.date.strftime('%y_%m')
+        else:
+            return '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
 
     @property
     def rerun(self):

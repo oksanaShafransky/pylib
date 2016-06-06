@@ -14,7 +14,6 @@ from tasks.executer import Executer, Arg, Stage, CONCURRENCY
 
 
 class HiveExecuter(Executer):
-
     CACHED_FILES_STAGING_DIR = '/tmp/hive/cached_files'
 
     def __init__(self):
@@ -41,7 +40,7 @@ class HiveExecuter(Executer):
         dry_run_param = Arg('-dr', '--dry-run', 'dry_run', bool, 'If set, only output statements without running',
                             required=False, default=False)
         output_table_param = Arg('-o', '--output_table_path', 'output_table_path', str,
-                                 'Output path root (not including the partition path', required=True)
+                                 'Output path root (not including the partition path)', required=False)
         check_out_param = Arg('-co', '--check-output', 'check_output', bool, 'Return if output already exists',
                               required=False, default=False)
         merge_out_param = Arg('-dmo', '--dont-merge-output', 'no_merge_output', bool, 'Whether To Merge Output Files',
@@ -142,12 +141,10 @@ class HiveExecuter(Executer):
         if 'type' in vars(args):
             job_params.append(args.type)
 
+        logger.info('Action Name:%s' % query_name)
         if args.dry_run:
-            logger.info('DryRun:\n%s' % query_str)
-            logger.info('Query is:\n%s' % query_str)
+            logger.info('DryRun Query :\n%s' % query_str)
             return
-        else:
-            logger.info('Action Name:%s' % query_name)
 
         log_dir = tempfile.gettempdir() + '/logs/hive_exec/' + tempfile._get_candidate_names().next()
         logger.info('Hive log is at: %s' % log_dir)

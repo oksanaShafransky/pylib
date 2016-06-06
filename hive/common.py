@@ -82,10 +82,10 @@ class GracefulShutdownHandler:
 
 
 def getPartitionString(mode, mode_type, year, month, day, **kwargs):
-    if mode == "window" or mode_type == "weekly":
-        partition_parts = "year=%s, month=%02d, day=%02d, type='%s'" % (year, month, day, mode_type)
-    elif mode == "daily":
+    if mode == "daily":
         partition_parts = "year=%s, month=%02d, day=%02d" % (year, month, day)
+    elif mode == "window" or mode_type == "weekly":
+        partition_parts = "year=%s, month=%02d, day=%02d, type='%s'" % (year, month, day, mode_type)
     else:
         partition_parts = "year=%s, month=%02d, type='%s'" % (year, month, mode_type)
 
@@ -129,11 +129,22 @@ def getWhereString(table_prefix, mode, mode_type, year, month, day):
             'mode_type': mode_type}
 
 
-def get_monthly_where(year, month, day=None):
-    if day:
-        return 'year=%02d and month=%02d and day=%02d ' % (year, month, day)
+def get_monthly_where(year, month, day=None, table_prefix=None):
+    params = {'table': table_prefix,
+              'year': year,
+              'month': month,
+              'day': day
+              }
+
+    if table_prefix is not None:
+        result = '%(table)s.year=%(year)02d AND %(table)s.month=%(month)02d' % params
+        if day is not None:
+            result += ' AND %(table)s.day=%(day)02d' % params
     else:
-        return 'year=%02d and month=%02d ' % (year, month)
+        result = 'year=%02d AND month=%02d' % (year, month)
+        if day is not None:
+            result += ' AND day=%02d' % day
+    return result
 
 
 def get_range_where_clause(year, month, day, mode, mode_type):
@@ -244,14 +255,18 @@ def wait_on_processes(processes):
         print p.communicate()
 
 
-def table_location(table):
+def get_table_location(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except OSError as e:
+        logger.warn("Unable to run 'hive'. This usually happens in dev scenario. Returning empty string")
+        return ''
     output, err = p.communicate()
     if p.returncode == 0:
         for line in output.split("\n"):
             if "Location:" in line:
-                return line.split("\t")[1]
+                return str(line.split("\t")[1]).strip()
     raise Exception('Cannot find the location for table %s \n stdout[%s] \n stderr[%s]' % (table, output, err))
 
 
@@ -300,12 +315,15 @@ def temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name):
     return table_name, drop_cmd, create_cmd
 
 
-def should_create_external_table(orig_table_name, location):
-    # Remove hdfs:// where needed for comparison
-    if 'hdfs://' in location:
-        location = urlparse(location).path
-    table_loc = table_location(orig_table_name)
-    return table_loc != location
+def should_create_temp_table(orig_table_name, table_loc):
+    def __normalalize(location):
+        return os.path.normpath(urlparse(str(location)).path)
+
+    table_loc = __normalalize(table_loc)
+    orig_table_loc = __normalalize(get_table_location(orig_table_name))
+
+    logger.info("Checking that '%s' != '%s'" % (orig_table_loc, table_loc))
+    return orig_table_loc != table_loc
 
 
 def should_create_external_hbase_table(orig_table_name, hbase_table_name_val):
@@ -326,11 +344,11 @@ def temp_hbase_table_cmds(orig_table_name, hbase_root_table_name, mode, mode_typ
         return orig_table_name, '', ''
 
 
-def temp_table_cmds(orig_table_name, root):
-    logger.info("Checking whether to create external table %s in location %s:" % (orig_table_name, root))
-    if should_create_external_table(orig_table_name, root):
-        logger.info("Writing to an external table in the given location.")
-        return temp_table_cmds_internal(orig_table_name, root)
+def temp_table_cmds(orig_table_name, table_location):
+    logger.info("Checking whether to create temporary table %s over location %s:" % (orig_table_name, table_location))
+    if should_create_temp_table(orig_table_name, table_location):
+        logger.info("Writing to temp table in the given location.")
+        return temp_table_cmds_internal(orig_table_name, table_location)
     else:
         logger.info("Writing to the original table in place. The location which was passed is being discarded.")
         repair_cmd = 'MSCK REPAIR TABLE %s;\n' % orig_table_name
@@ -350,7 +368,7 @@ def deploy_jars(f):
         upload_target = '/similargroup/jars/%s/' % datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
         jars_to_add = deploy_all_jars(kwargs['deploy_path'], upload_target)
         add_jars_cmd = '\n'.join(['add jar hdfs://%s/%s;' % (upload_target, jar_name) for jar_name in jars_to_add])
-        return fnc(jars_to_add=add_jars_cmd, *args, **kwargs)
+        return add_jars_cmd + fnc(jars_to_add=add_jars_cmd, *args, **kwargs)
 
     return lambda *args, **kwargs: invoke(f, *args, **kwargs)
 

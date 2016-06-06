@@ -17,10 +17,10 @@ class EtcdProxy(KeyValueProxy):
         return str(self.client.get(self._full_path(str(key))).value)
 
     def set(self, key, value):
-        self.client.set(self._full_path(str(key)), str(value))
+        return self.client.set(self._full_path(str(key)), str(value))
 
     def delete(self, key):
-        self.client.delete(self._full_path(str(key)))
+        return self.client.delete(self._full_path(str(key)))
 
     def sub_keys(self, key):
         return [res.key[len(self._full_path(str(key))) + 1:] for res in self.client.get(self._full_path(str(key))).children]
