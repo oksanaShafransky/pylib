@@ -201,7 +201,7 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.run_bash(self.__compose_python_runner_command(python_executable, command_params, *positional)).ok
 
     def run_r(self, r_executable, command_params):
-        return self.run_bash(command="execute Rscript %s/%s %s" % (execution_dir, r_executable, ' '.join(command_params)))
+        return self.run_bash(self.__compose_infra_command("execute Rscript %s/%s %s" % (execution_dir, r_executable, ' '.join(command_params))))
 
     def latest_monthly_success_date(self, directory, month_lookback):
         d = self.__get_common_args()['date']
