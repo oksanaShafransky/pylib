@@ -191,6 +191,12 @@ class ContextualizedTasksInfra(TasksInfra):
                                main_class=main_class,
                                command_params=command_params)
 
+    def run_analytics_hadoop(self, command_params, main_class):
+        return self.run_hadoop(jar_path='analytics',
+                               jar_name='analytics.jar',
+                               main_class=main_class,
+                               command_params=command_params)
+
     def run_bash(self, command):
         print ("Running '%s'" % command)
         sys.stdout.flush()
