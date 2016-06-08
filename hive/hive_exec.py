@@ -2,15 +2,14 @@ import shutil
 import tempfile
 import traceback
 from datetime import datetime
+from inspect import isfunction
+from multiprocessing.pool import ThreadPool as Pool
+
+import hive_runner
+from common import logger
+from tasks.executer import Executer, Arg, Stage, CONCURRENCY
 
 __author__ = 'Felix'
-
-from inspect import isfunction
-
-from common import logger
-import hive_runner
-from multiprocessing.pool import ThreadPool as Pool
-from tasks.executer import Executer, Arg, Stage, CONCURRENCY
 
 
 class HiveExecuter(Executer):
@@ -28,35 +27,29 @@ class HiveExecuter(Executer):
         subprocess.call(['rm', '-r', '-f', self.cache_dir])
 
     def get_common_params(self):
-        date_param = Arg('-d', '--date', 'date', Arg.date_arg, 'Date to use in %Y-%m-%d or %Y-%m format', required=True)
-        mode_param = Arg('-m', '--mode', 'mode', ('daily', 'window', 'snapshot'), 'Job mode', required=True)
-        mode_type_param = Arg('-mt', '--mode-type', 'mode_type', (
-            'weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
-                              'Mode Type', required=False, default=None)
-        num_reducers_param = Arg('-n', '--num-of-reducers', 'num_of_reducers', int, 'Number of reducers to use',
-                                 required=False, default=32)
-        sync_param = Arg('-s', '--sync', 'sync', bool, 'Run in sync mode (wait for completion', required=False,
-                         default=False)
-        dry_run_param = Arg('-dr', '--dry-run', 'dry_run', bool, 'If set, only output statements without running',
-                            required=False, default=False)
-        output_table_param = Arg('-o', '--output_table_path', 'output_table_path', str,
-                                 'Output path root (not including the partition path)', required=False)
-        check_out_param = Arg('-co', '--check-output', 'check_output', bool, 'Return if output already exists',
-                              required=False, default=False)
-        merge_out_param = Arg('-dmo', '--dont-merge-output', 'no_merge_output', bool, 'Whether To Merge Output Files',
-                              required=False, default=False)
-        pool_param = Arg('-cp', '--calc-pool', 'calc_pool', str, 'Calculation pool to user', required=False,
-                         default='calculation')
-        compression_param = Arg('-cm', '--compression', 'compression', ('gz', 'bz2', 'none'), 'Compression type to use',
-                                required=False, default='bz2')
-        slow_start_param = Arg('-sscmr', '--slow-start-rate', 'slow_start_ratio', str,
-                               'mapreduce.job.reduce.slowstart.completedmaps',
-                               required=False, default=None)
-        hive_db = Arg('-hdb', '--hive-database', 'hive_db', str, 'hive db to use', required=False, default='analytics')
-
-        return [date_param, mode_param, mode_type_param, num_reducers_param, sync_param, dry_run_param,
-                output_table_param, check_out_param, merge_out_param, pool_param, compression_param, slow_start_param,
-                hive_db]
+        common_args = [
+            Arg('-d', '--date', 'date', Arg.date_arg, 'Date to use in %Y-%m-%d or %Y-%m format', required=True),
+            Arg('-m', '--mode', 'mode', ('daily', 'window', 'snapshot'), 'Job mode', required=True),
+            Arg('-mt', '--mode-type', 'mode_type',
+                ('weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
+                'Mode Type', required=False, default=None),
+            Arg('-n', '--num-of-reducers', 'num_of_reducers', int, '', required=False, default=32),
+            Arg('-s', '--sync', 'sync', bool, 'Run in sync mode (wait for completion)', required=False, default=False),
+            Arg('-dr', '--dry-run', 'dry_run', bool, 'print generated statement only', required=False, default=False),
+            Arg('-o', '--output_table_path', 'output_table_path', str,
+                'Output path root (not including the partition path)', required=False),
+            Arg('-co', '--check-output', 'check_output', bool, 'Return if output already exists', required=False,
+                default=False),
+            Arg('-dmo', '--dont-merge-output', 'no_merge_output', bool, 'Whether To Merge Output Files', required=False,
+                default=False),
+            Arg('-cp', '--calc-pool', 'calc_pool', str, 'Calculation pool to use', required=False,
+                default='calculation'),
+            Arg('-cm', '--compression', 'compression', ('gz', 'bz2', 'none'), 'Compression type to use', required=False,
+                default='bz2'),
+            Arg('-sscmr', '--slow-start-rate', 'slow_start_ratio', str,
+                'set mapreduce.job.reduce.slowstart.completedmaps', required=False, default=None),
+            Arg('-hdb', '--hive-database', 'hive_db', str, 'hive db to use', required=False, default='analytics')]
+        return common_args
 
     def get_arg_dependencies(self):
 
