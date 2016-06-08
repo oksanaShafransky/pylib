@@ -114,7 +114,11 @@ class Executer(object):
         self.base_parser = argparse.ArgumentParser('executer.py')
         self.subparsers = self.base_parser.add_subparsers(dest='action')
 
-        self.init_common_params()
+        self.common_params = self.get_common_params()
+        self.common_parser = argparse.ArgumentParser(add_help=False)
+
+        for common_param in self.common_params:
+            common_param.add_argument(self.common_parser)
 
     # set common_params in subclasses to use for all their actions
     def get_common_params(self):
@@ -123,13 +127,6 @@ class Executer(object):
     # define default values for arguments depending on values of others
     def get_arg_dependencies(self):
         return {}
-
-    def init_common_params(self):
-        self.common_params = self.get_common_params()
-        self.common_parser = argparse.ArgumentParser(add_help=False)
-
-        for common_param in self.common_params:
-            common_param.add_argument(self.common_parser)
 
     def common_param(self, param_name):
         for common_param in self.common_params:
