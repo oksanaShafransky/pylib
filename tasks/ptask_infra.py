@@ -39,6 +39,19 @@ class TasksInfra(object):
         return '%s/country=%s' % (TasksInfra.year_month(date), country)
 
     @staticmethod
+    def days_in_range(end_date, mode_type):
+        if mode_type == "last-28":
+            start_date = end_date - datetime.timedelta(days=27)
+        elif mode_type == "monthly":
+            # get last day in month
+            last = calendar.monthrange(end_date.year, end_date.month)[1]
+            end_date = datetime.datetime(end_date.year, end_date.month, last).date()
+            start_date = datetime.datetime(end_date.year, end_date.month, 1).date()
+
+        for i in range((end_date - start_date).days + 1):
+            yield start_date + datetime.timedelta(days=i)
+
+    @staticmethod
     def add_command_params(command, command_params, *positional):
         ans = command + ' ' + ' '.join(positional)
         for key, value in command_params.iteritems():
@@ -231,16 +244,7 @@ class ContextualizedTasksInfra(TasksInfra):
         end_date = self.__get_common_args()['date']
         mode_type = self.__get_common_args()['mode_type']
 
-        if mode_type == "last-28":
-            start_date = end_date - datetime.timedelta(days=27)
-        elif mode_type == "monthly":
-            # get last day in month
-            last = calendar.monthrange(end_date.year, end_date.month)[1]
-            end_date = datetime.datetime(end_date.year, end_date.month, last).date()
-            start_date = datetime.datetime(end_date.year, end_date.month, 1).date()
-
-        for i in range((end_date - start_date).days + 1):
-            yield start_date + datetime.timedelta(days=i)
+        return TasksInfra.days_in_range(end_date, mode_type)
 
     # module is either 'mobile' or 'analytics'
     def run_spark(self, main_class, module, queue, app_name, command_params, jars_from_lib=None):
