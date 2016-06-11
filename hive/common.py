@@ -418,3 +418,45 @@ def hbase_table_suffix(date, mode, mode_type, in_date_fmt='%Y-%m-%d'):
     # date_suffix = datetime.strftime(datetime.strptime(date, in_date_fmt), date_fmt)
     date_suffix = datetime.strftime(date, date_fmt)
     return date_suffix if mode == 'snapshot' else '_%s%s' % (mode_type, date_suffix)
+
+
+def get_range_where_clause(year, month, day, mode, mode_type, prefix=''):
+    if int(year) < 100:
+        end_date = datetime(2000 + int(year), int(month), int(day)).date()
+    else:
+        end_date = datetime(int(year), int(month), int(day)).date()
+    start_date = ""
+
+    if mode_type == "last-1":
+        start_date = end_date - timedelta(days=0)
+    elif mode_type == "last-7":
+        start_date = end_date - timedelta(days=6)
+    elif mode_type == "last-28":
+        start_date = end_date - timedelta(days=27)
+    elif mode_type == "last-30":
+        start_date = end_date - timedelta(days=29)
+    elif mode_type == "last-90":
+        start_date = end_date - timedelta(days=89)
+    elif mode_type == "weekly":
+        start_date = end_date - timedelta(days=int(end_date.weekday()))
+        end_date = start_date + timedelta(days=6)
+    elif mode_type == "monthly":
+        return ' (%syear = %02d and %smonth = %02d) ' % (prefix, end_date.year % 100, prefix, month)
+    elif mode_type == "quarterly":
+        start_date = datetime(int(year), int(month) - ((int(month) - 1) % 3), 1).date()
+        end_date = start_date + timedelta(days=63)
+        return '(%syear=%02d and %smonth <= %02d and %smonth >= %02d' % (prefix, end_date.year % 100, prefix, start_date.month, prefix, end_date.month)
+    elif mode_type == "annually":
+        return " (%syear = %02d) " % (prefix, end_date.year % 100)
+
+    where_clause = ""
+
+    while True:
+        if where_clause != "":
+            where_clause += " or "
+        where_clause += ' (%syear=%02d and %smonth=%02d and %sday=%02d) ' % (prefix, start_date.year % 100, prefix, start_date.month, prefix, start_date.day)
+        start_date = start_date + timedelta(days=1)
+        if start_date > end_date:
+            break
+
+    return ' (%s) ' % where_clause
