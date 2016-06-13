@@ -21,6 +21,15 @@ class TasksInfra(object):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
     @staticmethod
+    def full_partition_path(mode, mode_type, date):
+        if mode == "daily":
+            return 'year=%s/month=%s/day=%s' % (str(date.year)[2:], str(date.month).zfill(2), str(date.day).zfill(2))
+        elif mode == "window" or mode_type == "weekly":
+            return 'type=%s/year=%s/month=%s/day=%s' % (mode_type, str(date.year)[2:], str(date.month).zfill(2), str(date.day).zfill(2))
+        else:
+            return 'type=%s/year=%s/month=%s' % (mode_type, str(date.year)[2:], str(date.month).zfill(2))
+
+    @staticmethod
     def year_month_day(date):
         year_str = str(date.year)[2:]
         return 'year=%s/month=%s/day=%s' % (year_str, str(date.month).zfill(2), str(date.day).zfill(2))
@@ -210,6 +219,9 @@ class ContextualizedTasksInfra(TasksInfra):
         d = self.__get_common_args()['date']
         command = self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, d, month_lookback))
         return self.run_bash(command=command).stdout.strip()
+
+    def full_partition_path(self):
+        return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'], self.__get_common_args()['date'])
 
     def year_month_day(self):
         return TasksInfra.year_month_day(self.__get_common_args()['date'])
