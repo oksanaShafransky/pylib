@@ -43,6 +43,7 @@ class PtaskInvoker(Program):
             Argument(names=('dont_force', 'df'), kind=bool, help="Don't force flag - when used, the task will skip if expected output exists at start"),
             Argument(names=('rerun', 'rr'), kind=bool, help="Rerun flag - when used, the task will use YARN reruns root queue"),
             Argument(names=('env_type', 'et'), help="Environment type (dev/staging/production)", optional=True),
+            Argument(names=('table_prefix', 'tp'), help="Table Prefix", optional=True, default=''),
         ]
         return core_args + extra_args
 
@@ -67,6 +68,8 @@ class PtaskInvoker(Program):
             sw_tasks['rerun'] = True
         if self.args.env_type.value:
             sw_tasks['env_type'] = self.args.env_type.value
+        if self.args.table_prefix.value:
+            sw_tasks['table_prefix'] = self.args.table_prefix.value
 
         sw_tasks['execution_user'] = os.environ['TASK_ID'].split('.')[0]
         sw_tasks['dag_id'] = os.environ['TASK_ID'].split('.')[1]

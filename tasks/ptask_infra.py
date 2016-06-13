@@ -393,11 +393,19 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.year_month() if self.mode == 'snapshot' else self.year_month_day()
 
     @property
+    def type_date_suffix(self):
+        return 'type=%s/' % self.mode_type + self.date_suffix
+
+    @property
     def table_suffix(self):
         if self.mode == 'snapshot':
             return '_%s' % self.date.strftime('%y_%m')
         else:
             return '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
+
+    @property
+    def table_prefix(self):
+        return self.__get_common_args()['table_prefix']
 
     @property
     def rerun(self):
