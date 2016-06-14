@@ -233,10 +233,6 @@ class ContextualizedTasksInfra(TasksInfra):
         command = self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, d, month_lookback))
         return self.run_bash(command=command).stdout.strip()
 
-    def mark_folder_success(self, directory, opts=''):
-        command = self.__compose_infra_command('markFolderSuccess %s %s' % (directory, opts))
-        return self.run_bash(command=command).stdout.strip()
-
     def full_partition_path(self):
         return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'], self.__get_common_args()['date'])
 
