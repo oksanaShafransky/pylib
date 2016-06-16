@@ -267,6 +267,7 @@ class ContextualizedTasksInfra(TasksInfra):
         jar_path = '%s/%s' % (self.execution_dir, 'mobile' if module == 'mobile' else 'analytics')
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
+                  ' --conf "spark.yarn.tags=$TASK_ID"' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' --deploy-mode cluster' \
