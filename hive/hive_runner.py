@@ -196,10 +196,11 @@ def run_hive(cmd, log_path=None):
     err_temp.close()
     out_temp.close()
 
-    if not CAN_REPORT:
-        warnings.warn('Cannot update auxdb. Python packages (lxml, gelfclient) missing')
-    else:
-        report(p, log_path, stderrdata, start_time)
+    # Disable gelf reporting
+    # if not CAN_REPORT:
+    #     warnings.warn('Cannot update auxdb. Python packages (lxml, gelfclient) missing')
+    # else:
+    #     report(p, log_path, stderrdata, start_time)
 
     print 'finishing'
     print 'ret code is %d' % p.returncode
