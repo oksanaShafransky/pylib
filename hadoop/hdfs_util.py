@@ -9,7 +9,7 @@ __author__ = 'Felix'
 MRP_HDFS_NAMENODE_PORT = 8020
 MRP_HDFS_NAMENODE_SERVER = 'active.hdfs-namenode-mrp.service.production'
 
-logger = logging.getLogger('__main__')
+logger = logging.getLogger(__name__)
 
 
 # read config to rely on run environment
@@ -83,9 +83,9 @@ def get_size(path):
 def test_size(path, min_size_required=None):
     hdfs_client = create_client()
     if min_size_required is not None:
-        logger.info('Checking if dir %s exists and is larger than %d...' % (path, min_size_required))
+        logger.info('Checking that dir %s exists and is larger than %d...' % (path, min_size_required))
     else:
-        logger.info('Checking if dir %s exists...' % path)
+        logger.info('Checking that dir %s exists...' % path)
 
     try:
         space_consumed = hdfs_client.count([path]).next()['spaceConsumed']
@@ -135,6 +135,14 @@ def read_files(paths):
 def get_file(file_path, local_name):
     hdfs_client = create_client()
     return hdfs_client.copyToLocal([file_path], local_name).next()
+
+
+def check_success(directory):
+    hdfs_client = create_client()
+    logging.info("Checking that dir '%s' contains _SUCCESS..." % directory)
+    res = hdfs_client.test(path=(directory + "/_SUCCESS"))
+    logging.info('it does' if res else "it doesn't")
+    return res
 
 
 def mark_success(dir_path, create_missing_path=False):
