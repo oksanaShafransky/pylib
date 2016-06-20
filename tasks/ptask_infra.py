@@ -1,15 +1,15 @@
 import ConfigParser
 import calendar
-import logging
+import datetime
 import os
 import re
 import sys
 import time
 
-import datetime
-
-from hadoop.hdfs_util import create_client, test_size
+from invoke import Result
 from redis import StrictRedis as Redis
+
+from hadoop.hdfs_util import test_size, check_success, mark_success
 
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../..'
@@ -25,12 +25,15 @@ class TasksInfra(object):
         if mode == "daily":
             return 'year=%s/month=%s/day=%s' % (str(date.year)[2:], str(date.month).zfill(2), str(date.day).zfill(2))
         elif mode == "window" or mode_type == "weekly":
-            return 'type=%s/year=%s/month=%s/day=%s' % (mode_type, str(date.year)[2:], str(date.month).zfill(2), str(date.day).zfill(2))
+            return 'type=%s/year=%s/month=%s/day=%s' % (
+                mode_type, str(date.year)[2:], str(date.month).zfill(2), str(date.day).zfill(2))
         else:
             return 'type=%s/year=%s/month=%s' % (mode_type, str(date.year)[2:], str(date.month).zfill(2))
 
     @staticmethod
     def year_month_day(date):
+        if date is None:
+            raise AttributeError("date wasn't passed")
         year_str = str(date.year)[2:]
         return 'year=%s/month=%s/day=%s' % (year_str, str(date.month).zfill(2), str(date.day).zfill(2))
 
@@ -40,6 +43,8 @@ class TasksInfra(object):
 
     @staticmethod
     def year_month(date):
+        if date is None:
+            raise AttributeError("date wasn't passed")
         year_str = str(date.year)[2:]
         return 'year=%s/month=%s' % (year_str, str(date.month).zfill(2))
 
@@ -56,6 +61,8 @@ class TasksInfra(object):
             last = calendar.monthrange(end_date.year, end_date.month)[1]
             end_date = datetime.datetime(end_date.year, end_date.month, last).date()
             start_date = datetime.datetime(end_date.year, end_date.month, 1).date()
+        else:
+            raise ValueError("Unable to figure out range from mode_type='%s'" % mode_type)
 
         for i in range((end_date - start_date).days + 1):
             yield start_date + datetime.timedelta(days=i)
@@ -100,41 +107,29 @@ class ContextualizedTasksInfra(TasksInfra):
             command = self.__with_rerun_root_queue(command)
         return command
 
-    # Todo: move the HDFS-specific code to hadoop.hdfs_util
-    @staticmethod
-    def __is_dir_contains_success(directory):
-        client = create_client()
-        expected_success_path = directory + "/_SUCCESS"
-        ans = client.test(path=expected_success_path)
-        if ans:
-            logging.warn(expected_success_path + " contains _SUCCESS file")
-        else:
-            logging.warn(expected_success_path + " doesn't contain _SUCCESS file")
-        return ans
-
-    @staticmethod
-    def __is_hdfs_collection_valid(directories,
-                                   min_valid_size_bytes=0,
-                                   validate_marker=False):
+    def __is_hdfs_collection_valid(self, directories, min_size_bytes=0, validate_marker=False):
         ans = True
         if isinstance(directories, list):
             for directory in directories:
-                ans = ans and ContextualizedTasksInfra.__is_hdfs_collection_valid(directory, min_valid_size_bytes, validate_marker)
+                ans = ans and self.__is_hdfs_collection_valid(directory, min_size_bytes, validate_marker)
         else:
             directory = directories
+            if self.dry_run:
+                log_message = "Dry Run: would have checked that '%s' size > %d bytes" % (directory, min_size_bytes)
+                log_message += ' and contains _SUCCESS file' if validate_marker else ''
+                print log_message
+                return ans
+
             if validate_marker:
-                ans = ans and ContextualizedTasksInfra.__is_dir_contains_success(directory)
-            if min_valid_size_bytes:
-                ans = ans and test_size(directory, min_valid_size_bytes)
+                ans = ans and check_success(directory)
+            if min_size_bytes:
+                ans = ans and test_size(directory, min_size_bytes)
         return ans
 
-    @staticmethod
-    def is_valid_output_exists(directories,
-                               valid_output_min_size_bytes=0,
-                               validate_marker=False):
-        return ContextualizedTasksInfra.__is_hdfs_collection_valid(directories,
-                                                     min_valid_size_bytes=valid_output_min_size_bytes,
-                                                     validate_marker=validate_marker)
+    def is_valid_output_exists(self, directories, valid_output_min_size_bytes=0, validate_marker=False):
+        return self.__is_hdfs_collection_valid(directories,
+                                               min_size_bytes=valid_output_min_size_bytes,
+                                               validate_marker=validate_marker)
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
@@ -145,6 +140,8 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.ctx.config.config['sw_common']
 
     def log_lineage_hdfs(self, directories, direction):
+        if self.has_task_id is False:
+            return
         if self.execution_user != 'airflow':
             return
         lineage_value_template = \
@@ -171,13 +168,11 @@ class ContextualizedTasksInfra(TasksInfra):
             lineage_value = lineage_value_log_hdfs_collection_template(directory, direction)
             client.rpush(lineage_key, lineage_value)
 
-    def assert_input_validity(self, directories,
-                              valid_input_min_size_bytes=0,
-                              validate_marker=False):
+    def assert_input_validity(self, directories, valid_input_min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
         assert self.__is_hdfs_collection_valid(directories,
-                                                     min_valid_size_bytes=valid_input_min_size_bytes,
-                                                     validate_marker=validate_marker) is True, \
+                                               min_size_bytes=valid_input_min_size_bytes,
+                                               validate_marker=validate_marker) is True, \
             'Input is not valid, given value is %s' % directories
 
     def assert_output_validity(self, directories,
@@ -185,8 +180,8 @@ class ContextualizedTasksInfra(TasksInfra):
                                validate_marker=False):
         self.log_lineage_hdfs(directories, 'output')
         assert self.__is_hdfs_collection_valid(directories,
-                                                     min_valid_size_bytes=valid_output_min_size_bytes,
-                                                     validate_marker=validate_marker) is True, \
+                                               min_size_bytes=valid_output_min_size_bytes,
+                                               validate_marker=validate_marker) is True, \
             'Output is not valid, given value is %s' % directories
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
@@ -198,7 +193,8 @@ class ContextualizedTasksInfra(TasksInfra):
                                                  rerun_root_queue=self.rerun)
         ).ok
 
-    def fail(self, reason=None):
+    @staticmethod
+    def fail(reason=None):
         if reason is not None:
             assert False, reason
         else:
@@ -220,24 +216,34 @@ class ContextualizedTasksInfra(TasksInfra):
                                command_params=command_params)
 
     def run_bash(self, command):
-        print ("Running '%s'" % command)
+        print ("Final bash command: \n#####\n%s\n#####" % command)
         sys.stdout.flush()
         time.sleep(1)
+        if self.dry_run or self.checks_only:
+            return Result(command, stdout=None, stderr=None, exited=0, pty=None)
         return self.ctx.run(command)
 
     def run_python(self, python_executable, command_params, *positional):
         return self.run_bash(self.__compose_python_runner_command(python_executable, command_params, *positional)).ok
 
     def run_r(self, r_executable, command_params):
-        return self.run_bash(self.__compose_infra_command("execute Rscript %s/%s %s" % (execution_dir, r_executable, ' '.join(command_params))))
+        return self.run_bash(self.__compose_infra_command(
+            "execute Rscript %s/%s %s" % (execution_dir, r_executable, ' '.join(command_params)))).ok
 
     def latest_monthly_success_date(self, directory, month_lookback):
         d = self.__get_common_args()['date']
         command = self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, d, month_lookback))
         return self.run_bash(command=command).stdout.strip()
 
+    def mark_success(self, directory, opts=''):
+        if self.dry_run or self.checks_only:
+            print '''Dry Run: If successful would create '%s/_SUCCESS' marker''' % directory
+        else:
+            mark_success(directory)
+
     def full_partition_path(self):
-        return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'], self.__get_common_args()['date'])
+        return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'],
+                                              self.__get_common_args()['date'])
 
     def year_month_day(self):
         return TasksInfra.year_month_day(self.__get_common_args()['date'])
@@ -375,7 +381,7 @@ class ContextualizedTasksInfra(TasksInfra):
         if log:
             print 'writing %s to key %s column %s at table %s' % (value, key, '%s:%s' % (col_family, col), table)
         import happybase
-        HBASE = 'mrp'   # TODO: allow for inference based on config
+        HBASE = 'mrp'  # TODO: allow for inference based on config
         srv = 'hbase-%s.service.production' % HBASE
         conn = happybase.Connection(srv)
         conn.table(table).put(key, {'%s:%s' % (col_family, col): value})
@@ -436,6 +442,14 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.__get_common_args()['env_type']
 
     @property
+    def dry_run(self):
+        return self.__get_common_args()['dry_run']
+
+    @property
+    def checks_only(self):
+        return self.__get_common_args()['checks_only']
+
+    @property
     def execution_user(self):
         return self.__get_common_args()['execution_user']
 
@@ -450,3 +464,7 @@ class ContextualizedTasksInfra(TasksInfra):
     @property
     def execution_dt(self):
         return self.__get_common_args()['execution_dt']
+
+    @property
+    def has_task_id(self):
+        return self.__get_common_args()['has_task_id']

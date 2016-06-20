@@ -1,15 +1,11 @@
-#! /usr/bin/env python
-import logging
+import datetime
 import os
 import sys
 
-import datetime
 from invoke import Program, Argument, Config
 from invoke import ctask
 from invoke.config import merge_dicts
 from invoke.exceptions import Failure, ParseError, Exit
-
-log = logging.getLogger('ptask_invoke')
 
 # TODO: should check cross validation?
 known_modes = ['snapshot', 'window', 'daily']
@@ -24,7 +20,8 @@ class PtaskConfig(Config):
             {'date': None,
              'base_dir': '/similargroup/data',
              'force': True,
-             'rerun': False}
+             'rerun': False,
+             'dry_run': False}
         return global_defaults
 
 
@@ -40,9 +37,15 @@ class PtaskInvoker(Program):
             Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's output", optional=True),
             Argument(names=('mode', 'm'), help="Run mode (snapshot/window/daily)", optional=True),
             Argument(names=('mode_type', 'mt'), help="Run mode type (monthly/window/daily)", optional=True),
-            Argument(names=('dont_force', 'df'), kind=bool, help="Don't force flag - when used, the task will skip if expected output exists at start"),
-            Argument(names=('rerun', 'rr'), kind=bool, help="Rerun flag - when used, the task will use YARN reruns root queue"),
+            Argument(names=('dont_force', 'df'), kind=bool,
+                     help="Don't force flag - when used, the task will skip if expected output exists at start"),
+            Argument(names=('rerun', 'rr'), kind=bool,
+                     help="Rerun flag - when used, the task will use YARN reruns root queue"),
             Argument(names=('env_type', 'et'), help="Environment type (dev/staging/production)", optional=True),
+            Argument(names=('dry_run', 'dr'), kind=bool, default=False, optional=True,
+                     help="Some operations would only log their underlying command"),
+            Argument(names=('checks_only', 'co'), kind=bool, default=False, optional=True,
+                     help="Checks would run, executions would only print commands "),
             Argument(names=('table_prefix', 'tp'), help="Table Prefix", optional=True, default=''),
         ]
         return core_args + extra_args
@@ -70,11 +73,19 @@ class PtaskInvoker(Program):
             sw_tasks['env_type'] = self.args.env_type.value
         if self.args.table_prefix.value:
             sw_tasks['table_prefix'] = self.args.table_prefix.value
+        if self.args.checks_only.value:
+            sw_tasks['checks_only'] = True
+        if self.args.dry_run.value:
+            sw_tasks['dry_run'] = True
 
-        sw_tasks['execution_user'] = os.environ['TASK_ID'].split('.')[0]
-        sw_tasks['dag_id'] = os.environ['TASK_ID'].split('.')[1]
-        sw_tasks['task_id'] = os.environ['TASK_ID'].split('.')[2]
-        sw_tasks['execution_dt'] = os.environ['TASK_ID'].split('.')[3]
+        if 'TASK_ID' in os.environ:
+            sw_tasks['has_task_id'] = True
+            sw_tasks['execution_user'] = os.environ['TASK_ID'].split('.')[0]
+            sw_tasks['dag_id'] = os.environ['TASK_ID'].split('.')[1]
+            sw_tasks['task_id'] = os.environ['TASK_ID'].split('.')[2]
+            sw_tasks['execution_dt'] = os.environ['TASK_ID'].split('.')[3]
+        else:
+            sw_tasks['has_task_id'] = False
 
         merge_dicts(config['sw_common'], sw_tasks)
         return config
@@ -90,18 +101,25 @@ class PtaskInvoker(Program):
             self._parse(argv)
             # Restrict a run to one task at a time
             assert len(self.tasks) == 1
-            print 'Starting ptask {0}'.format(os.environ['TASK_ID'])
+            if 'TASK_ID' in os.environ:
+                task_name = os.environ['TASK_ID']
+            else:
+                task_name = '..'
+            print 'Starting ptask {0}'.format(task_name)
             self.execute()
-            print 'Finished successfuly ptask {0}'.format(os.environ['TASK_ID'].split('.')[2])
+            print 'Finished successfully ptask {0}'.format(task_name)
         except (Failure, Exit, ParseError) as e:
-            log.warn('Received a possibly-skippable exception: {0!r}'.format(e))
-            # Print error message from parser if necessary.
+            print 'Received a possibly-skippable exception: {0!r}'.format(e)
             if isinstance(e, ParseError):
                 sys.stderr.write("{0}\n".format(e))
             sys.exit(1)
 
 
 def main():
+    import logging
+    logging.root.setLevel(logging.INFO)
+    ch = logging.StreamHandler(sys.stdout)
+    logging.root.addHandler(ch)
     program = PtaskInvoker(config_class=PtaskConfig)
     program.run()
 
