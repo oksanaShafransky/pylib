@@ -213,7 +213,7 @@ def run_hive(cmd, log_path=None):
 
 
 def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation',
-                 consolidate_output=True, sync=True, compression='gz'):
+                 consolidate_output=True, compression='gz'):
     if compression is None or compression == "none":
         compress = "false"
         codec = None

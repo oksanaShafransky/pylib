@@ -34,7 +34,6 @@ class HiveExecuter(Executer):
                 ('weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
                 'Mode Type', required=False, default=None),
             Arg('-n', '--num-of-reducers', 'num_of_reducers', int, '', required=False, default=32),
-            Arg('-s', '--sync', 'sync', bool, 'Run in sync mode (wait for completion)', required=False, default=True),
             Arg('-dr', '--dry-run', 'dry_run', bool, 'print generated statement only', required=False, default=False),
             Arg('-o', '--output_table_path', 'output_table_path', str,
                 'Output path root (not including the partition path)', required=False),
@@ -143,9 +142,9 @@ class HiveExecuter(Executer):
 
         try:
             hive_runner.run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
-                                     sync=args.sync, consolidate_output=not args.no_merge_output,
-                                     log_dir=log_dir, slow_start_ratio=args.slow_start_ratio,
-                                     calc_pool=args.calc_pool, compression=args.compression)
+                                     consolidate_output=not args.no_merge_output, log_dir=log_dir,
+                                     slow_start_ratio=args.slow_start_ratio, calc_pool=args.calc_pool,
+                                     compression=args.compression)
             self.results[query_name] = 'success'
         except:
             self.results[query_name] = 'failure'
