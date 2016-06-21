@@ -127,9 +127,8 @@ class ContextualizedTasksInfra(TasksInfra):
         return ans
 
     def is_valid_output_exists(self, directories, valid_output_min_size_bytes=0, validate_marker=False):
-        return self.__is_hdfs_collection_valid(directories,
-                                               min_size_bytes=valid_output_min_size_bytes,
-                                               validate_marker=validate_marker)
+        self.log_lineage_hdfs(directories, 'output')
+        return self.__is_hdfs_collection_valid(directories, valid_output_min_size_bytes, validate_marker)
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
