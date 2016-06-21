@@ -16,12 +16,12 @@ class PtaskConfig(Config):
     @staticmethod
     def global_defaults():
         global_defaults = Config.global_defaults()
-        global_defaults['sw_common'] = \
-            {'date': None,
-             'base_dir': '/similargroup/data',
-             'force': True,
-             'rerun': False,
-             'dry_run': False}
+        global_defaults['sw_common'] = {'date': None,
+                                        'base_dir': '/similargroup/data',
+                                        'force': True,
+                                        'rerun': False,
+                                        'dry_run': False,
+                                        'checks_only': False}
         return global_defaults
 
 
