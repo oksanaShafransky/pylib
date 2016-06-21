@@ -1,18 +1,14 @@
-import subprocess
+import os
 import re
+import socket
+import tempfile
+import time
+import warnings
+from datetime import datetime
+
 import common
 from common import GracefulShutdownHandler
-
-import tempfile
-from urllib2 import urlopen
-from datetime import datetime
-import time
-import socket
-import warnings
-from xml.sax.saxutils import escape
-import os
 from jobs.builder import yarn_queue_param
-
 from jobs.stats import *
 
 try:
@@ -108,14 +104,19 @@ def report(proc, log_path, stderrdata, start_time):
             job_name = config['mapreduce.job.name']
             mapper_class = config.get('mapred.mapper.class', 'no mapper')
             reducer_class = config.get('mapred.reducer.class', 'no reducer')
-            if proc.returncode != 0 or counters_dict.get('Job Counters.Failed reduce tasks') or counters_dict.get('Job Counters.Failed map tasks'):
+            if proc.returncode != 0 or counters_dict.get('Job Counters.Failed reduce tasks') or counters_dict.get(
+                    'Job Counters.Failed map tasks'):
                 job_success = 0
             else:
                 job_success = 1
             if number_of_mappers:
-                average_mapper_time = int(float(counters_dict['Job Counters.Total time spent by all maps in occupied slots (ms)']) / number_of_mappers / 1000)
+                average_mapper_time = int(float(counters_dict[
+                                                    'Job Counters.Total time spent by all maps in occupied slots (ms)']) / number_of_mappers / 1000)
+            else:
+                average_mapper_time = 0
             if number_of_reducers:
-                average_reducer_time = int(float(counters_dict['Job Counters.Total time spent by all reduces in occupied slots (ms)']) / number_of_reducers / 1000)
+                average_reducer_time = int(float(counters_dict[
+                                                     'Job Counters.Total time spent by all reduces in occupied slots (ms)']) / number_of_reducers / 1000)
             else:
                 average_reducer_time = 0
 
@@ -211,7 +212,8 @@ def run_hive(cmd, log_path=None):
         raise subprocess.CalledProcessError(p.returncode, cmd)
 
 
-def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation', consolidate_output=True, sync=True, compression='gz'):
+def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation',
+                 consolidate_output=True, sync=True, compression='gz'):
     if compression is None or compression == "none":
         compress = "false"
         codec = None
@@ -224,32 +226,33 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
     else:
         raise ValueError('Unknown compression type %s' % compression)
 
-    effective_pool = ('%s.%s' % (os.environ[yarn_queue_param], calc_pool)) if yarn_queue_param in os.environ else calc_pool
+    effective_pool = (
+        '%s.%s' % (os.environ[yarn_queue_param], calc_pool)) if yarn_queue_param in os.environ else calc_pool
 
     cmd = ["hive", "-S", "-e", '"%s"' % hql,
-       "-hiveconf", "mapreduce.job.name=" + job_name,
-       "-hiveconf", "mapreduce.job.reduces=" + str(num_of_reducers),
-       "-hiveconf", "mapreduce.job.queuename=" + effective_pool,
-       "-hiveconf", "hive.exec.compress.output=" + compress,
-       "-hiveconf", "io.seqfile.compression=BLOCK",
-       "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
-       "-hiveconf", 'hive.log.dir=%s' % log_dir,
-       "-hiveconf", "hive.log.file=hive.log",
-       "-hiveconf", "hive.exec.scratchdir=/tmp/hive-prod",
-       "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
-       "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
-       "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728",
-       "-hiveconf", "mapreduce.map.cpu.vcores=2",
-       "-hiveconf", "mapreduce.reduce.cpu.vcores=2",
-       "-hiveconf", "hive.merge.mapredfiles=%s" % ('true' if consolidate_output else 'false'),
-       "-hiveconf", "hive.vectorized.execution.enabled=true",
-       "-hiveconf", "hive.vectorized.execution.reduce.enabled=true",
-       "-hiveconf", "hive.cbo.enable=true",
-       "-hiveconf", "hive.stats.fetch.column.stats=true",
-       "-hiveconf", "mapreduce.child.java.opts=-Xmx4096m -Xms4096m",
-       "-hiveconf", "mapreduce.reduce.memory.mb=5320",
-       "-hiveconf", "mapreduce.map.memory.mb=5320"
-    ]
+           "-hiveconf", "mapreduce.job.name=" + job_name,
+           "-hiveconf", "mapreduce.job.reduces=" + str(num_of_reducers),
+           "-hiveconf", "mapreduce.job.queuename=" + effective_pool,
+           "-hiveconf", "hive.exec.compress.output=" + compress,
+           "-hiveconf", "io.seqfile.compression=BLOCK",
+           "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
+           "-hiveconf", 'hive.log.dir=%s' % log_dir,
+           "-hiveconf", "hive.log.file=hive.log",
+           "-hiveconf", "hive.exec.scratchdir=/tmp/hive-prod",
+           "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
+           "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
+           "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=134217728",
+           "-hiveconf", "mapreduce.map.cpu.vcores=2",
+           "-hiveconf", "mapreduce.reduce.cpu.vcores=2",
+           "-hiveconf", "hive.merge.mapredfiles=%s" % ('true' if consolidate_output else 'false'),
+           "-hiveconf", "hive.vectorized.execution.enabled=true",
+           "-hiveconf", "hive.vectorized.execution.reduce.enabled=true",
+           "-hiveconf", "hive.cbo.enable=true",
+           "-hiveconf", "hive.stats.fetch.column.stats=true",
+           "-hiveconf", "mapreduce.child.java.opts=-Xmx4096m -Xms4096m",
+           "-hiveconf", "mapreduce.reduce.memory.mb=5320",
+           "-hiveconf", "mapreduce.map.memory.mb=5320"
+           ]
 
     if codec:
         cmd += ["-hiveconf", "mapreduce.output.fileoutputformat.compress.codec=" + codec]
@@ -257,8 +260,4 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
         cmd += ["-hiveconf", "mapreduce.job.reduce.slowstart.completedmaps=" + slow_start_ratio]
 
     common.logger.info('CMD:\n%s' % ' '.join(cmd))
-
-    if sync:
-        return run_hive(cmd, log_path=log_dir + "/hive.log")
-    else:
-        return subprocess.Popen(cmd)
+    return run_hive(cmd, log_path=log_dir + "/hive.log")
