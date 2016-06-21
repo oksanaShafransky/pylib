@@ -34,7 +34,7 @@ class HiveExecuter(Executer):
                 ('weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
                 'Mode Type', required=False, default=None),
             Arg('-n', '--num-of-reducers', 'num_of_reducers', int, '', required=False, default=32),
-            Arg('-s', '--sync', 'sync', bool, 'Run in sync mode (wait for completion)', required=False, default=False),
+            Arg('-s', '--sync', 'sync', bool, 'Run in sync mode (wait for completion)', required=False, default=True),
             Arg('-dr', '--dry-run', 'dry_run', bool, 'print generated statement only', required=False, default=False),
             Arg('-o', '--output_table_path', 'output_table_path', str,
                 'Output path root (not including the partition path)', required=False),
