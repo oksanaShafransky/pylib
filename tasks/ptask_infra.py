@@ -430,7 +430,7 @@ class ContextualizedTasksInfra(TasksInfra):
 
     @property
     def table_prefix(self):
-        return self.__get_common_args()['table_prefix']
+        return self.__get_common_args().get('table_prefix', '')
 
     @property
     def rerun(self):
