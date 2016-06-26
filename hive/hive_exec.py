@@ -31,7 +31,7 @@ class HiveExecuter(Executer):
             Arg('-d', '--date', 'date', Arg.date_arg, 'Date to use in %Y-%m-%d or %Y-%m format', required=True),
             Arg('-m', '--mode', 'mode', ('daily', 'window', 'snapshot'), 'Job mode', required=True),
             Arg('-mt', '--mode-type', 'mode_type',
-                ('weekly', 'monthly', 'quarterly', 'annually', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
+                ('weekly', 'monthly', 'quarterly', 'annually', 'daily', 'last-1', 'last-7', 'last-28', 'last-30', 'last-90'),
                 'Mode Type', required=False, default=None),
             Arg('-n', '--num-of-reducers', 'num_of_reducers', int, '', required=False, default=32),
             Arg('-dr', '--dry-run', 'dry_run', bool, 'print generated statement only', required=False, default=False),
