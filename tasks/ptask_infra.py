@@ -90,7 +90,7 @@ class ContextualizedTasksInfra(TasksInfra):
 
     @staticmethod
     def __with_rerun_root_queue(command):
-        return 'setRootQueue reruns && %s' % command
+        return 'source %s/scripts/common.sh && setRootQueue reruns && %s' % (execution_dir, command)
 
     def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, rerun_root_queue=False):
         command = self.__compose_infra_command(
