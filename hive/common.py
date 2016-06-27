@@ -13,6 +13,8 @@ from dateutil.relativedelta import relativedelta
 import sys
 import signal
 
+import random
+
 GLOBAL_DRYRUN = False  # This is crazy ugly, should allow executor to deploy jars
 
 
@@ -363,9 +365,15 @@ def formatted(f):
     return lambda *args, **kwargs: dedent(f(*args, **kwargs))
 
 
+def random_str(length):
+    chars = [chr(ord('a') + x) for x in range(ord('z') - ord('a'))]
+    return ''.join(random.choice(chars) for i in range(length))
+
+
 def deploy_jars(f):
     def invoke(fnc, *args, **kwargs):
-        upload_target = '/similargroup/jars/%s/' % datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+        rnd_len = 5
+        upload_target = '/similargroup/jars/%s/%s/' % (datetime.now().strftime('%Y-%m-%d-%H-%M-%S'), random_str(rnd_len))
         jars_to_add = deploy_all_jars(kwargs['deploy_path'], upload_target)
         add_jars_cmd = '\n'.join(['add jar hdfs://%s/%s;' % (upload_target, jar_name) for jar_name in jars_to_add])
         return add_jars_cmd + fnc(jars_to_add=add_jars_cmd, *args, **kwargs)
@@ -460,3 +468,4 @@ def get_range_where_clause(year, month, day, mode, mode_type, prefix=''):
             break
 
     return ' (%s) ' % where_clause
+
