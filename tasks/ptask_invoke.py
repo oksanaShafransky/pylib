@@ -34,7 +34,8 @@ class PtaskInvoker(Program):
         core_args = super(PtaskInvoker, self).core_args()
         extra_args = [
             Argument(names=('date', 'dt'), help="The task's logical day in ISO yyyy-MM-dd format", optional=True),
-            Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's output", optional=True),
+            Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's input", optional=True),
+            Argument(names=('calc_dir', 'cd'), help="The HDFS base directory for the task's output", optional=True),
             Argument(names=('mode', 'm'), help="Run mode (snapshot/window/daily)", optional=True),
             Argument(names=('mode_type', 'mt'), help="Run mode type (monthly/window/daily)", optional=True),
             Argument(names=('dont_force', 'df'), kind=bool,
@@ -59,6 +60,8 @@ class PtaskInvoker(Program):
             sw_tasks['date'] = PtaskInvoker.__parse_date(self.args.date.value)
         if self.args.base_dir.value:
             sw_tasks['base_dir'] = self.args.base_dir.value
+        if self.args.calc_dir.value:
+            sw_tasks['calc_dir'] = self.args.calc_dir.value
         if self.args.mode.value:
             assert (self.args.mode.value in known_modes)
             sw_tasks['mode'] = self.args.mode.value

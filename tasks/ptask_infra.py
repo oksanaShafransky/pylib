@@ -394,6 +394,10 @@ class ContextualizedTasksInfra(TasksInfra):
         return self.__get_common_args()['base_dir']
 
     @property
+    def calc_dir(self):
+        return self.__get_common_args().get('calc_dir', self.base_dir)
+
+    @property
     def production_base_dir(self):
         return '/similargroup/data'
 
