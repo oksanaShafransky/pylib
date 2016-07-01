@@ -212,8 +212,12 @@ def run_hive(cmd, log_path=None):
         raise subprocess.CalledProcessError(p.returncode, cmd)
 
 
+DEFAULT_TASK_MEMORY = 4096
+TASK_MEMORY_OVERHEAD = 0.3
+
+
 def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation',
-                 consolidate_output=True, compression='gz'):
+                 consolidate_output=True, compression='gz', task_memory=DEFAULT_TASK_MEMORY):
     if compression is None or compression == "none":
         compress = "false"
         codec = None
@@ -249,9 +253,9 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
            "-hiveconf", "hive.vectorized.execution.reduce.enabled=true",
            "-hiveconf", "hive.cbo.enable=true",
            "-hiveconf", "hive.stats.fetch.column.stats=true",
-           "-hiveconf", "mapreduce.child.java.opts=-Xmx4096m -Xms4096m",
-           "-hiveconf", "mapreduce.reduce.memory.mb=5320",
-           "-hiveconf", "mapreduce.map.memory.mb=5320"
+           "-hiveconf", "mapreduce.child.java.opts=-Xmx%(memory)dm -Xms%(memory)dm" % {'memory': task_memory},
+           "-hiveconf", "mapreduce.reduce.memory.mb=%d" % int(task_memory * (1 + TASK_MEMORY_OVERHEAD)),
+           "-hiveconf", "mapreduce.map.memory.mb=%d" % int(task_memory * (1 + TASK_MEMORY_OVERHEAD))
            ]
 
     if codec:
