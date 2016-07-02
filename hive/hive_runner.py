@@ -258,7 +258,7 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
            "-hiveconf", "mapreduce.child.java.opts=-Xmx%(memory)dm -Xms%(memory)dm" % {'memory': task_memory},
            "-hiveconf", "mapreduce.reduce.memory.mb=%d" % int(task_memory * (1 + TASK_MEMORY_OVERHEAD)),
            "-hiveconf", "mapreduce.map.memory.mb=%d" % int(task_memory * (1 + TASK_MEMORY_OVERHEAD)),
-           "-hiveconf", "mapreduce.task.io.sort.mb=%d" % max(task_memory / 10, 256)
+           "-hiveconf", "mapreduce.task.io.sort.mb=%d" % max(task_memory / 20, 256)
            ]
 
     if codec:
