@@ -49,6 +49,7 @@ class HiveExecuter(Executer):
                 'set mapreduce.job.reduce.slowstart.completedmaps', required=False, default=None),
             Arg('-hdb', '--hive-database', 'hive_db', str, 'hive db to use', required=False, default='analytics'),
             Arg('-tm', '--task-memory', 'task_mem', int, 'Task Memory (MB)', required=False, default=4096),
+            Arg('-ibs', '--input-block-size', 'block_size', int, 'Input Block Size (MB)', required=False, default=None),
         ]
         return common_args
 
@@ -146,7 +147,7 @@ class HiveExecuter(Executer):
             hive_runner.run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
                                      consolidate_output=not args.no_merge_output, log_dir=log_dir,
                                      slow_start_ratio=args.slow_start_ratio, calc_pool=args.calc_pool,
-                                     compression=args.compression, task_memory=args.task_mem)
+                                     compression=args.compression, task_memory=args.task_mem, input_block_size=args.block_size)
             self.results[query_name] = 'success'
         except:
             self.results[query_name] = 'failure'

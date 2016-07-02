@@ -217,7 +217,7 @@ TASK_MEMORY_OVERHEAD = 0.3
 
 
 def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation',
-                 consolidate_output=True, compression='gz', task_memory=DEFAULT_TASK_MEMORY):
+                 consolidate_output=True, compression='gz', task_memory=DEFAULT_TASK_MEMORY, input_block_size=None):
     if compression is None or compression == "none":
         compress = "false"
         codec = None
@@ -258,6 +258,9 @@ def run_hive_job(hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None,
            "-hiveconf", "mapreduce.map.memory.mb=%d" % int(task_memory * (1 + TASK_MEMORY_OVERHEAD)),
            "-hiveconf", "mapreduce.task.io.sort.mb=%d" % min(task_memory / 10, 256)
            ]
+
+    if input_block_size is not None:
+        cmd += ["-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=%d" % input_block_size]
 
     if codec:
         cmd += ["-hiveconf", "mapreduce.output.fileoutputformat.compress.codec=" + codec]
