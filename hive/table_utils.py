@@ -108,7 +108,9 @@ class TableProvided:
 
 
 class HBaseTableProvided:
-    def __init__(self, alias, table_name_resolver, mode_param='mode', mode_type_param='mode_type', date_param='date'):
+    def __init__(self, alias, table_name_resolver, mode_param='mode', mode_type_param='mode_type', date_param='date',
+                 hbase_table_name_param='hbase_table_name'):
+        self.hbase_table_name = hbase_table_name_param
         self.table_alias = alias
         self.mode_param, self.mode_type_param, self.date_param = mode_param, mode_type_param, date_param
 
@@ -118,7 +120,7 @@ class HBaseTableProvided:
             self.table_name = lambda **kwargs: table_name_resolver
 
     def assign_table_from_params(self, **kwargs):
-        return temp_hbase_table_cmds(self.table_name(**kwargs), kwargs[self.mode_param], kwargs[self.mode_type_param], kwargs[self.date_param])
+        return temp_hbase_table_cmds(self.table_name(**kwargs), kwargs[self.hbase_table_name], kwargs[self.mode_param], kwargs[self.mode_type_param], kwargs[self.date_param])
 
     def invoke_fnc(self, f, *args, **kwargs):
         effective_table_name, drop_cmd, create_cmd = self.assign_table_from_params(**kwargs)
