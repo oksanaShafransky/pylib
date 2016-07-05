@@ -331,6 +331,7 @@ class ContextualizedTasksInfra(TasksInfra):
                   " --name '%(app_name)s'" \
                   " --master yarn-cluster" \
                   ' --queue %(queue)s' \
+                  ' --conf "spark.yarn.tags=$TASK_ID"' \
                   " --deploy-mode cluster" \
                   " --jars '%(jars)s'" \
                   " --files '%(files)s'" \
