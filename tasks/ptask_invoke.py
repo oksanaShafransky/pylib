@@ -94,7 +94,7 @@ class PtaskInvoker(Program):
     def __parse_date(date_str):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
-    def run(self, argv=None):
+    def run(self, argv=None, **kwargs):
         try:
             # add pylib to path
             sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
@@ -104,10 +104,14 @@ class PtaskInvoker(Program):
             if 'TASK_ID' in os.environ:
                 task_name = os.environ['TASK_ID']
             else:
-                task_name = '..'
-            print 'Starting ptask {0}'.format(task_name)
+                task_name = self.tasks[0].name
+            print '\nInvoking ptask "%(task_name)s" from "%(collection_name)s.py" ("%(collection_path)s")' % {
+                'task_name': task_name,
+                'collection_name': self.collection.name,
+                'collection_path': self.collection.loaded_from
+            }
             self.execute()
-            print 'Finished successfully ptask {0}'.format(task_name)
+            print '\nFinished ptask "{0}"'.format(task_name)
         except (Failure, Exit, ParseError) as e:
             print 'Received a possibly-skippable exception: {0!r}'.format(e)
             if isinstance(e, ParseError):
@@ -120,8 +124,8 @@ def main():
     logging.root.setLevel(logging.INFO)
     ch = logging.StreamHandler(sys.stdout)
     logging.root.addHandler(ch)
-    program = PtaskInvoker(config_class=PtaskConfig)
-    program.run()
+    ptask_invoker = PtaskInvoker(config_class=PtaskConfig)
+    ptask_invoker.run()
 
 
 if __name__ == '__main__':
