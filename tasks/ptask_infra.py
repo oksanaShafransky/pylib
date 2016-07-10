@@ -78,7 +78,7 @@ class TasksInfra(object):
         return ans
 
 
-class ContextualizedTasksInfra(TasksInfra):
+class ContextualizedTasksInfra(object):
     def __init__(self, ctx):
         self.ctx = ctx
         self.execution_dir = execution_dir
@@ -102,7 +102,7 @@ class ContextualizedTasksInfra(TasksInfra):
                 'class': main_class
             }
         )
-        command = self.add_command_params(command, command_params)
+        command = TasksInfra.add_command_params(command, command_params)
         if rerun_root_queue:
             command = self.__with_rerun_root_queue(command)
         return command
@@ -112,33 +112,37 @@ class ContextualizedTasksInfra(TasksInfra):
         if isinstance(directories, list):
             for directory in directories:
                 ans = ans and self.__is_hdfs_collection_valid(directory, min_size_bytes, validate_marker)
-        else:
-            directory = directories
-            if self.dry_run:
-                log_message = "Dry Run: would have checked that '%s' size > %d bytes" % (directory, min_size_bytes)
-                log_message += ' and contains _SUCCESS file' if validate_marker else ''
-                print log_message
-                return ans
+            return ans
 
+        # leaf mode
+        directory = directories
+        if self.dry_run:
+            log_message = "Dry Run: would have checked that '%s' size > %d bytes" % (directory, min_size_bytes)
+            log_message += ' and contains _SUCCESS file' if validate_marker else ''
+            sys.stdout.write(log_message)
+        else:
             if validate_marker:
                 ans = ans and check_success(directory)
-            if min_size_bytes:
+            if min_size_bytes > 0:
                 ans = ans and test_size(directory, min_size_bytes)
         return ans
 
-    def is_valid_output_exists(self, directories, valid_output_min_size_bytes=0, validate_marker=False):
+    def is_valid_output_exists(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'output')
-        return self.__is_hdfs_collection_valid(directories, valid_output_min_size_bytes, validate_marker)
+        return self.__is_hdfs_collection_valid(directories, min_size_bytes, validate_marker)
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
-        command = self.add_command_params(command, command_params, *positional)
+        command = TasksInfra.add_command_params(command, command_params, *positional)
         return command
 
     def __get_common_args(self):
         return self.ctx.config.config['sw_common']
 
     def log_lineage_hdfs(self, directories, direction):
+        if self.dry_run or self.checks_only:
+            sys.stdout.write('\n(*)')
+            return
         if self.has_task_id is False:
             return
         if self.execution_user != 'airflow':
@@ -146,40 +150,36 @@ class ContextualizedTasksInfra(TasksInfra):
         lineage_value_template = \
             '%(execution_user)s.%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction)s:hdfs::%(directory)s'
 
-        def lineage_value_log_hdfs_collection_template(directory, direction):
-            return lineage_value_template % {
-                'execution_user': self.execution_user,
-                'dag_id': self.dag_id,
-                'task_id': self.task_id,
-                'execution_dt': self.execution_dt,
-                'directory': directory,
-                'direction': direction
-            }
-
         client = Redis(host='redis-bigdata.service.production')
         lineage_key = 'LINEAGE_%s' % datetime.date.today().strftime('%y-%m-%d')
+        if isinstance(directories, basestring):
+            directories = [directories]
+
         if isinstance(directories, list):
             for directory in directories:
-                lineage_value = lineage_value_log_hdfs_collection_template(directory, direction)
+                lineage_value = lineage_value_template % {
+                    'execution_user': self.execution_user,
+                    'dag_id': self.dag_id,
+                    'task_id': self.task_id,
+                    'execution_dt': self.execution_dt,
+                    'directory': directory,
+                    'direction': direction
+                }
                 client.rpush(lineage_key, lineage_value)
-        else:
-            directory = directories
-            lineage_value = lineage_value_log_hdfs_collection_template(directory, direction)
-            client.rpush(lineage_key, lineage_value)
 
-    def assert_input_validity(self, directories, valid_input_min_size_bytes=0, validate_marker=False):
+    def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
         assert self.__is_hdfs_collection_valid(directories,
-                                               min_size_bytes=valid_input_min_size_bytes,
+                                               min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker) is True, \
             'Input is not valid, given value is %s' % directories
 
     def assert_output_validity(self, directories,
-                               valid_output_min_size_bytes=0,
+                               min_size_bytes=0,
                                validate_marker=False):
         self.log_lineage_hdfs(directories, 'output')
         assert self.__is_hdfs_collection_valid(directories,
-                                               min_size_bytes=valid_output_min_size_bytes,
+                                               min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker) is True, \
             'Output is not valid, given value is %s' % directories
 
@@ -215,7 +215,7 @@ class ContextualizedTasksInfra(TasksInfra):
                                command_params=command_params)
 
     def run_bash(self, command):
-        print ("Final bash command: \n#####\n%s\n#####" % command)
+        sys.stdout.write("\nFinal bash command: \n#####\n%s\n#####\n" % command)
         sys.stdout.flush()
         time.sleep(1)
         if self.dry_run or self.checks_only:
@@ -236,7 +236,7 @@ class ContextualizedTasksInfra(TasksInfra):
 
     def mark_success(self, directory, opts=''):
         if self.dry_run or self.checks_only:
-            print '''Dry Run: If successful would create '%s/_SUCCESS' marker''' % directory
+            sys.stdout.write('''Dry Run: If successful would create '%s/_SUCCESS' marker''' % directory)
         else:
             mark_success(directory)
 
@@ -288,12 +288,15 @@ class ContextualizedTasksInfra(TasksInfra):
         command = TasksInfra.add_command_params(command, command_params)
         return self.run_bash(command).ok
 
-    @staticmethod
-    def get_jars_list(module_dir, jars_from_lib):
+    def get_jars_list(self, module_dir, jars_from_lib):
         if jars_from_lib:
             jars_from_lib = map(lambda x: '%s.jar' % x, jars_from_lib)
         else:
-            jars_from_lib = os.listdir('%s/lib' % module_dir)
+            lib_module_dir = '%s/lib' % module_dir
+            if self.dry_run or self.checks_only:
+                print 'Would attach jars from ' + lib_module_dir
+            else:
+                jars_from_lib = os.listdir(lib_module_dir)
         jars = ','.join(map(lambda x: module_dir + '/lib/' + x, jars_from_lib))
         return jars
 
@@ -455,7 +458,10 @@ class ContextualizedTasksInfra(TasksInfra):
 
     @property
     def task_id(self):
-        return self.__get_common_args()['task_id']
+        if self.has_task_id:
+            return self.__get_common_args()['task_id']
+        else:
+            return 'NO_TASK_ID'
 
     @property
     def dag_id(self):
