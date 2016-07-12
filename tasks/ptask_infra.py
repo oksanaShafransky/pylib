@@ -71,6 +71,8 @@ class TasksInfra(object):
     def add_command_params(command, command_params, *positional):
         ans = command + ' ' + ' '.join(positional)
         for key, value in command_params.iteritems():
+            if value is None:
+                continue
             if isinstance(value, bool) and value:
                 ans += " -%s" % key
             else:
