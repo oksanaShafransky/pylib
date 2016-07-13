@@ -18,13 +18,13 @@ execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') +
 class TasksInfra(object):
     @staticmethod
     def parse_date(date_str):
-        return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
+        return datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
 
     @staticmethod
     def full_partition_path(mode, mode_type, date):
-        if mode == "daily":
+        if mode == 'daily':
             return 'year=%s/month=%s/day=%s' % (str(date.year)[2:], str(date.month).zfill(2), str(date.day).zfill(2))
-        elif mode == "window" or mode_type == "weekly":
+        elif mode == 'window' or mode_type == 'weekly':
             return 'type=%s/year=%s/month=%s/day=%s' % (
                 mode_type, str(date.year)[2:], str(date.month).zfill(2), str(date.day).zfill(2))
         else:
@@ -54,9 +54,9 @@ class TasksInfra(object):
 
     @staticmethod
     def days_in_range(end_date, mode_type):
-        if mode_type == "last-28":
+        if mode_type == 'last-28':
             start_date = end_date - datetime.timedelta(days=27)
-        elif mode_type == "monthly":
+        elif mode_type == 'monthly':
             # get last day in month
             last = calendar.monthrange(end_date.year, end_date.month)[1]
             end_date = datetime.datetime(end_date.year, end_date.month, last).date()
