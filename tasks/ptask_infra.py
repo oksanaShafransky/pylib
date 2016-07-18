@@ -70,6 +70,7 @@ class TasksInfra(object):
     @staticmethod
     def add_command_params(command, command_params, *positional):
         ans = command + ' ' + ' '.join(positional)
+
         for key, value in command_params.iteritems():
             if isinstance(value, bool) and value:
                 ans += " -%s" % key
