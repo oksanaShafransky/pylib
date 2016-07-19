@@ -357,6 +357,17 @@ def temp_table_cmds(orig_table_name, table_location):
         return orig_table_name, repair_cmd, ''
 
 
+# def hive_over_hbase_cmds(orig_table_name):
+#     logger.info("Checking whether to create temporary table %s over location %s:" % (orig_table_name, table_location))
+#     if should_create_temp_table(orig_table_name, table_location):
+#         logger.info("Writing to temp table in the given location.")
+#         return temp_table_cmds_internal(orig_table_name, table_location)
+#     else:
+#         logger.info("Writing to the original table in place. The location which was passed is being discarded.")
+#         repair_cmd = 'MSCK REPAIR TABLE %s;\n' % orig_table_name
+#         return orig_table_name, repair_cmd, ''
+
+
 def dedent(s):
     return '\n'.join([line.lstrip() for line in s.split('\n') if line.strip()])
 
