@@ -74,8 +74,9 @@ class TasksInfra(object):
         for key, value in command_params.iteritems():
             if value is None:
                 continue
-            if isinstance(value, bool) and value:
-                ans += " -%s" % key
+            if isinstance(value, bool):
+                if value:
+                    ans += " -%s" % key
             else:
                 ans += " -%s %s" % (key, value)
         return ans
@@ -223,7 +224,7 @@ class ContextualizedTasksInfra(object):
         time.sleep(1)
         if self.dry_run or self.checks_only:
             return Result(command, stdout=None, stderr=None, exited=0, pty=None)
-        return self.ctx.run(command)
+        return self.ctx.run(command.replace('\'', '\\"\'\\"'))
 
     def run_python(self, python_executable, command_params, *positional):
         return self.run_bash(self.__compose_python_runner_command(python_executable, command_params, *positional)).ok
