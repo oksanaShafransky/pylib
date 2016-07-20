@@ -239,7 +239,7 @@ class ContextualizedTasksInfra(object):
 
     def mark_success(self, directory, opts=''):
         if self.dry_run or self.checks_only:
-            sys.stdout.write('''Dry Run: If successful would create '%s/_SUCCESS' marker''' % directory)
+            sys.stdout.write('''Dry Run: If successful would create '%s/_SUCCESS' marker\n''' % directory)
         else:
             mark_success(directory)
 
