@@ -286,7 +286,7 @@ def delete_path(path):
 
 
 def temp_table_cmds_internal(orig_table_name, temp_root):
-    table_name = '%s_temp_%s' % (orig_table_name, random.randint(10000, 99999))
+    table_name = generate_randomized_table_name(orig_table_name)
     drop_cmd = '\nDROP TABLE IF EXISTS %s;\n' % table_name
     create_cmd = '''\n
                     CREATE EXTERNAL TABLE %(table_name)s
@@ -304,7 +304,7 @@ def temp_table_cmds_internal(orig_table_name, temp_root):
 
 
 def temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name):
-    table_name = '%s_temp_%s' % (orig_table_name, random.randint(10000, 99999))
+    table_name = generate_randomized_table_name(orig_table_name)
     drop_cmd = '\nDROP TABLE IF EXISTS %s;\n' % table_name
     create_cmd = '''\n
                     CREATE EXTERNAL TABLE %(table_name)s
@@ -315,6 +315,10 @@ def temp_hbase_table_cmds_internal(orig_table_name, full_hbase_table_name):
                        'orig_table_name': orig_table_name,
                        'full_hbase_table_name': full_hbase_table_name}
     return table_name, drop_cmd, create_cmd
+
+
+def generate_randomized_table_name(orig_table_name):
+    return '%s_temp_%s' % (orig_table_name, random.randint(10000, 99999))
 
 
 def should_create_temp_table(orig_table_name, table_loc):
@@ -355,17 +359,6 @@ def temp_table_cmds(orig_table_name, table_location):
         logger.info("Writing to the original table in place. The location which was passed is being discarded.")
         repair_cmd = 'MSCK REPAIR TABLE %s;\n' % orig_table_name
         return orig_table_name, repair_cmd, ''
-
-
-# def hive_over_hbase_cmds(orig_table_name):
-#     logger.info("Checking whether to create temporary table %s over location %s:" % (orig_table_name, table_location))
-#     if should_create_temp_table(orig_table_name, table_location):
-#         logger.info("Writing to temp table in the given location.")
-#         return temp_table_cmds_internal(orig_table_name, table_location)
-#     else:
-#         logger.info("Writing to the original table in place. The location which was passed is being discarded.")
-#         repair_cmd = 'MSCK REPAIR TABLE %s;\n' % orig_table_name
-#         return orig_table_name, repair_cmd, ''
 
 
 def dedent(s):
