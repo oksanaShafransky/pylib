@@ -121,6 +121,7 @@ class ContextualizedTasksInfra(object):
         if self.dry_run:
             log_message = "Dry Run: would have checked that '%s' size > %d bytes" % (directory, min_size_bytes)
             log_message += ' and contains _SUCCESS file' if validate_marker else ''
+            log_message += '\n'
             sys.stdout.write(log_message)
         else:
             if validate_marker:
@@ -143,7 +144,7 @@ class ContextualizedTasksInfra(object):
 
     def log_lineage_hdfs(self, directories, direction):
         if self.dry_run or self.checks_only:
-            sys.stdout.write('\n(*)')
+            sys.stdout.write('(*)')
             return
         if self.has_task_id is False:
             return
@@ -217,7 +218,7 @@ class ContextualizedTasksInfra(object):
                                command_params=command_params)
 
     def run_bash(self, command):
-        sys.stdout.write("\nFinal bash command: \n#####\n%s\n#####\n" % command)
+        sys.stdout.write("#####\nFinal bash command: \n-----------------\n%s\n#####\n" % command)
         sys.stdout.flush()
         time.sleep(1)
         if self.dry_run or self.checks_only:
@@ -296,7 +297,8 @@ class ContextualizedTasksInfra(object):
         else:
             lib_module_dir = '%s/lib' % module_dir
             if self.dry_run or self.checks_only:
-                print 'Would attach jars from ' + lib_module_dir
+                print 'Dry Run: Would attach jars from ' + lib_module_dir
+                jars_from_lib = []
             else:
                 jars_from_lib = os.listdir(lib_module_dir)
         jars = ','.join(map(lambda x: module_dir + '/lib/' + x, jars_from_lib))
@@ -331,6 +333,8 @@ class ContextualizedTasksInfra(object):
             main_py_file = 'python/' + main_py_file
             if not py_files and os.path.exists(module_dir + '/python/' + module + '.py.zip'):
                 py_files = [module_dir + '/python/' + module + '.py.zip']
+        if py_files is None:
+            py_files = []
 
         command = "spark-submit" \
                   " --name '%(app_name)s'" \
