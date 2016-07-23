@@ -1,0 +1,4 @@
+similarweb.egg-info/PKG-INFO
+similarweb.egg-info/SOURCES.txt
+similarweb.egg-info/dependency_links.txt
+similarweb.egg-info/top_level.txt

@@ -8,8 +8,8 @@ from datetime import datetime
 
 import common
 from common import GracefulShutdownHandler
-from pylib..builder import yarn_queue_param
-from pylib..stats import *
+from pylib.jobs.builder import yarn_queue_param
+from pylib.jobs.stats import *
 
 try:
     from lxml.etree import HTML

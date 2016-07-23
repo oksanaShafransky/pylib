@@ -9,7 +9,7 @@ import time
 from invoke import Result
 from redis import StrictRedis as Redis
 
-from hadoop.hdfs_util import test_size, check_success, mark_success
+from pylib.hadoop.hdfs_util import test_size, check_success, mark_success
 
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../..'
