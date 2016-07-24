@@ -223,9 +223,11 @@ class ContextualizedTasksInfra(object):
         time.sleep(1)
         if self.dry_run or self.checks_only:
             return Result(command, stdout=None, stderr=None, exited=0, pty=None)
-        special_chars = {'\\': '\\', '\'': '\"'}
-        for chr, replacement in special_chars.iteritems():
-            command = command.replace(chr, '\"%s\"' % replacement)
+        #special_chars = {'\\': '\\', '\'': '\"'}
+        """special_chars = ['\'', '\\']
+        for chr in special_chars:
+            command = command.replace(chr, '\\"%s\\"' % chr)"""
+        command = command.replace('\'', '\\"\'\\"')
         return self.ctx.run(command)
 
     def run_python(self, python_executable, command_params, *positional):
