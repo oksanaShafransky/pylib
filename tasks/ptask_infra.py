@@ -223,6 +223,9 @@ class ContextualizedTasksInfra(object):
         time.sleep(1)
         if self.dry_run or self.checks_only:
             return Result(command, stdout=None, stderr=None, exited=0, pty=None)
+        special_chars = {'\\': '\\', '\'': '\"'}
+        for chr, replacement in special_chars.iteritems():
+            command = command.replace(chr, '\"%s\"' % replacement)
         return self.ctx.run(command)
 
     def run_python(self, python_executable, command_params, *positional):
@@ -480,3 +483,11 @@ class ContextualizedTasksInfra(object):
     @property
     def has_task_id(self):
         return self.__get_common_args()['has_task_id']
+
+    if __name__ == '__main__':
+        command = "source /home/felixv/cdh5/pylib/tasks/../../scripts/common.sh && execute hadoopexec /home/felixv/cdh5/pylib/tasks/../../analytics analytics.jar com.similargroup.common.utils.SqlExportUtil  -cs jdbc:mysql://mysql-ga.vip.sg.internal:3306/swga?user=swga\&password=swga\!23 -q 'select domain, country as country_name, deviceId, users, visits from websites_countries_data where year=2016 and month=6 and day=1' -ot parquet -out /similargroup/ga/daily/website-data/year=16/month=06/day=01"
+        special_chars = {'\\': '\\', '\'': '\"'}
+        for chr, replacement in special_chars.iteritems():
+            command = command.replace(chr, '\"%s\"' % replacement)
+
+        print command
