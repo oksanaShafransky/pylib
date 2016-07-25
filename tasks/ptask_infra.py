@@ -341,17 +341,17 @@ class ContextualizedTasksInfra(object):
         if py_files is None:
             py_files = []
 
-        command = "spark-submit" \
-                  " --name '%(app_name)s'" \
-                  " --master yarn-cluster" \
+        command = 'spark-submit' \
+                  ' --name "%(app_name)s"' \
+                  ' --master yarn-cluster' \
                   ' --queue %(queue)s' \
                   ' --conf "spark.yarn.tags=$TASK_ID"' \
-                  " --deploy-mode cluster" \
-                  " --jars '%(jars)s'" \
-                  " --files '%(files)s'" \
-                  " --py-files '%(py-files)s'" \
-                  " %(spark-confs)s" \
-                  " '%(execution_dir)s/%(main_py)s'" \
+                  ' --deploy-mode cluster' \
+                  ' --jars "%(jars)s"' \
+                  ' --files "%(files)s"' \
+                  ' --py-files "%(py-files)s"' \
+                  ' %(spark-confs)s' \
+                  ' "%(execution_dir)s/%(main_py)s"' \
                   % {'app_name': app_name if app_name else os.path.basename(main_py_file),
                      'execution_dir': module_dir,
                      'queue': queue,
