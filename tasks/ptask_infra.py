@@ -226,7 +226,7 @@ class ContextualizedTasksInfra(object):
         if self.dry_run or self.checks_only:
             return Result(command, stdout=None, stderr=None, exited=0, pty=None)
         return self.ctx.run(command.replace('\'', '\\"\'\\"'))
-    
+
     def run_python(self, python_executable, command_params, *positional):
         return self.run_bash(self.__compose_python_runner_command(python_executable, command_params, *positional)).ok
 
