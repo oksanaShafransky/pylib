@@ -77,6 +77,9 @@ class TasksInfra(object):
             if isinstance(value, bool):
                 if value:
                     ans += " -%s" % key
+            elif isinstance(value, list):
+                for elem in value:
+                    ans += " -%s %s" % (key, elem)
             else:
                 ans += " -%s %s" % (key, value)
         return ans
