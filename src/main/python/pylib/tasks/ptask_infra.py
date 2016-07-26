@@ -70,11 +70,13 @@ class TasksInfra(object):
     @staticmethod
     def add_command_params(command, command_params, *positional):
         ans = command + ' ' + ' '.join(positional)
+
         for key, value in command_params.iteritems():
             if value is None:
                 continue
-            if isinstance(value, bool) and value:
-                ans += " -%s" % key
+            if isinstance(value, bool):
+                if value:
+                    ans += " -%s" % key
             else:
                 ans += " -%s %s" % (key, value)
         return ans
@@ -223,7 +225,7 @@ class ContextualizedTasksInfra(object):
         time.sleep(1)
         if self.dry_run or self.checks_only:
             return Result(command, stdout=None, stderr=None, exited=0, pty=None)
-        return self.ctx.run(command)
+        return self.ctx.run(command.replace('\'', '\\"\'\\"'))
 
     def run_python(self, python_executable, command_params, *positional):
         return self.run_bash(self.__compose_python_runner_command(python_executable, command_params, *positional)).ok
@@ -404,6 +406,10 @@ class ContextualizedTasksInfra(object):
         return self.__get_common_args()['base_dir']
 
     @property
+    def calc_dir(self):
+        return self.__get_common_args().get('calc_dir', self.base_dir)
+
+    @property
     def production_base_dir(self):
         return '/similargroup/data'
 
@@ -480,3 +486,11 @@ class ContextualizedTasksInfra(object):
     @property
     def has_task_id(self):
         return self.__get_common_args()['has_task_id']
+
+    if __name__ == '__main__':
+        command = "source /home/felixv/cdh5/pylib/tasks/../../scripts/common.sh && execute hadoopexec /home/felixv/cdh5/pylib/tasks/../../analytics analytics.jar com.similargroup.common.utils.SqlExportUtil  -cs jdbc:mysql://mysql-ga.vip.sg.internal:3306/swga?user=swga\&password=swga\!23 -q 'select domain, country as country_name, deviceId, users, visits from websites_countries_data where year=2016 and month=6 and day=1' -ot parquet -out /similargroup/ga/daily/website-data/year=16/month=06/day=01"
+        special_chars = {'\\': '\\', '\'': '\"'}
+        for chr, replacement in special_chars.iteritems():
+            command = command.replace(chr, '\"%s\"' % replacement)
+
+        print command

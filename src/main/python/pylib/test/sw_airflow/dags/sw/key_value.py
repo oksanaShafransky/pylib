@@ -3,7 +3,7 @@ __author__ = 'Felix'
 from datetime import datetime, timedelta
 from airflow.models import DAG
 
-from sw.airflow.key_value import *
+from sw_airflow.common.airflow.key_value import *
 
 
 dag_args = {
