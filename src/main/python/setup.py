@@ -4,5 +4,6 @@ setup(
     name="sw_pylib",
     packages=find_packages(),
     zip_safe=True,
-    requires=['invoke']
+    requires=['invoke'],
+    test_suite='pylib.test.hadoop'
 )
