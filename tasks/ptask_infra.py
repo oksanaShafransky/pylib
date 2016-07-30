@@ -239,7 +239,7 @@ class ContextualizedTasksInfra(object):
             "execute Rscript %s/%s %s" % (execution_dir, r_executable, ' '.join(command_params)))).ok
 
     def latest_monthly_success_date(self, directory, month_lookback, date=None):
-        d = date.strftime('%Y-%m-%d') or self.__get_common_args()['date']
+        d = date.strftime('%Y-%m-%d') if date is not None else self.__get_common_args()['date']
         command = self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, d, month_lookback))
         try:
             return self.run_bash(command=command).stdout.strip()
@@ -247,7 +247,7 @@ class ContextualizedTasksInfra(object):
             return None
 
     def latest_daily_success_date(self, directory, month_lookback, date=None):
-        d = date.strftime('%Y-%m-%d') or self.__get_common_args()['date']
+        d = date.strftime('%Y-%m-%d') if date is not None else self.__get_common_args()['date']
         command = self.__compose_infra_command('LatestDailySuccessDate %s %s %s' % (directory, d, month_lookback))
         try:
             return self.run_bash(command=command).stdout.strip()
