@@ -25,4 +25,4 @@ def get_table_names(location, print_query):
     print '\n'.join(map(lambda db_table: '%s.%s' % db_table, find_table_name(location, print_query)))
 
 
-get_table_names(location='daily/aggregate/aggkey=SiteCountrySourceKey', print_query=False)
+get_table_names(location='/similargroup/data/analytics/window/post-estimate/aggkey=sending-pages', print_query=False)

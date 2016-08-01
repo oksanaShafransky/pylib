@@ -7,6 +7,7 @@ import sys
 import time
 
 from invoke import Result
+from invoke.exceptions import Failure
 from redis import StrictRedis as Redis
 
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success
@@ -237,10 +238,21 @@ class ContextualizedTasksInfra(object):
         return self.run_bash(self.__compose_infra_command(
             "execute Rscript %s/%s %s" % (execution_dir, r_executable, ' '.join(command_params)))).ok
 
-    def latest_monthly_success_date(self, directory, month_lookback):
-        d = self.__get_common_args()['date']
+    def latest_monthly_success_date(self, directory, month_lookback, date=None):
+        d = date.strftime('%Y-%m-%d') if date is not None else self.__get_common_args()['date']
         command = self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, d, month_lookback))
-        return self.run_bash(command=command).stdout.strip()
+        try:
+            return self.run_bash(command=command).stdout.strip()
+        except Failure:
+            return None
+
+    def latest_daily_success_date(self, directory, month_lookback, date=None):
+        d = date.strftime('%Y-%m-%d') if date is not None else self.__get_common_args()['date']
+        command = self.__compose_infra_command('LatestDailySuccessDate %s %s %s' % (directory, d, month_lookback))
+        try:
+            return self.run_bash(command=command).stdout.strip()
+        except Failure:
+            return None
 
     def mark_success(self, directory, opts=''):
         if self.dry_run or self.checks_only:
