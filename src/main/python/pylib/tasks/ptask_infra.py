@@ -461,6 +461,10 @@ class ContextualizedTasksInfra(object):
             return '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
 
     @property
+    def date_title(self):
+        return self.date.strftime('%Y-%m' if self.mode == 'snapshot' else '%Y-%m-%d')
+
+    @property
     def table_prefix(self):
         return self.__get_common_args().get('table_prefix', '')
 
