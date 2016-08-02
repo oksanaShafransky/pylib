@@ -254,7 +254,7 @@ def deploy_all_jars(deploy_path, jar_hdfs_location, lib_path="lib"):
 
 def wait_on_processes(processes):
     for p in processes:
-        print p.communicate()
+        print (p.communicate())
 
 
 def get_table_location(table):
