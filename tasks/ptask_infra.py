@@ -176,6 +176,12 @@ class ContextualizedTasksInfra(object):
                 }
                 client.rpush(lineage_key, lineage_value)
 
+    @staticmethod
+    def assert_index_exists(es_host, index):
+        from elasticsearch import Elasticsearch
+        es = Elasticsearch(es_host)
+        assert es.indices.exists(index) is True, "Some index %s was not found on the server" % index
+
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
         assert self.__is_hdfs_collection_valid(directories,
