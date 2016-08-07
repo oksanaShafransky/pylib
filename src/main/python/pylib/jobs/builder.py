@@ -22,7 +22,7 @@ user_path = 'USER'
 yarn_queue_param = 'JOB_QUEUE'
 
 lib_path = os.path.abspath(
-    os.path.join(os.path.join(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'), '..'), 'pygz'))
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../../pygz'))
 lib_file = 'pylib.tar.gz'
 
 DFS_BLOCK_SIZE = 128
@@ -62,13 +62,14 @@ class JobBuilder:
             '--no-output',
             '--strict-protocols',
             '--cleanup', 'NONE',
-            '--python-archive', '%s/%s' % (lib_path, lib_file),
+            '--archive', '%s/%s#pylib' % (lib_path, lib_file),
+            '--setup', 'touch pylib/__init__.py',
+            '--setup', 'export PYTHONPATH=$PYTHONPATH:.',
             '--jobconf', ('mapreduce.job.name=%s' % job_name),
             '--jobconf', ('mapreduce.map.failures.maxpercent=%d' % self.max_map_fail_percentage),
             '--jobconf', ('mapreduce.map.maxattempts=%d' % self.max_map_task_fails),
             '--jobconf', ('mapreduce.reduce.maxattempts=%d' % self.max_reduce_task_fails),
-            '--python-bin', PYTHON_HOME,
-            '--setup', 'export PYTHONPATH=$PYTHONPATH:$PATH'
+            '--python-bin', PYTHON_HOME
         ]
 
         self.input_type = 'plain'
