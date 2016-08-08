@@ -63,7 +63,7 @@ class JobBuilder:
             '--strict-protocols',
             '--cleanup', 'NONE',
             '--archive', '%s/%s#%s' % (lib_path, lib_file, lib_file),
-            '--setup', 'export PYTHONPATH=$PYTHONPATH:.:%s' % lib_file,
+            '--setup', 'export PYTHONPATH=$PYTHONPATH:./%s/%s' % (lib_file, lib_file[:lib_file.rfind('.')]),
             '--jobconf', ('mapreduce.job.name=%s' % job_name),
             '--jobconf', ('mapreduce.map.failures.maxpercent=%d' % self.max_map_fail_percentage),
             '--jobconf', ('mapreduce.map.maxattempts=%d' % self.max_map_task_fails),
