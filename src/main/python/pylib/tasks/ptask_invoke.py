@@ -100,7 +100,7 @@ class PtaskInvoker(Program):
     def run(self, argv=None, **kwargs):
         try:
             # add pylib to path
-            sys.path.append(os.path.join(os.path.dirname(__file__), '../'))
+            sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
             self._parse(argv)
             # Restrict a run to one task at a time
             assert len(self.tasks) == 1
