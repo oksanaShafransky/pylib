@@ -65,6 +65,8 @@ class JobBuilder:
             '--archive', '%s/%s#pylib' % (lib_path, lib_file),
             '--setup', 'touch pylib/__init__.py',
             '--setup', 'export PYTHONPATH=$PYTHONPATH:.',
+            '--setup', 'ls -r ./pylib/*',
+            '--setup', 'echo $PYTHONPATH',
             '--jobconf', ('mapreduce.job.name=%s' % job_name),
             '--jobconf', ('mapreduce.map.failures.maxpercent=%d' % self.max_map_fail_percentage),
             '--jobconf', ('mapreduce.map.maxattempts=%d' % self.max_map_task_fails),
