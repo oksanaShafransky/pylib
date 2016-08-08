@@ -22,8 +22,8 @@ user_path = 'USER'
 yarn_queue_param = 'JOB_QUEUE'
 
 lib_path = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../../pygz'))
-lib_file = 'pylib.tar.gz'
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../../pylib/python'))
+lib_file = 'sw_pylib-0.0.0.dev0.zip'
 
 DFS_BLOCK_SIZE = 128
 
