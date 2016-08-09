@@ -347,8 +347,8 @@ class ContextualizedTasksInfra(object):
                 additional_configs += ' --%s %s' % (key, value)
 
         if use_bigdata_defaults:
-            main_py_file = 'python/' + 'sw_' + module + '/' + main_py_file
-            module_source_zip_path = module_dir + '/python/' + 'sw_' + module + '/' + module + '-0.0.0.dev0.zip'
+            main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
+            module_source_zip_path = '%s/python/%s-0.0.0.dev0.zip' % (module_dir, module)
             if not py_files and os.path.exists(module_source_zip_path):
                 py_files = [module_source_zip_path]
         if py_files is None:

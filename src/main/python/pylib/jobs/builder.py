@@ -22,8 +22,8 @@ user_path = 'USER'
 yarn_queue_param = 'JOB_QUEUE'
 
 lib_path = os.path.abspath(
-    os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../../pygz'))
-lib_file = 'pylib.tar.gz'
+    os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../../../pylib/python'))
+lib_file = 'sw_pylib-0.0.0.dev0.zip'
 
 DFS_BLOCK_SIZE = 128
 
@@ -62,9 +62,8 @@ class JobBuilder:
             '--no-output',
             '--strict-protocols',
             '--cleanup', 'NONE',
-            '--archive', '%s/%s#pylib' % (lib_path, lib_file),
-            '--setup', 'touch pylib/__init__.py',
-            '--setup', 'export PYTHONPATH=$PYTHONPATH:.',
+            '--archive', '%s/%s#%s' % (lib_path, lib_file, lib_file),
+            '--setup', 'export PYTHONPATH=$PYTHONPATH:./%s/%s' % (lib_file, lib_file[:lib_file.rfind('.')]),
             '--jobconf', ('mapreduce.job.name=%s' % job_name),
             '--jobconf', ('mapreduce.map.failures.maxpercent=%d' % self.max_map_fail_percentage),
             '--jobconf', ('mapreduce.map.maxattempts=%d' % self.max_map_task_fails),
