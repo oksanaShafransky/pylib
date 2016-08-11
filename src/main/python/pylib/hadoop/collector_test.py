@@ -72,7 +72,7 @@ if __name__ == '__main__':
         slope = (change - last_week_change) / last_week_change
 
         if change > threshold:
-            report += '%s changed %.3f from yesterday, as opposed to %.3f daily a week ago, representing a %.2f slope\n' % (col, change, last_week_change, slope)
+            report += '%s changed %.3f from yesterday, as opposed to %.3f daily a week ago, representing a %.2f ratio\n' % (col, change, last_week_change, slope)
 
     # check if report is in fact empty
     if report == '':
