@@ -1,13 +1,19 @@
 __author__ = 'Amit'
 
-from pylib.sw_config.composite_kv import CompositeConfigurationProxy
 from pycountry import countries
 
 
 class MobileWebConfig:
-    def __init__(self, env='main'):
+    def __init__(self, env='main', is_local=False):
         self.root = 'services/mobile-web/env/%s' % env
-        self.conf = CompositeConfigurationProxy()
+        if is_local:
+            from pylib.sw_config.mock import DictProxy
+            countries_dict = {'%s/countries' % self.root: '840,826'}
+            self.conf = DictProxy(**countries_dict)
+            pass
+        else:
+            from pylib.sw_config.composite_kv import CompositeConfigurationProxy
+            self.conf = CompositeConfigurationProxy()
 
         self._countries = {}
 

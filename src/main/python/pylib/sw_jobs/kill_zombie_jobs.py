@@ -13,30 +13,30 @@ logging.basicConfig(level=logging.INFO,
                     stream=sys.stdout)
 logger = logging.getLogger(os.path.basename(__file__))
 
-job_rm = 'http://active.yarn-rm-mrp.service.production'
-job_rm_port = 8088
 valid_states = 'SUBMITTED,ACCEPTED,RUNNING'
 user = 'airflow'
 
-zombie_apps_template = '%(server)s:%(port)d/ws/v1/cluster/apps?user=%(user)s&states=%(states)s&applicationTags=%(task_id)s'
-kill_app_template = '%(server)s:%(port)d/ws/v1/cluster/apps/%(app_id)s/state'
+zombie_apps_template = 'http://%(server)s:%(port)d/ws/v1/cluster/apps?user=%(user)s&states=%(states)s&applicationTags=%(task_id)s'
+kill_app_template = 'http://%(server)s:%(port)d/ws/v1/cluster/apps/%(app_id)s/state'
 
 
 class ZombieKiller:
+
+    def __init__(self, rm_server, rm_port=8088):
+        self.server, self.port = rm_server, rm_port
 
     class ZombieHandleMode:
         alert = 0
         kill = 1
 
-    @staticmethod
-    def kill_zombie_jobs(task_id, handling_mode=ZombieHandleMode.alert):
+    def kill_zombie_jobs(self, task_id, handling_mode=ZombieHandleMode.alert):
 
         if not task_id:
             raise ValueError("task_id cannot be empty")
 
         logger.info('checking if jobs with Airflow unique identifier %s is running...' % task_id)
 
-        job_url = zombie_apps_template % {'server': job_rm, 'port': job_rm_port, 'user': user, 'states': valid_states,
+        job_url = zombie_apps_template % {'server': self.server, 'port': self.port, 'user': user, 'states': valid_states,
                                           'task_id': task_id}
         resp = json.load(urllib.urlopen(job_url))
         apps = resp['apps']
@@ -51,7 +51,7 @@ class ZombieKiller:
                     if handling_mode == ZombieKiller.ZombieHandleMode.alert:
                         raise ZombieJobFoundException(task_id)
                     elif handling_mode == ZombieKiller.ZombieHandleMode.kill:
-                        app_kill_url = kill_app_template % {'server': job_rm, 'port': job_rm_port, 'app_id': id}
+                        app_kill_url = kill_app_template % {'server': self.server, 'port': self.port, 'app_id': id}
                         r = requests.put(app_kill_url, headers={"content-type": "application/json"}, data=json.dumps({'state': 'KILLED'}))
                         r.raise_for_status()
                     else:
