@@ -2,19 +2,15 @@ __author__ = 'Amit'
 
 from pycountry import countries
 
+from airflow.models import Variable
+
+from pylib.sw_config.kv_factory import provider_from_config
+
 
 class MobileWebConfig:
-    def __init__(self, env='main', is_local=False):
+    def __init__(self, env='main'):
         self.root = 'services/mobile-web/env/%s' % env
-        if is_local:
-            from pylib.sw_config.mock import DictProxy
-            countries_dict = {'%s/countries' % self.root: '840,826'}
-            self.conf = DictProxy(**countries_dict)
-            pass
-        else:
-            from pylib.sw_config.composite_kv import CompositeConfigurationProxy
-            self.conf = CompositeConfigurationProxy()
-
+        self.conf = provider_from_config(Variable.get('key_value_production'))
         self._countries = {}
 
     @property
