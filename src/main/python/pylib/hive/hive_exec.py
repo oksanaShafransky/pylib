@@ -5,7 +5,7 @@ from datetime import datetime
 from inspect import isfunction
 from multiprocessing.pool import ThreadPool as Pool
 
-import hive_runner
+from hive_runner import HiveProcessRunner
 from common import logger
 from pylib.tasks.executer import Executer, Arg, Stage, CONCURRENCY
 
@@ -144,7 +144,7 @@ class HiveExecuter(Executer):
         job_name = 'Hive. %s' % (' - '.join([query_name] + job_params))
 
         try:
-            hive_runner.run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
+            HiveProcessRunner().run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
                                      consolidate_output=not args.no_merge_output, log_dir=log_dir,
                                      slow_start_ratio=args.slow_start_ratio, calc_pool=args.calc_pool,
                                      compression=args.compression, task_memory=args.task_mem, input_block_size=args.block_size)
