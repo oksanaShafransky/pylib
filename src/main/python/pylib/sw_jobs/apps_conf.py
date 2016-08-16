@@ -4,8 +4,8 @@ from pylib.sw_config.kv_factory import provider_from_config
 from pycountry import countries
 from airflow.models import Variable
 
-class AppsConfig:
-    def __init__(self, env='main'):
+class AppsEngagementConfig:
+    def __init__(self, env):
         self.root = 'services/app-engagement/env/%s' % env
         self.conf = provider_from_config(Variable.get('key_value_production'))
 
