@@ -6,8 +6,8 @@ from kv import KeyValueProxy
 
 
 class ConsulProxy(KeyValueProxy):
-    def __init__(self, env=None):
-        self.client = consulate.Consul('consul.service%(suffix)s' % {'suffix': (('.' + env) if env else '')})
+    def __init__(self, server):
+        self.client = consulate.Consul(server)
 
     def get(self, key):
         return self.client.kv.get(str(key))

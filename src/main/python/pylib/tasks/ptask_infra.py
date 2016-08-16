@@ -264,8 +264,8 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'],
                                               self.__get_common_args()['date'])
 
-    def year_month_day(self):
-        return TasksInfra.year_month_day(self.__get_common_args()['date'])
+    def year_month_day(self, date=None):
+        return TasksInfra.year_month_day(self.__get_common_args()['date'] if date is None else date)
 
     ymd = year_month_day
 
