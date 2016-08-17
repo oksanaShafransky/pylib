@@ -11,7 +11,7 @@ from invoke.exceptions import Failure
 from redis import StrictRedis as Redis
 
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
-from pylib.hadoop.hdfs_util import test_size, check_success, mark_success
+from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs
 
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../../../..'
@@ -211,9 +211,13 @@ class ContextualizedTasksInfra(object):
         if query_name_suffix is not None:
             job_name = job_name + ' ' + query_name_suffix
 
-        for dir in managed_output_dirs:
-            self.
+        # delete output on start
+        if not self.dry_run:
+            delete_dirs(managed_output_dirs)
+
         HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, is_dry_run=self.dry_run)
+        for mdir in managed_output_dirs:
+            mark_success(mdir)
 
     @staticmethod
     def fail(reason=None):
