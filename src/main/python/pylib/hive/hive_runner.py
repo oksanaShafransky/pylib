@@ -1,20 +1,148 @@
-import os
 import re
 from datetime import datetime
 from dateutil import parser
 import subprocess
+from copy import copy
 
 import common
 from common import GracefulShutdownHandler
-from pylib.jobs.builder import yarn_queue_param
+
+
+class HiveParamBuilder:
+
+    TASK_MEMORY_OVERHEAD = 0.3
+
+    COMPRESSION_FORMATS = {
+        'gz': 'org.apache.hadoop.io.compress.GzipCodec',
+        'bz2': 'org.apache.hadoop.io.compress.BZip2Codec'
+    }
+
+    def __init__(self):
+        self.root_queue = None
+        self.pool = 'calculation'
+        self.slow_start = 1.0
+
+        self.map_cpu_cores = 2
+        self.map_task_memory = 1024  # MB
+        self.input_block_size = 128
+
+        self.reduce_cpu_cores = 2
+        self.reduce_task_memory = 2048
+
+        self.compression = None
+
+        self.child_opts = {
+            'all': set(),
+            'map': set(),
+            'reduce': set()
+        }
+
+    def add_child_option(self, option, where='all', condition=True):
+        if condition:
+            self.child_opts[where].add(option)
+        return self
+
+    def with_memory(self, amount_in_mb, where='all', condition=True):
+        if condition:
+            if where == 'all':
+                self.map_task_memory = amount_in_mb
+                self.reduce_task_memory = amount_in_mb
+            elif where == 'map':
+                self.map_task_memory = amount_in_mb
+            elif where == 'reduce':
+                self.reduce_task_memory = amount_in_mb
+            else:
+                raise ValueError('target must be either all, map or reduce')
+
+        return self
+
+    def with_cores(self, amount, where='all', condition=True):
+        if condition:
+            if where == 'all':
+                self.map_cpu_cores = amount
+                self.reduce_task_memory = amount
+            elif where == 'map':
+                self.map_cpu_cores = amount
+            elif where == 'reduce':
+                self.reduce_cpu_cores = amount
+            else:
+                raise ValueError('target must be either all, map or reduce')
+
+        return self
+
+    def set_pool(self, pool, condition=True):
+        if condition:
+            self.pool = pool
+        return self
+
+    def set_queue(self, queue, condition=True):
+        if condition:
+            self.root_queue = queue
+        return self
+
+    def as_rerun(self, condition=True):
+        if condition:
+            return self.set_queue('reruns')
+
+    def start_reduce_early(self, map_percentage, condition=True):
+        if condition:
+            self.slow_start = map_percentage
+        return self
+
+    def with_input_block_size(self, size, condition=True):
+        if condition:
+            self.input_block_size = size
+        return self
+
+    def set_compression(self, compression, condition=True):
+        if condition:
+            self.compression = compression if compression != 'none' else None
+        return self
+
+    def to_conf(self):
+        self.add_child_option('-Xmx%(memory)dm -Xms%(memory)dm' % {'memory': self.map_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD)}, where='map')
+        self.add_child_option('-Xmx%(memory)dm -Xms%(memory)dm' % {'memory': self.reduce_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD)}, where='reduce')
+
+        ret = {
+            'mapreduce.job.queuename': ('%s.%s' % (self.root_queue, self.pool)) if self.root_queue is not None else self.pool,
+            'mapreduce.input.fileinputformat.split.maxsize': self.input_block_size * 1024 * 1024,
+            'mapreduce.map.cpu.vcores': self.map_cpu_cores,
+            'mapreduce.reduce.cpu.vcores': self.reduce_cpu_cores,
+            'mapreduce.task.io.sort.mb': max(self.map_task_memory / 10, 256)
+        }
+
+        if len(self.child_opts['all']) > 0:
+            ret['mapreduce.child.java.opts'] = ' '.join(self.child_opts['all'])
+
+        if len(self.child_opts['map']) > 0:
+            ret['mapreduce.map.java.opts'] = ' '.join(self.child_opts['map'])
+
+        if len(self.child_opts['reduce']) > 0:
+            ret['mapreduce.reduce.java.opts'] = ' '.join(self.child_opts['reduce'])
+
+        ret['hive.exec.compress.output'] = 'true' if self.compression is not None else 'false'
+        if self.compression is not None:
+            ret['mapreduce.output.fileoutputformat.compress.codec'] = HiveParamBuilder.COMPRESSION_FORMATS[self.compression]
+
+        return ret
 
 
 class HiveProcessRunner:
 
-    DEFAULT_TASK_MEMORY = 4096
-    TASK_MEMORY_OVERHEAD = 0.3
+    DEFAULT_HIVE_CONFIG = {
+        'io.seqfile.compression': 'BLOCK',
+        'hive.hadoop.supports.splittable.combineinputformat': 'true',
+        'hive.exec.max.dynamic.partitions': 100000,
+        'hive.exec.max.dynamic.partitions.pernode': 100000,
+        'hive.exec.scratchdir': '/tmp/hive-prod',
+        'hive.vectorized.execution.enabled': 'true',
+        'hive.vectorized.execution.reduce.enabled': 'true',
+        'hive.cbo.enable': 'true',
+        'hive.stats.fetch.column.stats': 'true'
+    }
 
-    DEFAULT_INPUT_BLOCK_SIZE = 128
+    def __init__(self):
+        pass
 
     @staticmethod
     def find_jobs(log_path, start_dt=None, end_dt=None):
@@ -53,58 +181,24 @@ class HiveProcessRunner:
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, cmd)
 
-    def run_query(self, hql, hive_params, job_name=None, reducers=None, log_dir='/tmp/logs', **extra_hive_params):
-        pass
+    def run_query(self, hql, hive_params, job_name=None, partitions=None, consolidate_output=True, log_dir='/tmp/logs', **extra_hive_confs):
+        params = copy(HiveProcessRunner.DEFAULT_HIVE_CONFIG)
+        params.update(hive_params.to_conf())
+        params.update(extra_hive_confs)
 
-    def run_hive_job(self, hql, job_name, num_of_reducers, log_dir, slow_start_ratio=None, calc_pool='calculation',
-                     consolidate_output=True, compression='gz', task_memory=DEFAULT_TASK_MEMORY, input_block_size=None):
-        if compression is None or compression == 'none':
-            compress = 'false'
-            codec = None
-        elif compression == 'gz':
-            compress = 'true'
-            codec = "org.apache.hadoop.io.compress.GzipCodec"
-        elif compression == "bz2":
-            compress = 'true'
-            codec = "org.apache.hadoop.io.compress.BZip2Codec"
-        else:
-            raise ValueError('Unknown compression type %s' % compression)
+        if job_name is not None:
+            params['mapreduce.job.name'] = job_name
 
-        effective_pool = (
-            '%s.%s' % (os.environ[yarn_queue_param], calc_pool)) if yarn_queue_param in os.environ else calc_pool
+        if partitions is not None:
+            params['mapreduce.job.reduces'] = partitions
 
-        cmd = ["hive", "-e", '"%s"' % hql,
-               "-hiveconf", "mapreduce.job.name=" + job_name,
-               "-hiveconf", "mapreduce.job.reduces=" + str(num_of_reducers),
-               "-hiveconf", "mapreduce.job.queuename=" + effective_pool,
-               "-hiveconf", "hive.exec.compress.output=" + compress,
-               "-hiveconf", "io.seqfile.compression=BLOCK",
-               "-hiveconf", "hive.exec.max.dynamic.partitions=100000",
-               "-hiveconf", 'hive.log.dir=%s' % log_dir,
-               "-hiveconf", "hive.log.file=hive.log",
-               "-hiveconf", "hive.exec.scratchdir=/tmp/hive-prod",
-               "-hiveconf", "hive.exec.max.dynamic.partitions.pernode=100000",
-               "-hiveconf", "hive.hadoop.supports.splittable.combineinputformat=true",
-               "-hiveconf", "mapreduce.input.fileinputformat.split.maxsize=%d" % ((input_block_size or HiveProcessRunner.DEFAULT_INPUT_BLOCK_SIZE) * 1024 * 1024),
-               "-hiveconf", "mapreduce.map.cpu.vcores=2",
-               "-hiveconf", "mapreduce.reduce.cpu.vcores=2",
-               "-hiveconf", "hive.merge.mapredfiles=%s" % ('true' if consolidate_output else 'false'),
-               "-hiveconf", "hive.vectorized.execution.enabled=true",
-               "-hiveconf", "hive.vectorized.execution.reduce.enabled=true",
-               "-hiveconf", "hive.cbo.enable=true",
-               "-hiveconf", "hive.stats.fetch.column.stats=true",
-               "-hiveconf", "mapreduce.child.java.opts=-Xmx%(memory)dm -Xms%(memory)dm" % {'memory': task_memory},
-               "-hiveconf", "mapreduce.map.java.opts=-Xmx%(memory)dm -Xms%(memory)dm" % {'memory': task_memory},
-               "-hiveconf", "mapreduce.reduce.java.opts=-Xmx%(memory)dm -Xms%(memory)dm" % {'memory': task_memory},
-               "-hiveconf", "mapreduce.reduce.memory.mb=%d" % int(task_memory * (1 + HiveProcessRunner.TASK_MEMORY_OVERHEAD)),
-               "-hiveconf", "mapreduce.map.memory.mb=%d" % int(task_memory * (1 + HiveProcessRunner.TASK_MEMORY_OVERHEAD)),
-               "-hiveconf", "mapreduce.task.io.sort.mb=%d" % max(task_memory / 10, 256)
-               ]
+        params['hive.merge.mapredfiles'] = 'true' if consolidate_output else 'false'
+        params['hive.log.dir'] = log_dir
+        params['hive.log.file'] = 'hive.log'
 
-        if codec:
-            cmd += ["-hiveconf", "mapreduce.output.fileoutputformat.compress.codec=" + codec]
-        if slow_start_ratio:
-            cmd += ["-hiveconf", "mapreduce.job.reduce.slowstart.completedmaps=" + slow_start_ratio]
+        hive_cmd = ['hive', '-e', hql]
+        for param, val in params.iteritems():
+            hive_cmd += ['-hiveconf', '%s=%s' % (param, str(val))]
 
-        common.logger.info('CMD:\n%s' % ' '.join(cmd))
-        return self._run_hive(cmd, log_path=log_dir + "/hive.log")
+        common.logger.info('CMD:\n%s' % ' '.join(hive_cmd))
+        return self._run_hive(hive_cmd, log_path='%s/hive.log' % log_dir)

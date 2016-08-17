@@ -5,7 +5,7 @@ from datetime import datetime
 from inspect import isfunction
 from multiprocessing.pool import ThreadPool as Pool
 
-from hive_runner import HiveProcessRunner
+from hive_runner import HiveProcessRunner, HiveParamBuilder
 from common import logger
 from pylib.tasks.executer import Executer, Arg, Stage, CONCURRENCY
 
@@ -144,10 +144,15 @@ class HiveExecuter(Executer):
         job_name = 'Hive. %s' % (' - '.join([query_name] + job_params))
 
         try:
-            HiveProcessRunner().run_hive_job(hql=query_str, job_name=job_name, num_of_reducers=args.num_of_reducers,
-                                     consolidate_output=not args.no_merge_output, log_dir=log_dir,
-                                     slow_start_ratio=args.slow_start_ratio, calc_pool=args.calc_pool,
-                                     compression=args.compression, task_memory=args.task_mem, input_block_size=args.block_size)
+            hive_params = HiveParamBuilder() \
+                .set_pool(args.calc_pool) \
+                .with_memory(args.task_mem) \
+                .with_input_block_size(args.block_size, condition=args.block_size is not None) \
+                .set_compression(args.compression) \
+                .start_reduce_early(args.slow_start_ratio, condition=args.slow_start_ratio is not None)
+
+            HiveProcessRunner().run_query(query_str, hive_params, job_name=job_name, partitions=args.num_of_reducers,
+                                          consolidate_output=not args.no_merge_output, log_dir=log_dir)
             self.results[query_name] = 'success'
         except:
             self.results[query_name] = 'failure'
