@@ -1,13 +1,22 @@
-__author__ = 'Amit'
-
 from pylib.sw_config.kv_factory import provider_from_config
 from pycountry import countries
-from airflow.models import Variable
+#from airflow.models import Variable
 
 class AppsEngagementConfig:
     def __init__(self, env):
         self.root = 'services/app-engagement/env/%s' % env
-        self.conf = provider_from_config(Variable.get('key_value_production'))
+        # conf = Variable.get('key_value_production')
+        conf = """{
+             "pylib.sw_config.consul.ConsulProxy": {
+                 "server":"consul.service.production"
+             },
+             "pylib.sw_config.etcd_kv.EtcdProxy": {
+                 "server":"etcd.service.production",
+                 "port": 4001,
+                 "root_path": "v1/production"
+             }
+             }"""
+        self.conf = provider_from_config(conf)
 
         self._countries = {}
         self._default_sqs_decay_factor = None
