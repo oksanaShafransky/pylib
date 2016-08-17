@@ -152,7 +152,7 @@ class HiveExecuter(Executer):
                 .start_reduce_early(args.slow_start_ratio, condition=args.slow_start_ratio is not None) \
                 .consolidate_output(not args.no_merge_output)
 
-            HiveProcessRunner().run_query(query_str, hive_params, job_name=job_name, partitions=args.num_of_reducers, log_dir=log_dir)
+            HiveProcessRunner().run_query(query_str, hive_params, job_name=job_name, partitions=args.num_of_reducers, log_dir=log_dir, is_dry_run=args.dry_run)
             self.results[query_name] = 'success'
         except:
             self.results[query_name] = 'failure'

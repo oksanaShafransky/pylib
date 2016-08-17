@@ -202,7 +202,8 @@ class ContextualizedTasksInfra(object):
                                                  rerun_root_queue=self.rerun)
         ).ok
 
-    def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None, **extra_hive_conf):
+    # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
+    def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None, managed_output_dirs=[], **extra_hive_conf):
         if self.rerun:
             hive_params = hive_params.as_rerun()
 
@@ -210,7 +211,9 @@ class ContextualizedTasksInfra(object):
         if query_name_suffix is not None:
             job_name = job_name + ' ' + query_name_suffix
 
-        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions)
+        for dir in managed_output_dirs:
+            self.
+        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, is_dry_run=self.dry_run)
 
     @staticmethod
     def fail(reason=None):

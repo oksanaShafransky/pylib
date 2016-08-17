@@ -188,7 +188,7 @@ class HiveProcessRunner:
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, cmd)
 
-    def run_query(self, hql, hive_params, job_name=None, partitions=None, log_dir='/tmp/logs', **extra_hive_confs):
+    def run_query(self, hql, hive_params, job_name=None, partitions=None, log_dir='/tmp/logs', is_dry_run=False, **extra_hive_confs):
         params = copy(HiveProcessRunner.DEFAULT_HIVE_CONFIG)
         params.update(hive_params.to_conf())
         params.update(extra_hive_confs)
@@ -207,4 +207,7 @@ class HiveProcessRunner:
             hive_cmd += ['-hiveconf', '%s=%s' % (param, str(val))]
 
         common.logger.info('CMD:\n%s' % ' '.join(hive_cmd))
-        return self._run_hive(hive_cmd, log_path='%s/hive.log' % log_dir)
+        if not is_dry_run:
+            return self._run_hive(hive_cmd, log_path='%s/hive.log' % log_dir)
+        else:
+            common.logger.info('Not executing, this is just a dry run')
