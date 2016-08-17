@@ -357,7 +357,7 @@ class ContextualizedTasksInfra(object):
         if (py_files == []):
             py_files_cmd = ' '
         else:
-            py_files_cmd = ' --files "%(files)s"'
+            py_files_cmd = ' --py-files "%s"' % ','.join(py_files)
 
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
