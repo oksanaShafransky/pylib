@@ -348,7 +348,7 @@ class ContextualizedTasksInfra(object):
 
         if use_bigdata_defaults:
             main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
-            module_source_egg_path = '%s/%s-0.0.0.dev0-py2.7.egg' % (module_dir, module)
+            module_source_egg_path = '%s/sw_%s-0.0.0.dev0-py2.7.egg' % (module_dir, module)
             if not py_files and os.path.exists(module_source_egg_path):
                 py_files = [module_source_egg_path]
         if py_files is None:
