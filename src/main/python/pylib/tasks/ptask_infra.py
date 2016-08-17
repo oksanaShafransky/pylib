@@ -10,7 +10,8 @@ from invoke import Result
 from invoke.exceptions import Failure
 from redis import StrictRedis as Redis
 
-from pylib.hadoop.hdfs_util import test_size, check_success, mark_success
+from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
+from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs
 
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../../../..'
@@ -200,6 +201,23 @@ class ContextualizedTasksInfra(object):
                                                  command_params=command_params,
                                                  rerun_root_queue=self.rerun)
         ).ok
+
+    # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
+    def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None, managed_output_dirs=[], **extra_hive_conf):
+        if self.rerun:
+            hive_params = hive_params.as_rerun()
+
+        job_name = 'Hive. %s - %s - %s' % (query_name, self.date_title, self.mode)
+        if query_name_suffix is not None:
+            job_name = job_name + ' ' + query_name_suffix
+
+        # delete output on start
+        if not self.dry_run:
+            delete_dirs(*managed_output_dirs)
+
+        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, is_dry_run=self.dry_run)
+        for mdir in managed_output_dirs:
+            mark_success(mdir)
 
     @staticmethod
     def fail(reason=None):
