@@ -213,7 +213,7 @@ class ContextualizedTasksInfra(object):
 
         # delete output on start
         if not self.dry_run:
-            delete_dirs(managed_output_dirs)
+            delete_dirs(*managed_output_dirs)
 
         HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, is_dry_run=self.dry_run)
         for mdir in managed_output_dirs:
