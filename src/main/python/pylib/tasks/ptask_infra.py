@@ -351,8 +351,13 @@ class ContextualizedTasksInfra(object):
             module_source_egg_path = '%s/%s-0.0.0.dev0-py2.7.egg' % (module_dir, module)
             if not py_files and os.path.exists(module_source_egg_path):
                 py_files = [module_source_egg_path]
-        elif py_files is None:
+        if py_files is None:
             py_files = []
+
+        if (py_files == []):
+            py_files_cmd = ' '
+        else:
+            py_files_cmd = ' --files "%(files)s"'
 
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
@@ -362,14 +367,14 @@ class ContextualizedTasksInfra(object):
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
-                  ' --py-files "%(py-files)s"' \
+                  ' %(py_files_cmd)s' \
                   ' %(spark-confs)s' \
                   ' "%(execution_dir)s/%(main_py)s"' \
                   % {'app_name': app_name if app_name else os.path.basename(main_py_file),
                      'execution_dir': module_dir,
                      'queue': queue,
                      'files': "','".join(files),
-                     'py-files': ','.join(py_files),
+                     'py_files_cmd': py_files_cmd,
                      'spark-confs': additional_configs,
                      'jars': self.get_jars_list(module_dir, jars_from_lib),
                      'main_py': main_py_file
