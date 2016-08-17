@@ -10,6 +10,7 @@ from invoke import Result
 from invoke.exceptions import Failure
 from redis import StrictRedis as Redis
 
+from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success
 
 # The execution_dir should be a relative path to the project's top-level directory
@@ -200,6 +201,16 @@ class ContextualizedTasksInfra(object):
                                                  command_params=command_params,
                                                  rerun_root_queue=self.rerun)
         ).ok
+
+    def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None, **extra_hive_conf):
+        if self.rerun:
+            hive_params = hive_params.as_rerun()
+
+        job_name = 'Hive. %s - %s - %s' % (query_name, self.date_title, self.mode)
+        if query_name_suffix is not None:
+            job_name = job_name + ' ' + query_name_suffix
+
+        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions)
 
     @staticmethod
     def fail(reason=None):

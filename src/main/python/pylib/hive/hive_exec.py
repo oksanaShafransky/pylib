@@ -1,6 +1,8 @@
 import shutil
 import tempfile
 import traceback
+import os
+import shutil
 from datetime import datetime
 from inspect import isfunction
 from multiprocessing.pool import ThreadPool as Pool
@@ -19,12 +21,10 @@ class HiveExecuter(Executer):
         super(HiveExecuter, self).__init__()
         self.cache_dir = '%s/%s' % (HiveExecuter.CACHED_FILES_STAGING_DIR, datetime.now().strftime('%Y.%m.%d.%H.%M.%S'))
         self.cached_files = []
-        import subprocess
-        subprocess.call(['mkdir', '-p', self.cache_dir])
+        os.makedirs(self.cache_dir)
 
     def __del__(self):
-        import subprocess
-        subprocess.call(['rm', '-r', '-f', self.cache_dir])
+        shutil.rmtree(self.cache_dir)
 
     def get_common_params(self):
         common_args = [
@@ -149,10 +149,10 @@ class HiveExecuter(Executer):
                 .with_memory(args.task_mem) \
                 .with_input_block_size(args.block_size, condition=args.block_size is not None) \
                 .set_compression(args.compression) \
-                .start_reduce_early(args.slow_start_ratio, condition=args.slow_start_ratio is not None)
+                .start_reduce_early(args.slow_start_ratio, condition=args.slow_start_ratio is not None) \
+                .consolidate_output(not args.no_merge_output)
 
-            HiveProcessRunner().run_query(query_str, hive_params, job_name=job_name, partitions=args.num_of_reducers,
-                                          consolidate_output=not args.no_merge_output, log_dir=log_dir)
+            HiveProcessRunner().run_query(query_str, hive_params, job_name=job_name, partitions=args.num_of_reducers, log_dir=log_dir)
             self.results[query_name] = 'success'
         except:
             self.results[query_name] = 'failure'

@@ -30,6 +30,7 @@ class HiveParamBuilder:
         self.reduce_task_memory = 2048
 
         self.compression = None
+        self.consolidate = True
 
         self.child_opts = {
             'all': set(),
@@ -99,6 +100,11 @@ class HiveParamBuilder:
             self.compression = compression if compression != 'none' else None
         return self
 
+    def consolidate_output(self, whether_to_consolidate, condition=True):
+        if condition:
+            self.consolidate = whether_to_consolidate
+        return self
+
     def to_conf(self):
         self.add_child_option('-Xmx%(memory)dm -Xms%(memory)dm' % {'memory': self.map_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD)}, where='map')
         self.add_child_option('-Xmx%(memory)dm -Xms%(memory)dm' % {'memory': self.reduce_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD)}, where='reduce')
@@ -108,7 +114,8 @@ class HiveParamBuilder:
             'mapreduce.input.fileinputformat.split.maxsize': self.input_block_size * 1024 * 1024,
             'mapreduce.map.cpu.vcores': self.map_cpu_cores,
             'mapreduce.reduce.cpu.vcores': self.reduce_cpu_cores,
-            'mapreduce.task.io.sort.mb': max(self.map_task_memory / 10, 256)
+            'mapreduce.task.io.sort.mb': max(self.map_task_memory / 10, 256),
+            'hive.merge.mapredfiles': 'true' if self.consolidate else 'false'
         }
 
         if len(self.child_opts['all']) > 0:
@@ -181,7 +188,7 @@ class HiveProcessRunner:
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, cmd)
 
-    def run_query(self, hql, hive_params, job_name=None, partitions=None, consolidate_output=True, log_dir='/tmp/logs', **extra_hive_confs):
+    def run_query(self, hql, hive_params, job_name=None, partitions=None, log_dir='/tmp/logs', **extra_hive_confs):
         params = copy(HiveProcessRunner.DEFAULT_HIVE_CONFIG)
         params.update(hive_params.to_conf())
         params.update(extra_hive_confs)
@@ -192,7 +199,6 @@ class HiveProcessRunner:
         if partitions is not None:
             params['mapreduce.job.reduces'] = partitions
 
-        params['hive.merge.mapredfiles'] = 'true' if consolidate_output else 'false'
         params['hive.log.dir'] = log_dir
         params['hive.log.file'] = 'hive.log'
 
