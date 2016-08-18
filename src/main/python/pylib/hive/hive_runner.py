@@ -112,6 +112,8 @@ class HiveParamBuilder:
         ret = {
             'mapreduce.job.queuename': ('%s.%s' % (self.root_queue, self.pool)) if self.root_queue is not None else self.pool,
             'mapreduce.input.fileinputformat.split.maxsize': self.input_block_size * 1024 * 1024,
+            'mapreduce.map.memory.mb': self.map_task_memory,
+            'mapreduce.reduce.memory.mb': self.reduce_task_memory,
             'mapreduce.map.cpu.vcores': self.map_cpu_cores,
             'mapreduce.reduce.cpu.vcores': self.reduce_cpu_cores,
             'mapreduce.task.io.sort.mb': max(self.map_task_memory / 10, 256),
