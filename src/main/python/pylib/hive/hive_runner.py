@@ -106,14 +106,14 @@ class HiveParamBuilder:
         return self
 
     def to_conf(self):
-        self.add_child_option('-Xmx%(memory)dm -Xms%(memory)dm' % {'memory': self.map_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD)}, where='map')
-        self.add_child_option('-Xmx%(memory)dm -Xms%(memory)dm' % {'memory': self.reduce_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD)}, where='reduce')
+        self.add_child_option('-Xmx%(memory)dm -Xms%(memory)dm' % {'memory': self.map_task_memory}, where='map')
+        self.add_child_option('-Xmx%(memory)dm -Xms%(memory)dm' % {'memory': self.reduce_task_memory}, where='reduce')
 
         ret = {
             'mapreduce.job.queuename': ('%s.%s' % (self.root_queue, self.pool)) if self.root_queue is not None else self.pool,
             'mapreduce.input.fileinputformat.split.maxsize': self.input_block_size * 1024 * 1024,
-            'mapreduce.map.memory.mb': self.map_task_memory,
-            'mapreduce.reduce.memory.mb': self.reduce_task_memory,
+            'mapreduce.map.memory.mb': self.map_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD),
+            'mapreduce.reduce.memory.mb': self.reduce_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD),
             'mapreduce.map.cpu.vcores': self.map_cpu_cores,
             'mapreduce.reduce.cpu.vcores': self.reduce_cpu_cores,
             'mapreduce.task.io.sort.mb': max(self.map_task_memory / 10, 256),
