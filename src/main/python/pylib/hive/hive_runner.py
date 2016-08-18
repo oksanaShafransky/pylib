@@ -14,7 +14,8 @@ class HiveParamBuilder:
 
     COMPRESSION_FORMATS = {
         'gz': 'org.apache.hadoop.io.compress.GzipCodec',
-        'bz2': 'org.apache.hadoop.io.compress.BZip2Codec'
+        'bz2': 'org.apache.hadoop.io.compress.BZip2Codec',
+        'snappy': 'org.apache.hadoop.io.compress.SnappyCodec'
     }
 
     def __init__(self):
@@ -112,8 +113,8 @@ class HiveParamBuilder:
         ret = {
             'mapreduce.job.queuename': ('%s.%s' % (self.root_queue, self.pool)) if self.root_queue is not None else self.pool,
             'mapreduce.input.fileinputformat.split.maxsize': self.input_block_size * 1024 * 1024,
-            'mapreduce.map.memory.mb': self.map_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD),
-            'mapreduce.reduce.memory.mb': self.reduce_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD),
+            'mapreduce.map.memory.mb': int(self.map_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD)),
+            'mapreduce.reduce.memory.mb': int(self.reduce_task_memory * (1 + HiveParamBuilder.TASK_MEMORY_OVERHEAD)),
             'mapreduce.map.cpu.vcores': self.map_cpu_cores,
             'mapreduce.reduce.cpu.vcores': self.reduce_cpu_cores,
             'mapreduce.task.io.sort.mb': max(self.map_task_memory / 10, 256),
