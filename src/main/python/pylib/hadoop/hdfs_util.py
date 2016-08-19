@@ -45,8 +45,9 @@ def upload_file_to_hdfs(file_path, target_path):
     subprocess.call(put_cmd.split(' '))
 
 
-def delete_file(path):
-    hdfs_client = create_client()
+def delete_file(path, hdfs_client=None):
+    if hdfs_client is None:
+        hdfs_client = create_client()
     try:
         res = list(hdfs_client.delete(path, False))
         return len(res) > 0
@@ -60,8 +61,9 @@ def delete_files(*args):
         delete_file(path)
 
 
-def delete_dir(path):
-    hdfs_client = create_client()
+def delete_dir(path, hdfs_client=None):
+    if hdfs_client is None:
+        hdfs_client = create_client()
     try:
         res = list(hdfs_client.delete([path], True))
         return len(res) > 0
@@ -73,6 +75,13 @@ def delete_dir(path):
 def delete_dirs(*args):
     for path in args:
         delete_dir(path)
+
+
+def move_dir(path, target, hdfs_client=None):
+    if hdfs_client is None:
+        hdfs_client = create_client()
+
+    hdfs_client.rename([path], target).next()
 
 
 def get_size(path):
