@@ -5,12 +5,14 @@ import os
 import re
 import sys
 import time
+import shutil
 
 from invoke import Result
 from invoke.exceptions import Failure
 from redis import StrictRedis as Redis
 
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
+from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs
 
 # The execution_dir should be a relative path to the project's top-level directory
@@ -215,9 +217,14 @@ class ContextualizedTasksInfra(object):
         if not self.dry_run:
             delete_dirs(*managed_output_dirs)
 
-        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, is_dry_run=self.dry_run)
+        log_dir = 'tmp/logs/%s' % random_str(5)
+        os.mkdir(log_dir)
+
+        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run)
         for mdir in managed_output_dirs:
             mark_success(mdir)
+
+        shutil.rmtree(log_dir)
 
     @staticmethod
     def fail(reason=None):
