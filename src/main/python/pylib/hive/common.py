@@ -376,9 +376,9 @@ def random_str(length):
 
 def deploy_jars(f):
     def invoke(fnc, *args, **kwargs):
-        main_jars = ['%s/%s' % (kwargs['deploy_path'], jar) for jar in listdir(kwargs['deploy_path']) if isfile(join(kwargs['deploy_path'], jar)) and jar.endswith('.jar')]
         full_lib_path = join(kwargs['deploy_path'], 'lib')
         lib_jars = ['%s/%s' % (full_lib_path, jar) for jar in listdir(full_lib_path) if isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
+        main_jars = ['%s/%s' % (kwargs['deploy_path'], jar) for jar in listdir(kwargs['deploy_path']) if isfile(join(kwargs['deploy_path'], jar)) and jar.endswith('.jar')]
         add_jars_cmd = '\n'.join(['add jar %s;' % jar_name for jar_name in main_jars + lib_jars])
         return add_jars_cmd + fnc(jars_to_add=add_jars_cmd, *args, **kwargs)
 
