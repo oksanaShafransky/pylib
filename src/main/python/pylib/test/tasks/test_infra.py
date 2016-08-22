@@ -3,6 +3,9 @@ import os
 
 import invoke
 import pytest
+from redis import Redis
+from redis import StrictRedis
+
 from pylib.tasks.ptask_infra import TasksInfra, ContextualizedTasksInfra
 from datetime import datetime
 
@@ -79,7 +82,7 @@ class TestContextualizedTasksInfra:
         # No commands run
         assert len(actual_commands) == 0
 
-    def test_run_spark(self,monkeypatch):
+    def test_run_spark(self, monkeypatch):
         self._disable_invoke_debug()
         actual_commands = []
         expected_regexp = 'cd .*/mobile;spark-submit --queue research_shared .* --name "TestRun" .*--jars .*/test.jar,.*/test2.jar --class com.similarweb.mobile.Test ./mobile.jar   -number 32'
@@ -94,7 +97,6 @@ class TestContextualizedTasksInfra:
         monkeypatch.setattr(invoke.runners.Runner, 'run', mockrun)
         monkeypatch.setattr(os, 'listdir', mock_listdir)
 
-
         config = PtaskConfig()
         ctx = invoke.context.Context(config)
         c_infra = ContextualizedTasksInfra(ctx)
@@ -106,10 +108,26 @@ class TestContextualizedTasksInfra:
         actual_command = actual_commands[0]
         assert re.match(expected_regexp, actual_command)
 
-    @pytest.mark.skip(reason="Didn't finish it yet. Just an example")
+    # @pytest.mark.skip(reason="Didn't finish it yet. Just an example")
     def test_log_lineage(self, monkeypatch):
         self._disable_invoke_debug()
+        actual_values = []
+        expected_values = [('LINEAGE_16-08-22', ('airflow.testDAG.testId.2016-08-12::output:hdfs::/tmp/test',)),
+                           ('LINEAGE_16-08-22', ('airflow.testDAG.testId.2016-08-12::output:hdfs::/tmp/test2',))]
+
+        def mock_rpush(self, name, *values):
+            actual_values.append((name, values))
+
+        monkeypatch.setattr(StrictRedis, 'rpush', mock_rpush)
+
         config = PtaskConfig()
+        config['sw_common']['has_task_id'] = True
+        config['sw_common']['dag_id'] = 'testDAG'
+        config['sw_common']['task_id'] = 'testId'
+        config['sw_common']['execution_dt'] = '2016-08-12'
+        config['sw_common']['execution_user'] = 'airflow'
         ctx = invoke.context.Context(config)
         c_infra = ContextualizedTasksInfra(ctx)
-        c_infra.log_lineage_hdfs(['/tmp/test','/tmp/test2'],'output')
+        c_infra.log_lineage_hdfs(['/tmp/test', '/tmp/test2'], 'output')
+        assert len(actual_values) == 2
+        assert set(actual_values) == set(expected_values)
