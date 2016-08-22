@@ -1,16 +1,13 @@
 import logging
 import os
+import re
 
 import invoke
-import pytest
-from redis import Redis
+from datetime import datetime
 from redis import StrictRedis
 
 from pylib.tasks.ptask_infra import TasksInfra, ContextualizedTasksInfra
-from datetime import datetime
-
 from pylib.tasks.ptask_invoke import PtaskConfig
-import re
 
 
 class TestTasksInfra:
@@ -66,7 +63,6 @@ class TestContextualizedTasksInfra:
     def test_python_dry_run(self, monkeypatch):
         self._disable_invoke_debug()
         actual_commands = []
-        expected_regexp = 'source .*/common.sh && pyexecute .*/test.py  -number 32'
 
         def mockrun(self, command, **kwargs):
             actual_commands.append(command)
