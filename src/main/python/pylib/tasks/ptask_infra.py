@@ -91,6 +91,9 @@ class TasksInfra(object):
 
 class ContextualizedTasksInfra(object):
     def __init__(self, ctx):
+        """
+        :param ctx: invoke.context.Context
+        """
         self.ctx = ctx
         self.execution_dir = execution_dir
 
