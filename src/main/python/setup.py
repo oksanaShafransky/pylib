@@ -5,5 +5,7 @@ setup(
     packages=find_packages(),
     zip_safe=True,
     requires=['invoke'],
-    test_suite='pylib.test.hadoop'
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
+    test_suite='tests.pylib'
 )

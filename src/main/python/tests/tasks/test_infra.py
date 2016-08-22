@@ -104,7 +104,6 @@ class TestContextualizedTasksInfra:
         actual_command = actual_commands[0]
         assert re.match(expected_regexp, actual_command)
 
-    # @pytest.mark.skip(reason="Didn't finish it yet. Just an example")
     def test_log_lineage(self, monkeypatch):
         self._disable_invoke_debug()
         actual_values = []
