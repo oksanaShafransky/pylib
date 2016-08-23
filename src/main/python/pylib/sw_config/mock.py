@@ -3,7 +3,7 @@ __author__ = 'Felix'
 from kv import KeyValueProxy
 
 
-class Override:
+class Override(object):
     def __init__(self, key, value):
         self.key = key
         self.value = value
@@ -15,7 +15,7 @@ class Override:
         return self.invoke(fnc)
 
 
-class WithSet:
+class WithSet(object):
     def __init__(self, key, value):
         self.modified_key = key
         self.modified_value = value
@@ -34,13 +34,15 @@ class WithSet:
 
 
 class WithDelete(WithSet):
-    def __init__(self, key):
+    def __init__(self, key, value):
+        super(WithDelete, self).__init__(key, value)
         self.modified_key = key
         self.modified_value = None
 
 
 class DictProxy(KeyValueProxy):
     def __init__(self, **kwargs):
+        super(DictProxy, self).__init__()
         self.db = kwargs
 
     def get(self, key):

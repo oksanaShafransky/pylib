@@ -33,7 +33,7 @@ def parse_field(arr, start_idx, data_type):
         str_len = unpack('>h', arr[start_idx:start_idx + 2])[0]
         return 2 + str_len, arr[start_idx + 2:start_idx + 2 + str_len]
     else:
-        raise 'Illegal data type passed'
+        raise ValueError('Illegal data type passed')
 
 
 # reads a collection from a binary stream

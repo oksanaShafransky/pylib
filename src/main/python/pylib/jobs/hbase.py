@@ -8,10 +8,10 @@ from struct import *
 import happybase
 import sys
 import cProfile, pstats
-from six.moves import cStringIO
+from six.moves import cStringIO as StringIO
 
 
-class Exporter:
+class Exporter(object):
     cf_params = {'max_versions': 1, 'compression': 'snappy'}
 
     batch = None
@@ -36,7 +36,7 @@ class Exporter:
                 if overwrite:
                     self.conn.delete_table(table_name, disable=True)
                 else:
-                    raise 'Table already exists, use overwrite=True to force rewrite'
+                    raise ValueError('Table already exists, use overwrite=True to force rewrite')
 
             self.conn.create_table(table_name, {col_family: self.cf_params})
 
@@ -145,7 +145,7 @@ class Exporter:
         self._finish_profile()
 
 
-class ByteHelper:
+class ByteHelper(object):
     def __init__(self):
         self._bytes = StringIO.StringIO()
 
@@ -188,4 +188,4 @@ class ByteHelper:
                 elif types[idx] == 'double':
                     self.append_double(val)
                 else:
-                    raise 'Unknown Type'
+                    raise ValueError('Unknown Type')

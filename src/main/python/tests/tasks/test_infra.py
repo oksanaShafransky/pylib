@@ -10,7 +10,7 @@ from pylib.tasks.ptask_infra import TasksInfra, ContextualizedTasksInfra
 from pylib.tasks.ptask_invoke import PtaskConfig
 
 
-class TestTasksInfra:
+class TestTasksInfra(object):
     def test_paths(self):
         dt = datetime.datetime(2016, 10, 3)
         assert TasksInfra.full_partition_path(date=dt, mode='window',
@@ -33,7 +33,7 @@ class TestTasksInfra:
         assert expected == actual
 
 
-class TestContextualizedTasksInfra:
+class TestContextualizedTasksInfra(object):
     def _disable_invoke_debug(self):
         log = logging.getLogger('invoke')
         log.setLevel(logging.ERROR)

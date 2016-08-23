@@ -19,7 +19,11 @@ HEALTHY = 1
 MINIMAL = 0
 
 
-def init_env(env_type, changes=[], deletes=[]):
+def init_env(env_type, changes=None, deletes=None):
+    if deletes is None:
+        deletes = []
+    if changes is None:
+        changes = []
     effective_cls = PROXY_CLASS
 
     for key, value in changes:
@@ -50,7 +54,11 @@ def parse_modifications(args):
     return sets, deletes
 
 
-def check_config(settings_provider, env_type='production', sets=[], deletes=[], health_level=HEALTHY):
+def check_config(settings_provider, env_type='production', sets=None, deletes=None, health_level=HEALTHY):
+    if deletes is None:
+        deletes = []
+    if sets is None:
+        sets = []
     init_env(env_type, changes=sets, deletes=deletes)
 
     success = True

@@ -11,7 +11,7 @@ from pylib.sw_config.kv_factory import provider_from_config
 default_conf = {'pylib.sw_config.mock.DictProxy': {'services/mobile-web/env/main/countries': '840'}}
 
 
-class MobileWebConfig:
+class MobileWebConfig(object):
     def __init__(self, env='main'):
         self.root = 'services/mobile-web/env/%s' % env
         self.conf = provider_from_config(Variable.get('key_value_production', default_var=json.dumps(default_conf)))

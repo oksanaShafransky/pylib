@@ -1,7 +1,7 @@
 __author__ = 'Felix'
 
 
-class Summer:
+class Summer(object):
 
     def __init__(self, factor):
         self.factor = factor
@@ -13,7 +13,7 @@ class Summer:
 
         return sum * self.factor
 
-class Token:
+class Token(object):
 
     def __init__(self):
         self.token = ''
@@ -26,7 +26,7 @@ class Token:
         return self.token
 
 
-class Count:
+class Count(object):
 
     def __init__(self):
         self.count = 0

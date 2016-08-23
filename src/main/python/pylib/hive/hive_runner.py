@@ -8,7 +8,7 @@ import common
 from common import GracefulShutdownHandler
 
 
-class HiveParamBuilder:
+class HiveParamBuilder(object):
 
     TASK_MEMORY_OVERHEAD = 0.3
 
@@ -137,7 +137,7 @@ class HiveParamBuilder:
         return ret
 
 
-class HiveProcessRunner:
+class HiveProcessRunner(object):
 
     DEFAULT_HIVE_CONFIG = {
         'io.seqfile.compression': 'BLOCK',

@@ -2,7 +2,7 @@ __author__ = 'Felix'
 
 
 #Defines the api for key/value proxies
-class KeyValueProxy:
+class KeyValueProxy(object):
     def __init__(self):
         pass
 

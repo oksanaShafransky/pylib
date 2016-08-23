@@ -210,7 +210,10 @@ class ContextualizedTasksInfra(object):
         ).ok
 
     # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
-    def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None, managed_output_dirs=[], **extra_hive_conf):
+    def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None,
+                 managed_output_dirs=None, **extra_hive_conf):
+        if managed_output_dirs is None:
+            managed_output_dirs = []
         if self.rerun:
             hive_params = hive_params.as_rerun()
 
