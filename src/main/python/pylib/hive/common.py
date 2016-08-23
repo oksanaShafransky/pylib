@@ -254,7 +254,7 @@ def deploy_all_jars(deploy_path, jar_hdfs_location, lib_path="lib", lib_jars_fil
         lib_jars = [jar for jar in listdir(full_lib_path)
                     if isfile(join(full_lib_path, jar)) and jar.endswith('.jar') and jar in lib_jars_filter]
         for jar in lib_jars:
-            subprocess.call(["bash", "-c", "hadoop fs -put %s/%s.jar %s" % (full_lib_path, jar, jar_hdfs_location)])
+            subprocess.call(["bash", "-c", "hadoop fs -put %s/%s %s" % (full_lib_path, jar, jar_hdfs_location)])
 
     return lib_jars + main_jars
 
