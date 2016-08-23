@@ -234,20 +234,27 @@ def detect_jars(deploy_path, lib_path="lib"):
     return lib_jars + main_jars
 
 
-def deploy_all_jars(deploy_path, jar_hdfs_location, lib_path="lib"):
+def deploy_all_jars(deploy_path, jar_hdfs_location, lib_path="lib", lib_jars_filter=None):
     logger.info("copy jars to hdfs, location on hdfs: " + jar_hdfs_location + " from local path: " + deploy_path)
     if GLOBAL_DRYRUN:
         'print dryrun set, not actually deploying'
         return
 
     main_jars = [jar for jar in listdir(deploy_path) if isfile(join(deploy_path, jar)) and jar.endswith('.jar')]
-    full_lib_path = join(deploy_path, lib_path)
-    lib_jars = [jar for jar in listdir(full_lib_path) if isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
 
     subprocess.call(["hadoop", "fs", "-rm", "-r", jar_hdfs_location])
     subprocess.call(["hadoop", "fs", "-mkdir", "-p", jar_hdfs_location])
     subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (deploy_path, jar_hdfs_location)])
-    subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (full_lib_path, jar_hdfs_location)])
+
+    full_lib_path = join(deploy_path, lib_path)
+    if lib_jars_filter is None:
+        lib_jars = [jar for jar in listdir(full_lib_path) if isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
+        subprocess.call(["bash", "-c", "hadoop fs -put %s/*.jar %s" % (full_lib_path, jar_hdfs_location)])
+    else:
+        lib_jars = [jar for jar in listdir(full_lib_path)
+                    if isfile(join(full_lib_path, jar)) and jar.endswith('.jar') and jar in lib_jars_filter]
+        for jar in lib_jars:
+            subprocess.call(["bash", "-c", "hadoop fs -put %s/%s.jar %s" % (full_lib_path, jar, jar_hdfs_location)])
 
     return lib_jars + main_jars
 
@@ -377,8 +384,10 @@ def random_str(length):
 def deploy_jars(f):
     def invoke(fnc, *args, **kwargs):
         full_lib_path = join(kwargs['deploy_path'], 'lib')
-        lib_jars = ['%s/%s' % (full_lib_path, jar) for jar in listdir(full_lib_path) if isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
-        main_jars = ['%s/%s' % (kwargs['deploy_path'], jar) for jar in listdir(kwargs['deploy_path']) if isfile(join(kwargs['deploy_path'], jar)) and jar.endswith('.jar')]
+        lib_jars = ['%s/%s' % (full_lib_path, jar) for jar in listdir(full_lib_path) if
+                    isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
+        main_jars = ['%s/%s' % (kwargs['deploy_path'], jar) for jar in listdir(kwargs['deploy_path']) if
+                     isfile(join(kwargs['deploy_path'], jar)) and jar.endswith('.jar')]
         add_jars_cmd = '\n'.join(['add jar %s;' % jar_name for jar_name in lib_jars + main_jars])
         return add_jars_cmd + fnc(jars_to_add=add_jars_cmd, *args, **kwargs)
 
@@ -457,7 +466,8 @@ def get_range_where_clause(year, month, day, mode, mode_type, prefix=''):
     elif mode_type == "quarterly":
         start_date = datetime(int(year), int(month) - ((int(month) - 1) % 3), 1).date()
         end_date = start_date + timedelta(days=63)
-        return '(%syear=%02d and %smonth <= %02d and %smonth >= %02d' % (prefix, end_date.year % 100, prefix, start_date.month, prefix, end_date.month)
+        return '(%syear=%02d and %smonth <= %02d and %smonth >= %02d' % (
+            prefix, end_date.year % 100, prefix, start_date.month, prefix, end_date.month)
     elif mode_type == "annually":
         return " (%syear = %02d) " % (prefix, end_date.year % 100)
 
@@ -466,10 +476,10 @@ def get_range_where_clause(year, month, day, mode, mode_type, prefix=''):
     while True:
         if where_clause != "":
             where_clause += " or "
-        where_clause += ' (%syear=%02d and %smonth=%02d and %sday=%02d) ' % (prefix, start_date.year % 100, prefix, start_date.month, prefix, start_date.day)
+        where_clause += ' (%syear=%02d and %smonth=%02d and %sday=%02d) ' % (
+            prefix, start_date.year % 100, prefix, start_date.month, prefix, start_date.day)
         start_date = start_date + timedelta(days=1)
         if start_date > end_date:
             break
 
     return ' (%s) ' % where_clause
-
