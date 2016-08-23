@@ -1,8 +1,10 @@
-import ConfigParser
+from six.moves import configparser
 import calendar
 import datetime
 import os
 import re
+
+import six
 import sys
 import time
 import shutil
@@ -75,7 +77,7 @@ class TasksInfra(object):
     def add_command_params(command, command_params, *positional):
         ans = command + ' ' + ' '.join(positional)
 
-        for key, value in command_params.iteritems():
+        for key, value in command_params.items():
             if value is None:
                 continue
             if isinstance(value, bool):
@@ -167,7 +169,7 @@ class ContextualizedTasksInfra(object):
 
         client = Redis(host='redis-bigdata.service.production')
         lineage_key = 'LINEAGE_%s' % datetime.date.today().strftime('%y-%m-%d')
-        if isinstance(directories, basestring):
+        if isinstance(directories, six.string_types):
             directories = [directories]
 
         if isinstance(directories, list):
@@ -342,7 +344,7 @@ class ContextualizedTasksInfra(object):
         else:
             lib_module_dir = '%s/lib' % module_dir
             if self.dry_run or self.checks_only:
-                print 'Dry Run: Would attach jars from ' + lib_module_dir
+                print('Dry Run: Would attach jars from ' + lib_module_dir)
                 jars_from_lib = []
             else:
                 jars_from_lib = os.listdir(lib_module_dir)
@@ -368,10 +370,10 @@ class ContextualizedTasksInfra(object):
         module_dir = self.execution_dir + '/' + module
 
         if spark_configs:
-            for key, value in spark_configs.iteritems():
+            for key, value in spark_configs.items():
                 additional_configs += ' --conf %s=%s' % (key, value)
         if named_spark_args:
-            for key, value in named_spark_args.iteritems():
+            for key, value in named_spark_args.items():
                 additional_configs += ' --%s %s' % (key, value)
 
         if use_bigdata_defaults:
@@ -412,7 +414,7 @@ class ContextualizedTasksInfra(object):
         return self.run_bash(command).ok
 
     def read_s3_configuration(self, property_key):
-        config = ConfigParser.ConfigParser()
+        config = configparser.ConfigParser()
         config.read('%s/scripts/.s3cfg' % self.execution_dir)
         return config.get('default', property_key)
 
@@ -439,7 +441,7 @@ class ContextualizedTasksInfra(object):
 
     def write_to_hbase(self, key, table, col_family, col, value, log=True):
         if log:
-            print 'writing %s to key %s column %s at table %s' % (value, key, '%s:%s' % (col_family, col), table)
+            print('writing %s to key %s column %s at table %s' % (value, key, '%s:%s' % (col_family, col), table))
         import happybase
         HBASE = 'mrp'  # TODO: allow for inference based on config
         srv = 'hbase-%s.service.production' % HBASE
@@ -543,7 +545,7 @@ class ContextualizedTasksInfra(object):
     if __name__ == '__main__':
         command = "source /home/felixv/cdh5/pylib/tasks/../../scripts/common.sh && execute hadoopexec /home/felixv/cdh5/pylib/tasks/../../analytics analytics.jar com.similargroup.common.utils.SqlExportUtil  -cs jdbc:mysql://mysql-ga.vip.sg.internal:3306/swga?user=swga\&password=swga\!23 -q 'select domain, country as country_name, deviceId, users, visits from websites_countries_data where year=2016 and month=6 and day=1' -ot parquet -out /similargroup/ga/daily/website-data/year=16/month=06/day=01"
         special_chars = {'\\': '\\', '\'': '\"'}
-        for chr, replacement in special_chars.iteritems():
+        for chr, replacement in special_chars.items():
             command = command.replace(chr, '\"%s\"' % replacement)
 
-        print command
+        print(command)

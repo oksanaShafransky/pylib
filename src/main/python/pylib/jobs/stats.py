@@ -1,7 +1,7 @@
 __author__ = 'Felix'
 
 import subprocess
-from urllib2 import urlopen
+from six.moves.urllib.request import urlopen
 from xml.sax.saxutils import escape
 
 
@@ -121,6 +121,6 @@ class PostJobHandler:
 class PrintRecorder:
 
     def record(self, stats):
-        print 'job %s stats:' % stats.job_name
+        print('job %s stats:' % stats.job_name)
 
-        print stats.counters
+        print(stats.counters)

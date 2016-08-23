@@ -10,6 +10,7 @@ from multiprocessing.pool import ThreadPool as Pool
 from hive_runner import HiveProcessRunner, HiveParamBuilder
 from common import logger
 from pylib.tasks.executer import Executer, Arg, Stage, CONCURRENCY
+import six
 
 __author__ = 'Felix'
 
@@ -76,7 +77,7 @@ class HiveExecuter(Executer):
         if isinstance(steps, (list, tuple)):
             for step in steps:
                 self.run_step(step, self.args)
-        elif isinstance(steps, basestring):
+        elif isinstance(steps, six.string_types):
             self.run_step(steps, self.args)  # Single item
         else:
             raise ValueError
@@ -105,7 +106,7 @@ class HiveExecuter(Executer):
                     logger.info('DryRun, Was meant to execute %s' % stage.__name__)
                 else:
                     stage()
-            elif isinstance(stage, basestring):
+            elif isinstance(stage, six.string_types):
                 self.run_query(query_name=args.action,
                                query_str=stage,
                                args=args

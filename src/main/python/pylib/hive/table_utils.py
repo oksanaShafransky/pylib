@@ -134,4 +134,4 @@ class HBaseTableProvided:
 
 
 if __name__ == '__main__':
-    print get_table_partitions('mobile.daily_app_metrics')
+    print(get_table_partitions('mobile.daily_app_metrics'))

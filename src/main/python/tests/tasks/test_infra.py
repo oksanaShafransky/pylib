@@ -12,7 +12,7 @@ from pylib.tasks.ptask_invoke import PtaskConfig
 
 class TestTasksInfra:
     def test_paths(self):
-        dt = datetime(2016, 10, 03)
+        dt = datetime(2016, 10, 3)
         assert TasksInfra.full_partition_path(date=dt, mode='window',
                                               mode_type='last-28') == 'type=last-28/year=16/month=10/day=03'
         assert TasksInfra.full_partition_path(date=dt, mode='snapshot',

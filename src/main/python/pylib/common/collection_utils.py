@@ -1,3 +1,5 @@
+import six
+
 __author__ = 'Felix'
 
 from struct import *
@@ -59,8 +61,8 @@ def read_collection(col_stream, col_schema):
 
 def append_dict(*dicts):
     ret = dict()
-    for dict in dicts:
-        for key, val in dict.iteritems():
+    for _dict in dicts:
+        for key, val in six.iteritems(_dict):
             ret[key] = val
 
     return ret
@@ -79,7 +81,7 @@ if __name__ == '__main__':
 
     rank_table = conn.table('app_top_list_15_06_14')
     us_ranks = rank_table.row('0  840')
-    print us_ranks.keys()
+    print(us_ranks.keys())
 
     free_strm = us_ranks['data:new_free']
     free_rank = read_collection(free_strm, rank_schema)
@@ -101,5 +103,5 @@ if __name__ == '__main__':
         except:
             pass
 
-    print 'dates'
-    print sorted(dates)
+    print('dates')
+    print(sorted(dates))

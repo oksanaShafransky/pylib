@@ -1,3 +1,5 @@
+import six
+
 __author__ = 'Felix'
 
 import sys
@@ -52,7 +54,7 @@ def check_config(settings_provider, env_type='production', sets=[], deletes=[], 
     init_env(env_type, changes=sets, deletes=deletes)
 
     success = True
-    for name, artifact in settings_provider.get_artifacts().iteritems():
+    for name, artifact in six.iteritems(settings_provider.get_artifacts()):
         num_dates = len(artifact.dates)
         if num_dates < settings_provider.min_viable_options():
             logging.error('%s is in a dangerous state with %d valid days' % (name, num_dates))

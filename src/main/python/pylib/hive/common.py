@@ -4,10 +4,13 @@ import os
 import subprocess
 import random
 import calendar
+
+import six
 from datetime import *
 from os.path import isfile, join
 from os import listdir
-from urlparse import urlparse
+
+from future.moves.urllib.parse import urlparse
 
 from dateutil.relativedelta import relativedelta
 import sys
@@ -91,7 +94,7 @@ def getPartitionString(mode, mode_type, year, month, day, **kwargs):
     else:
         partition_parts = "year=%s, month=%02d, type='%s'" % (year, month, mode_type)
 
-    for key, value in kwargs.iteritems():
+    for key, value in six.iteritems(kwargs):
         if value:
             partition_parts += ', %s=%s' % (key, value)
         else:
@@ -106,7 +109,7 @@ def getDatePartitionString(year, month, day=None, **kwargs):
     else:
         partition_parts = "year=%s, month=%02d" % (year, month)
 
-    for key, value in kwargs.iteritems():
+    for key, value in six.iteritems(kwargs):
         if value:
             partition_parts += ', %s=%s' % (key, value)
         else:

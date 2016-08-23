@@ -8,7 +8,7 @@ from struct import *
 import happybase
 import sys
 import cProfile, pstats
-import cStringIO as StringIO
+from six.moves import cStringIO
 
 
 class Exporter:

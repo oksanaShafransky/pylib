@@ -385,4 +385,4 @@ class Job(MRJob):
 
 
 if __name__ == '__main__':
-    print 'do not use this as main'
+    print('do not use this as main')

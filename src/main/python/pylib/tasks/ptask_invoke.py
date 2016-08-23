@@ -108,15 +108,15 @@ class PtaskInvoker(Program):
                 task_name = os.environ['TASK_ID']
             else:
                 task_name = self.tasks[0].name
-            print '\nInvoking ptask "%(task_name)s" from "%(collection_name)s.py" ("%(collection_path)s")' % {
+            print('\nInvoking ptask "%(task_name)s" from "%(collection_name)s.py" ("%(collection_path)s")' % {
                 'task_name': task_name,
                 'collection_name': self.collection.name,
                 'collection_path': self.collection.loaded_from
-            }
+            })
             self.execute()
-            print '\nFinished ptask "{0}"'.format(task_name)
+            print('\nFinished ptask "{0}"'.format(task_name))
         except (Failure, Exit, ParseError) as e:
-            print 'Received a possibly-skippable exception: {0!r}'.format(e)
+            print('Received a possibly-skippable exception: {0!r}'.format(e))
             if isinstance(e, ParseError):
                 sys.stderr.write("{0}\n".format(e))
             sys.exit(1)
