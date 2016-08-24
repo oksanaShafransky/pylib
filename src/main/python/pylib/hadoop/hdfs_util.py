@@ -1,6 +1,7 @@
 import logging
 import subprocess
 
+import six
 import snakebite.client
 from snakebite.errors import FileNotFoundException
 
@@ -159,7 +160,7 @@ def mark_success(dir_path, create_missing_path=False):
     if create_missing_path:
         mkdir(dir_path, hdfs_client)
 
-    if not isinstance(dir_path, basestring):
+    if not isinstance(dir_path, six.string_types):
         raise Exception('if you want different type to be supported, implement it yourself')
 
     hdfs_client.touchz(paths=[dir_path + '/_SUCCESS']).next()

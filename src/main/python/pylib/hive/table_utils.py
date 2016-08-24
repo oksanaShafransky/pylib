@@ -83,7 +83,7 @@ def delete_table(table_name):
         curr.execute('drop table %s' % table_name)
 
 
-class TableProvided:
+class TableProvided(object):
     def __init__(self, alias, table_name_resolver, path_param):
         self.table_alias = alias
         self.param = path_param
@@ -107,7 +107,7 @@ class TableProvided:
         return lambda *args, **kwargs: self.invoke_fnc(fnc, *args, **kwargs)
 
 
-class HBaseTableProvided:
+class HBaseTableProvided(object):
     def __init__(self, alias, table_name_resolver, mode_param='mode', mode_type_param='mode_type', date_param='date',
                  hbase_table_name_param='hbase_table_name'):
         self.hbase_table_name = hbase_table_name_param
@@ -134,4 +134,4 @@ class HBaseTableProvided:
 
 
 if __name__ == '__main__':
-    print get_table_partitions('mobile.daily_app_metrics')
+    print(get_table_partitions('mobile.daily_app_metrics'))

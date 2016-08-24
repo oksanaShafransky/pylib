@@ -23,7 +23,7 @@ def find_files(path, prefix=''):
             if not os.path.basename(file_name).startswith('_'):
                 files += ['%s/%s' % (dir_name, file_name.split('/')[-1:][0])]
 
-    print 'files to cache for path %s: %s' % (path, files)
+    print('files to cache for path %s: %s' % (path, files))
     return dir_name, files
 
 

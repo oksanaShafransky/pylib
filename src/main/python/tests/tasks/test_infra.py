@@ -3,16 +3,16 @@ import os
 import re
 
 import invoke
-from datetime import datetime
+import datetime
 from redis import StrictRedis
 
 from pylib.tasks.ptask_infra import TasksInfra, ContextualizedTasksInfra
 from pylib.tasks.ptask_invoke import PtaskConfig
 
 
-class TestTasksInfra:
+class TestTasksInfra(object):
     def test_paths(self):
-        dt = datetime(2016, 10, 03)
+        dt = datetime.datetime(2016, 10, 3)
         assert TasksInfra.full_partition_path(date=dt, mode='window',
                                               mode_type='last-28') == 'type=last-28/year=16/month=10/day=03'
         assert TasksInfra.full_partition_path(date=dt, mode='snapshot',
@@ -33,7 +33,7 @@ class TestTasksInfra:
         assert expected == actual
 
 
-class TestContextualizedTasksInfra:
+class TestContextualizedTasksInfra(object):
     def _disable_invoke_debug(self):
         log = logging.getLogger('invoke')
         log.setLevel(logging.ERROR)
@@ -113,7 +113,14 @@ class TestContextualizedTasksInfra:
         def mock_rpush(self, name, *values):
             actual_values.append((name, values))
 
+        class NewDate(datetime.date):
+            @classmethod
+            def today(cls):
+                return cls(2016, 8, 22)
+
         monkeypatch.setattr(StrictRedis, 'rpush', mock_rpush)
+        monkeypatch.setattr(datetime, 'date', NewDate)
+
 
         config = PtaskConfig()
         config['sw_common']['has_task_id'] = True

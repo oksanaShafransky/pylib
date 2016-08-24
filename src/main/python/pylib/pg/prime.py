@@ -79,52 +79,52 @@ def sieve(num, vicinity, small_primes, jump=1):
 def generate_prime(bit_size, small_primes, search_size=None):
     if search_size is None:
         search_size = bit_size * 3
-    print 'search size is %d' % search_size
+    print('search size is %d' % search_size)
     while True:
         n = random.randint(2 ** (bit_size - 1), (2 ** bit_size - 1))
         if n % 2 == 0:
             n += 1
         candidates = sieve(n, search_size / 2, small_primes, 2)
-        print '%d candidates after sieving' % len(candidates)
+        print('%d candidates after sieving' % len(candidates))
         attempts = 0
         while len(candidates) > 0:
             attempts += 1
             next_cand = candidates[random.randint(0, len(candidates) - 1)]
             if is_prime(next_cand):
-                print 'succeeded at %d attempt' % attempts
+                print('succeeded at %d attempt' % attempts)
                 return next_cand
             else:
                candidates.remove(next_cand)
-        print 'no prime among candidates'
+        print('no prime among candidates')
 
 
 def generate_germain_prime(bit_size, small_primes, search_size=None):
     if search_size is None:
         search_size = bit_size * bit_size * 12
-    print 'search size is %d' % search_size
+    print('search size is %d' % search_size)
     while True:
         n = random.randint(2 ** (bit_size - 1), (2 ** bit_size - 1))
         if n % 2 == 0:
             n += 1
-        print nanotime.now()
+        print(nanotime.now())
         candidates_q = set(sieve(n, search_size / 2, small_primes, 2))
         candidates_p = set([(p - 1) / 2 for p in sieve(n * 2 + 1, search_size / 2, small_primes, 4)])
         candidates = list(candidates_p.intersection(candidates_q))
-        print '%d candidates after sieving' % len(candidates)
+        print('%d candidates after sieving' % len(candidates))
         attempts = 0
         while len(candidates) > 0:
             attempts += 1
             next_cand = candidates[random.randint(0, len(candidates) - 1)]
             if is_prime(next_cand):
-                print nanotime.now()
-                print 'prime q at %d attempt' % attempts
+                print(nanotime.now())
+                print('prime q at %d attempt' % attempts)
                 if is_prime(next_cand * 2 + 1):
-                    print 'prime p at %d attempt!!!' % attempts
+                    print('prime p at %d attempt!!!' % attempts)
                     return next_cand
 
             candidates.remove(next_cand)
 
-        print 'no prime among candidates'
+        print('no prime among candidates')
 
 
 def test_primality_test_performance(num_size, num_runs):
@@ -139,7 +139,7 @@ def test_primality_test_performance(num_size, num_runs):
     end_time = nanotime.now().nanoseconds()
     avg_run_time = (end_time - start_time) / num_runs
 
-    print 'on average, miller-rabin took %.5f milliseconds' % (avg_run_time / 1000000.0)
+    print('on average, miller-rabin took %.5f milliseconds' % (avg_run_time / 1000000.0))
 
 
 def test_prime_gen(num_size, num_runs):
@@ -149,12 +149,12 @@ def test_prime_gen(num_size, num_runs):
     for _ in range(num_runs):
         p = generate_prime(num_size, small_primes[:primes_to_use[num_size]])
         found += 1
-        print '%d: found prime %d' % (found, p)
+        print('%d: found prime %d' % (found, p))
 
     end_time = nanotime.now().nanoseconds()
     avg_run_time = (end_time - start_time) / num_runs
 
-    print 'on average, prime generation took %.5f seconds' % (avg_run_time / 1000000000.0)
+    print('on average, prime generation took %.5f seconds' % (avg_run_time / 1000000000.0))
 
 
 def test_germain_gen(num_size, num_runs):
@@ -164,12 +164,12 @@ def test_germain_gen(num_size, num_runs):
     for _ in range(num_runs):
         p = generate_germain_prime(num_size, small_primes[:primes_to_use[num_size]])
         found += 1
-        print '%d: %d found' % (found, p)
+        print('%d: %d found' % (found, p))
 
     end_time = nanotime.now().nanoseconds()
     avg_run_time = (end_time - start_time) / num_runs
 
-    print 'on average, prime generation took %.5f seconds' % (avg_run_time / 1000000000.0)
+    print('on average, prime generation took %.5f seconds' % (avg_run_time / 1000000000.0))
 
 
 if __name__ == '__main__':

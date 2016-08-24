@@ -2,7 +2,7 @@ __author__ = 'Felix'
 
 
 def sanitize(raw_str):
-    from StringIO import StringIO
+    from six import StringIO
     buff = StringIO()
     for c in raw_str:
         try:

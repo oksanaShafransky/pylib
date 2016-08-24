@@ -40,5 +40,5 @@ def load_primes(f, amount=None):
 if __name__ == '__main__':
     #write_to_file(gen_small_primes(2 ** 32), 'c:/tmp/primes.bin')
     primes = load_primes('c:/tmp/primes.bin')
-    print len(primes)
-    print primes[:100]
+    print(len(primes))
+    print(primes[:100])

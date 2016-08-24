@@ -10,7 +10,7 @@ from pylib.jobs.run import run
 from job_test import MyJob
 
 
-class TestJob:
+class TestJob(object):
 
     def get_job(self):
         return JobBuilder(job_name='TestJob') \

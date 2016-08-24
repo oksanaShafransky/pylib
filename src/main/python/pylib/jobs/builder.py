@@ -48,7 +48,7 @@ def get_region_servers():
         zk.stop()
 
 
-class JobBuilder:
+class JobBuilder(object):
     GZ_COUNTER = 0
 
     max_map_fail_percentage = 0
@@ -385,4 +385,4 @@ class Job(MRJob):
 
 
 if __name__ == '__main__':
-    print 'do not use this as main'
+    print('do not use this as main')

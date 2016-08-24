@@ -13,7 +13,7 @@ hadoop_user_log_dir_template = '/user/%s/tmp/mrjob/%s/output/_logs/history/'
 conf_file_suffix = '_conf.xml'
 
 
-class Tee:
+class Tee(object):
     def __init__(self, _fd1, _fd2):
         self.fd1 = _fd1
         self.fd2 = _fd2

@@ -7,6 +7,7 @@ from kv import KeyValueProxy
 
 class ConsulProxy(KeyValueProxy):
     def __init__(self, server):
+        super(ConsulProxy, self).__init__()
         self.client = consulate.Consul(server)
 
     def get(self, key):

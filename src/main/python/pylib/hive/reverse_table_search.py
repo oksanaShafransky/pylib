@@ -22,7 +22,7 @@ def find_table_name(location, print_query=True):
 
 
 def get_table_names(location, print_query):
-    print '\n'.join(map(lambda db_table: '%s.%s' % db_table, find_table_name(location, print_query)))
+    print('\n'.join(map(lambda db_table: '%s.%s' % db_table, find_table_name(location, print_query))))
 
 if __name__ == '__main__':
     get_table_names(location=sys.argv[1], print_query=False)

@@ -5,7 +5,7 @@ from pylib.jobs.run import run
 from avro_test import AvroCountryCount
 
 
-class TestJob:
+class TestJob(object):
 
     def get_job(self):
         return JobBuilder(job_name='Test Mobile Avro') \

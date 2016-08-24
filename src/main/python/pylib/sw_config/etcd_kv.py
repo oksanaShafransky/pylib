@@ -7,6 +7,7 @@ from kv import KeyValueProxy
 
 class EtcdProxy(KeyValueProxy):
     def __init__(self, server, port=4001, root_path='v1'):
+        super(EtcdProxy, self).__init__()
         self.client = etcd.Client(server, port)
         self.root_path = '/' + root_path if not root_path.startswith('/') else root_path
 

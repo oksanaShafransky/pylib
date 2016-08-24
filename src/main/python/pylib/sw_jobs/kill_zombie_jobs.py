@@ -20,12 +20,12 @@ zombie_apps_template = 'http://%(server)s:%(port)d/ws/v1/cluster/apps?user=%(use
 kill_app_template = 'http://%(server)s:%(port)d/ws/v1/cluster/apps/%(app_id)s/state'
 
 
-class ZombieKiller:
+class ZombieKiller(object):
 
     def __init__(self, rm_server, rm_port=8088):
         self.server, self.port = rm_server, rm_port
 
-    class ZombieHandleMode:
+    class ZombieHandleMode(object):
         alert = 0
         kill = 1
 
@@ -68,10 +68,3 @@ class ZombieKiller:
 class ZombieJobFoundException(Exception):
     def __init___(self, task_id):
         super(ZombieJobFoundException, self).__init__(self, "Zombie job found for task id %s" % task_id)
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('task_id', metavar='TASK_ID', help='Airflow Unique Task ID')
-
-    args = parser.parse_args()
-    ZombieKiller.kill_zombie_jobs(args.task_id)

@@ -34,4 +34,6 @@ def sample_user_data(date, metrics_table_path, output_table_path, limit=10, **kw
 
 
 if __name__ == '__main__':
-    print sample_user_data(datetime(2016, 2, 15), metrics_table_path='/similargroup/data/mobile-analytics/daily/aggregate/aggkey=AppCountrySourceKey', output_table_path='/home/felix/temp-tables2/app-metrics')
+    print(sample_user_data(datetime(2016, 2, 15),
+                           metrics_table_path='/similargroup/data/mobile-analytics/daily/aggregate/aggkey=AppCountrySourceKey',
+                           output_table_path='/home/felix/temp-tables2/app-metrics'))

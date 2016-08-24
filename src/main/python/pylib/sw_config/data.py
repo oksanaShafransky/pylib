@@ -10,7 +10,7 @@ def get_proxy():
     return get_instance(KeyValueProxy)
 
 
-class Artifact:
+class Artifact(object):
     class Mode:
         window = 0,
         monthly = 1
@@ -47,7 +47,7 @@ class Artifact:
         return dates
 
 
-class Intersect:
+class Intersect(object):
     def __init__(self, *args):
         self.sub_artifacts = args
 

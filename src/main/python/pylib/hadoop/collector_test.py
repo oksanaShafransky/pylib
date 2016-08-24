@@ -77,6 +77,6 @@ if __name__ == '__main__':
     # check if report is in fact empty
     if report == '':
         report = 'No Significant Changes'
-    print report
+    print(report)
     if args.mail_to is not None:
         send_report(report, args.check_date, args.mail_to)

@@ -4,10 +4,13 @@ import os
 import subprocess
 import random
 import calendar
+
+import six
 from datetime import *
 from os.path import isfile, join
 from os import listdir
-from urlparse import urlparse
+
+from future.moves.urllib.parse import urlparse
 
 from dateutil.relativedelta import relativedelta
 import sys
@@ -38,7 +41,7 @@ MOBILE_ALL_CATEGORY = '\"\"'
 UNRANKED = -1
 
 
-class GracefulShutdownHandler:
+class GracefulShutdownHandler(object):
     def __init__(self, on_kill, sig=signal.SIGTERM):
         self.on_kill = on_kill
         self.sig = sig
@@ -91,7 +94,7 @@ def getPartitionString(mode, mode_type, year, month, day, **kwargs):
     else:
         partition_parts = "year=%s, month=%02d, type='%s'" % (year, month, mode_type)
 
-    for key, value in kwargs.iteritems():
+    for key, value in six.iteritems(kwargs):
         if value:
             partition_parts += ', %s=%s' % (key, value)
         else:
@@ -106,7 +109,7 @@ def getDatePartitionString(year, month, day=None, **kwargs):
     else:
         partition_parts = "year=%s, month=%02d" % (year, month)
 
-    for key, value in kwargs.iteritems():
+    for key, value in six.iteritems(kwargs):
         if value:
             partition_parts += ', %s=%s' % (key, value)
         else:
@@ -147,40 +150,6 @@ def get_monthly_where(year, month, day=None, table_prefix=None):
         if day is not None:
             result += ' AND day=%02d' % day
     return result
-
-
-def get_range_where_clause(year, month, day, mode, mode_type):
-    if int(year) < 100:
-        end_date = datetime(2000 + int(year), int(month), int(day)).date()
-    else:
-        end_date = datetime(int(year), int(month), int(day)).date()
-    start_date = ""
-
-    if mode_type == "last-1":
-        start_date = end_date - timedelta(days=0)
-    elif mode_type == "last-7":
-        start_date = end_date - timedelta(days=6)
-    elif mode_type == "last-28":
-        start_date = end_date - timedelta(days=27)
-    elif mode_type == "last-30":
-        start_date = end_date - timedelta(days=29)
-    elif mode_type == "last-90":
-        start_date = end_date - timedelta(days=89)
-    elif mode_type == "weekly":
-        start_date = end_date - timedelta(days=int(end_date.weekday()))
-        end_date = start_date + timedelta(days=6)
-    elif mode_type == "monthly":
-        return ' (year = %02d and month = %02d) ' % (end_date.year % 100, month)
-    elif mode_type == "quarterly":
-        start_date = datetime(int(year), int(month) - ((int(month) - 1) % 3), 1).date()
-        end_date = start_date + timedelta(days=63)
-        return '(year=%02d and month <= %02d and month >= %02d' % (
-            end_date.year % 100, start_date.month, end_date.month)
-    elif mode_type == "annually":
-        return " (year = %02d) " % (end_date.year % 100)
-
-    return get_where_between_dates(start_date, end_date)
-
 
 def get_day_range_where_clause(year, month, day, window_size):
     if int(year) < 100:

@@ -1,7 +1,7 @@
 __author__ = 'Felix'
 
 
-class GCD:
+class GCD(object):
     def __init__(self, a, b, gcd):
         self.a = a
         self.b = b

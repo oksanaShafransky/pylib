@@ -1,7 +1,7 @@
 __author__ = 'Felix'
 
 import subprocess
-from urllib2 import urlopen
+from six.moves.urllib.request import urlopen
 from xml.sax.saxutils import escape
 
 
@@ -74,7 +74,7 @@ def parse_config_xml(config_xml):
     return ret
 
 
-class JobStats:
+class JobStats(object):
 
     def __init__(self, **kwargs):
         self.run_result = kwargs['result']
@@ -105,7 +105,7 @@ class JobStats:
             if self.number_of_reducers else 0
 
 
-class PostJobHandler:
+class PostJobHandler(object):
 
     def __init__(self, recorders):
         self.recorders = recorders
@@ -118,9 +118,9 @@ class PostJobHandler:
             recorder.record(stats)
 
 
-class PrintRecorder:
+class PrintRecorder(object):
 
     def record(self, stats):
-        print 'job %s stats:' % stats.job_name
+        print('job %s stats:' % stats.job_name)
 
-        print stats.counters
+        print(stats.counters)

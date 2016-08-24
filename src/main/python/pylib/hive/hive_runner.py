@@ -8,7 +8,7 @@ import common
 from common import GracefulShutdownHandler
 
 
-class HiveParamBuilder:
+class HiveParamBuilder(object):
 
     TASK_MEMORY_OVERHEAD = 0.3
 
@@ -137,7 +137,7 @@ class HiveParamBuilder:
         return ret
 
 
-class HiveProcessRunner:
+class HiveProcessRunner(object):
 
     DEFAULT_HIVE_CONFIG = {
         'io.seqfile.compression': 'BLOCK',
@@ -187,7 +187,7 @@ class HiveProcessRunner:
             end_time = datetime.now()
 
         jobs = self.find_jobs(log_path, start_time)
-        print 'finished running %d job(s) after %s with ret code %d' % (len(jobs), end_time - start_time, p.returncode)
+        print('finished running %d job(s) after %s with ret code %d' % (len(jobs), end_time - start_time, p.returncode))
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, cmd)
 
@@ -206,7 +206,7 @@ class HiveProcessRunner:
         params['hive.log.file'] = 'hive.log'
 
         hive_cmd = ['hive', '-e', hql]
-        for param, val in params.iteritems():
+        for param, val in params.items():
             hive_cmd += ['-hiveconf', '%s=%s' % (param, str(val))]
 
         common.logger.info('CMD:\n%s' % ' '.join(hive_cmd))

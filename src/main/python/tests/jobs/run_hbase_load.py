@@ -5,7 +5,7 @@ from pylib.jobs.run import run
 from hbase_load_test import HbaseJob
 
 
-class TestJob:
+class TestJob(object):
 
     def get_job(self):
         return JobBuilder(job_name='Test HBase Load') \

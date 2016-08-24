@@ -13,7 +13,7 @@ def parse_date(date_str):
         return datetime.strptime(date_str, '%Y-%m')
 
 
-class Arg:
+class Arg(object):
     @staticmethod
     def date_arg(date_str):
         try:
@@ -61,12 +61,12 @@ class Arg:
         self.registered = True
 
 
-class Const:
+class Const(object):
     def __init__(self, value):
         self.value = value
 
 
-class Action:
+class Action(object):
     def __init__(self, action_name, action_params, group, kw_params=None, parent_parser=None, action_help=None):
 
         self.name = action_name
@@ -100,7 +100,7 @@ def upsert_param(params, new_param):
     candidates = [param for param in params if param.attribute == new_param.attribute]
 
     if len(candidates) not in [0, 1]:
-        raise argparse.ArgumentError('colliding params: ' + str(candidates))
+        raise argparse.ArgumentError(argument=None, message='colliding params: ' + str(candidates))
 
     if len(candidates) == 1:
         params.remove(candidates[0])
@@ -187,6 +187,6 @@ class Executer(object):
             elif isinstance(kw_param, Const):
                 handler_kwargs[named_param] = kw_param.value
             else:
-                raise Exception('unrecognized handler parameter type: %s' % param.__class__.__name__)
+                raise Exception('unrecognized handler parameter type: %s' % kw_param.__class__.__name__)
 
         return handler(*handler_args, **handler_kwargs)
