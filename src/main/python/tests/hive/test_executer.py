@@ -1,5 +1,6 @@
 from pylib.hive.hive_exec import Executer
 from pylib.tasks.executer import Arg
+import sys
 
 __author__ = 'Felix'
 
@@ -32,7 +33,7 @@ def div(x, y):
     print(x / y)
 
 
-if __name__ == '__main__':
+def test_cmd(capsys):
     calc = PairCalculator()
 
     calc.add_action('echo', echo, [Arg('-w', '--what', 'what', str, 'Say', required=False, default='hello world')])
@@ -56,5 +57,7 @@ if __name__ == '__main__':
         calc.common_param('left'),
         calc.common_param('right')
     ])
-
+    sys.argv = ['test_executer.py', 'add', '-lhs', '5', '--right_hand_side', '10']
     calc.execute()
+    out, err = capsys.readouterr()
+    assert '15.0' in out
