@@ -7,7 +7,8 @@ from random import random
 from struct import *
 import happybase
 import sys
-import cProfile, pstats
+import cProfile
+import pstats
 from six.moves import cStringIO as StringIO
 
 
@@ -63,7 +64,6 @@ class Exporter(object):
             self.refresh_connection()
         return self._table
 
-
     def refresh_connection(self):
         if self._batch:
             self._batch.send()
@@ -89,7 +89,6 @@ class Exporter(object):
         t.join(timeout)
         if t.is_alive():
             raise RuntimeError()
-
 
     def put(self, key, data):
         self.count += 1
@@ -123,7 +122,6 @@ class Exporter(object):
         if self.count % self.CONNECTION_REFRESH_INTERVAL == 0:
             self.refresh_connection()
 
-
     def _finish_profile(self):
         self.pr.disable()
         s = StringIO.StringIO()
@@ -147,7 +145,7 @@ class Exporter(object):
 
 class ByteHelper(object):
     def __init__(self):
-        self._bytes = StringIO.StringIO()
+        self._bytes = StringIO()
 
     @property
     def bytes(self):
