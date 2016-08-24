@@ -10,7 +10,7 @@ from datetime import *
 from os.path import isfile, join
 from os import listdir
 
-from future.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlparse
 
 from dateutil.relativedelta import relativedelta
 import sys
