@@ -29,7 +29,7 @@ class ZombieKiller(object):
         alert = 0
         kill = 1
 
-    def kill_zombie_jobs(self, task_id, handling_mode=ZombieHandleMode.alert):
+    def kill_zombie_jobs(self, task_id, handling_mode=ZombieHandleMode.kill):
 
         if not task_id:
             raise ValueError("task_id cannot be empty")
