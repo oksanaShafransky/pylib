@@ -30,7 +30,7 @@ class HiveParamBuilder(object):
         self.reduce_cpu_cores = 2
         self.reduce_task_memory = 2048
 
-        self.compression = None
+        self.compression = 'bz2'
         self.consolidate = True
 
         self.child_opts = {
