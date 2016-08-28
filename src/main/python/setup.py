@@ -6,6 +6,6 @@ setup(
     zip_safe=True,
     requires=['invoke', 'tld', 'mrjob', 'redis'],
     setup_requires=['pytest-runner'],
-    tests_require=['pytest', 'invoke==0.12.2', 'mrjob==0.5.2', 'redis'],
+    tests_require=['pytest', 'snakebite', 'invoke==0.12.2', 'redis'],
     test_suite='tests'
 )
