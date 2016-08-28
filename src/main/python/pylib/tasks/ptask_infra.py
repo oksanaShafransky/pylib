@@ -231,17 +231,18 @@ class ContextualizedTasksInfra(object):
         cache_dir = 'tmp/cache/%s' % random_str(5)
         os.makedirs(cache_dir)
 
-        # register cached files
-        for cached_file in cache_files:
-            if '#' in cached_file:   # handle renaming
-                hdfs_path, target_name = cached_file.split('#')
-            else:
-                hdfs_path = cached_file
-                target_name = cached_file.split('/')[-1]
+        if cache_files is not None:
+            # register cached files
+            for cached_file in cache_files:
+                if '#' in cached_file:   # handle renaming
+                    hdfs_path, target_name = cached_file.split('#')
+                else:
+                    hdfs_path = cached_file
+                    target_name = cached_file.split('/')[-1]
 
-            get_file(hdfs_path, '%s/%s' % (cache_dir, target_name))
-            sys.stdout.write('caching hdfs file %s as %s' % (cached_file, target_name))
-            query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
+                get_file(hdfs_path, '%s/%s' % (cache_dir, target_name))
+                sys.stdout.write('caching hdfs file %s as %s' % (cached_file, target_name))
+                query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
 
         HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run)
         for mdir in managed_output_dirs:
