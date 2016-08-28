@@ -228,7 +228,7 @@ class ContextualizedTasksInfra(object):
         log_dir = 'tmp/logs/%s' % random_str(5)
         os.mkdir(log_dir)
 
-        cache_dir = 'tmp/cache/%s' % random_str(5)
+        cache_dir = '/tmp/cache/%s' % random_str(5)
         os.makedirs(cache_dir)
 
         if cache_files is not None:
