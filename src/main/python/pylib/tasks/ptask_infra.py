@@ -15,7 +15,7 @@ from redis import StrictRedis as Redis
 
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
-from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs
+from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs, get_file
 
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../../../..'
@@ -211,7 +211,7 @@ class ContextualizedTasksInfra(object):
 
     # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
     def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None,
-                 managed_output_dirs=None, **extra_hive_conf):
+                 managed_output_dirs=None, cache_files=None, **extra_hive_conf):
         if managed_output_dirs is None:
             managed_output_dirs = []
         if self.rerun:
@@ -228,11 +228,27 @@ class ContextualizedTasksInfra(object):
         log_dir = 'tmp/logs/%s' % random_str(5)
         os.mkdir(log_dir)
 
+        cache_dir = 'tmp/cache/%s' % random_str(5)
+        os.makedirs(cache_dir)
+
+        # register cached files
+        for cached_file in cache_files:
+            if '#' in cached_file:   # handle renaming
+                hdfs_path, target_name = cached_file.split('#')
+            else:
+                hdfs_path = cached_file
+                target_name = cached_file.split('/')[-1]
+
+            get_file(hdfs_path, '%s/%s' % (cache_dir, target_name))
+            sys.stdout.write('caching hdfs file %s as %s' % (cached_file, target_name))
+            query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
+
         HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run)
         for mdir in managed_output_dirs:
             mark_success(mdir)
 
         shutil.rmtree(log_dir)
+        shutil.rmtree(cache_dir)
 
     @staticmethod
     def fail(reason=None):
