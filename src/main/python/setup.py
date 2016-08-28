@@ -4,8 +4,8 @@ setup(
     name="sw_pylib",
     packages=find_packages(),
     zip_safe=True,
-    requires=['invoke'],
+    requires=['invoke', 'tld', 'mrjob', 'redis'],
     setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
+    tests_require=['pytest', 'invoke==0.12.2', 'mrjob==0.5.2', 'redis'],
     test_suite='tests'
 )
