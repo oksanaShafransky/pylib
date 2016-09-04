@@ -191,10 +191,13 @@ class HiveProcessRunner(object):
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, cmd)
 
-    def run_query(self, hql, hive_params, job_name=None, partitions=None, log_dir='/tmp/logs', is_dry_run=False, **extra_hive_confs):
+    def run_query(self, hql, hive_params, job_name=None, partitions=None, log_dir='/tmp/logs', is_dry_run=False, aux_jars=None, **extra_hive_confs):
         params = copy(HiveProcessRunner.DEFAULT_HIVE_CONFIG)
         params.update(hive_params.to_conf())
         params.update(extra_hive_confs)
+
+        if aux_jars is None:
+            aux_jars = []
 
         if job_name is not None:
             params['mapreduce.job.name'] = job_name
@@ -205,7 +208,11 @@ class HiveProcessRunner(object):
         params['hive.log.dir'] = log_dir
         params['hive.log.file'] = 'hive.log'
 
-        hive_cmd = ['hive', '-e', hql]
+        hive_cmd = ['hive']
+        if len(aux_jars) > 0:
+            hive_cmd += ['--auxpath', ','.join(aux_jars)]
+
+        hive_cmd += ['-e', hql]
         for param, val in params.items():
             hive_cmd += ['-hiveconf', '%s=%s' % (param, str(val))]
 

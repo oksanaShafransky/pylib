@@ -211,7 +211,7 @@ class ContextualizedTasksInfra(object):
 
     # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
     def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None,
-                 managed_output_dirs=None, cache_files=None, **extra_hive_conf):
+                 managed_output_dirs=None, cache_files=None, aux_jars=None, **extra_hive_conf):
         if managed_output_dirs is None:
             managed_output_dirs = []
         if self.rerun:
@@ -244,7 +244,7 @@ class ContextualizedTasksInfra(object):
                 sys.stdout.write('caching hdfs file %s as %s' % (cached_file, target_name))
                 query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
 
-        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run)
+        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run, aux_jars=aux_jars)
         for mdir in managed_output_dirs:
             mark_success(mdir)
 
