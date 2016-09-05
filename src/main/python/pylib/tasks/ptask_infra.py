@@ -427,7 +427,7 @@ class ContextualizedTasksInfra(object):
                      'files': "','".join(files),
                      'py_files_cmd': py_files_cmd,
                      'spark-confs': additional_configs,
-                     'jars': self.get_jars_list(module_dir, jars_from_lib) + ('%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
+                     'jars': self.get_jars_list(module_dir, jars_from_lib) + (',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                      'main_py': main_py_file
                      }
 
