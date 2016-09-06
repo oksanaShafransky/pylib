@@ -2,6 +2,7 @@ from pylib.sw_config.kv_factory import provider_from_config
 from pycountry import countries
 #from airflow.models import Variable
 
+
 class AppsEngagementConfig(object):
     def __init__(self, env):
         self.root = 'services/app-engagement/env/%s' % env
