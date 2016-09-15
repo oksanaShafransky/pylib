@@ -424,7 +424,7 @@ class ContextualizedTasksInfra(object):
                   % {'app_name': app_name if app_name else os.path.basename(main_py_file),
                      'execution_dir': module_dir,
                      'queue': queue,
-                     'files': "','".join(files),
+                     'files': ','.join(files),
                      'py_files_cmd': py_files_cmd,
                      'spark-confs': additional_configs,
                      'jars': self.get_jars_list(module_dir, jars_from_lib) + (',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
