@@ -46,7 +46,7 @@ class PtaskInvoker(Program):
             Argument(names=('dry_run', 'dr'), kind=bool, default=False, optional=True,
                      help="Some operations would only log their underlying command"),
             Argument(names=('checks_only', 'co'), kind=bool, default=False, optional=True,
-                     help="Checks would run, executions would only print commands "),
+                     help="Checks would run, executions would only print commands"),
             Argument(names=('table_prefix', 'tp'), help="Table Prefix", optional=True, default=''),
         ]
         return core_args + extra_args
