@@ -22,7 +22,8 @@ from pylib.sw_config.kv_factory import provider_from_config
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../../../..'
 
 
-class TasksInfra(object):
+class KeyValueProvider(object):
+
     conf = """{
              "pylib.sw_config.consul.ConsulProxy": {
                  "server":"consul.service.production"
@@ -36,20 +37,24 @@ class TasksInfra(object):
     conf = provider_from_config(conf)
 
     @staticmethod
-    def get_kv(key):
-        return TasksInfra.conf.get(key)
+    def get(key):
+        return KeyValueProvider.conf.get(key)
 
     @staticmethod
-    def set_kv(key, value):
-        return TasksInfra.conf.get(key, value)
+    def set(key, value):
+        return KeyValueProvider.conf.set(key, value)
 
     @staticmethod
-    def delete_kv(key):
-        return TasksInfra.conf.get(key)
+    def delete(key):
+        return KeyValueProvider.conf.delete(key)
 
     @staticmethod
-    def subkeys_kv(key):
-        return TasksInfra.conf.get(key)
+    def subkeys(key):
+        return KeyValueProvider.conf.sub_keys(key)
+
+
+class TasksInfra(object):
+    kv = KeyValueProvider()
 
     @staticmethod
     def parse_date(date_str, fmt='%Y-%m-%d'):
@@ -65,9 +70,9 @@ class TasksInfra(object):
 
     @staticmethod
     def __latest_success_date_kv(base_path, fmt):
-        dates = sorted(TasksInfra.subkeys_kv(base_path), reverse=True)
+        dates = sorted(TasksInfra.kv.subkeys(base_path), reverse=True)
         for date in dates:
-            if TasksInfra.get_kv('%s/%s' % (base_path, date)) == 'success':
+            if TasksInfra.kv.get('%s/%s' % (base_path, date)) == 'success':
                 return TasksInfra.parse_date(date, fmt)
 
         return None
