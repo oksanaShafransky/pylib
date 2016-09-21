@@ -16,15 +16,61 @@ from redis import StrictRedis as Redis
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs, get_file
+from pylib.sw_config.kv_factory import provider_from_config
 
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../../../..'
 
 
 class TasksInfra(object):
+    conf = """{
+             "pylib.sw_config.consul.ConsulProxy": {
+                 "server":"consul.service.production"
+             },
+             "pylib.sw_config.etcd_kv.EtcdProxy": {
+                 "server":"etcd.service.production",
+                 "port": 4001,
+                 "root_path": "v1/production"
+             }
+             }"""
+    conf = provider_from_config(conf)
+
     @staticmethod
-    def parse_date(date_str):
-        return datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+    def get_kv(key):
+        return TasksInfra.conf.get(key)
+
+    @staticmethod
+    def set_kv(key, value):
+        return TasksInfra.conf.get(key, value)
+
+    @staticmethod
+    def delete_kv(key):
+        return TasksInfra.conf.get(key)
+
+    @staticmethod
+    def subkeys_kv(key):
+        return TasksInfra.conf.get(key)
+
+    @staticmethod
+    def parse_date(date_str, fmt='%Y-%m-%d'):
+        return datetime.datetime.strptime(date_str, fmt).date()
+
+    @staticmethod
+    def latest_monthly_success_date_kv(base_path):
+        return TasksInfra.__latest_success_date_kv(base_path, fmt='%Y-%m')
+
+    @staticmethod
+    def latest_daily_success_date_kv(base_path):
+        return TasksInfra.__latest_success_date_kv(base_path, fmt='%Y-%m-%d')
+
+    @staticmethod
+    def __latest_success_date_kv(base_path, fmt):
+        dates = sorted(TasksInfra.subkeys_kv(base_path), reverse=True)
+        for date in dates:
+            if TasksInfra.get_kv('%s/%s' % (base_path, date)) == 'success':
+                return TasksInfra.parse_date(date, fmt)
+
+        return None
 
     @staticmethod
     def full_partition_path(mode, mode_type, date):
