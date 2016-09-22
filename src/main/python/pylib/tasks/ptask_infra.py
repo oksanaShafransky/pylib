@@ -272,7 +272,7 @@ class ContextualizedTasksInfra(object):
         print('Checking if there are at least %d keys with %s prefix in Redis...' % (count, prefix))
         client = Redis(host='redis-bigdata.service.production')
         cnt = 0
-        for key in client.scan_iter(match='%s*' % prefix):
+        for key in client.scan_iter(match='%s*' % prefix, count=count):
             cnt += 1
             if cnt == count:
                 break
