@@ -21,6 +21,7 @@ run \
 -v /etc/localtime:/etc/localtime:ro \
 -v /tmp/logs:/tmp/logs \
 -v /var/lib/sss:/var/lib/sss \
+-v /etc/passwd:/etc/passwd \
 -v /etc/localtime:/etc/localtime:ro \
 -v /usr/bin:/opt/old_bin \
 -v /var/run/similargroup:/var/run/similargroup \
@@ -76,5 +77,5 @@ sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s &&
 
         final_cmd = DockerInvoker.dock_cmd_template % params
         print(final_cmd)
-        subprocess.call(['bash', '-c', final_cmd])
+        subprocess.check_call(['bash', '-c', final_cmd])
 
