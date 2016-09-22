@@ -24,11 +24,6 @@ from pylib.sw_config.kv_factory import provider_from_config
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../../../..'
 
-import logging
-log = logging.getLogger(__name__)
-logging.basicConfig(level=logging.CRITICAL)
-log.propagate = False
-
 class KeyValueProvider(object):
 
     conf = """{
