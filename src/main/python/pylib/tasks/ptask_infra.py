@@ -278,7 +278,7 @@ class ContextualizedTasksInfra(object):
         if not self.dry_run:
             delete_dirs(*managed_output_dirs)
 
-        log_dir = 'tmp/logs/%s' % random_str(5)
+        log_dir = '/tmp/logs/%s' % random_str(5)
         os.mkdir(log_dir)
 
         cache_dir = '/tmp/cache/%s' % random_str(5)
