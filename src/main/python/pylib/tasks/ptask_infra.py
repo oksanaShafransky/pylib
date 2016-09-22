@@ -24,8 +24,8 @@ from pylib.sw_config.kv_factory import provider_from_config
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../../../..'
 
-class KeyValueProvider(object):
 
+class KeyValueProvider(object):
     conf = """{
              "pylib.sw_config.consul.ConsulProxy": {
                  "server":"consul.service.production"
@@ -287,7 +287,7 @@ class ContextualizedTasksInfra(object):
         if cache_files is not None:
             # register cached files
             for cached_file in cache_files:
-                if '#' in cached_file:   # handle renaming
+                if '#' in cached_file:  # handle renaming
                     hdfs_path, target_name = cached_file.split('#')
                 else:
                     hdfs_path = cached_file
@@ -297,7 +297,8 @@ class ContextualizedTasksInfra(object):
                 sys.stdout.write('caching hdfs file %s as %s' % (cached_file, target_name))
                 query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
 
-        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run)
+        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir,
+                                      is_dry_run=self.dry_run)
         for mdir in managed_output_dirs:
             mark_success(mdir)
 
@@ -480,7 +481,8 @@ class ContextualizedTasksInfra(object):
                      'files': "','".join(files),
                      'py_files_cmd': py_files_cmd,
                      'spark-confs': additional_configs,
-                     'jars': self.get_jars_list(module_dir, jars_from_lib) + (',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
+                     'jars': self.get_jars_list(module_dir, jars_from_lib) + (
+                         ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                      'main_py': main_py_file
                      }
 
@@ -552,7 +554,16 @@ class ContextualizedTasksInfra(object):
 
     @property
     def mode_type(self):
-        return self.__get_common_args()['mode_type']
+        if 'mode_type' in self.__get_common_args():
+            return self.__get_common_args()['mode_type']
+        if 'mode' in self.__get_common_args():
+            mode = self.__get_common_args()['mode']
+            default_mode_types = {'snapshot': 'monthly',
+                                  'window': 'last-28',
+                                  'daily': 'daily'}
+            if mode in default_mode_types:
+                return default_mode_types[mode]
+        raise KeyError('unable to determine mode_type')
 
     @property
     def date_suffix(self):
