@@ -21,6 +21,7 @@ run \
 -v /etc/localtime:/etc/localtime:ro \
 -v /tmp/logs:/tmp/logs \
 -v /var/lib/sss:/var/lib/sss \
+-v /etc/passwd:/etc/passwd \
 -v /etc/localtime:/etc/localtime:ro \
 -v /usr/bin:/opt/old_bin \
 -v /var/run/similargroup:/var/run/similargroup \
