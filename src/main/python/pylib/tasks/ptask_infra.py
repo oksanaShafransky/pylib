@@ -55,6 +55,37 @@ class KeyValueProvider(object):
         return KeyValueProvider.conf.sub_keys(key)
 
 
+class KeyValueProvider(object):
+
+    conf = """{
+             "pylib.sw_config.consul.ConsulProxy": {
+                 "server":"consul.service.production"
+             },
+             "pylib.sw_config.etcd_kv.EtcdProxy": {
+                 "server":"etcd.service.production",
+                 "port": 4001,
+                 "root_path": "v1/production"
+             }
+             }"""
+    conf = provider_from_config(conf)
+
+    @staticmethod
+    def get(key):
+        return KeyValueProvider.conf.get(key)
+
+    @staticmethod
+    def set(key, value):
+        return KeyValueProvider.conf.set(key, value)
+
+    @staticmethod
+    def delete(key):
+        return KeyValueProvider.conf.delete(key)
+
+    @staticmethod
+    def subkeys(key):
+        return KeyValueProvider.conf.sub_keys(key)
+
+
 class TasksInfra(object):
     kv = KeyValueProvider()
 
@@ -264,7 +295,7 @@ class ContextualizedTasksInfra(object):
 
     # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
     def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None,
-                 managed_output_dirs=None, cache_files=None, **extra_hive_conf):
+                 managed_output_dirs=None, cache_files=None, aux_jars=None, **extra_hive_conf):
         if managed_output_dirs is None:
             managed_output_dirs = []
         if self.rerun:
@@ -297,7 +328,7 @@ class ContextualizedTasksInfra(object):
                 sys.stdout.write('caching hdfs file %s as %s' % (cached_file, target_name))
                 query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
 
-        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run)
+        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run, aux_jars=aux_jars)
         for mdir in managed_output_dirs:
             mark_success(mdir)
 
@@ -477,7 +508,7 @@ class ContextualizedTasksInfra(object):
                   % {'app_name': app_name if app_name else os.path.basename(main_py_file),
                      'execution_dir': module_dir,
                      'queue': queue,
-                     'files': "','".join(files),
+                     'files': ','.join(files),
                      'py_files_cmd': py_files_cmd,
                      'spark-confs': additional_configs,
                      'jars': self.get_jars_list(module_dir, jars_from_lib) + (',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
