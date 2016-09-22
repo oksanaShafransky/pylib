@@ -76,5 +76,5 @@ sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s &&
 
         final_cmd = DockerInvoker.dock_cmd_template % params
         print(final_cmd)
-        subprocess.call(['bash', '-c', final_cmd])
+        subprocess.check_call(['bash', '-c', final_cmd])
 
