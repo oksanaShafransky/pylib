@@ -268,6 +268,16 @@ class ContextualizedTasksInfra(object):
                 }
                 client.rpush(lineage_key, lineage_value)
 
+    def assert_redis_keys_validity(self, prefix, count):
+        print('Checking if there are at least %d keys with %s prefix in Redis...' % (count, prefix))
+        client = Redis(host='redis-bigdata.service.production')
+        cnt = 0
+        for key in client.scan_iter(match='%s*' % prefix):
+            cnt += 1
+            if cnt == count:
+                break
+        assert cnt == count, 'Only %d keys with prefix %s' % (cnt, prefix)
+
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
         assert self.__is_hdfs_collection_valid(directories,
