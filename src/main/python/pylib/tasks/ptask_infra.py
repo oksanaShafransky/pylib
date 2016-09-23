@@ -234,7 +234,7 @@ class ContextualizedTasksInfra(object):
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
-        command = TasksInfra.add_command_params(command, command_params, *positional, value_wrap='"')
+        command = TasksInfra.add_command_params(command, command_params, '"', *positional)
         return command
 
     def __get_common_args(self):
