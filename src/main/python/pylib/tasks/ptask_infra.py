@@ -158,7 +158,7 @@ class TasksInfra(object):
             yield start_date + datetime.timedelta(days=i)
 
     @staticmethod
-    def add_command_params(command, command_params, *positional):
+    def add_command_params(command, command_params, value_wrap='', *positional):
         ans = command + ' ' + ' '.join(positional)
 
         for key, value in command_params.items():
@@ -169,9 +169,9 @@ class TasksInfra(object):
                     ans += " -%s" % key
             elif isinstance(value, list):
                 for elem in value:
-                    ans += " -%s '%s'" % (key, elem)
+                    ans += " -%s %s%s%s" % (key, value_wrap, elem, value_wrap)
             else:
-                ans += " -%s '%s'" % (key, value)
+                ans += " -%s %s%s%s" % (key, value_wrap, value, value_wrap)
         return ans
 
 
@@ -202,7 +202,7 @@ class ContextualizedTasksInfra(object):
                 'class': main_class
             }
         )
-        command = TasksInfra.add_command_params(command, command_params)
+        command = TasksInfra.add_command_params(command, command_params, value_wrap="'")
         if rerun_root_queue:
             command = self.__with_rerun_root_queue(command)
         return command
@@ -234,7 +234,7 @@ class ContextualizedTasksInfra(object):
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
-        command = TasksInfra.add_command_params(command, command_params, *positional)
+        command = TasksInfra.add_command_params(command, command_params, value_wrap='"', *positional)
         return command
 
     def __get_common_args(self):
@@ -449,7 +449,7 @@ class ContextualizedTasksInfra(object):
                    'jars': self.get_jars_list(jar_path, jars_from_lib),
                    'main_class': main_class,
                    'jar': jar}
-        command = TasksInfra.add_command_params(command, command_params)
+        command = TasksInfra.add_command_params(command, command_params, value_wrap="'")
         return self.run_bash(command).ok
 
     def get_jars_list(self, module_dir, jars_from_lib):
@@ -526,7 +526,7 @@ class ContextualizedTasksInfra(object):
                      'main_py': main_py_file
                      }
 
-        command = TasksInfra.add_command_params(command, command_params)
+        command = TasksInfra.add_command_params(command, command_params, value_wrap='"')
         return self.run_bash(command).ok
 
     def read_s3_configuration(self, property_key):
