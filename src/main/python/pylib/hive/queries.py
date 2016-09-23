@@ -22,7 +22,7 @@ def sum_query(dt, mode, mode_type, daily_table, daily_table_path, sum_table, sum
     % \
                                     {
                                         'sum_table': kwargs['target_table'],
-                                        'daily_table': kwargs['daily_table'],
+                                        'daily_table': kwargs['source_table'],
                                         'partition_str': partition_str,
                                         'key_cols': ','.join(group_cols),
                                         'summed_cols': ','.join(['sum(%s)' % col for col in summed_cols]),
