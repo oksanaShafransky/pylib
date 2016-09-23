@@ -28,7 +28,7 @@ run \
 --rm \
 --name=%(container_name)s \
 --sig-proxy=false \
---user=`id -u` \
+--user=%(user)s \
 -e DOCKER_GATE=%(docker_gate)s \
 -e GELF_HOST="runsrv2.sg.internal" \
 -e HOME=/tmp \
@@ -38,7 +38,8 @@ sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s &&
 %(bash_command)s"
     '''
 
-    def __init__(self, execution_dir='/similargroup/production', gate='docker-a02.sg.internal:2375', repos='docker.similarweb.io:5000/bigdata', image='mrp'):
+    def __init__(self, user='jupyter', execution_dir='/similargroup/production', gate='docker-a02.sg.internal:2375', repos='docker.similarweb.io:5000/bigdata', image='mrp'):
+        self.user = user
         self.execution_dir = execution_dir
         self.docker_gate = gate
         self.docker_repository = repos
@@ -69,6 +70,7 @@ sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s &&
         params = {
             'docker_gate': self.docker_gate,
             'execution_dir': self.execution_dir,
+            'user': self.user,
             'container_name': 'remote_ptask_%s' % task_id,
             'docker_repository': self.docker_repository,
             'docker': self.image,
