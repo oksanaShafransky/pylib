@@ -12,7 +12,6 @@ def sum_query(dt, mode, mode_type, daily_table, daily_table_path, sum_table, sum
     partition_str = getPartitionString(mode, mode_type, year, month, day)
 
     return """
-                                      use %(db)s;
                                       insert overwrite table %(sum_table)s partition %(partition_str)s
                                       select %(key_cols)s, %(summed_cols)s
                                       from %(daily_table)s a
