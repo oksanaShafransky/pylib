@@ -16,7 +16,7 @@ def sum_query(dt, mode, mode_type, daily_table, daily_table_path, sum_table, sum
                                       select %(key_cols)s, %(summed_cols)s
                                       from %(daily_table)s a
                                       where %(where_clause)s
-                                      group by %(group_cols)s;
+                                      group by %(key_cols)s;
                                     """ \
     % \
                                     {
