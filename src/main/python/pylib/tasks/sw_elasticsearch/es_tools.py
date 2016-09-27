@@ -3,7 +3,7 @@ from elasticsearch import Elasticsearch
 
 class ElasticsearchActor(object):
     def __init__(self, ti, index_name):
-        self.es = Elasticsearch('http://%s:%d/' % ('es-logstash-ng.service.%s' % ti.env_type, 9200))
+        self.es = Elasticsearch('http://%s:%d/' % ('es-autocomplete.service.%s' % ti.env_type, 9200))
         self.current_index = self.ci_creator(ti, index_name)
         self.alias = index_name
 
