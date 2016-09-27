@@ -1,13 +1,13 @@
-from six.moves import configparser
 import calendar
 import datetime
+import logging
 import os
 import re
+import shutil
 import six
 import sys
 import time
-import shutil
-import logging
+from six.moves import configparser
 
 # Adjust log level
 logging.getLogger("urllib3").setLevel(logging.WARNING)
@@ -56,7 +56,6 @@ class KeyValueProvider(object):
 
 
 class KeyValueProvider(object):
-
     conf = """{
              "pylib.sw_config.consul.ConsulProxy": {
                  "server":"consul.service.production"
@@ -268,7 +267,14 @@ class ContextualizedTasksInfra(object):
                 }
                 client.rpush(lineage_key, lineage_value)
 
+    def is_valid_redis_output(self, prefix, count):
+        return self.__get_prefix_keys_count(prefix, count) >= count
+
     def assert_redis_keys_validity(self, prefix, count):
+        cnt = self.__get_prefix_keys_count(prefix, count)
+        assert cnt == count, 'Only %d keys with prefix %s' % (cnt, prefix)
+
+    def __get_prefix_keys_count(self, prefix, count):
         print('Checking if there are at least %d keys with %s prefix in Redis...' % (count, prefix))
         client = Redis(host='redis-bigdata.service.production')
         cnt = 0
@@ -276,7 +282,7 @@ class ContextualizedTasksInfra(object):
             cnt += 1
             if cnt == count:
                 break
-        assert cnt == count, 'Only %d keys with prefix %s' % (cnt, prefix)
+        return cnt
 
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
@@ -338,7 +344,8 @@ class ContextualizedTasksInfra(object):
                 sys.stdout.write('caching hdfs file %s as %s' % (cached_file, target_name))
                 query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
 
-        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run, aux_jars=aux_jars)
+        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir,
+                                      is_dry_run=self.dry_run, aux_jars=aux_jars)
         for mdir in managed_output_dirs:
             mark_success(mdir)
 
