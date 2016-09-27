@@ -449,7 +449,7 @@ class ContextualizedTasksInfra(object):
                    'jars': self.get_jars_list(jar_path, jars_from_lib),
                    'main_class': main_class,
                    'jar': jar}
-        command = TasksInfra.add_command_params(command, command_params, value_wrap="'")
+        command = TasksInfra.add_command_params(command, command_params, value_wrap='"')
         return self.run_bash(command).ok
 
     def get_jars_list(self, module_dir, jars_from_lib):
