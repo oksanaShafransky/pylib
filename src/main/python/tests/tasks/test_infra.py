@@ -29,6 +29,23 @@ class TestTasksInfra(object):
                    'number': 32}
         actual = TasksInfra.add_command_params('cmd.py',
                                                options,
+                                               '',
+                                               'param1', 'param2')
+        assert expected == actual
+
+    def test_command_value_wrapping(self):
+        wrapper = '$'
+        expected = 'cmd.py param1 param2 -action %(wrap)slol%(wrap)s -switch -cats %(wrap)sfluffles%(wrap)s -cats %(wrap)sduffles%(wrap)s -cats %(wrap)smuffles%(wrap)s -number %(wrap)s32%(wrap)s' % \
+                   {
+                       'wrap': wrapper
+                   }
+        options = {'switch': True,
+                   'cats': ['fluffles', 'duffles', 'muffles'],
+                   'action': 'lol',
+                   'number': 32}
+        actual = TasksInfra.add_command_params('cmd.py',
+                                               options,
+                                               wrapper,
                                                'param1', 'param2')
         assert expected == actual
 
@@ -41,7 +58,10 @@ class TestContextualizedTasksInfra(object):
     def test_python_run(self, monkeypatch):
         self._disable_invoke_debug()
         actual_commands = []
-        expected_regexp = 'source .*/common.sh && pyexecute .*/test.py  -number 32'
+        expected_regexp = 'source .*/common.sh && pyexecute .*/test.py  -number %(wrap)s32%(wrap)s' % \
+                          {
+                              'wrap': TasksInfra.EXEC_WRAPPERS['python']
+                          }
 
         def mockrun(self, command, **kwargs):
             actual_commands.append(command)
@@ -81,7 +101,11 @@ class TestContextualizedTasksInfra(object):
     def test_run_spark(self, monkeypatch):
         self._disable_invoke_debug()
         actual_commands = []
-        expected_regexp = 'cd .*/mobile;spark-submit --queue research_shared .* --name "TestRun" .*--jars .*/test.jar,.*/test2.jar --class com.similarweb.mobile.Test ./mobile.jar   -number 32'
+        expected_regexp = '''cd .*/mobile;spark-submit --queue research_shared .* --name "TestRun" .*--jars .*/test.jar,.*/test2.jar --class com.similarweb.mobile.Test ./mobile.jar   -number %(wrap)s32%(wrap)s''' \
+            % \
+                {
+                    'wrap': TasksInfra.EXEC_WRAPPERS['bash']
+                }
 
         def mockrun(self, command, **kwargs):
             actual_commands.append(command)

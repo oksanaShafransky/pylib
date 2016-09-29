@@ -156,6 +156,12 @@ class TasksInfra(object):
         for i in range((end_date - start_date).days + 1):
             yield start_date + datetime.timedelta(days=i)
 
+    EXEC_WRAPPERS = {
+        'python': '"',
+        'java': "'",
+        'bash': "'"
+    }
+
     @staticmethod
     def add_command_params(command, command_params, value_wrap='', *positional):
         ans = command + ' ' + ' '.join(positional)
@@ -168,9 +174,9 @@ class TasksInfra(object):
                     ans += " -%s" % key
             elif isinstance(value, list):
                 for elem in value:
-                    ans += " -%s %s%s%s" % (key, value_wrap, elem, value_wrap)
+                    ans += " -%s %s%s%s" % (key, value_wrap, str(elem), value_wrap)
             else:
-                ans += " -%s %s%s%s" % (key, value_wrap, value, value_wrap)
+                ans += " -%s %s%s%s" % (key, value_wrap, str(value), value_wrap)
         return ans
 
 
@@ -201,7 +207,7 @@ class ContextualizedTasksInfra(object):
                 'class': main_class
             }
         )
-        command = TasksInfra.add_command_params(command, command_params, value_wrap="'")
+        command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
         if rerun_root_queue:
             command = self.__with_rerun_root_queue(command)
         return command
@@ -233,7 +239,7 @@ class ContextualizedTasksInfra(object):
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
-        command = TasksInfra.add_command_params(command, command_params, '"', *positional)
+        command = TasksInfra.add_command_params(command, command_params, TasksInfra.EXEC_WRAPPERS['python'], *positional)
         return command
 
     def __get_common_args(self):
@@ -380,7 +386,7 @@ class ContextualizedTasksInfra(object):
         time.sleep(1)
         if self.dry_run or self.checks_only:
             return Result(command, stdout=None, stderr=None, exited=0, pty=None)
-        return self.ctx.run(command.replace('\'', '\\"\'\\"'))
+        return self.ctx.run(command)
 
     def run_python(self, python_executable, command_params, *positional):
         return self.run_bash(self.__compose_python_runner_command(python_executable, command_params, *positional)).ok
@@ -456,7 +462,8 @@ class ContextualizedTasksInfra(object):
                    'jars': self.get_jars_list(jar_path, jars_from_lib),
                    'main_class': main_class,
                    'jar': jar}
-        command = TasksInfra.add_command_params(command, command_params, value_wrap='"')
+
+        command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
         return self.run_bash(command).ok
 
     def get_jars_list(self, module_dir, jars_from_lib):
@@ -506,7 +513,7 @@ class ContextualizedTasksInfra(object):
         if py_files is None:
             py_files = []
 
-        if (py_files == []):
+        if py_files == []:
             py_files_cmd = ' '
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(py_files)
@@ -533,7 +540,7 @@ class ContextualizedTasksInfra(object):
                      'main_py': main_py_file
                      }
 
-        command = TasksInfra.add_command_params(command, command_params, value_wrap='"')
+        command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         return self.run_bash(command).ok
 
     def read_s3_configuration(self, property_key):
