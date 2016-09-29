@@ -352,15 +352,19 @@ def random_str(length):
 
 def deploy_jars(f):
     def invoke(fnc, *args, **kwargs):
-        full_lib_path = join(kwargs['deploy_path'], 'lib')
-        lib_jars = ['%s/%s' % (full_lib_path, jar) for jar in listdir(full_lib_path) if
-                    isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
-        main_jars = ['%s/%s' % (kwargs['deploy_path'], jar) for jar in listdir(kwargs['deploy_path']) if
-                     isfile(join(kwargs['deploy_path'], jar)) and jar.endswith('.jar')]
-        add_jars_cmd = '\n'.join(['add jar %s;' % jar_name for jar_name in lib_jars + main_jars])
+        add_jars_cmd = '\n'.join(['add jar %s;' % jar_name for jar_name in detect_local_jars(kwargs['deploy_path'])])
         return add_jars_cmd + fnc(jars_to_add=add_jars_cmd, *args, **kwargs)
 
     return lambda *args, **kwargs: invoke(f, *args, **kwargs)
+
+
+def detect_local_jars(path):
+    full_lib_path = join(path, 'lib')
+    lib_jars = ['%s/%s' % (full_lib_path, jar) for jar in listdir(full_lib_path) if
+                isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
+    main_jars = ['%s/%s' % (path, jar) for jar in listdir(path) if
+                 isfile(join(path, jar)) and jar.endswith('.jar')]
+    return lib_jars + main_jars
 
 
 def parse_date(dt):

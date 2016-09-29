@@ -36,7 +36,7 @@ class CompositeConfigurationProxy(KeyValueProxy):
             try:
                 return proxy.sub_keys(key)
             except Exception:
-                return self.consul.sub_keys(key)
+                pass
 
         return None
 

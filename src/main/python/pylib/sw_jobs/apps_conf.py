@@ -44,3 +44,18 @@ class AppsEngagementConfig(object):
             self._countries_sqs_decay_factor = dict([(country_code, self.conf.get('%s/decay_factor/%s' % (self.root, country_code)))
                                     for country_code in countries])
         return self._countries_sqs_decay_factor
+
+    @property
+    def default_sqs_smoothing_ssm(self):
+        if self._default_sqs_decay_factor is None:
+            self._default_sqs_decay_factor = self.conf.get('%s/ssm/default' % self.root)
+            print('ssm is %s' % self._default_sqs_decay_factor)
+        return self._default_sqs_decay_factor
+
+    @property
+    def countries_sqs_smoothing_ssm(self):
+        countries = self.countries
+        if self._countries_sqs_decay_factor is None:
+            self._countries_sqs_decay_factor = dict([(country_code, self.conf.get('%s/ssm/%s' % (self.root, country_code)))
+                                                     for country_code in countries])
+        return self._countries_sqs_decay_factor

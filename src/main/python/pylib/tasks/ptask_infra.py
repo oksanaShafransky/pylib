@@ -1,13 +1,16 @@
-from six.moves import configparser
 import calendar
 import datetime
+import logging
 import os
 import re
-
+import shutil
 import six
 import sys
 import time
-import shutil
+from six.moves import configparser
+
+# Adjust log level
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 from invoke import Result
 from invoke.exceptions import Failure
@@ -16,15 +19,95 @@ from redis import StrictRedis as Redis
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs, get_file
+from pylib.sw_config.kv_factory import provider_from_config
 
 # The execution_dir should be a relative path to the project's top-level directory
 execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../../../..'
 
 
-class TasksInfra(object):
+class KeyValueProvider(object):
+    conf = """{
+             "pylib.sw_config.consul.ConsulProxy": {
+                 "server":"consul.service.production"
+             },
+             "pylib.sw_config.etcd_kv.EtcdProxy": {
+                 "server":"etcd.service.production",
+                 "port": 4001,
+                 "root_path": "v1/production"
+             }
+             }"""
+    conf = provider_from_config(conf)
+
     @staticmethod
-    def parse_date(date_str):
-        return datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+    def get(key):
+        return KeyValueProvider.conf.get(key)
+
+    @staticmethod
+    def set(key, value):
+        return KeyValueProvider.conf.set(key, value)
+
+    @staticmethod
+    def delete(key):
+        return KeyValueProvider.conf.delete(key)
+
+    @staticmethod
+    def subkeys(key):
+        return KeyValueProvider.conf.sub_keys(key)
+
+
+class KeyValueProvider(object):
+    conf = """{
+             "pylib.sw_config.consul.ConsulProxy": {
+                 "server":"consul.service.production"
+             },
+             "pylib.sw_config.etcd_kv.EtcdProxy": {
+                 "server":"etcd.service.production",
+                 "port": 4001,
+                 "root_path": "v1/production"
+             }
+             }"""
+    conf = provider_from_config(conf)
+
+    @staticmethod
+    def get(key):
+        return KeyValueProvider.conf.get(key)
+
+    @staticmethod
+    def set(key, value):
+        return KeyValueProvider.conf.set(key, value)
+
+    @staticmethod
+    def delete(key):
+        return KeyValueProvider.conf.delete(key)
+
+    @staticmethod
+    def subkeys(key):
+        return KeyValueProvider.conf.sub_keys(key)
+
+
+class TasksInfra(object):
+    kv = KeyValueProvider()
+
+    @staticmethod
+    def parse_date(date_str, fmt='%Y-%m-%d'):
+        return datetime.datetime.strptime(date_str, fmt).date()
+
+    @staticmethod
+    def latest_monthly_success_date_kv(base_path):
+        return TasksInfra.__latest_success_date_kv(base_path, fmt='%Y-%m')
+
+    @staticmethod
+    def latest_daily_success_date_kv(base_path):
+        return TasksInfra.__latest_success_date_kv(base_path, fmt='%Y-%m-%d')
+
+    @staticmethod
+    def __latest_success_date_kv(base_path, fmt):
+        dates = sorted(TasksInfra.kv.subkeys(base_path), reverse=True)
+        for date in dates:
+            if TasksInfra.kv.get('%s/%s' % (base_path, date)) == 'success':
+                return TasksInfra.parse_date(date, fmt)
+
+        return None
 
     @staticmethod
     def full_partition_path(mode, mode_type, date):
@@ -74,7 +157,7 @@ class TasksInfra(object):
             yield start_date + datetime.timedelta(days=i)
 
     @staticmethod
-    def add_command_params(command, command_params, *positional):
+    def add_command_params(command, command_params, value_wrap='', *positional):
         ans = command + ' ' + ' '.join(positional)
 
         for key, value in command_params.items():
@@ -85,9 +168,9 @@ class TasksInfra(object):
                     ans += " -%s" % key
             elif isinstance(value, list):
                 for elem in value:
-                    ans += " -%s %s" % (key, elem)
+                    ans += " -%s %s%s%s" % (key, value_wrap, elem, value_wrap)
             else:
-                ans += " -%s %s" % (key, value)
+                ans += " -%s %s%s%s" % (key, value_wrap, value, value_wrap)
         return ans
 
 
@@ -118,7 +201,7 @@ class ContextualizedTasksInfra(object):
                 'class': main_class
             }
         )
-        command = TasksInfra.add_command_params(command, command_params)
+        command = TasksInfra.add_command_params(command, command_params, value_wrap="'")
         if rerun_root_queue:
             command = self.__with_rerun_root_queue(command)
         return command
@@ -150,7 +233,7 @@ class ContextualizedTasksInfra(object):
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
         command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
-        command = TasksInfra.add_command_params(command, command_params, *positional)
+        command = TasksInfra.add_command_params(command, command_params, '"', *positional)
         return command
 
     def __get_common_args(self):
@@ -184,6 +267,23 @@ class ContextualizedTasksInfra(object):
                 }
                 client.rpush(lineage_key, lineage_value)
 
+    def is_valid_redis_output(self, prefix, count):
+        return self.__get_prefix_keys_count(prefix, count) >= count
+
+    def assert_redis_keys_validity(self, prefix, count):
+        cnt = self.__get_prefix_keys_count(prefix, count)
+        assert cnt == count, 'Only %d keys with prefix %s' % (cnt, prefix)
+
+    def __get_prefix_keys_count(self, prefix, count):
+        print('Checking if there are at least %d keys with %s prefix in Redis...' % (count, prefix))
+        client = Redis(host='redis-bigdata.service.production')
+        cnt = 0
+        for key in client.scan_iter(match='%s*' % prefix, count=count):
+            cnt += 1
+            if cnt == count:
+                break
+        return cnt
+
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
         assert self.__is_hdfs_collection_valid(directories,
@@ -211,7 +311,7 @@ class ContextualizedTasksInfra(object):
 
     # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
     def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None,
-                 managed_output_dirs=None, cache_files=None, **extra_hive_conf):
+                 managed_output_dirs=None, cache_files=None, aux_jars=None, **extra_hive_conf):
         if managed_output_dirs is None:
             managed_output_dirs = []
         if self.rerun:
@@ -225,7 +325,7 @@ class ContextualizedTasksInfra(object):
         if not self.dry_run:
             delete_dirs(*managed_output_dirs)
 
-        log_dir = 'tmp/logs/%s' % random_str(5)
+        log_dir = '/tmp/logs/%s' % random_str(5)
         os.mkdir(log_dir)
 
         cache_dir = '/tmp/cache/%s' % random_str(5)
@@ -234,7 +334,7 @@ class ContextualizedTasksInfra(object):
         if cache_files is not None:
             # register cached files
             for cached_file in cache_files:
-                if '#' in cached_file:   # handle renaming
+                if '#' in cached_file:  # handle renaming
                     hdfs_path, target_name = cached_file.split('#')
                 else:
                     hdfs_path = cached_file
@@ -244,7 +344,8 @@ class ContextualizedTasksInfra(object):
                 sys.stdout.write('caching hdfs file %s as %s' % (cached_file, target_name))
                 query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
 
-        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir, is_dry_run=self.dry_run)
+        HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir,
+                                      is_dry_run=self.dry_run, aux_jars=aux_jars)
         for mdir in managed_output_dirs:
             mark_success(mdir)
 
@@ -355,7 +456,7 @@ class ContextualizedTasksInfra(object):
                    'jars': self.get_jars_list(jar_path, jars_from_lib),
                    'main_class': main_class,
                    'jar': jar}
-        command = TasksInfra.add_command_params(command, command_params)
+        command = TasksInfra.add_command_params(command, command_params, value_wrap='"')
         return self.run_bash(command).ok
 
     def get_jars_list(self, module_dir, jars_from_lib):
@@ -424,14 +525,15 @@ class ContextualizedTasksInfra(object):
                   % {'app_name': app_name if app_name else os.path.basename(main_py_file),
                      'execution_dir': module_dir,
                      'queue': queue,
-                     'files': "','".join(files),
+                     'files': ','.join(files),
                      'py_files_cmd': py_files_cmd,
                      'spark-confs': additional_configs,
-                     'jars': self.get_jars_list(module_dir, jars_from_lib) + ('%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
+                     'jars': self.get_jars_list(module_dir, jars_from_lib) + (
+                         ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                      'main_py': main_py_file
                      }
 
-        command = TasksInfra.add_command_params(command, command_params)
+        command = TasksInfra.add_command_params(command, command_params, value_wrap='"')
         return self.run_bash(command).ok
 
     def read_s3_configuration(self, property_key):
@@ -499,7 +601,16 @@ class ContextualizedTasksInfra(object):
 
     @property
     def mode_type(self):
-        return self.__get_common_args()['mode_type']
+        if 'mode_type' in self.__get_common_args():
+            return self.__get_common_args()['mode_type']
+        if 'mode' in self.__get_common_args():
+            mode = self.__get_common_args()['mode']
+            default_mode_types = {'snapshot': 'monthly',
+                                  'window': 'last-28',
+                                  'daily': 'daily'}
+            if mode in default_mode_types:
+                return default_mode_types[mode]
+        raise KeyError('unable to determine mode_type')
 
     @property
     def date_suffix(self):
