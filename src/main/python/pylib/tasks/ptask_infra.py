@@ -158,7 +158,7 @@ class TasksInfra(object):
 
     EXEC_WRAPPERS = {
         'python': '"',
-        'java': "'",
+        'java': '\\"\'\\"',
         'bash': "'"
     }
 
