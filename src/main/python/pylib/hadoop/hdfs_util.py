@@ -131,9 +131,10 @@ def get_hive_partition_values(base_path, column_name):
     return extract_hive_partition_values(relevant_paths, column_name)
 
 
-def list_all(paths):
+def list_dirs(paths):
     hdfs_client = create_client()
-    return [child['path'] for child in hdfs_client.ls([paths] if not isinstance(paths, list) else paths)]
+    return [child['path'] for child in hdfs_client.ls([paths] if not isinstance(paths, list) else paths) if
+            child['file_type'] == 'd']
 
 
 def list_files(paths):
