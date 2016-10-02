@@ -47,7 +47,7 @@ sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s &&
 
     def run_task(self, collection, task, date, mode, mode_type, input_base='/similargroup/data', output_base='/similargroup/data', dry_run=False, task_id=None, **kwargs):
         ptask_cmd = '%(python)s %(root)s/%(invoke)s -c %(root)s/%(collection)s --dt %(date)s --mode %(mode)s --mode-type %(mt)s \
-                     --base-dir %(base_dir)s --calc-dir %(calc_dir)s %(dry_run_opt)s %(extra_opts)s %(task)s' % \
+                     --base-dir %(base_dir)s --calc-dir %(calc_dir)s %(dry_run_opt)s %(task)s %(extra_opts)s' % \
                     {
                         'python': python_bin,
                         'root': self.execution_dir,
