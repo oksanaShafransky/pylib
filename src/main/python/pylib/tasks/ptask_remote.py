@@ -45,9 +45,9 @@ sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s &&
         self.docker_repository = repos
         self.image = image
 
-    def run_task(self, collection, task, date, mode, mode_type, input_base='/similargroup/data', output_base='/similargroup/data', dry_run=False, task_id=None, **kwargs):
+    def run_task(self, collection, task, date, mode, mode_type, input_base='/similargroup/data', output_base='/similargroup/data', table_prefix='', dry_run=False, task_id=None, **kwargs):
         ptask_cmd = '%(python)s %(root)s/%(invoke)s -c %(root)s/%(collection)s --dt %(date)s --mode %(mode)s --mode-type %(mt)s \
-                     --base-dir %(base_dir)s --calc-dir %(calc_dir)s %(dry_run_opt)s %(task)s %(extra_opts)s' % \
+                     --base-dir %(base_dir)s --calc-dir %(calc_dir)s %(dry_run_opt)s %(tp_opt)s %(task)s %(extra_opts)s' % \
                     {
                         'python': python_bin,
                         'root': self.execution_dir,
@@ -59,7 +59,8 @@ sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s &&
                         'base_dir': input_base,
                         'calc_dir': output_base,
                         'dry_run_opt': '--dr' if dry_run else '',
-                        'extra_opts': ' '.join(['--%s %s' % (param, str(value)) for (param, value) in kwargs.items()]),
+                        'tp_opt': ('--tp %s' % table_prefix) if (table_prefix is not None and table_prefix != '') else '',
+                        'extra_opts': ' '.join(['--%s %s' % (param.replace('_', '-'), str(value)) for (param, value) in kwargs.items()]),
                         'task': task
                     }
 
