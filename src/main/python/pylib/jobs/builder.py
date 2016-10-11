@@ -58,6 +58,8 @@ class JobBuilder(object):
     def __init__(self, job_name='MRJob'):
         os.environ['HADOOP_LOG_DIR'] = '/user/felixv/logs'
         self.stages = []
+        self.map_java_opts = []
+        self.reduce_java_opts = []
         self.args = [
             '--no-output',
             '--strict-protocols',
@@ -193,13 +195,33 @@ class JobBuilder(object):
 
         return self
 
-    def with_task_memory(self, megabytes, task_type='all'):
-        self.args += ['--jobconf', ('mapred.child.java.opts=-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes})]
+    def with_map_java_opts(self, child_java_opts):
+        self.map_java_opts += [child_java_opts]
 
+        return self
+
+    def with_reduce_java_opts(self, child_java_opts):
+        self.reduce_java_opts += [child_java_opts]
+
+        return self
+
+    def with_map_profiler(self):
+        self.map_java_opts += ['-agentpath:/opt/yjp/bin/libyjpagent.so']
+
+        return self
+
+    def with_reduce_profiler(self):
+        self.reduce_java_opts += ['-agentpath:/opt/yjp/bin/libyjpagent.so']
+
+        return self
+
+    def with_task_memory(self, megabytes, task_type='all'):
         if task_type == 'all' or task_type == 'map':
+            self.map_java_opts += ['-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes}]
             self.args += ['--jobconf', 'mapreduce.map.memory.mb=%d' % megabytes]
 
         if task_type == 'all' or task_type == 'reduce':
+            self.reduce_java_opts += ['-Xmx%(mems)dm -Xms%(mems)dm' % {'mems': megabytes}]
             self.args += ['--jobconf', 'mapreduce.reduce.memory.mb=%d' % megabytes]
 
         return self
@@ -300,6 +322,10 @@ class JobBuilder(object):
         return True, 'OK'
 
     def get_job(self, job_cls, runner='hadoop', **kwargs):
+        if self.map_java_opts:
+            self.args += ['--jobconf', ('mapreduce.map.java.opts=%s' % ' '.join(self.map_java_opts))]
+        if self.reduce_java_opts:
+            self.args += ['--jobconf', ('mapreduce.reduce.java.opts=%s' % ' '.join(self.reduce_java_opts))]
 
         check, msg = self.do_checks()
         if not check:
