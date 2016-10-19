@@ -34,6 +34,7 @@ class PtaskInvoker(Program):
         core_args = super(PtaskInvoker, self).core_args()
         extra_args = [
             Argument(names=('date', 'dt'), help="The task's logical day in ISO yyyy-MM-dd format", optional=True),
+            Argument(names=('execution_dir', 'ex'), help="The path of the execution dir", optional=False),
             Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's input", optional=True),
             Argument(names=('calc_dir', 'cd'), help="The HDFS base directory for the task's output", optional=True),
             Argument(names=('mode', 'm'), help="Run mode (snapshot/window/daily)", optional=True),
@@ -58,6 +59,8 @@ class PtaskInvoker(Program):
         sw_tasks = {}
         if self.args.date.value:
             sw_tasks['date'] = PtaskInvoker.__parse_date(self.args.date.value)
+        if self.args.execution_dir.value:
+            sw_tasks['execution_dir'] = self.args.execution_dir.value
         if self.args.base_dir.value:
             sw_tasks['base_dir'] = self.args.base_dir.value
         if self.args.calc_dir.value:
@@ -99,8 +102,6 @@ class PtaskInvoker(Program):
 
     def run(self, argv=None, **kwargs):
         try:
-            # add pylib to path
-            sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
             self._parse(argv)
             # Restrict a run to one task at a time
             assert len(self.tasks) == 1

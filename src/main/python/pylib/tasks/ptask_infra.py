@@ -21,10 +21,6 @@ from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs, get_file
 from pylib.sw_config.kv_factory import provider_from_config
 
-# The execution_dir should be a relative path to the project's top-level directory
-execution_dir = os.path.dirname(os.path.realpath(__file__)).replace('//', '/') + '/../../../..'
-
-
 class KeyValueProvider(object):
     conf = """{
              "pylib.sw_config.consul.ConsulProxy": {
@@ -186,7 +182,7 @@ class ContextualizedTasksInfra(object):
         :param ctx: invoke.context.Context
         """
         self.ctx = ctx
-        self.execution_dir = execution_dir
+        self.execution_dir = self.__get_common_args()['execution_dir']
 
     @staticmethod
     def __compose_infra_command(command):
