@@ -21,7 +21,8 @@ class PtaskConfig(Config):
                                         'force': True,
                                         'rerun': False,
                                         'dry_run': False,
-                                        'checks_only': False}
+                                        'checks_only': False,
+                                        'execution_dir': '.'}
         return global_defaults
 
 

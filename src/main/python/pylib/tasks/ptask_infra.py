@@ -182,22 +182,19 @@ class ContextualizedTasksInfra(object):
         :param ctx: invoke.context.Context
         """
         self.ctx = ctx
-        self.execution_dir = self.__get_common_args()['execution_dir']
 
-    @staticmethod
-    def __compose_infra_command(command):
-        ans = 'source %s/scripts/common.sh && %s' % (execution_dir, command)
+    def __compose_infra_command(self, command):
+        ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
         return ans
 
-    @staticmethod
-    def __with_rerun_root_queue(command):
-        return 'source %s/scripts/common.sh && setRootQueue reruns && %s' % (execution_dir, command)
+    def __with_rerun_root_queue(self, command):
+        return 'source %s/scripts/common.sh && setRootQueue reruns && %s' % (self.execution_dir, command)
 
     def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, rerun_root_queue=False):
         command = self.__compose_infra_command(
             'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
             {
-                'base_dir': execution_dir,
+                'base_dir': self.execution_dir,
                 'jar_relative_path': jar_path,
                 'jar': jar_name,
                 'class': main_class
@@ -234,7 +231,7 @@ class ContextualizedTasksInfra(object):
         return self.__is_hdfs_collection_valid(directories, min_size_bytes, validate_marker)
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
-        command = self.__compose_infra_command('pyexecute %s/%s' % (execution_dir, python_executable))
+        command = self.__compose_infra_command('pyexecute %s/%s' % (self.execution_dir, python_executable))
         command = TasksInfra.add_command_params(command, command_params, TasksInfra.EXEC_WRAPPERS['python'], *positional)
         return command
 
@@ -389,7 +386,7 @@ class ContextualizedTasksInfra(object):
 
     def run_r(self, r_executable, command_params):
         return self.run_bash(self.__compose_infra_command(
-            "execute Rscript %s/%s %s" % (execution_dir, r_executable, ' '.join(command_params)))).ok
+            "execute Rscript %s/%s %s" % (self.execution_dir, r_executable, ' '.join(command_params)))).ok
 
     def latest_monthly_success_date(self, directory, month_lookback, date=None):
         d = date.strftime('%Y-%m-%d') if date is not None else self.__get_common_args()['date']
@@ -676,6 +673,10 @@ class ContextualizedTasksInfra(object):
     @property
     def has_task_id(self):
         return self.__get_common_args()['has_task_id']
+
+    @property
+    def execution_dir(self):
+        return self.__get_common_args()['execution_dir']
 
     if __name__ == '__main__':
         command = "source /home/felixv/cdh5/pylib/tasks/../../scripts/common.sh && execute hadoopexec /home/felixv/cdh5/pylib/tasks/../../analytics analytics.jar com.similargroup.common.utils.SqlExportUtil  -cs jdbc:mysql://mysql-ga.vip.sg.internal:3306/swga?user=swga\&password=swga\!23 -q 'select domain, country as country_name, deviceId, users, visits from websites_countries_data where year=2016 and month=6 and day=1' -ot parquet -out /similargroup/ga/daily/website-data/year=16/month=06/day=01"
