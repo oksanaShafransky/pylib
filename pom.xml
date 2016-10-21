@@ -29,7 +29,7 @@
                         </goals>
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="build-install" if="build.python">
+                            <target name="build-install" unless="teamcity.exec" if="build.python">
                                 <exec executable="${build_pythonenv}/pip.exe" osfamily="windows" dir="${project.basedir}/src/main/python">
                                     <arg line="install -e ."/>
                                 </exec>
