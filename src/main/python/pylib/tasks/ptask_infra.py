@@ -467,6 +467,7 @@ class ContextualizedTasksInfra(object):
         return self.run_bash(command).ok
 
     def get_jars_list(self, module_dir, jars_from_lib):
+        # TODO: use pylib - should include all jars?
         if jars_from_lib:
             jars_from_lib = map(lambda x: '%s.jar' % x, jars_from_lib)
         else:
