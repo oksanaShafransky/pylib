@@ -21,9 +21,6 @@ std_hadoop_home = '/usr/bin/hadoop'
 user_path = 'USER'
 yarn_queue_param = 'JOB_QUEUE'
 
-lib_path = '~'
-lib_file = 'installed_pylib_src.zip'
-
 DFS_BLOCK_SIZE = 128
 
 
@@ -63,8 +60,6 @@ class JobBuilder(object):
             '--no-output',
             '--strict-protocols',
             '--cleanup', 'NONE',
-            #'--archive', '%s/%s#%s' % (lib_path, lib_file, lib_file),
-            '--setup', 'export PYTHONPATH=$PYTHONPATH:./%s/%s' % (lib_file, lib_file[:lib_file.rfind('.')]),
             '--jobconf', ('mapreduce.job.name=%s' % job_name),
             '--jobconf', ('mapreduce.map.failures.maxpercent=%d' % self.max_map_fail_percentage),
             '--jobconf', ('mapreduce.map.maxattempts=%d' % self.max_map_task_fails),
