@@ -13,4 +13,38 @@
     <properties>
         <build.prop.dir>..</build.prop.dir>
     </properties>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-antrun-plugin</artifactId>
+                    <executions>
+                        <execution>
+                            <id>python-install</id>
+                            <phase>install</phase>
+                            <goals>
+                                <goal>run</goal>
+                            </goals>
+                            <configuration>
+                                <skip>${skip_local_python_install}</skip>
+                                <exportAntProperties>true</exportAntProperties>
+                                <target name="build-install" unless="teamcity.exec" if="build.python" >
+                                    <exec executable="${build_python_path}pip.exe" osfamily="windows"
+                                          dir="${project.basedir}/src/main/python">
+                                        <arg line="install -e ."/>
+                                    </exec>
+                                    <exec executable="${build_python_path}pip" osfamily="unix"
+                                          dir="${project.basedir}/src/main/python">
+                                        <arg line="install -e ."/>
+                                    </exec>
+                                </target>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 </project>
