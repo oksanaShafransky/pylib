@@ -83,7 +83,7 @@ class JobBuilder(object):
         self.follow_ups = []
 
         self.add_follow_up(PostJobHandler([PrintRecorder()]).handle_job)
-        self.include_dir('/opt/anaconda/envs/mrp27/lib/python2.7/site-packages/pylib')
+        self.include_absolute_dir('/opt/anaconda/envs/mrp27/lib/python2.7/site-packages','pylib')
 
     def with_combined_text_input(self, split_size=128 * 1024 * 1024):
         self.args += ['--hadoop-arg', '-libjars']
@@ -289,6 +289,13 @@ class JobBuilder(object):
         ret = '/tmp/%d.tar.gz' % JobBuilder.GZ_COUNTER
         JobBuilder.GZ_COUNTER += 1
         return ret
+
+    def include_absolute_dir(self, parent_dir_path, base_dir_path):
+        archive_name = self.get_next_gz()
+        self.add_setup_cmd('tar -zcvf %s -C %s %s' % (archive_name, parent_dir_path, base_dir_path))
+        self.args += ['--python-archive', '%s' % archive_name]
+        self.add_follow_up_cmd('rm %s' % archive_name)
+        return self
 
     def include_dir(self, dir_path):
         archive_name = self.get_next_gz()
