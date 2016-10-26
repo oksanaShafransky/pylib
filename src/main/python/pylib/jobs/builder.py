@@ -21,7 +21,7 @@ std_hadoop_home = '/usr/bin/hadoop'
 user_path = 'USER'
 yarn_queue_param = 'JOB_QUEUE'
 
-lib_path = os.path.abspath('~/')
+lib_path = '~'
 lib_file = 'installed_pylib_src.zip'
 
 DFS_BLOCK_SIZE = 128
