@@ -63,7 +63,7 @@ class JobBuilder(object):
             '--no-output',
             '--strict-protocols',
             '--cleanup', 'NONE',
-            '--archive', '%s/%s#%s' % (lib_path, lib_file, lib_file),
+            #'--archive', '%s/%s#%s' % (lib_path, lib_file, lib_file),
             '--setup', 'export PYTHONPATH=$PYTHONPATH:./%s/%s' % (lib_file, lib_file[:lib_file.rfind('.')]),
             '--jobconf', ('mapreduce.job.name=%s' % job_name),
             '--jobconf', ('mapreduce.map.failures.maxpercent=%d' % self.max_map_fail_percentage),
@@ -83,6 +83,7 @@ class JobBuilder(object):
         self.follow_ups = []
 
         self.add_follow_up(PostJobHandler([PrintRecorder()]).handle_job)
+        self.include_dir('/opt/anaconda/envs/mrp27/lib/python2.7/site-packages/pylib')
 
     def with_combined_text_input(self, split_size=128 * 1024 * 1024):
         self.args += ['--hadoop-arg', '-libjars']
