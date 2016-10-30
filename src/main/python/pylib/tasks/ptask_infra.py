@@ -21,35 +21,6 @@ from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs, get_file
 from pylib.sw_config.kv_factory import provider_from_config
 
-class KeyValueProvider(object):
-    conf = """{
-             "pylib.sw_config.consul.ConsulProxy": {
-                 "server":"consul.service.production"
-             },
-             "pylib.sw_config.etcd_kv.EtcdProxy": {
-                 "server":"etcd.service.production",
-                 "port": 4001,
-                 "root_path": "v1/production"
-             }
-             }"""
-    conf = provider_from_config(conf)
-
-    @staticmethod
-    def get(key):
-        return KeyValueProvider.conf.get(key)
-
-    @staticmethod
-    def set(key, value):
-        return KeyValueProvider.conf.set(key, value)
-
-    @staticmethod
-    def delete(key):
-        return KeyValueProvider.conf.delete(key)
-
-    @staticmethod
-    def subkeys(key):
-        return KeyValueProvider.conf.sub_keys(key)
-
 
 class KeyValueProvider(object):
     conf = """{
