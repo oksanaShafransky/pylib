@@ -1,8 +1,9 @@
 
-from pyspark.sql.functions import abs, min, isnan
+from pyspark.sql.functions import abs, min, isnan, isnull, coalesce
 
 
-def df_compare(df_left, df_right, join_columns, sort_by_column, threshold=0.01, cmp_type='abs', col_trans_left=None, col_trans_right=None):
+def df_compare(df_left, df_right, join_columns, sort_by_column, threshold=0.01, cmp_type='abs',
+               col_trans_left=None, col_trans_right=None):
     common_columns = set(df_left.columns).intersection(df_right.columns)
     merged_columns = list(join_columns)
     compared_columns = common_columns - set(merged_columns)
@@ -20,5 +21,33 @@ def df_compare(df_left, df_right, join_columns, sort_by_column, threshold=0.01, 
                                  abs(right_joint['%s_right' % cmp_col] - left_joint['%s_left' % cmp_col]) /
                                  min(right_joint['%s_right' % cmp_col], left_joint['%s_left' % cmp_col]))
 
-    filtered = joint.filter(~ isnan(joint['%s_right' % sort_by_column]) & ~ isnan(joint['%s_left' % sort_by_column]))
-    return filtered.orderBy('%s_diff' % sort_by_column, ascending=False)
+    return joint \
+        .filter(~ isnan(joint['%s_right' % sort_by_column]) & ~ isnan(joint['%s_left' % sort_by_column])) \
+        .filter(abs(joint['%s_right' % sort_by_column] - joint['%s_left' % sort_by_column]) /
+                min(joint['%s_right' % sort_by_column] - joint['%s_left' % sort_by_column]) > threshold) \
+        .orderBy('%s_diff' % sort_by_column, ascending=False)
+
+
+def df_diff(df_left, df_right, join_columns, sort_by_column, col_trans_left=None, col_trans_right=None):
+    left_2_join, right_2_join = df_left, df_right
+    for col in join_columns:
+        left_2_join = left_2_join.withColumn('%s_ind' % col, left_2_join[col])
+        right_2_join = right_2_join.withColumn('%s_ind' % col, right_2_join[col])
+
+    left_joint = df_left.join(right_2_join, on=list(join_columns), how='left_outer')
+    right_missing = left_joint \
+        .withColumn('join_indicator', coalesce(*['%s_ind' % col for col in join_columns])) \
+        .filter(isnull('join_indicator'))
+
+    right_joint = df_right.join(left_2_join, on=list(join_columns), how='left_outer')
+    left_missing = right_joint \
+        .withColumn('join_indicator', coalesce(*['%s_ind' % col for col in join_columns])) \
+        .filter(isnull('join_indicator'))
+
+    if sort_by_column is None:
+        return right_missing, left_missing
+    else:
+        left_ret = right_missing.filter(~ isnan(df_left[sort_by_column])).orderBy(df_left[sort_by_column], ascending=False)
+        right_ret = left_missing.filter(~ isnan(df_left[sort_by_column])).orderBy(df_left[sort_by_column], ascending=False)
+
+    return left_ret, right_ret
