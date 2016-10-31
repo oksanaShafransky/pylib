@@ -1,5 +1,5 @@
 
-from pyspark.sql.functions import abs, min, isnan, isnull, coalesce
+from pyspark.sql.functions import abs, min, isnan, isnull, coalesce, least
 
 
 def df_compare(df_left, df_right, join_columns, sort_by_column, threshold=0.01, cmp_type='abs',
@@ -19,16 +19,16 @@ def df_compare(df_left, df_right, join_columns, sort_by_column, threshold=0.01, 
                                  abs(right_joint['%s_right' % cmp_col] - left_joint['%s_left' % cmp_col])
                                  if cmp_type.lower() in ['abs', 'absolute'] else
                                  abs(right_joint['%s_right' % cmp_col] - left_joint['%s_left' % cmp_col]) /
-                                 min(right_joint['%s_right' % cmp_col], left_joint['%s_left' % cmp_col]))
+                                 least(right_joint['%s_right' % cmp_col], left_joint['%s_left' % cmp_col]))
 
     return joint \
         .filter(~ isnan(joint['%s_right' % sort_by_column]) & ~ isnan(joint['%s_left' % sort_by_column])) \
-        .filter(abs(joint['%s_right' % sort_by_column] - joint['%s_left' % sort_by_column]) /
-                min(joint['%s_right' % sort_by_column] - joint['%s_left' % sort_by_column]) > threshold) \
+        .filter((abs(joint['%s_right' % sort_by_column] - joint['%s_left' % sort_by_column]) /
+                least(joint['%s_right' % sort_by_column], joint['%s_left' % sort_by_column])) > threshold) \
         .orderBy('%s_diff' % sort_by_column, ascending=False)
 
 
-def df_diff(df_left, df_right, join_columns, sort_by_column, col_trans_left=None, col_trans_right=None):
+def df_diff(df_left, df_right, join_columns, sort_by_column=None, col_trans_left=None, col_trans_right=None):
     left_2_join, right_2_join = df_left, df_right
     for col in join_columns:
         left_2_join = left_2_join.withColumn('%s_ind' % col, left_2_join[col])
