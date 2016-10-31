@@ -1,17 +1,22 @@
 # ! /usr/bin/env python
-import calendar
 import logging
 import os
-import random
-import signal
-import six
 import subprocess
-import sys
+import random
+import calendar
+
+import six
 from datetime import *
-from dateutil.relativedelta import relativedelta
-from os import listdir
 from os.path import isfile, join
+from os import listdir
+
 from six.moves.urllib.parse import urlparse
+
+from dateutil.relativedelta import relativedelta
+import sys
+import signal
+
+import random
 
 GLOBAL_DRYRUN = False  # This is crazy ugly, should allow executor to deploy jars
 
@@ -146,7 +151,6 @@ def get_monthly_where(year, month, day=None, table_prefix=None):
             result += ' AND day=%02d' % day
     return result
 
-
 def get_day_range_where_clause(year, month, day, window_size):
     if int(year) < 100:
         end_date = datetime(2000 + int(year), int(month), int(day)).date()
@@ -188,6 +192,15 @@ def deploy_jar(deploy_path, jar_hdfs_location):
     subprocess.call(["hadoop", "fs", "-put", deploy_path + "/analytics.jar", jar_hdfs_location + "/analytics.jar"])
     subprocess.call(
         ["hadoop", "fs", "-put", deploy_path + "/lib/common-1.0.jar", jar_hdfs_location + "/common.jar"])
+
+
+# use ['add jar %s' % jar for jar in detect_jars(...) ]
+def detect_jars(deploy_path, lib_path="lib"):
+    main_jars = [jar for jar in listdir(deploy_path) if isfile(join(deploy_path, jar)) and jar.endswith('.jar')]
+    full_lib_path = join(deploy_path, lib_path)
+    lib_jars = [jar for jar in listdir(full_lib_path) if isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
+
+    return lib_jars + main_jars
 
 
 def deploy_all_jars(deploy_path, jar_hdfs_location, lib_path="lib", lib_jars_filter=None):
@@ -345,15 +358,13 @@ def deploy_jars(f):
     return lambda *args, **kwargs: invoke(f, *args, **kwargs)
 
 
-def detect_jars(path):
-    jars = ['%s/%s' % (path, jar) for jar in listdir(path) if
-            isfile(join(path, jar)) and jar.endswith('.jar')]
-    return jars
-
-
 def detect_local_jars(path):
     full_lib_path = join(path, 'lib')
-    return detect_jars(full_lib_path) + detect_jars(path)
+    lib_jars = ['%s/%s' % (full_lib_path, jar) for jar in listdir(full_lib_path) if
+                isfile(join(full_lib_path, jar)) and jar.endswith('.jar')]
+    main_jars = ['%s/%s' % (path, jar) for jar in listdir(path) if
+                 isfile(join(path, jar)) and jar.endswith('.jar')]
+    return lib_jars + main_jars
 
 
 def parse_date(dt):
