@@ -32,7 +32,7 @@ def file_exists(file_path, hdfs_client=None):
     if not hdfs_client:
         hdfs_client = create_client()
     try:
-        return hdfs_client.test(path=file_path)
+        return hdfs_client.test(path=file_path, directory=False)
     except FileNotFoundException:
         return False
 
@@ -176,3 +176,15 @@ def mkdir(dir_path, hdfs_client=None):
     if not hdfs_client:
         hdfs_client = create_client()
     hdfs_client.mkdir(paths=[dir_path], create_parent=True).next()
+
+
+def change_file_extension(path, new_ext, hdfs_client=None):
+    hdfs_client = hdfs_client or create_client()
+    if directory_exists(path, hdfs_client):
+        for dir_file in list_files(path):
+            change_file_extension(dir_file, new_ext, hdfs_client)
+    elif file_exists(path, hdfs_client):
+        last_dot = path.rfind('.')
+        new_name = (path[:last_dot] if last_dot > 0 else path) + '.' + new_ext
+        hdfs_client.rename([path], new_name).next()
+
