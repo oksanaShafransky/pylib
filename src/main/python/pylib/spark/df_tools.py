@@ -24,11 +24,13 @@ def df_compare(df_left, df_right, join_columns, sort_by_column, threshold=0.01, 
 
     left_joint, right_joint = df_left, df_right
 
-    for old_name, rename in col_trans_left.items():
-        left_joint = left_joint.withColumnRenamed(old_name, rename)
+    if col_trans_left is not None:
+        for old_name, rename in col_trans_left.items():
+            left_joint = left_joint.withColumnRenamed(old_name, rename)
 
-    for old_name, rename in col_trans_right.items():
-        right_joint = right_joint.withColumnRenamed(old_name, rename)
+    if col_trans_right is not None:
+        for old_name, rename in col_trans_right.items():
+            right_joint = right_joint.withColumnRenamed(old_name, rename)
 
     for com_col in compared_columns:
         left_joint = left_joint.withColumnRenamed(com_col, '%s_left' % com_col)
@@ -64,13 +66,15 @@ def df_diff(df_left, df_right, join_columns, sort_by_column=None, col_trans_left
     left_joint, right_joint = df_left, df_right
     left_2_join, right_2_join = df_left, df_right
 
-    for old_name, rename in col_trans_left.items():
-        left_joint = left_joint.withColumnRenamed(old_name, rename)
-        left_2_join = left_2_join.withColumnRenamed(old_name, rename)
+    if col_trans_left is not None:
+        for old_name, rename in col_trans_left.items():
+            left_joint = left_joint.withColumnRenamed(old_name, rename)
+            left_2_join = left_2_join.withColumnRenamed(old_name, rename)
 
-    for old_name, rename in col_trans_right.items():
-        right_joint = right_joint.withColumnRenamed(old_name, rename)
-        right_2_join = right_2_join.withColumnRenamed(old_name, rename)
+    if col_trans_right is not None:
+        for old_name, rename in col_trans_right.items():
+            right_joint = right_joint.withColumnRenamed(old_name, rename)
+            right_2_join = right_2_join.withColumnRenamed(old_name, rename)
 
     for col in join_columns:
         left_2_join = left_2_join.withColumn('%s_ind' % col, left_2_join[col])
