@@ -2,49 +2,526 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <groupId>com.similargroup</groupId>
     <artifactId>pylib</artifactId>
+    <version>1.0</version>
     <packaging>jar</packaging>
     <name>pylib</name>
-    <parent>
-        <groupId>com.similargroup</groupId>
-        <artifactId>build</artifactId>
-        <version>1.0</version>
-    </parent>
     <properties>
-        <build.prop.dir>..</build.prop.dir>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- set default values for ant variables used in build system as empty string -->
+        <main.basedir>${build.prop.dir}</main.basedir>
+        <build.deponly>false</build.deponly>
+        <java.version>1.8</java.version>
+        <build.prop.dir>./</build.prop.dir>
     </properties>
 
+
+    <repositories>
+        <repository>
+            <id>mvnrepository</id>
+            <url>http://repo1.maven.org/maven2</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+        </repository>
+        <repository>
+            <id>similar-bigdata</id>
+            <url>https://artifactory.similarweb.io/artifactory/list/similar-bigdata</url>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+    </repositories>
+
     <build>
+        <finalName>${project.artifactId}</finalName>
         <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-resources-plugin</artifactId>
+                    <version>2.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-install-plugin</artifactId>
+                    <version>2.5.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.scalatest</groupId>
+                    <artifactId>scalatest-maven-plugin</artifactId>
+                    <version>1.0-RC2</version>
+                </plugin>
+
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-failsafe-plugin</artifactId>
+                    <version>2.16</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.17</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.avro</groupId>
+                    <artifactId>avro-maven-plugin</artifactId>
+                    <version>1.7.6</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jsonschema2pojo</groupId>
+                    <artifactId>jsonschema2pojo-maven-plugin</artifactId>
+                    <version>0.4.22</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>2.8</version>
+                </plugin>
+
+                <!--This plugin's configuration is used to store Eclipse
+                        m2e settings only. It has no influence on the Maven build itself. -->
+                <plugin>
+                    <groupId>org.eclipse.m2e</groupId>
+                    <artifactId>lifecycle-mapping</artifactId>
+                    <version>1.0.0</version>
+                    <configuration>
+                        <lifecycleMappingMetadata>
+                            <pluginExecutions>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-dependency-plugin</artifactId>
+                                        <versionRange>[2.8,)</versionRange>
+                                        <goals>
+                                            <goal>copy-dependencies</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore/>
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.codehaus.mojo</groupId>
+                                        <artifactId>properties-maven-plugin</artifactId>
+                                        <versionRange>[1.0-alpha-2,)</versionRange>
+                                        <goals>
+                                            <goal>read-project-properties</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <execute/>
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.maven.plugins</groupId>
+                                        <artifactId>maven-antrun-plugin</artifactId>
+                                        <versionRange>[1.7,)</versionRange>
+                                        <goals>
+                                            <goal>run</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <execute>
+                                            <runOnIncremental>false</runOnIncremental>
+                                        </execute>
+                                    </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.apache.avro</groupId>
+                                        <artifactId>avro-maven-plugin</artifactId>
+                                        <versionRange>[1.7,)</versionRange>
+                                        <goals>
+                                            <goal>schema</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <execute/>
+                                    </action>
+                                </pluginExecution>
+                            </pluginExecutions>
+                        </lifecycleMappingMetadata>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>properties-maven-plugin</artifactId>
+                    <version>1.0-alpha-2</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-antrun-plugin</artifactId>
+                    <version>1.7</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>2.8.1</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.gmavenplus</groupId>
+                    <artifactId>gmavenplus-plugin</artifactId>
+                    <version>1.3</version>
                     <executions>
                         <execution>
-                            <id>python-install</id>
-                            <phase>install</phase>
                             <goals>
-                                <goal>run</goal>
+                                <goal>addSources</goal>
+                                <goal>addTestSources</goal>
+                                <goal>generateStubs</goal>
+                                <goal>testCompile</goal>
+                                <goal>removeStubs</goal>
+                                <goal>removeTestStubs</goal>
                             </goals>
-                            <configuration>
-                                <skip>${skip_local_python_install}</skip>
-                                <exportAntProperties>true</exportAntProperties>
-                                <target name="build-install" unless="teamcity.exec" if="build.python" >
-                                    <exec executable="${build_python_path}pip.exe" osfamily="windows"
-                                          dir="${project.basedir}/src/main/python">
-                                        <arg line="install -e ."/>
-                                    </exec>
-                                    <exec executable="${build_python_path}pip" osfamily="unix"
-                                          dir="${project.basedir}/src/main/python">
-                                        <arg line="install -e ."/>
-                                    </exec>
-                                </target>
-                            </configuration>
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>2.4</version>
+                </plugin>
             </plugins>
         </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>readProp</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <quiet>true</quiet>
+                            <files>
+                                <file>${main.basedir}/build.properties</file>
+                                <file>${main.basedir}/local-build.properties</file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>python-build</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target name="build-python">
+                                <exec executable="python.exe" osfamily="windows"
+                                      dir="${project.basedir}/src/main/python">
+                                    <arg line="setup.py egg_info --tag-build dev
+                                    build --build-base ${project.basedir}/target/python-packages
+                                          --build-lib ${project.basedir}/target/python-packages/lib
+                                    sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
+                                    bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
+                                    bdist_egg --dist-dir ${project.basedir}/target/python-packages
+                                    "/>
+                                </exec>
+                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}/src/main/python">
+                                    <arg line="setup.py egg_info --tag-build dev
+                                    build --build-base ${project.basedir}/target/python-packages
+                                          --build-lib ${project.basedir}/target/python-packages/lib
+                                    sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
+                                    bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
+                                    bdist_egg --dist-dir ${project.basedir}/target/python-packages
+                                    "/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>python-test</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target name="test-python" unless="skipTests">
+                                <exec executable="pip.exe" osfamily="windows"
+                                      dir="${project.basedir}/src/main/python" failonerror="true">
+                                    <arg line="install --upgrade -i  https://artifactory.similarweb.io/api/pypi/similar-pypi/simple sw_pylib"/>
+                                </exec>
+                                <exec executable="${build_python_path}pip" osfamily="unix" dir="${project.basedir}/src/main/python"
+                                      failonerror="true">
+                                    <arg line="install --upgrade -i  https://artifactory.similarweb.io/api/pypi/similar-pypi/simple sw_pylib"/>
+                                </exec>
+                                <exec executable="python.exe" osfamily="windows"
+                                      dir="${project.basedir}/src/main/python" failonerror="true">
+                                    <arg line="setup.py pytest"/>
+                                </exec>
+                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}/src/main/python"
+                                      failonerror="true">
+                                    <arg line="setup.py pytest"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>python-install</id>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <skip>${skip_local_python_install}</skip>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target name="install-python" unless="teamcity.exec" >
+                                <exec executable="${build_python_path}pip.exe" osfamily="windows"
+                                      dir="${project.basedir}/src/main/python">
+                                    <arg line="install -e ."/>
+                                </exec>
+                                <exec executable="${build_python_path}pip" osfamily="unix"
+                                      dir="${project.basedir}/src/main/python">
+                                    <arg line="install -e ."/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>python-deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target name="deploy-python">
+                                <exec executable="python.exe" osfamily="windows"
+                                      dir="${project.basedir}/src/main/python">
+                                    <arg line="setup.py egg_info --tag-build dev
+                                sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
+                                bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
+                                bdist_egg --dist-dir ${project.basedir}/target/python-packages upload -r artifactory
+                                "/>
+                                </exec>
+                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}/src/main/python">
+                                    <arg line="setup.py egg_info --tag-build dev
+                                sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
+                                bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
+                                bdist_egg --dist-dir ${project.basedir}/target/python-packages upload -r artifactory
+                                "/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>getMainBaseDir</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target>
+                                <!--Adjust the location below to your directory structure -->
+                                <property name="main.basedir" location="./${build.prop.dir}"/>
+                                <echo message="main.basedir=${main.basedir}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>getGit</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target unless="teamcity.exec">
+                                <property name="build_counter" value="42"/>
+                                <exec executable="git" outputproperty="git_longrevision" failifexecutionfails="false"
+                                      errorproperty="">
+                                    <arg value="log"/>
+                                    <arg value="-1"/>
+                                    <arg value="--pretty=format:%H"/>
+                                </exec>
+                                <exec executable="git" outputproperty="git_shortrevision" failifexecutionfails="false"
+                                      errorproperty="">
+                                    <arg value="log"/>
+                                    <arg value="-1"/>
+                                    <arg value="--pretty=format:%h"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>echoProps</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target>
+                                <echo message="build_version=${build_version}"/>
+                                <echo message="git.revision=${git_longrevision}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>echoTS</id>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target if="teamcity.exec">
+                                <echo message="##teamcity[buildNumber '${build_version}']"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>writeProps</id>
+                        <phase>process-classes</phase>
+                        <configuration>
+                            <target>
+                                <tstamp>
+                                    <format property="current.build.time" pattern="dd MMM yyyy HH:mm:ss  Z"/>
+                                </tstamp>
+                                <echo file="${project.build.outputDirectory}/build.properties">
+                                    build.time=${current.build.time}
+                                    build_version=${build_version}
+                                    vcs.revision=${git_longrevision}
+                                    os.name=${os.name}
+                                    os.arch=${os.arch}
+                                    os.version=${os.version}
+                                    user.name=${user.name}
+                                    user.home=${user.home}
+                                    user.dir=${user.dir}
+                                </echo>
+                            </target>
+                        </configuration>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>2.5.1</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/libsForHadoop</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <excludeTransitive>true</excludeTransitive>
+                            <excludeGroupIds>
+                                org.apache.hadoop,org.apache.hbase,org.apache.hive,junit,org.apache.spark,org.scalatest,org.scala-lang
+                            </excludeGroupIds>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-transient-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/alllib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                            <excludeTransitive>false</excludeTransitive>
+                            <!--<includeGroupIds>org.apache.hadoop,org.apache.hbase,org.apache.hive,junit,mysql,com.googlecode.json-simple,org.graylog2,log4j</includeGroupIds>-->
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.1</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.4.1</version>
+                <configuration>
+                    <tagNameFormat>v@{build_version}</tagNameFormat>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>2.6</version>
+            </plugin>
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.0.0</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>process</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>package</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>lib</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>src/main/python/build</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+            </testResource>
+        </testResources>
     </build>
 </project>
