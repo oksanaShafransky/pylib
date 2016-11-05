@@ -300,14 +300,14 @@
                             <target name="deploy-python" unless="teamcity.exec">
                                 <exec executable="python.exe" osfamily="windows"
                                       dir="${project.basedir}">
-                                    <arg line="setup.py egg_info --tag-build .dev${git_shortrevision}
+                                    <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
                                 sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                 bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                 bdist_egg --dist-dir ${project.basedir}/target/python-packages
                                 upload -r artifactory"/>
                                 </exec>
                                 <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}">
-                                    <arg line="setup.py egg_info --tag-build .dev${git_shortrevision}
+                                    <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
                                 sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                 bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                 bdist_egg --dist-dir ${project.basedir}/target/python-packages
