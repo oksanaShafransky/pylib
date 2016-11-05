@@ -63,3 +63,5 @@ Vagrant*
 
 **/.cache/
 /local-build.properties
+.eggs
+build

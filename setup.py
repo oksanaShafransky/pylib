@@ -2,6 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='sw_pylib',
+    version='1.0.0',
     packages=find_packages(),
     zip_safe=True,
     install_requires=['invoke==0.12.2', 'tld', 'mrjob==0.5.2', 'redis', 'snakebite', 'redis', 'ujson==1.33', 'mrjob==0.5.2', 'consulate==0.6.0', 'python-etcd==0.3.3', 'urllib3==1.16'],
