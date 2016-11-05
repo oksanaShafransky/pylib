@@ -280,11 +280,11 @@
                             <target name="install-python" unless="teamcity.exec" >
                                 <exec executable="${build_python_path}pip.exe" osfamily="windows"
                                       dir="${project.basedir}">
-                                    <arg line="install ."/>
+                                    <arg line="install -e ."/>
                                 </exec>
                                 <exec executable="${build_python_path}pip" osfamily="unix"
                                       dir="${project.basedir}">
-                                    <arg line="install ."/>
+                                    <arg line="install -e ."/>
                                 </exec>
                             </target>
                         </configuration>
@@ -531,9 +531,6 @@
                         </fileset>
                         <fileset>
                             <directory>.cache</directory>
-                        </fileset>
-                        <fileset>
-                            <directory>ssw_pylib.egg-info</directory>
                         </fileset>
                     </filesets>
                 </configuration>
