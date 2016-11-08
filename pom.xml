@@ -219,7 +219,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
-                    <execution>
+                      <execution>
                         <id>python-build</id>
                         <phase>prepare-package</phase>
                         <goals>
@@ -227,21 +227,19 @@
                         </goals>
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="build-python">
+                            <target name="build-python" unless="teamcity.exec">
                                 <exec executable="python.exe" osfamily="windows"
-                                      dir="${project.basedir}/src/main/python">
-                                    <arg line="setup.py egg_info --tag-build dev
-                                    build --build-base ${project.basedir}/target/python-packages
-                                          --build-lib ${project.basedir}/target/python-packages/lib
+                                      dir="${project.basedir}">
+                                    <arg line="setup.py
+                                    build
                                     sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                     bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                     bdist_egg --dist-dir ${project.basedir}/target/python-packages
                                     "/>
                                 </exec>
-                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}/src/main/python">
-                                    <arg line="setup.py egg_info --tag-build dev
-                                    build --build-base ${project.basedir}/target/python-packages
-                                          --build-lib ${project.basedir}/target/python-packages/lib
+                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}">
+                                    <arg line="setup.py
+                                    build
                                     sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                     bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                     bdist_egg --dist-dir ${project.basedir}/target/python-packages
@@ -259,19 +257,11 @@
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
                             <target name="test-python" unless="skipTests">
-                                <exec executable="pip.exe" osfamily="windows"
-                                      dir="${project.basedir}/src/main/python" failonerror="true">
-                                    <arg line="install --upgrade -i  https://artifactory.similarweb.io/api/pypi/similar-pypi/simple sw_pylib"/>
-                                </exec>
-                                <exec executable="${build_python_path}pip" osfamily="unix" dir="${project.basedir}/src/main/python"
-                                      failonerror="true">
-                                    <arg line="install --upgrade -i  https://artifactory.similarweb.io/api/pypi/similar-pypi/simple sw_pylib"/>
-                                </exec>
                                 <exec executable="python.exe" osfamily="windows"
-                                      dir="${project.basedir}/src/main/python" failonerror="true">
+                                      dir="${project.basedir}" failonerror="true">
                                     <arg line="setup.py pytest"/>
                                 </exec>
-                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}/src/main/python"
+                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}"
                                       failonerror="true">
                                     <arg line="setup.py pytest"/>
                                 </exec>
@@ -289,39 +279,66 @@
                             <exportAntProperties>true</exportAntProperties>
                             <target name="install-python" unless="teamcity.exec" >
                                 <exec executable="${build_python_path}pip.exe" osfamily="windows"
-                                      dir="${project.basedir}/src/main/python">
-                                    <arg line="install -e ."/>
+                                      dir="${project.basedir}">
+                                    <arg line="install --ignore-installed -editable ."/>
                                 </exec>
                                 <exec executable="${build_python_path}pip" osfamily="unix"
-                                      dir="${project.basedir}/src/main/python">
-                                    <arg line="install -e ."/>
+                                      dir="${project.basedir}">
+                                    <arg line="install --ignore-installed --editable ."/>
                                 </exec>
                             </target>
                         </configuration>
                     </execution>
                     <execution>
-                        <id>python-deploy</id>
+                        <id>python-deploy-dev</id>
                         <phase>deploy</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="deploy-python">
+                            <target name="deploy-python" unless="teamcity.exec">
                                 <exec executable="python.exe" osfamily="windows"
-                                      dir="${project.basedir}/src/main/python">
-                                    <arg line="setup.py egg_info --tag-build dev
+                                      dir="${project.basedir}">
+                                    <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
                                 sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                 bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
-                                bdist_egg --dist-dir ${project.basedir}/target/python-packages upload -r artifactory
-                                "/>
+                                bdist_egg --dist-dir ${project.basedir}/target/python-packages
+                                upload -r artifactory"/>
                                 </exec>
-                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}/src/main/python">
-                                    <arg line="setup.py egg_info --tag-build dev
+                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}">
+                                    <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
                                 sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                 bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
-                                bdist_egg --dist-dir ${project.basedir}/target/python-packages upload -r artifactory
-                                "/>
+                                bdist_egg --dist-dir ${project.basedir}/target/python-packages
+                                upload -r artifactory"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>python-deploy-prod</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target name="deploy-python" if="teamcity.exec">
+                                <exec executable="python.exe" osfamily="windows"
+                                      dir="${project.basedir}">
+                                    <arg line="setup.py
+                                sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
+                                bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
+                                bdist_egg --dist-dir ${project.basedir}/target/python-packages
+                                upload -r artifactory"/>
+                                </exec>
+                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}">
+                                    <arg line="setup.py
+                                sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
+                                bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
+                                bdist_egg --dist-dir ${project.basedir}/target/python-packages
+                                upload -r artifactory"/>
                                 </exec>
                             </target>
                         </configuration>
@@ -507,7 +524,13 @@
                             <directory>lib</directory>
                         </fileset>
                         <fileset>
-                            <directory>src/main/python/build</directory>
+                            <directory>target</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>build</directory>
+                        </fileset>
+                        <fileset>
+                            <directory>.cache</directory>
                         </fileset>
                     </filesets>
                 </configuration>
@@ -515,12 +538,12 @@
         </plugins>
         <resources>
             <resource>
-                <directory>src/main/resources</directory>
+                <directory>pylib/resources</directory>
             </resource>
         </resources>
         <testResources>
             <testResource>
-                <directory>src/test/resources</directory>
+                <directory>tests/resources</directory>
             </testResource>
         </testResources>
     </build>

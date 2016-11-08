@@ -83,6 +83,20 @@ def delete_table(table_name):
         curr.execute('drop table %s' % table_name)
 
 
+def get_table_partition_info(table_name, partition):
+    partition_str = ', '.join(["%s='%s'" % (k, v) for k, v in partition.items()])
+
+    with get_hive_connection().cursor() as curr:
+        curr.execute('describe formatted %s partition (%s)' % (table_name, partition_str))
+        return list(curr.fetch())
+
+
+def drop_partition(table_name, partition):
+    partition_str = ', '.join(["%s='%s'" % (k, v) for k, v in partition.items()])
+    with get_hive_connection().cursor() as curr:
+        curr.execute('alter table %s drop if exists partition (%s)' % (table_name, partition_str))
+
+
 class TableProvided(object):
     def __init__(self, alias, table_name_resolver, path_param):
         self.table_alias = alias
