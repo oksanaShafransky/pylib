@@ -49,6 +49,7 @@ def compare_collectors(daily_agg_dir, date, mailing_list=None, threshold=0.05):
     report = ''
     for col in __list_collectors(daily_agg_dir, date=date):
         try:
+            print "Inspecting collector %s" % col
             curr_size = get_size('%s/%s/%s' % (daily_agg_dir, 'aggkey=%s' % col, __date_suffix(date)))
             previous_size = get_size(
                 '%s/%s/%s' % (daily_agg_dir, 'aggkey=%s' % col, __date_suffix(date + timedelta(days=-1))))
@@ -65,8 +66,12 @@ def compare_collectors(daily_agg_dir, date, mailing_list=None, threshold=0.05):
             if change > threshold:
                 report += '%s changed %.3f from yesterday, as opposed to %.3f daily a week ago, representing a %.2f ratio\n' % (
                     col, change, last_week_change, slope)
+            else:
+                print "No significant changes found for %s" % col
         except FileNotFoundException:
             print "Last week's data not found, skipping test for %s" % col
+        except Exception, e:
+            print "Error while inspecting %s: %s" % (col, str(e))
 
     # check if report is in fact empty
     if report == '':
