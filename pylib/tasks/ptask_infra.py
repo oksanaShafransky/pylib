@@ -87,26 +87,33 @@ class TasksInfra(object):
             return 'type=%s/year=%s/month=%s' % (mode_type, str(date.year)[2:], str(date.month).zfill(2))
 
     @staticmethod
-    def year_month_day(date):
+    def year_month_day(date, zero_padding=True):
         if date is None:
             raise AttributeError("date wasn't passed")
         year_str = str(date.year)[2:]
-        return 'year=%s/month=%s/day=%s' % (year_str, str(date.month).zfill(2), str(date.day).zfill(2))
+        if zero_padding:
+            return 'year=%s/month=%s/day=%s' % (year_str, str(date.month).zfill(2), str(date.day).zfill(2))
+        else:
+            return 'year=%s/month=%s/day=%s' % (year_str, date.month, date.day)
 
     @staticmethod
-    def year_month_day_country(date, country):
-        return '%s/country=%s' % (TasksInfra.year_month_day(date), country)
+    def year_month_day_country(date, country, zero_padding=True):
+        if zero_padding:
+            return '%s/country=%s' % (TasksInfra.year_month_day(date, zero_padding=zero_padding), country)
 
     @staticmethod
-    def year_month(date):
+    def year_month(date, zero_padding=True):
         if date is None:
             raise AttributeError("date wasn't passed")
         year_str = str(date.year)[2:]
-        return 'year=%s/month=%s' % (year_str, str(date.month).zfill(2))
+        if zero_padding:
+            return 'year=%s/month=%s' % (year_str, str(date.month).zfill(2))
+        else:
+            return 'year=%s/month=%s' % (year_str, date.month)
 
     @staticmethod
-    def year_month_country(date, country):
-        return '%s/country=%s' % (TasksInfra.year_month(date), country)
+    def year_month_country(date, country, zero_padding=True):
+        return '%s/country=%s' % (TasksInfra.year_month(date, zero_padding=zero_padding), country)
 
     @staticmethod
     def days_in_range(end_date, mode_type):
@@ -385,19 +392,23 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'],
                                               self.__get_common_args()['date'])
 
-    def year_month_day(self, date=None):
-        return TasksInfra.year_month_day(self.__get_common_args()['date'] if date is None else date)
+    def year_month_day(self, date=None, zero_padding=True):
+        return TasksInfra.year_month_day(self.__get_common_args()['date'] if date is None else date,
+                                         zero_padding=zero_padding)
 
     ymd = year_month_day
 
-    def year_month_day_country(self, country):
-        return TasksInfra.year_month_day_country(self.__get_common_args()['date'], country)
+    def year_month_day_country(self, country, zero_padding=True):
+        return TasksInfra.year_month_day_country(self.__get_common_args()['date'], country,
+                                                 zero_padding=zero_padding)
 
-    def year_month_country(self, country):
-        return TasksInfra.year_month_country(self.__get_common_args()['date'], country)
+    def year_month_country(self, country, zero_padding=True):
+        return TasksInfra.year_month_country(self.__get_common_args()['date'], country,
+                                             zero_padding=zero_padding)
 
-    def year_month(self):
-        return TasksInfra.year_month(self.__get_common_args()['date'])
+    def year_month(self, zero_padding=True):
+        return TasksInfra.year_month(self.__get_common_args()['date'],
+                                     zero_padding=zero_padding)
 
     ym = year_month
 
