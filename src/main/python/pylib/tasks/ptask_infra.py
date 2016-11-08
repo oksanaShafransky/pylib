@@ -408,21 +408,29 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.days_in_range(end_date, mode_type)
 
     # module is either 'mobile' or 'analytics'
-    def run_spark(self, main_class, module, queue, app_name, command_params, jars_from_lib=None):
+    def run_spark(self, main_class, module, queue, app_name, command_params, jars_from_lib=None, num_executors=None):
         jar = './mobile.jar' if module == 'mobile' else './analytics.jar'
         jar_path = '%s/%s' % (self.execution_dir, 'mobile' if module == 'mobile' else 'analytics')
+
+        additional_confs = ''
+
+        if num_executors is not None:
+            additional_confs += ' --num-executors %d' % num_executors
+
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
                   ' --conf "spark.yarn.tags=$TASK_ID"' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' --deploy-mode cluster' \
+                  ' %(add_opts)s ' \
                   ' --jars %(jars)s' \
                   ' --class %(main_class)s' \
                   ' %(jar)s ' % \
                   {'jar_path': jar_path,
                    'queue': queue,
                    'app_name': app_name,
+                   'add_opts': additional_confs,
                    'jars': self.get_jars_list(jar_path, jars_from_lib),
                    'main_class': main_class,
                    'jar': jar}
