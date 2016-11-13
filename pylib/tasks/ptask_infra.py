@@ -452,7 +452,7 @@ class ContextualizedTasksInfra(object):
                    'app_name': app_name,
                    'add_opts': additional_confs,
                    'jars': self.get_jars_list(jar_path, jars_from_lib),
-                   'files': ','.join(files),
+                   'files': ','.join(files or []),
                    'main_class': main_class,
                    'jar': jar}
 
@@ -487,8 +487,7 @@ class ContextualizedTasksInfra(object):
                      use_bigdata_defaults=False,
                      queue=None
                      ):
-        if files is None:
-            files = []
+
         additional_configs = ''
         module_dir = self.execution_dir + '/' + module
 
@@ -526,7 +525,7 @@ class ContextualizedTasksInfra(object):
                   % {'app_name': app_name if app_name else os.path.basename(main_py_file),
                      'execution_dir': module_dir,
                      'queue': queue,
-                     'files': ','.join(files),
+                     'files': ','.join(files or []),
                      'py_files_cmd': py_files_cmd,
                      'spark-confs': additional_configs,
                      'jars': self.get_jars_list(module_dir, jars_from_lib) + (
