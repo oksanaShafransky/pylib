@@ -38,10 +38,11 @@ class CompositeConfigurationProxy(KeyValueProxy):
     def __fetch_and_assert_equality(self, func, key, cmprtr=lambda val1, val2: val1 == val2):
         # Make sure that values across providers are equal (eliminate Nones)
         values = [item for item in [self.__catch(lambda: func(proxy, key)) for proxy in self.proxies] if
-                  item is not None]
+                  ((item is not None) and (item != [])) ]
 
         # If the result list is empty, that means that the values across proxies are all None (don't exist in the KV)
         if len(values) != 0:
+            #print [item for item in values]
             assert all(
                 [cmprtr(values[0], item) for item in values]), "Values for key %s are not equal across providers" % key
             return values[0]

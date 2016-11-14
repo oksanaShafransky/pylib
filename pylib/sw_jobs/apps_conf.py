@@ -22,6 +22,7 @@ class AppsEngagementConfig(object):
         self._countries = {}
         self._default_sqs_decay_factor = None
         self._countries_sqs_decay_factor = {}
+        self._base_env_confs = None
 
     @property
     def countries(self):
@@ -59,3 +60,11 @@ class AppsEngagementConfig(object):
             self._countries_sqs_decay_factor = dict([(country_code, self.conf.get('%s/ssm/%s' % (self.root, country_code)))
                                                      for country_code in countries])
         return self._countries_sqs_decay_factor
+
+    @property
+    def base_env_confs(self):
+
+        if self._base_env_confs is None:
+            self._base_env_confs = dict([(key, self.conf.get('%s/%s' % (self.root, key)))
+                                         for key in self.conf.sub_keys('%s' % self.root)])
+        return self._base_env_confs

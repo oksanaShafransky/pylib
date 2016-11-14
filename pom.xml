@@ -280,7 +280,7 @@
                             <target name="install-python" unless="teamcity.exec" >
                                 <exec executable="${build_python_path}pip.exe" osfamily="windows"
                                       dir="${project.basedir}">
-                                    <arg line="install --ignore-installed -editable ."/>
+                                    <arg line="install --ignore-installed --editable ."/>
                                 </exec>
                                 <exec executable="${build_python_path}pip" osfamily="unix"
                                       dir="${project.basedir}">
