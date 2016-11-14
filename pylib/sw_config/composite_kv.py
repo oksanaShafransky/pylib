@@ -42,7 +42,6 @@ class CompositeConfigurationProxy(KeyValueProxy):
 
         # If the result list is empty, that means that the values across proxies are all None (don't exist in the KV)
         if len(values) != 0:
-            #print [item for item in values]
             assert all(
                 [cmprtr(values[0], item) for item in values]), "Values for key %s are not equal across providers" % key
             return values[0]
