@@ -101,7 +101,7 @@ class TestContextualizedTasksInfra(object):
     def test_run_spark(self, monkeypatch):
         self._disable_invoke_debug()
         actual_commands = []
-        expected_regexp = '''cd .*/mobile;spark-submit --queue research_shared .* --name "TestRun" .*--jars .*/test.jar,.*/test2.jar --class com.similarweb.mobile.Test ./mobile.jar   -number %(wrap)s32%(wrap)s''' \
+        expected_regexp = '''cd .*/mobile;spark-submit --queue research_shared .* --name "TestRun" .*--jars .*/test.jar,.*/test2.jar --files "" --class com.similarweb.mobile.Test ./mobile.jar   -number %(wrap)s32%(wrap)s''' \
             % \
                 {
                     'wrap': TasksInfra.EXEC_WRAPPERS['bash']
