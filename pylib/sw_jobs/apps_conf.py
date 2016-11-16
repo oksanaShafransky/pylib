@@ -23,6 +23,9 @@ class AppsEngagementConfig(object):
         self._default_sqs_decay_factor = None
         self._countries_sqs_decay_factor = {}
         self._base_env_confs = None
+        self._device_weights_whitelist_per_country = None
+        self._users_weights_whitelist_per_country = None
+
 
     @property
     def countries(self):
@@ -81,8 +84,8 @@ class AppsEngagementConfig(object):
     @property
     def users_weights_whitelist_per_country(self):
 
-        if self.users_weights_whitelist_per_country is None:
+        if self._users_weights_whitelist_per_country is None:
 
-            self.users_weights_whitelist_per_country = dict([(key, self.conf.get('%s/users_sqs_whitelist/%s' % (self.root, key)))
+            self._users_weights_whitelist_per_country = dict([(key, self.conf.get('%s/users_sqs_whitelist/%s' % (self.root, key)))
                                                                for key in self.conf.sub_keys('%s/users_sqs_whitelist' % self.root)])
-            return self.users_weights_whitelist_per_country
+            return self._users_weights_whitelist_per_country
