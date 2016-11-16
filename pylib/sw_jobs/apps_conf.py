@@ -68,3 +68,21 @@ class AppsEngagementConfig(object):
             self._base_env_confs = dict([(key, self.conf.get('%s/%s' % (self.root, key)))
                                          for key in self.conf.sub_keys('%s' % self.root)])
         return self._base_env_confs
+
+    @property
+    def device_weights_whitelist_per_country(self):
+
+        if self._device_weights_whitelist_per_country is None:
+
+            self._device_weights_whitelist_per_country = dict([(key, self.conf.get('%s/devices_sqs_whitelist/%s' % (self.root, key)))
+                                         for key in self.conf.sub_keys('%s/devices_sqs_whitelist' % self.root)])
+            return self._device_weights_whitelist_per_country
+
+    @property
+    def users_weights_whitelist_per_country(self):
+
+        if self.users_weights_whitelist_per_country is None:
+
+            self.users_weights_whitelist_per_country = dict([(key, self.conf.get('%s/users_sqs_whitelist/%s' % (self.root, key)))
+                                                               for key in self.conf.sub_keys('%s/users_sqs_whitelist' % self.root)])
+            return self.users_weights_whitelist_per_country
