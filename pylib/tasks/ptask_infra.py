@@ -255,7 +255,8 @@ class ContextualizedTasksInfra(object):
 
     def get_redis_client(self):
         if self.redis is None:
-            self.redis = StrictRedis(host='redis-bigdata.service.production',
+            # self.redis = StrictRedis(host='redis-bigdata.service.production',
+            self.redis = StrictRedis(host='10.0.13.34',
                                      socket_timeout=15,
                                      socket_connect_timeout=15,
                                      retry_on_timeout=True)
