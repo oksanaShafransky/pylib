@@ -22,6 +22,8 @@ from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs, get_file
 from pylib.sw_config.kv_factory import provider_from_config
 
+logger = logging.getLogger('ptask')
+
 
 class KeyValueProvider(object):
     conf = """{
@@ -234,17 +236,22 @@ class ContextualizedTasksInfra(object):
         if isinstance(directories, six.string_types):
             directories = [directories]
 
-        if isinstance(directories, list):
-            for directory in directories:
-                lineage_value = lineage_value_template % {
-                    'execution_user': self.execution_user,
-                    'dag_id': self.dag_id,
-                    'task_id': self.task_id,
-                    'execution_dt': self.execution_dt,
-                    'directory': directory,
-                    'direction': direction
-                }
-                self.get_redis_client().rpush(lineage_key, lineage_value)
+        # Barak: this is not good we don't want to ignore lineage reporting
+        try:
+            client = self.get_redis_client()
+            if isinstance(directories, list):
+                for directory in directories:
+                    lineage_value = lineage_value_template % {
+                        'execution_user': self.execution_user,
+                        'dag_id': self.dag_id,
+                        'task_id': self.task_id,
+                        'execution_dt': self.execution_dt,
+                        'directory': directory,
+                        'direction': direction
+                    }
+                    client.rpush(lineage_key, lineage_value)
+        except:
+            logger.error('failed reporting lineage')
 
     def get_redis_client(self):
         if self.redis is None:
