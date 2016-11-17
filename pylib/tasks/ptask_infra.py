@@ -238,7 +238,6 @@ class ContextualizedTasksInfra(object):
 
         # Barak: this is not good we don't want to ignore lineage reporting
         try:
-            client = self.get_redis_client()
             if isinstance(directories, list):
                 for directory in directories:
                     lineage_value = lineage_value_template % {
@@ -249,7 +248,7 @@ class ContextualizedTasksInfra(object):
                         'directory': directory,
                         'direction': direction
                     }
-                    client.rpush(lineage_key, lineage_value)
+                    self.get_redis_client().rpush(lineage_key, lineage_value)
         except:
             logger.error('failed reporting lineage')
 
