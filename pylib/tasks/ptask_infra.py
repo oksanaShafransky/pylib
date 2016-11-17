@@ -1,9 +1,10 @@
 import calendar
-import datetime
 import logging
 import os
 import re
 import shutil
+
+import datetime
 import six
 import sys
 import time
@@ -14,7 +15,7 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 from invoke import Result
 from invoke.exceptions import Failure
-from redis import StrictRedis as Redis
+from redis import StrictRedis
 
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
@@ -160,6 +161,7 @@ class ContextualizedTasksInfra(object):
         :param ctx: invoke.context.Context
         """
         self.ctx = ctx
+        self.redis = None
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -210,7 +212,8 @@ class ContextualizedTasksInfra(object):
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
         command = self.__compose_infra_command('pyexecute %s/%s' % (self.execution_dir, python_executable))
-        command = TasksInfra.add_command_params(command, command_params, TasksInfra.EXEC_WRAPPERS['python'], *positional)
+        command = TasksInfra.add_command_params(command, command_params, TasksInfra.EXEC_WRAPPERS['python'],
+                                                *positional)
         return command
 
     def __get_common_args(self):
@@ -227,7 +230,6 @@ class ContextualizedTasksInfra(object):
         lineage_value_template = \
             '%(execution_user)s.%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction)s:hdfs::%(directory)s'
 
-        client = Redis(host='redis-bigdata.service.production')
         lineage_key = 'LINEAGE_%s' % datetime.date.today().strftime('%y-%m-%d')
         if isinstance(directories, six.string_types):
             directories = [directories]
@@ -242,7 +244,15 @@ class ContextualizedTasksInfra(object):
                     'directory': directory,
                     'direction': direction
                 }
-                client.rpush(lineage_key, lineage_value)
+                self.get_redis_client().rpush(lineage_key, lineage_value)
+
+    def get_redis_client(self):
+        if self.redis is None:
+            self.redis = StrictRedis(host='redis-bigdata.service.production',
+                                     socket_timeout=15,
+                                     socket_connect_timeout=15,
+                                     retry_on_timeout=True)
+        return self.redis
 
     def is_valid_redis_output(self, prefix, count):
         return self.__get_prefix_keys_count(prefix, count) >= count
@@ -253,9 +263,8 @@ class ContextualizedTasksInfra(object):
 
     def __get_prefix_keys_count(self, prefix, count):
         print('Checking if there are at least %d keys with %s prefix in Redis...' % (count, prefix))
-        client = Redis(host='redis-bigdata.service.production')
         cnt = 0
-        for key in client.scan_iter(match='%s*' % prefix, count=count):
+        for _ in self.get_redis_client().scan_iter(match='%s*' % prefix, count=count):
             cnt += 1
             if cnt == count:
                 break
