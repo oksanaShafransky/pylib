@@ -131,16 +131,24 @@ def get_hive_partition_values(base_path, column_name):
     return extract_hive_partition_values(relevant_paths, column_name)
 
 
-def list_dirs(paths):
-    hdfs_client = create_client()
+def list_dirs(paths, hdfs_client):
+    if not hdfs_client:
+        hdfs_client = create_client()
     return [child['path'] for child in hdfs_client.ls([paths] if not isinstance(paths, list) else paths) if
             child['file_type'] == 'd']
 
 
-def list_files(paths):
-    hdfs_client = create_client()
+def list_files(paths, hdfs_client):
+    if not hdfs_client:
+        hdfs_client = create_client()
     return [child['path'] for child in hdfs_client.ls([paths] if not isinstance(paths, list) else paths) if
             child['file_type'] == 'f']
+
+
+def count_files(path, hdfs_client):
+    if not hdfs_client:
+        hdfs_client = create_client()
+    return len(list_files(path, hdfs_client) + sum([count_files(sub_dir, hdfs_client) for sub_dir in list_dirs(path, hdfs_client)]))
 
 
 def read_files(paths):
