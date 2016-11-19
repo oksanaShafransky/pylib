@@ -148,7 +148,7 @@ def list_files(paths, hdfs_client=None):
 def count_files(path, hdfs_client=None):
     if not hdfs_client:
         hdfs_client = create_client()
-    return len(list_files(path, hdfs_client) + sum([count_files(sub_dir, hdfs_client) for sub_dir in list_dirs(path, hdfs_client)]))
+    return len(list_files(path, hdfs_client)) + sum([count_files(sub_dir, hdfs_client) for sub_dir in list_dirs(path, hdfs_client)])
 
 
 def read_files(paths):
