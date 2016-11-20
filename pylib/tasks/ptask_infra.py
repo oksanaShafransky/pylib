@@ -21,7 +21,7 @@ from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs, get_file
 from pylib.sw_config.kv_factory import provider_from_config
-from hbase.hbase_utils import validate_records_per_region
+from pylib.hbase.hbase_utils import validate_records_per_region
 
 logger = logging.getLogger('ptask')
 
