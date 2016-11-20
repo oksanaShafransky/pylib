@@ -21,6 +21,7 @@ from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs, get_file
 from pylib.sw_config.kv_factory import provider_from_config
+from hbase.hbase_utils import validate_records_per_region
 
 logger = logging.getLogger('ptask')
 
@@ -292,6 +293,11 @@ class ContextualizedTasksInfra(object):
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker) is True, \
             'Output is not valid, given value is %s' % directories
+
+    #----------- HBASE -----------
+    @staticmethod
+    def assert_hbase_table_valid(table_name, minimum_regions_count = 100, rows_per_region = 50, cluster_name = 'hbase-mrp'):
+        assert validate_records_per_region(table_name, minimum_regions_count, rows_per_region, cluster_name)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
