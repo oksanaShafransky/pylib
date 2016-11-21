@@ -392,7 +392,8 @@ class ContextualizedTasksInfra(object):
         d = date.strftime('%Y-%m-%d') if date is not None else self.__get_common_args()['date']
         command = self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, d, month_lookback))
         try:
-            return self.run_bash(command=command).stdout.strip()
+            date_str = self.run_bash(command=command).stdout.strip()
+            return TasksInfra.parse_date(date_str) if date_str else None
         except Failure:
             return None
 
@@ -400,7 +401,8 @@ class ContextualizedTasksInfra(object):
         d = date.strftime('%Y-%m-%d') if date is not None else self.__get_common_args()['date']
         command = self.__compose_infra_command('LatestDailySuccessDate %s %s %s' % (directory, d, month_lookback))
         try:
-            return self.run_bash(command=command).stdout.strip()
+            date_str = self.run_bash(command=command).stdout.strip()
+            return TasksInfra.parse_date(date_str) if date_str else None
         except Failure:
             return None
 
