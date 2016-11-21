@@ -346,7 +346,7 @@ class ContextualizedTasksInfra(object):
         HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir,
                                       is_dry_run=self.dry_run, aux_jars=aux_jars)
         for mdir in managed_output_dirs:
-            mark_success(mdir)
+            self.mark_success(mdir)
 
         shutil.rmtree(log_dir)
         shutil.rmtree(cache_dir)
