@@ -64,23 +64,6 @@ class TasksInfra(object):
         return datetime.datetime.strptime(date_str, fmt).date()
 
     @staticmethod
-    def latest_monthly_success_date_kv(base_path):
-        return TasksInfra.__latest_success_date_kv(base_path, fmt='%Y-%m')
-
-    @staticmethod
-    def latest_daily_success_date_kv(base_path):
-        return TasksInfra.__latest_success_date_kv(base_path, fmt='%Y-%m-%d')
-
-    @staticmethod
-    def __latest_success_date_kv(base_path, fmt):
-        dates = sorted(TasksInfra.kv.subkeys(base_path), reverse=True)
-        for date in dates:
-            if TasksInfra.kv.get('%s/%s' % (base_path, date)) == 'success':
-                return TasksInfra.parse_date(date, fmt)
-
-        return None
-
-    @staticmethod
     def full_partition_path(mode, mode_type, date):
         if mode == 'daily':
             return 'year=%s/month=%s/day=%s' % (str(date.year)[2:], str(date.month).zfill(2), str(date.day).zfill(2))
@@ -388,23 +371,65 @@ class ContextualizedTasksInfra(object):
         return self.run_bash(self.__compose_infra_command(
             "execute Rscript %s/%s %s" % (self.execution_dir, r_executable, ' '.join(command_params)))).ok
 
-    def latest_monthly_success_date(self, directory, month_lookback, date=None):
-        d = date.strftime('%Y-%m-%d') if date is not None else self.__get_common_args()['date']
-        command = self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, d, month_lookback))
-        try:
-            date_str = self.run_bash(command=command).stdout.strip()
-            return TasksInfra.parse_date(date_str) if date_str else None
-        except Failure:
-            return None
-
     def latest_daily_success_date(self, directory, month_lookback, date=None):
-        d = date.strftime('%Y-%m-%d') if date is not None else self.__get_common_args()['date']
+        """
+        Get the latest success date of a task by searching the HDFS for _success markers
+        :param directory: The HDFS base dir to look at
+        :param month_lookback: lower bound month to look at
+        :param date: upper bound day. The default behavior uses this.date.
+        :return: a datetime.date if a valid date is found, else None
+        """
+        d = date.strftime('%Y-%m-%d') if date is not None else self.date
         command = self.__compose_infra_command('LatestDailySuccessDate %s %s %s' % (directory, d, month_lookback))
         try:
             date_str = self.run_bash(command=command).stdout.strip()
             return TasksInfra.parse_date(date_str) if date_str else None
         except Failure:
             return None
+
+    def latest_monthly_success_date(self, directory, month_lookback, date=None):
+        """ Similar to latest_daily_success_date, but returns the 1st of the month"""
+        d = date.strftime('%Y-%m-%d') if date is not None else self.date
+        command = self.__compose_infra_command('LatestMonthlySuccessDate %s %s %s' % (directory, d, month_lookback))
+        try:
+            date_str = self.run_bash(command=command).stdout.strip()
+            return TasksInfra.parse_date(date_str).replace(day=1) if date_str else None
+        except Failure:
+            return None
+
+    @staticmethod
+    def __latest_success_date_kv(base_path, fmt, days_lookback=None, date=None):
+        marked_dates = sorted(TasksInfra.kv.subkeys(base_path), reverse=True)
+        for marked_date in marked_dates:
+            if (not date) or (marked_date<=date):
+                if (not days_lookback) or (marked_date + datetime.timedelta(days=days_lookback)>=date):
+                    if TasksInfra.kv.get('%s/%s' % (base_path, date)) == 'success':
+                        return TasksInfra.parse_date(date, fmt)
+
+        return None
+
+    def latest_daily_success_date_kv(self, base_path, days_lookback=90, date=None):
+        """
+        Get the latest success date of a task by searching the KV store for success markers
+        :param base_path: the path in the KV store to look at
+        :param days_lookback: lower bound days to look at
+        :param date: upper bound day. The default behavior uses this.date.
+        :return: a datetime.date if a valid date is found, else None
+        """
+        if not date:
+            date = self.date
+        return TasksInfra.__latest_success_date_kv(base_path,
+                                                   fmt='%Y-%m-%d',
+                                                   days_lookback=days_lookback,
+                                                   date=date)
+
+    def latest_monthly_success_date_kv(self, base_path, days_lookback=90, date=None):
+        """" Similar to latest_daily_success_date, but returns the 1st of the month"""
+        return TasksInfra.__latest_success_date_kv(base_path,
+                                                   fmt='%Y-%m',
+                                                   days_lookback=days_lookback,
+                                                   date=date)
+
 
     def mark_success(self, directory, opts=''):
         if self.dry_run or self.checks_only:
