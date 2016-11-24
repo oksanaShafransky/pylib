@@ -278,9 +278,16 @@ class ContextualizedTasksInfra(object):
             'Output is not valid, given value is %s' % directories
 
     #----------- HBASE -----------
-    @staticmethod
-    def assert_hbase_table_valid(table_name, minimum_regions_count = 100, rows_per_region = 50, cluster_name = 'hbase-mrp'):
-        assert validate_records_per_region(table_name, minimum_regions_count, rows_per_region, cluster_name)
+    def assert_hbase_table_valid(self, table_name, columns = None, minimum_regions_count = 100, rows_per_region = 50, cluster_name = 'hbase-mrp'):
+        if self.dry_run:
+            log_message = "Dry Run: would have checked that table '%s' has %d regions and %d keys per region" % (table_name, minimum_regions_count, rows_per_region)
+            log_message += ' in columns: %s' % ','.join(columns) if columns else ''
+            log_message += '\n'
+            sys.stdout.write(log_message)
+        else:
+            assert validate_records_per_region(table_name, columns, minimum_regions_count, rows_per_region, cluster_name), \
+                'hbase table content is not valid, table name: %s' % table_name
+
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
