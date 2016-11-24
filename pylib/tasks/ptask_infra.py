@@ -418,7 +418,7 @@ class ContextualizedTasksInfra(object):
         """
         if not date:
             date = self.date
-        return TasksInfra.__latest_success_date_kv(base_path,
+        return ContextualizedTasksInfra.__latest_success_date_kv(base_path,
                                                    fmt='%Y-%m-%d',
                                                    days_lookback=days_lookback,
                                                    date=date)
@@ -427,7 +427,7 @@ class ContextualizedTasksInfra(object):
         """" Similar to latest_daily_success_date, but returns the 1st of the month"""
         if not date:
             date = self.date
-        return TasksInfra.__latest_success_date_kv(base_path,
+        return ContextualizedTasksInfra.__latest_success_date_kv(base_path,
                                                    fmt='%Y-%m',
                                                    days_lookback=days_lookback,
                                                    date=date)
