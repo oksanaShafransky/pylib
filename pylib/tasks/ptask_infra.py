@@ -406,12 +406,13 @@ class ContextualizedTasksInfra(object):
 
     @staticmethod
     def __latest_success_date_kv(base_path, fmt, days_lookback=None, date=None):
-        marked_dates = sorted(TasksInfra.kv.subkeys(base_path), reverse=True)
-        for marked_date in marked_dates:
+        marked_dates_str = sorted(TasksInfra.kv.subkeys(base_path), reverse=True)
+        for marked_date_str in marked_dates_str:
+            marked_date = TasksInfra.parse_date(marked_date_str, fmt)
             if (not date) or (marked_date<=date):
                 if (not days_lookback) or (marked_date + datetime.timedelta(days=days_lookback)>=date):
-                    if TasksInfra.kv.get('%s/%s' % (base_path, date)) == 'success':
-                        return TasksInfra.parse_date(date, fmt)
+                    if TasksInfra.kv.get('%s/%s' % (base_path, marked_date_str)) == 'success':
+                        return marked_date
 
         return None
 
