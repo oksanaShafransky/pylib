@@ -1,3 +1,4 @@
+from __future__ import print_function
 import psycopg2
 import sys
 
@@ -24,5 +25,16 @@ def find_table_name(location, print_query=True):
 def get_table_names(location, print_query):
     print('\n'.join(map(lambda db_table: '%s.%s' % db_table, find_table_name(location, print_query))))
 
-get_table_names(location='/similargroup/data/analytics/window/post-estimate/aggkey=sending-pages', print_query=True)
-#get_table_names(location='/similargroup/data/mobile-analytics/daily/aggregate/aggkey=SiteCountrySourceKey', print_query=False)
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        print('Huh? What path did you want to check?')
+        exit(1)
+    location = sys.argv[1]
+    print_query = None
+    if len(sys.argv) > 2:
+        print_query = sys.argv[2]
+    get_table_names(location=location, print_query=print_query)
+
+# get_table_names(location='/similargroup/data/analytics/window/post-estimate/aggkey=sending-pages', print_query=True)
+# get_table_names(location='/similargroup/data/mobile-analytics/daily/aggregate/aggkey=SiteCountrySourceKey', print_query=False)
