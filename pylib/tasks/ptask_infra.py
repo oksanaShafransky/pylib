@@ -488,7 +488,7 @@ class ContextualizedTasksInfra(object):
                   num_executors=None,
                   files=None):
         jar = './%s.jar' % module
-        jar_path = '%s/%s' % (self.execution_dir, 'mobile' if module == 'mobile' else 'analytics')
+        jar_path = '%s/%s' % (self.execution_dir, module)
 
         additional_confs = ''
 
