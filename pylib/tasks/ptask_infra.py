@@ -406,12 +406,13 @@ class ContextualizedTasksInfra(object):
 
     @staticmethod
     def __latest_success_date_kv(base_path, fmt, days_lookback=None, date=None):
-        marked_dates = sorted(TasksInfra.kv.subkeys(base_path), reverse=True)
-        for marked_date in marked_dates:
+        marked_dates_str = sorted(TasksInfra.kv.subkeys(base_path), reverse=True)
+        for marked_date_str in marked_dates_str:
+            marked_date = TasksInfra.parse_date(marked_date_str, fmt)
             if (not date) or (marked_date<=date):
                 if (not days_lookback) or (marked_date + datetime.timedelta(days=days_lookback)>=date):
-                    if TasksInfra.kv.get('%s/%s' % (base_path, date)) == 'success':
-                        return TasksInfra.parse_date(date, fmt)
+                    if TasksInfra.kv.get('%s/%s' % (base_path, marked_date_str)) == 'success':
+                        return marked_date
 
         return None
 
@@ -425,14 +426,16 @@ class ContextualizedTasksInfra(object):
         """
         if not date:
             date = self.date
-        return TasksInfra.__latest_success_date_kv(base_path,
+        return ContextualizedTasksInfra.__latest_success_date_kv(base_path,
                                                    fmt='%Y-%m-%d',
                                                    days_lookback=days_lookback,
                                                    date=date)
 
     def latest_monthly_success_date_kv(self, base_path, days_lookback=90, date=None):
         """" Similar to latest_daily_success_date, but returns the 1st of the month"""
-        return TasksInfra.__latest_success_date_kv(base_path,
+        if not date:
+            date = self.date
+        return ContextualizedTasksInfra.__latest_success_date_kv(base_path,
                                                    fmt='%Y-%m',
                                                    days_lookback=days_lookback,
                                                    date=date)
@@ -484,8 +487,8 @@ class ContextualizedTasksInfra(object):
                   jars_from_lib=None,
                   num_executors=None,
                   files=None):
-        jar = './mobile.jar' if module == 'mobile' else './analytics.jar'
-        jar_path = '%s/%s' % (self.execution_dir, 'mobile' if module == 'mobile' else 'analytics')
+        jar = './%s.jar' % module
+        jar_path = '%s/%s' % (self.execution_dir, module)
 
         additional_confs = ''
 
@@ -733,11 +736,3 @@ class ContextualizedTasksInfra(object):
     @property
     def execution_dir(self):
         return self.__get_common_args()['execution_dir']
-
-    if __name__ == '__main__':
-        command = "source /home/felixv/cdh5/pylib/tasks/../../scripts/common.sh && execute hadoopexec /home/felixv/cdh5/pylib/tasks/../../analytics analytics.jar com.similargroup.common.utils.SqlExportUtil  -cs jdbc:mysql://mysql-ga.vip.sg.internal:3306/swga?user=swga\&password=swga\!23 -q 'select domain, country as country_name, deviceId, users, visits from websites_countries_data where year=2016 and month=6 and day=1' -ot parquet -out /similargroup/ga/daily/website-data/year=16/month=06/day=01"
-        special_chars = {'\\': '\\', '\'': '\"'}
-        for chr, replacement in special_chars.items():
-            command = command.replace(chr, '\"%s\"' % replacement)
-
-        print(command)
