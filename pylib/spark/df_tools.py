@@ -96,3 +96,13 @@ def df_diff(df_left, df_right, join_columns, sort_by_column=None, col_trans_left
         left_ret = right_missing.filter(~ isnan(df_left[sort_by_column])).orderBy(df_left[sort_by_column], ascending=False)
         right_ret = left_missing.filter(~ isnan(df_left[sort_by_column])).orderBy(df_left[sort_by_column], ascending=False)
         return left_ret, right_ret
+
+
+def df_equal(df1, df2):
+    """
+    makes sure that all rows in df1 are in df2 (and vice versa)
+    :param df_left: dataframe 1
+    :param df_right: dataframe 2
+    :return: (are dataframes equal)
+    """
+    return (df1.subtract(df2).count() == 0) and (df2.subtract(df1).count() == 0)
