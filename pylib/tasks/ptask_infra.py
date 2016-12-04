@@ -278,7 +278,7 @@ class ContextualizedTasksInfra(object):
             'Output is not valid, given value is %s' % directories
 
     #----------- HBASE -----------
-    def assert_hbase_table_valid(self, table_name, columns = None, minimum_regions_count = 100, rows_per_region = 50, cluster_name = 'hbase-mrp'):
+    def assert_hbase_table_valid(self, table_name, columns = None, minimum_regions_count = 30, rows_per_region = 50, cluster_name = 'hbase-mrp'):
         if self.dry_run:
             log_message = "Dry Run: would have checked that table '%s' has %d regions and %d keys per region" % (table_name, minimum_regions_count, rows_per_region)
             log_message += ' in columns: %s' % ','.join(columns) if columns else ''
