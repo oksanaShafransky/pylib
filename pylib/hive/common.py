@@ -241,7 +241,7 @@ def hbase_table_name(table):
     for line in output.split("\n"):
         if "hbase.table.name" in line:
             return line.split("\t")[2]
-    raise Exception('Cannot find the name for table %s stdout[%s] stderr[%s]')
+    raise Exception('Cannot find the name for table %s stdout[%s] stderr[%s]' % (table, output, err))
 
 
 def delete_path(path):
