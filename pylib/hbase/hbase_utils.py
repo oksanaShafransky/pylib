@@ -4,7 +4,7 @@ from socket import error as socket_error
 CONNECTION_STRING_TEMPLATE = '{0}.service.production'
 TIMEOUT_RETRIES = 5
 
-def get_hbase_table(table_name, cluster_name):
+def get_hbase_table(table_name, cluster_name='hbase-mrp'):
     return happybase.Connection(CONNECTION_STRING_TEMPLATE.format(cluster_name)).table(table_name)
 
 def validate_records_per_region(table_name, columns = None, minimum_regions_count = 100, rows_per_region = 50, cluster_name = 'hbase-mrp'):
