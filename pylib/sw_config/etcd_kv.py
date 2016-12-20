@@ -26,3 +26,6 @@ class EtcdProxy(KeyValueProxy):
     def sub_keys(self, key):
         return [res.key[len(self._full_path(str(key))) + 1:] for res in self.client.get(self._full_path(str(key))).children]
 
+    def __str__(self):
+        return 'etcd key value server=%s, port=%d, root_path=%s' % (self.client.host, self.client.port, self.root_path)
+
