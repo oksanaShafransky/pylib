@@ -22,3 +22,6 @@ class ConsulProxy(KeyValueProxy):
     def sub_keys(self, key):
         return [sub_key for sub_key in [sub_key[len(str(key)) + 1:] for
                                         sub_key in self.client.kv.find(str(key))] if '/' not in sub_key]
+
+    def __str__(self):
+        return 'consul key value'

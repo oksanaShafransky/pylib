@@ -47,3 +47,6 @@ class CompositeConfigurationProxy(KeyValueProxy):
             return values[0]
         else:
             return None
+
+    def __str__(self):
+        return 'composite key value\n%s' % '\n'.join([str(proxy) for proxy in self.proxies])

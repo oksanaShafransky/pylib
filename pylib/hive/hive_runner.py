@@ -148,7 +148,8 @@ class HiveProcessRunner(object):
         'hive.vectorized.execution.enabled': 'true',
         'hive.vectorized.execution.reduce.enabled': 'true',
         'hive.cbo.enable': 'true',
-        'hive.stats.fetch.column.stats': 'true'
+        'hive.stats.fetch.column.stats': 'true',
+        'parquet.compression': 'SNAPPY'
     }
 
     def __init__(self):
