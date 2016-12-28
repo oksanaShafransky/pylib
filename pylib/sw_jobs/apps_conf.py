@@ -11,7 +11,7 @@ class AppsEngagementConfig(object):
               [
                 {
                      "class": "pylib.sw_config.consul.ConsulProxy",
-                     "server":"consul.service.production",
+                     "server":"consul.service.production"
                 },
                 {
                      "class": "pylib.sw_config.etcd_kv.EtcdProxy",
