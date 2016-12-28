@@ -27,16 +27,20 @@ logger = logging.getLogger('ptask')
 
 
 class KeyValueProvider(object):
-    conf = """{
-             "pylib.sw_config.consul.ConsulProxy": {
-                 "server":"consul.service.production"
-             },
-             "pylib.sw_config.etcd_kv.EtcdProxy": {
-                 "server":"etcd.service.production",
-                 "port": 4001,
-                 "root_path": "v1/production"
-             }
-             }"""
+    conf = """
+              [
+                {
+                     "class": "pylib.sw_config.consul.ConsulProxy",
+                     "server":"consul.service.production",
+                },
+                {
+                     "class": "pylib.sw_config.etcd_kv.EtcdProxy",
+                     "server":"etcd.service.production",
+                     "port": 4001,
+                     "root_path": "v1/production"
+                }
+              ]
+    """
     conf = provider_from_config(conf)
 
     @staticmethod
