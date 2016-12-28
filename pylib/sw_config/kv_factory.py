@@ -13,8 +13,9 @@ def create_proxy(proxy_cls, params):
 def provider_from_config(config_str):
     conf = json.loads(config_str)
     proxies = []
-    for cls, params in conf.items():
-        proxies += [create_proxy(cls, params)]
+    for proxy_def in conf.items():
+        cls = proxy_def.pop('class')
+        proxies += [create_proxy(cls, proxy_def)]
 
     return CompositeConfigurationProxy(proxies)
 
