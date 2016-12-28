@@ -13,7 +13,7 @@ def create_proxy(proxy_cls, params):
 def provider_from_config(config_str):
     conf = json.loads(config_str)
     proxies = []
-    for proxy_def in conf.items():
+    for proxy_def in conf:
         cls = proxy_def.pop('class')
         proxies += [create_proxy(cls, proxy_def)]
 
