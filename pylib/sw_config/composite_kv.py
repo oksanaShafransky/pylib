@@ -4,7 +4,7 @@ from kv import KeyValueProxy
 
 
 class CompositeConfigurationProxy(KeyValueProxy):
-    def __init__(self, proxies, enforce_providers_equality=True):
+    def __init__(self, proxies, enforce_providers_equality=False):
         KeyValueProxy.__init__(self)
         self.enforce_providers_equality = enforce_providers_equality
         self.proxies = proxies
