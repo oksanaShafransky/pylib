@@ -4,8 +4,9 @@ from kv import KeyValueProxy
 
 
 class CompositeConfigurationProxy(KeyValueProxy):
-    def __init__(self, proxies):
+    def __init__(self, proxies, enforce_providers_equality=True):
         KeyValueProxy.__init__(self)
+        self.enforce_providers_equality = enforce_providers_equality
         self.proxies = proxies
 
     def set(self, key, value):
@@ -43,7 +44,7 @@ class CompositeConfigurationProxy(KeyValueProxy):
         # If the result list is empty, that means that the values across proxies are all None (don't exist in the KV)
         if len(values) != 0:
             assert all(
-                [cmprtr(values[0], item) for item in values]), "Values for key %s are not equal across providers" % key
+                [((not self.enforce_providers_equality) or cmprtr(values[0], item)) for item in values]), "Values for key %s are not equal across providers" % key
             return values[0]
         else:
             return None
