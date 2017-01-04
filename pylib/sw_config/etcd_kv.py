@@ -18,11 +18,18 @@ class EtcdProxy(KeyValueProxy):
         return str(self.client.get(self._full_path(str(key))).value)
 
     def set(self, key, value):
-        return self.client.set(self._full_path(str(key)), str(value))
+        try:
+            return self.client.set(self._full_path(str(key)), str(value))
+        except:
+            import traceback
+            traceback.print_exc()
 
     def delete(self, key):
         return self.client.delete(self._full_path(str(key)))
 
     def sub_keys(self, key):
         return [res.key[len(self._full_path(str(key))) + 1:] for res in self.client.get(self._full_path(str(key))).children]
+
+    def __str__(self):
+        return 'etcd key value server=%s, port=%d, root_path=%s' % (self.client.host, self.client.port, self.root_path)
 

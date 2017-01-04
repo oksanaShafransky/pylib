@@ -19,7 +19,7 @@ from redis import StrictRedis
 
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
-from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dirs, get_file
+from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file
 from pylib.sw_config.kv_factory import provider_from_config
 from pylib.hbase.hbase_utils import validate_records_per_region
 
@@ -27,16 +27,20 @@ logger = logging.getLogger('ptask')
 
 
 class KeyValueProvider(object):
-    conf = """{
-             "pylib.sw_config.consul.ConsulProxy": {
-                 "server":"consul.service.production"
-             },
-             "pylib.sw_config.etcd_kv.EtcdProxy": {
-                 "server":"etcd.service.production",
-                 "port": 4001,
-                 "root_path": "v1/production"
-             }
-             }"""
+    conf = """
+              [
+                {
+                     "class": "pylib.sw_config.consul.ConsulProxy",
+                     "server":"consul.service.production"
+                },
+                {
+                     "class": "pylib.sw_config.etcd_kv.EtcdProxy",
+                     "server":"etcd.service.production",
+                     "port": 4001,
+                     "root_path": "v1/production"
+                }
+              ]
+    """
     conf = provider_from_config(conf)
 
     @staticmethod
@@ -196,6 +200,14 @@ class ContextualizedTasksInfra(object):
         self.log_lineage_hdfs(directories, 'output')
         return self.__is_hdfs_collection_valid(directories, min_size_bytes, validate_marker)
 
+    def clear_output_dirs(self, output_dirs):
+        if output_dirs is not None:
+            for dir in output_dirs:
+                if not (self.dry_run or self.checks_only):
+                    delete_dir(dir)
+                else:
+                    sys.stdout.write("Dry Run: would deleted output folder: %s" % dir)
+
     def is_valid_input_exists(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
         return self.__is_hdfs_collection_valid(directories, min_size_bytes, validate_marker)
@@ -315,8 +327,7 @@ class ContextualizedTasksInfra(object):
             job_name = job_name + ' ' + query_name_suffix
 
         # delete output on start
-        if not self.dry_run:
-            delete_dirs(*managed_output_dirs)
+        self.clear_output_dirs(managed_output_dirs)
 
         log_dir = '/tmp/logs/%s' % random_str(5)
         os.mkdir(log_dir)
@@ -490,9 +501,13 @@ class ContextualizedTasksInfra(object):
                   command_params,
                   jars_from_lib=None,
                   num_executors=None,
-                  files=None):
+                  files=None,
+                  managed_output_dirs=None):
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
+
+        # delete output on start
+        self.clear_output_dirs(managed_output_dirs)
 
         additional_confs = ''
 
@@ -548,8 +563,12 @@ class ContextualizedTasksInfra(object):
                      py_files=None,
                      spark_configs=None,
                      use_bigdata_defaults=False,
-                     queue=None
+                     queue=None,
+                     managed_output_dirs=None
                      ):
+
+        # delete output on start
+        self.clear_output_dirs(managed_output_dirs)
 
         additional_configs = ''
         module_dir = self.execution_dir + '/' + module

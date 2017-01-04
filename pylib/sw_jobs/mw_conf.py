@@ -9,16 +9,20 @@ from pylib.sw_config.kv_factory import provider_from_config
 
 
 class MobileWebConfig(object):
-    default_conf = """{
-             "pylib.sw_config.consul.ConsulProxy": {
-                 "server":"consul.service.production"
-             },
-             "pylib.sw_config.etcd_kv.EtcdProxy": {
-                 "server":"etcd.service.production",
-                 "port": 4001,
-                 "root_path": "v1/production"
-             }
-             }"""
+    default_conf = """
+              [
+                {
+                     "class": "pylib.sw_config.consul.ConsulProxy",
+                     "server":"consul.service.production"
+                },
+                {
+                     "class": "pylib.sw_config.etcd_kv.EtcdProxy",
+                     "server":"etcd.service.production",
+                     "port": 4001,
+                     "root_path": "v1/production"
+                }
+              ]
+    """
 
     def __init__(self, env='main', conf=default_conf):
         self.root = 'services/mobile-web/env/%s' % env

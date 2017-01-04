@@ -1,15 +1,16 @@
 
-from pyspark.sql.functions import abs, min, isnan, isnull, coalesce, least
+from pyspark.sql.functions import abs, min, isnan, isnull, coalesce, least, greatest
 
 
-def df_compare(df_left, df_right, join_columns, sort_by_column, threshold=0.01, cmp_type='abs',
+def df_compare(df_left, df_right, join_columns, sort_by_column=None, compared_columns=None, threshold=0.01, cmp_type='abs',
                col_trans_left=None, col_trans_right=None):
     """
     compares two data frames to find most significant differences between them
     :param df_left: dataframe 1
     :param df_right: dataframe 2
     :param join_columns: mutual columns to join on
-    :param sort_by_column: compared metric column for significance ordering
+    :param sort_by_column: column name for output order (default is first column)
+    :param compared_columns: list of column names to compare (default: all shared columns not in 'join_columns'
     :param threshold: significance threshold, only difference exceeding which will be returned.
            always calculated in relative terms
     :param cmp_type: abs(olute) or rel(ative) to calculate the change metrics, does not affect significance threshold
@@ -18,9 +19,14 @@ def df_compare(df_left, df_right, join_columns, sort_by_column, threshold=0.01, 
     :return: records with changes exceeding threshold, ordered by change of :sort_by_column
     """
 
-    common_columns = set(df_left.columns).intersection(df_right.columns)
     merged_columns = list(join_columns)
-    compared_columns = common_columns - set(merged_columns)
+
+    if compared_columns is None:
+        common_columns = set(df_left.columns).intersection(df_right.columns)
+        compared_columns = common_columns - set(merged_columns)
+
+    if sort_by_column is None:
+        sort_by_column = compared_columns[0]
 
     left_joint, right_joint = df_left, df_right
 
@@ -46,8 +52,7 @@ def df_compare(df_left, df_right, join_columns, sort_by_column, threshold=0.01, 
 
     return joint \
         .filter(~ isnan(joint['%s_right' % sort_by_column]) & ~ isnan(joint['%s_left' % sort_by_column])) \
-        .filter((abs(joint['%s_right' % sort_by_column] - joint['%s_left' % sort_by_column]) /
-                least(joint['%s_right' % sort_by_column], joint['%s_left' % sort_by_column])) > threshold) \
+        .filter(greatest([joint['%s_diff' % col] for col in compared_columns]) > threshold) \
         .orderBy('%s_diff' % sort_by_column, ascending=False)
 
 
@@ -106,3 +111,27 @@ def df_equal(df1, df2):
     :return: (are dataframes equal)
     """
     return (df1.subtract(df2).count() == 0) and (df2.subtract(df1).count() == 0)
+
+
+def df_equivalent(df_left, df_right, join_columns, sort_by_column, threshold=0.01, cmp_type='abs',
+                  col_trans_left=None, col_trans_right=None):
+
+    diff_r, diff_l = df_diff(df_left, df_right, join_columns, sort_by_column, col_trans_left, col_trans_right)
+    comp = df_compare(df_left, df_right, join_columns, sort_by_column, threshold, cmp_type, col_trans_left, col_trans_right)
+
+    ret = True
+
+    if diff_r.count() != 0:
+        print "right dataframe has unique keys. example:"
+        print diff_r.first()
+        ret = False
+    if diff_l.count() != 0:
+        print "left dataframe has unique keys. example:"
+        print diff_l.first()
+        ret = False
+    if comp.count() != 0:
+        print "some rows are not equivalent (threshold=%d). example:" % threshold
+        print comp.first()
+        ret = False
+
+    return ret

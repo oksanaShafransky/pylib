@@ -7,16 +7,20 @@ class AppsEngagementConfig(object):
     def __init__(self, env):
         self.root = 'services/app-engagement/env/%s' % env
         # conf = Variable.get('key_value_production')
-        conf = """{
-             "pylib.sw_config.consul.ConsulProxy": {
-                 "server":"consul.service.production"
-             },
-             "pylib.sw_config.etcd_kv.EtcdProxy": {
-                 "server":"etcd.service.production",
-                 "port": 4001,
-                 "root_path": "v1/production"
-             }
-             }"""
+        conf = """
+              [
+                {
+                     "class": "pylib.sw_config.consul.ConsulProxy",
+                     "server":"consul.service.production"
+                },
+                {
+                     "class": "pylib.sw_config.etcd_kv.EtcdProxy",
+                     "server":"etcd.service.production",
+                     "port": 4001,
+                     "root_path": "v1/production"
+                }
+              ]
+        """
         self.conf = provider_from_config(conf)
 
         self._countries = {}
