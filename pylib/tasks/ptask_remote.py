@@ -35,6 +35,8 @@ run \
 %(docker_repository)s/centos6.cdh5.%(docker)s bash -c " \
 sudo mkdir -p %(execution_dir)s && \
 sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s && \
+source /opt/anaconda/bin/activate mrp27 && \
+sudo pip install --no-dependencies --upgrade -i  https://artifactory.similarweb.io/api/pypi/similar-pypi/simple sw_pylib &&
 %(bash_command)s"
     '''
 
@@ -48,11 +50,9 @@ sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s && \
     def run_task(self, collection, task, date, mode, mode_type, input_base='/similargroup/data', output_base='/similargroup/data', table_prefix='', dry_run=False, task_id=None, **kwargs):
         last_slash_ind = collection.rfind('/')
         if last_slash_ind == -1:
-            # collection_name = collection
             collection_sub_path = ''
         else:
             collection_sub_path = collection[:last_slash_ind]
-            # collection_name = collection[last_slash_ind + 1:]
 
         ptask_cmd = 'ptask --root %(root)s/%(collection_sub_path)s -c /%(collection)s --dt %(date)s --mode %(mode)s --mode-type %(mt)s \
                      --base-dir %(base_dir)s --calc-dir %(calc_dir)s %(dry_run_opt)s %(tp_opt)s %(task)s %(extra_opts)s' % \
