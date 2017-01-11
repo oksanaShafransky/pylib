@@ -55,7 +55,7 @@ sudo pip install --no-dependencies --upgrade -i  https://artifactory.similarweb.
             collection_sub_path = collection[:last_slash_ind]
 
         ptask_cmd = 'ptask --root %(root)s/%(collection_sub_path)s -c /%(collection)s --dt %(date)s --mode %(mode)s --mode-type %(mt)s \
-                     --base-dir %(base_dir)s --calc-dir %(calc_dir)s %(dry_run_opt)s %(tp_opt)s %(task)s %(extra_opts)s' % \
+                     --base-dir %(base_dir)s --ex %(root)s --calc-dir %(calc_dir)s %(dry_run_opt)s %(tp_opt)s %(task)s %(extra_opts)s' % \
                     {
                         'python': python_bin,
                         'root': self.execution_dir,
