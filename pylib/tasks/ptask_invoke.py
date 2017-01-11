@@ -2,6 +2,10 @@ import datetime
 import os
 import sys
 
+# set default stream encoding to utf-8
+import codecs
+sys.stdout = codecs.getwriter('utf8')(sys.stdout)
+
 from invoke import Program, Argument, Config
 from invoke import ctask
 from invoke.config import merge_dicts
