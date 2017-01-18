@@ -10,10 +10,7 @@ class CompositeConfigurationProxy(KeyValueProxy):
 
     def set(self, key, value):
         for proxy in self.proxies:
-            try:
-                proxy.set(key, value)
-            except Exception:
-                pass
+            proxy.set(key, value)
 
     def delete(self, key):
         for proxy in self.proxies:

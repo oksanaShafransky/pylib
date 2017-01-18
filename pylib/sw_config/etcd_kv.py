@@ -18,7 +18,11 @@ class EtcdProxy(KeyValueProxy):
         return str(self.client.get(self._full_path(str(key))).value)
 
     def set(self, key, value):
-        return self.client.set(self._full_path(str(key)), str(value))
+        try:
+            return self.client.set(self._full_path(str(key)), str(value))
+        except:
+            import traceback
+            traceback.print_exc()
 
     def delete(self, key):
         return self.client.delete(self._full_path(str(key)))
