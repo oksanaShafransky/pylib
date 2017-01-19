@@ -1,25 +1,24 @@
+import logging
+import sys
+
 import six
+
+from dict_change_simulator import WithDelete, WithSet
+from etcd_kv import EtcdProxy
+from kv import KeyValueProxy
+from pylib.common.dependency import register_instance
+from window_config import SimilarWebWindowConfig
 
 __author__ = 'Felix'
 
-import sys
-import logging
-
-from pylib.common.dependency import register_instance
-from mock import *
-from kv import KeyValueProxy
-from window_config import SimilarWebWindowConfig
-
-
 ETCD_PATHS = {'production': 'v1/production', 'staging': 'v1/staging', 'dev': 'v1/dev'}
-from etcd_kv import EtcdProxy
 PROXY_CLASS = EtcdProxy
 
 HEALTHY = 1
 MINIMAL = 0
 
 
-def init_env(env_type, changes=None, deletes=None):
+def setup_simulation(env_type, changes=None, deletes=None):
     if deletes is None:
         deletes = []
     if changes is None:
@@ -59,7 +58,7 @@ def check_config(settings_provider, env_type='production', sets=None, deletes=No
         deletes = []
     if sets is None:
         sets = []
-    init_env(env_type, changes=sets, deletes=deletes)
+    setup_simulation(env_type, changes=sets, deletes=deletes)
 
     success = True
     for name, artifact in six.iteritems(settings_provider.get_artifacts()):
@@ -75,6 +74,7 @@ def check_config(settings_provider, env_type='production', sets=None, deletes=No
             logging.info('%s is OK with %d valid days' % (name, num_dates))
 
     return success
+
 
 if __name__ == '__main__':
 
