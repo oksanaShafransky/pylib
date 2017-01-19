@@ -1,13 +1,13 @@
-__author__ = 'Felix'
+from pylib.sw_config.data import Artifact, Intersect
 
-from data import *
+__author__ = 'Felix'
 
 MINIMAL_VIABLE_DATES_SIZE = 2
 DESRIED_DATES_SIZE = 3
 LOOKBACK_SIZE = 10
 
-class SimilarWebWindowConfig(object):
 
+class SimilarWebWindowConfig(object):
     def __init__(self):
         pass
 
@@ -27,7 +27,6 @@ class SimilarWebWindowConfig(object):
 
         return {'Web Analysis': web_analysis, 'Top Apps': top_apps}
 
-
     @staticmethod
     def min_viable_options():
         return MINIMAL_VIABLE_DATES_SIZE
@@ -39,5 +38,3 @@ class SimilarWebWindowConfig(object):
     @staticmethod
     def lookback_options():
         return LOOKBACK_SIZE
-
-

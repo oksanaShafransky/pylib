@@ -1,6 +1,6 @@
-__author__ = 'Felix'
-
 from collections import defaultdict
+
+__author__ = 'Felix'
 
 dependencies = defaultdict(dict)
 instances = defaultdict(dict)
