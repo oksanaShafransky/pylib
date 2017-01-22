@@ -35,15 +35,23 @@ class ElasticsearchActor(object):
         res = self.es.indices.create(index=self.current_index, body=index_metadata)
         print(" response: '%s'" % res)
 
-    def update_alias(self):
-        if self.es.indices.exists_alias(name=self.alias):
-            print("Alias '%s' already exists! Deleting..." % self.alias)
+def update_alias(self):
+    if self.es.indices.exists_alias(name=self.alias):
+        aliased_index_name = self.es.indices.get_alias(self.alias).keys()[0]
+
+        #comparing strings to verify new index is most recent
+        if self.current_index < aliased_index_name:
+            print("more recent index (%s) already exists! no update is required" % aliased_index_name)
+            return
+        else:
+            print("Alias already exists for index '%s' Deleting..." % aliased_index_name)
             res = self.es.indices.delete_alias(index="_all", name=self.alias)
             print(" response: '%s'" % res)
 
-        print("Updating alias '%s' to index '%s" % (self.alias, self.current_index))
-        res = self.es.indices.put_alias(index=self.current_index, name=self.alias)
-        print(" response: '%s'" % res)
+    print("Updating alias '%s' to index '%s" % (self.alias, self.current_index))
+    res = self.es.indices.put_alias(index=self.current_index, name=self.alias)
+    print(" response: '%s'" % res)
+
 
     def delete_index(self):
         if self.es.indices.exists(self.current_index):
