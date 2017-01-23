@@ -1,14 +1,7 @@
 from datetime import datetime
 from monthdelta import monthmod
 
-from kv import KeyValueProxy
-from pylib.common.dependency import get_instance
-
 __author__ = 'Felix'
-
-
-def get_proxy():
-    return get_instance(KeyValueProxy)
 
 
 class Artifact(object):
@@ -16,8 +9,8 @@ class Artifact(object):
         window = 0,
         monthly = 1
 
-    def __init__(self, root_path, required_value='success', date_fmt='%Y-%m-%d', lookback=10, mode=Mode.window):
-        self.proxy = get_proxy()
+    def __init__(self, proxy, root_path, required_value='success', date_fmt='%Y-%m-%d', lookback=10, mode=Mode.window):
+        self.proxy = proxy
         self.root = root_path
         self.req_val = required_value
         self.fmt = date_fmt
