@@ -58,12 +58,16 @@ def check_config(settings_provider, env_type='production', sets=None, deletes=No
         deletes = []
     if sets is None:
         sets = []
+
+    for name, artifact in six.iteritems(settings_provider.get_artifacts('web', env_type)):
+        logging.error('kfir')
+        logging.error(name)
+        logging.error(artifact.dates)
+
     setup_simulation(env_type, changes=sets, deletes=deletes)
 
     success = True
     for name, artifact in six.iteritems(settings_provider.get_artifacts('web', env_type)):
-        logging.error(name)
-        logging.error(artifact.dates)
         num_dates = len(artifact.dates)
         if num_dates < settings_provider.min_viable_options():
             logging.error('%s is in a dangerous state with %d valid days' % (name, num_dates))
