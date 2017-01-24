@@ -31,7 +31,7 @@ def setup_simulation(env_type, changes=None, deletes=None):
 
     for key in deletes:
         logging.info('simulating delete of %s' % key)
-        effective_cls = WithDelete(key)(effective_cls)
+        effective_cls = WithDelete(key=key, value=None)(effective_cls)
 
     register_instance(KeyValueProxy, effective_cls('etcd.service.production', root_path=ETCD_PATHS[env_type]))
 
