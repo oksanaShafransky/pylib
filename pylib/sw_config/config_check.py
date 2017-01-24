@@ -53,21 +53,16 @@ def parse_modifications(args):
     return sets, deletes
 
 
-def check_config(settings_provider, env_type='production', sets=None, deletes=None, health_level=HEALTHY):
+def check_config(settings_provider, env_type='production', purpose='web', sets=None, deletes=None, health_level=HEALTHY):
     if deletes is None:
         deletes = []
     if sets is None:
         sets = []
 
-    for name, artifact in six.iteritems(settings_provider.get_artifacts('web', env_type)):
-        logging.error('kfir')
-        logging.error(name)
-        logging.error(artifact.dates)
-
     setup_simulation(env_type, changes=sets, deletes=deletes)
 
     success = True
-    for name, artifact in six.iteritems(settings_provider.get_artifacts('web', env_type)):
+    for name, artifact in six.iteritems(settings_provider.get_artifacts(purpose, env_type)):
         num_dates = len(artifact.dates)
         if num_dates < settings_provider.min_viable_options():
             logging.error('%s is in a dangerous state with %d valid days' % (name, num_dates))

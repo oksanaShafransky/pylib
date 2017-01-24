@@ -25,8 +25,6 @@ class SimilarWebWindowConfig(object):
         proxy = provider_from_config(Variable.get('%s%s' % (AIRFLOW_VAR_NAME_PREFIX, env)))
 
         desktop_window = Artifact(proxy, '/'.join([purpose, env, 'services/current-web-dates/window']), required_value='true')
-        logging.error('kfir')
-        logging.error(desktop_window.dates)
         mw_window = Artifact(proxy, '/'.join([purpose, env, 'services/current-mobile-web-dates/window']), required_value='true')
         web_analysis = Intersect(desktop_window, mw_window)
 
