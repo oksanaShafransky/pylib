@@ -82,17 +82,17 @@ def df_diff(df_left, df_right, join_columns, sort_by_column=None, col_trans_left
             right_2_join = right_2_join.withColumnRenamed(old_name, rename)
 
     for col in join_columns:
-        left_2_join = left_2_join.withColumn('%s_ind' % col, left_2_join[col])
-        right_2_join = right_2_join.withColumn('%s_ind' % col, right_2_join[col])
+        left_2_join = left_2_join.withColumn('%s_ind' % col.replace('.', '_'), left_2_join[col])
+        right_2_join = right_2_join.withColumn('%s_ind' % col.replace('.', '_'), right_2_join[col])
 
     left_joint = left_joint.join(right_2_join, on=list(join_columns), how='left_outer')
     right_missing = left_joint \
-        .withColumn('join_indicator', coalesce(*['%s_ind' % col for col in join_columns])) \
+        .withColumn('join_indicator', coalesce(*['%s_ind' % col.replace('.', '_') for col in join_columns])) \
         .filter(isnull('join_indicator'))
 
     right_joint = right_joint.join(left_2_join, on=list(join_columns), how='left_outer')
     left_missing = right_joint \
-        .withColumn('join_indicator', coalesce(*['%s_ind' % col for col in join_columns])) \
+        .withColumn('join_indicator', coalesce(*['%s_ind' % col.replace('.', '_') for col in join_columns])) \
         .filter(isnull('join_indicator'))
 
     if sort_by_column is None:
