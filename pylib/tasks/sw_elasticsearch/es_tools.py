@@ -25,6 +25,11 @@ class ElasticsearchActor(object):
         assert self.es.indices.exists(self.current_index) is True, \
             "Index %s was not found on the server" % self.current_index
 
+    def assert_index_doc_count(self, min_documents=1000):
+        self.assert_index_existence()
+        docs = self.es.indices.stats(index=self.current_index, metric='docs')['_all']['primaries']['docs']['count']
+        assert docs > min_documents, "Index %s doesn't have enough documents (%d < %d)" % (self.current_index, docs, min_documents)
+
     def create_index(self, index_metadata):
         if self.es.indices.exists(self.current_index):
             print("Index '%s' already exists! Deleting..." % self.current_index)
