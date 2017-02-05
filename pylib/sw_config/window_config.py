@@ -6,6 +6,7 @@ MINIMAL_VIABLE_DATES_SIZE = 2
 DESRIED_DATES_SIZE = 3
 LOOKBACK_SIZE = 10
 
+
 class SimilarWebWindowConfig(object):
 
     def __init__(self):
