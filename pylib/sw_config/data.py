@@ -1,13 +1,7 @@
-__author__ = 'Felix'
-
+from datetime import datetime
 from monthdelta import monthmod
-from pylib.common.dependency import get_instance
-from datetime import datetime, timedelta
-from kv import KeyValueProxy
 
-
-def get_proxy():
-    return get_instance(KeyValueProxy)
+__author__ = 'Felix'
 
 
 class Artifact(object):
@@ -15,8 +9,8 @@ class Artifact(object):
         window = 0,
         monthly = 1
 
-    def __init__(self, root_path, required_value='success', date_fmt='%Y-%m-%d', lookback=10, mode=Mode.window):
-        self.proxy = get_proxy()
+    def __init__(self, proxy, root_path, required_value='success', date_fmt='%Y-%m-%d', lookback=10, mode=Mode.window):
+        self.proxy = proxy
         self.root = root_path
         self.req_val = required_value
         self.fmt = date_fmt
@@ -25,24 +19,32 @@ class Artifact(object):
 
     @property
     def dates(self):
-        potential_dates = sorted([datetime.strptime(key, self.fmt) for key in self.proxy.sub_keys(self.root)
-                                  if self.proxy.get('%s/%s' % (self.root, key)) == self.req_val], reverse=True)
+        potential_dates = []
+        for key in self.proxy.sub_keys(self.root):
+            if self.proxy.get('%s/%s' % (self.root, key)) == self.req_val:
+                potential_dates.append(datetime.strptime(key, self.fmt))
+        potential_dates = sorted(potential_dates, reverse=True)
+
+        if not potential_dates:
+            return []
 
         # keep only lookback days/months prior to first date
         dates = []
-        if potential_dates is not None:
-            delta = 0
-            newer_date = potential_dates[0]
+        delta = 0
+        newer_date = potential_dates[0]
 
-            for curr_date in potential_dates:
-                overall_delta = monthmod(curr_date, newer_date)
-                delta += overall_delta[1].days if self.mode == Artifact.Mode.window else overall_delta[0].months
+        for curr_date in potential_dates:
+            overall_delta = monthmod(curr_date, newer_date)
+            if self.mode == Artifact.Mode.window:
+                delta += overall_delta[1].days
+            else:
+                delta += overall_delta[0].months
 
-                if delta < self.lookback:
-                    dates += [curr_date]
-                    newer_date = curr_date
-                else:
-                    break
+            if delta < self.lookback:
+                dates += [curr_date]
+                newer_date = curr_date
+            else:
+                break
 
         return dates
 
@@ -54,4 +56,3 @@ class Intersect(object):
     @property
     def dates(self):
         return list(set.intersection(*[set(arg.dates) for arg in self.sub_artifacts]))
-

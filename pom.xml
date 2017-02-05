@@ -10,10 +10,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!-- set default values for ant variables used in build system as empty string -->
+        <build.prop.dir>./</build.prop.dir>
         <main.basedir>${build.prop.dir}</main.basedir>
         <build.deponly>false</build.deponly>
         <java.version>1.8</java.version>
-        <build.prop.dir>./</build.prop.dir>
     </properties>
 
 

@@ -1,25 +1,24 @@
+import logging
+import sys
+
 import six
+
+from dict_change_simulator import WithDelete, WithSet
+from etcd_kv import EtcdProxy
+from kv import KeyValueProxy
+from pylib.common.dependency import register_instance
+from window_config import SimilarWebWindowConfig
 
 __author__ = 'Felix'
 
-import sys
-import logging
-
-from pylib.common.dependency import register_instance
-from mock import *
-from kv import KeyValueProxy
-from window_config import SimilarWebWindowConfig
-
-
 ETCD_PATHS = {'production': 'v1/production', 'staging': 'v1/staging', 'dev': 'v1/dev'}
-from etcd_kv import EtcdProxy
 PROXY_CLASS = EtcdProxy
 
 HEALTHY = 1
 MINIMAL = 0
 
 
-def init_env(env_type, changes=None, deletes=None):
+def setup_simulation(env_type, changes=None, deletes=None):
     if deletes is None:
         deletes = []
     if changes is None:
@@ -32,7 +31,7 @@ def init_env(env_type, changes=None, deletes=None):
 
     for key in deletes:
         logging.info('simulating delete of %s' % key)
-        effective_cls = WithDelete(key)(effective_cls)
+        effective_cls = WithDelete(key=key, value=None)(effective_cls)
 
     register_instance(KeyValueProxy, effective_cls('etcd.service.production', root_path=ETCD_PATHS[env_type]))
 
@@ -54,15 +53,16 @@ def parse_modifications(args):
     return sets, deletes
 
 
-def check_config(settings_provider, env_type='production', sets=None, deletes=None, health_level=HEALTHY):
+def check_config(settings_provider, env_type='production', purpose='web', sets=None, deletes=None, health_level=HEALTHY):
     if deletes is None:
         deletes = []
     if sets is None:
         sets = []
-    init_env(env_type, changes=sets, deletes=deletes)
+
+    setup_simulation(env_type, changes=sets, deletes=deletes)
 
     success = True
-    for name, artifact in six.iteritems(settings_provider.get_artifacts()):
+    for name, artifact in six.iteritems(settings_provider.get_artifacts(purpose, env_type)):
         num_dates = len(artifact.dates)
         if num_dates < settings_provider.min_viable_options():
             logging.error('%s is in a dangerous state with %d valid days' % (name, num_dates))
@@ -75,6 +75,7 @@ def check_config(settings_provider, env_type='production', sets=None, deletes=No
             logging.info('%s is OK with %d valid days' % (name, num_dates))
 
     return success
+
 
 if __name__ == '__main__':
 
