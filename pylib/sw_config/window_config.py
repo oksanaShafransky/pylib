@@ -1,7 +1,7 @@
-import logging
+from airflow.models import Variable
+
 from pylib.sw_config.data import Artifact, Intersect
 from pylib.sw_config.kv_factory import provider_from_config
-from airflow.models import Variable
 
 AIRFLOW_VAR_NAME_PREFIX = 'key_value_'
 
@@ -32,7 +32,9 @@ class SimilarWebWindowConfig(object):
         scraping = Artifact(proxy, '/'.join([purpose, env, 'services/process_mobile_scraping/data-available']))
         top_apps = Intersect(app_engagement, scraping)
 
-        return {'Web Analysis': web_analysis, 'Top Apps': top_apps}
+        google_scrape = Artifact(proxy, '/'.join([purpose, env, 'services/google_keywords/data-available']))
+        google_keywords = Intersect(google_scrape)
+        return {'Web Analysis': web_analysis, 'Top Apps': top_apps, 'Google Scraping': google_keywords}
 
     @staticmethod
     def min_viable_options():
