@@ -93,11 +93,21 @@ class TasksInfra(object):
             return '%s/country=%s' % (TasksInfra.year_month_day(date, zero_padding=zero_padding), country)
 
     @staticmethod
+    def year_month(date, zero_padding=True):
+        if date is None:
+            raise AttributeError("date wasn't passed")
+        year_str = str(date.year)[2:]
+        if zero_padding:
+            return 'year=%s/month=%s' % (year_str, str(date.month).zfill(2))
+        else:
+            return 'year=%s/month=%s' % (year_str, date.month)
+
+    @staticmethod
     def year_previous_month(date, zero_padding=True):
         if date is None:
             raise AttributeError("date wasn't passed")
         last_month = date.month-1 if date.month > 1 else 12
-        year = date.year if date.month > 1 else date.year-1
+        year = date.year if date.month > 1 else date.year - 1
         year_str = str(year)[2:]
         if zero_padding:
             return 'year=%s/month=%s' % (year_str, str(last_month).zfill(2))
