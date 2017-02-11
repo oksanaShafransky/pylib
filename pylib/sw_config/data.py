@@ -20,7 +20,7 @@ class Artifact(object):
     @property
     def dates(self):
         potential_dates = []
-        for key in self.proxy.sub_keys(self.root):
+        for key in self.proxy.sub_keys(self.root) or []:
             if self.proxy.get('%s/%s' % (self.root, key)) == self.req_val:
                 potential_dates.append(datetime.strptime(key, self.fmt))
         potential_dates = sorted(potential_dates, reverse=True)

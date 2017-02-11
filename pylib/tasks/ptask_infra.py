@@ -56,7 +56,7 @@ class KeyValueProvider(object):
         return KeyValueProvider.conf.delete(key)
 
     @staticmethod
-    def subkeys(key):
+    def sub_keys(key):
         return KeyValueProvider.conf.sub_keys(key)
 
 

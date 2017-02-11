@@ -1,6 +1,9 @@
 __author__ = 'Felix'
 
-from kv import KeyValueProxy
+from inspect import isclass
+from copy import copy
+
+from pylib.sw_config.kv import KeyValueProxy
 
 
 class Override(object):
@@ -29,8 +32,13 @@ class WithSet(object):
 
         return Decorated
 
-    def __call__(self, cls):
-        return WithSet.invoke(cls, self.modified_key, self.modified_value)
+    def __call__(self, cls_or_instance):
+        if isclass(cls_or_instance):
+            return WithSet.invoke(cls_or_instance, self.modified_key, self.modified_value)
+        else:
+            ret = copy(cls_or_instance)
+            ret.get = Override(self.modified_key, self.modified_value)(ret.get)
+            return ret
 
 
 class WithDelete(WithSet):
