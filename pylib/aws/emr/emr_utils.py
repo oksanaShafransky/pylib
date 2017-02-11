@@ -18,9 +18,9 @@ def run(param_list):
 
 def cluster_create(cluster_name, start_script):
     ret = run(['bash', start_script])
-    cluster_dict= json.loads(ret)
+    cluster_dict = json.loads(ret)
     cluster_id = cluster_dict['ClusterId']
-    print 'cluster was created successfuly. id=%s' % cluster_id
+    print 'cluster was created successfully. id=%s' % cluster_id
 
     return cluster_dict
 
@@ -47,8 +47,8 @@ def cluster_get_details(cluster_id):
 
     instances = cluster_list_instances(cluster_id)['Instances']
     details['address_map'] = [
-        {'private_name' : inst['PrivateDnsName'],
-         'public_ip' : inst['PublicIpAddress']}
+        {'private_name': inst['PrivateDnsName'],
+         'public_ip': inst['PublicIpAddress']}
         for inst in instances
         if inst['Status']['State'] == u'RUNNING']
     details['full_instances'] = instances
@@ -57,7 +57,7 @@ def cluster_get_details(cluster_id):
 
 
 def cluster_list_instances(cluster_id, group_id = None):
-    command = ['aws','emr', 'list-instances', '--cluster-id', cluster_id]
+    command = ['aws', 'emr', 'list-instances', '--cluster-id', cluster_id]
     if group_id is not None and group_id != 'all':
         command.append('--instance-group-id')
         command.append(group_id)
@@ -65,9 +65,8 @@ def cluster_list_instances(cluster_id, group_id = None):
     return json.loads(ret)
 
 
-
 def emr_list(state='active'):
-    command = ['aws','emr', 'list-clusters']
+    command = ['aws', 'emr', 'list-clusters']
     if state is not None and state != 'all':
         command.append('--%s' % state)
     ret = run(command)
@@ -75,7 +74,6 @@ def emr_list(state='active'):
 
 HOSTS_EMR_START_MARKER = '###### EMR CONFIGURATION_START ######\n'
 HOSTS_EMR_END_MARKER = '###### EMR CONFIGURATION_END ######\n'
-
 
 
 def get_hosts_lines(cluster_obj):
@@ -94,26 +92,20 @@ def emr_update_hosts():
         conf_end = host_lines.index(HOSTS_EMR_END_MARKER)
         host_lines = host_lines[:conf_start] + host_lines[conf_end+1:]
 
-
     lines_to_write = []
     for cluster in emr_list()['Clusters']:
-        print "creating map for cluster %s (%s)" % (cluster['Name'], cluster['Id'])
+        print 'creating map for cluster %s (%s)' % (cluster['Name'], cluster['Id'])
         if cluster['Status']['State'] != 'STARTING':
             try:
                 lines_to_write += get_hosts_lines(cluster_get_details(cluster['Id']))
             except:
-                print "could not get details for this cluster"
+                print 'could not get details for this cluster'
         else:
-            print "this cluster is still starting"
+            print 'this cluster is still starting'
 
-    with open(HOSTS_PATH, 'w') as file:
-        file.writelines(host_lines +
-                        [HOSTS_EMR_START_MARKER] +
-                        lines_to_write +
-                        [HOSTS_EMR_END_MARKER])
+    with open(HOSTS_PATH, 'w') as host_file:
+        host_file.writelines(host_lines + [HOSTS_EMR_START_MARKER] + lines_to_write + [HOSTS_EMR_END_MARKER])
     return lines_to_write
-
-
 
 
 if __name__ == '__main__':

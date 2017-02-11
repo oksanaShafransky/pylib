@@ -28,13 +28,21 @@ class SimilarWebWindowConfig(object):
         mw_window = Artifact(proxy, '/'.join([purpose, env, 'services/current-mobile-web-dates/window']), required_value='true')
         web_analysis = Intersect(desktop_window, mw_window)
 
-        app_engagement = Artifact(proxy, '/'.join([purpose, env, 'services/mobile-usage-ranks/data-available/window']))
+        app_ranks = Artifact(proxy, '/'.join([purpose, env, 'services/mobile-usage-ranks/data-available/window']))
         scraping = Artifact(proxy, '/'.join([purpose, env, 'services/process_mobile_scraping/data-available']))
-        top_apps = Intersect(app_engagement, scraping)
+        top_apps = Intersect(app_ranks, scraping)
+
+        apps_window = Artifact(proxy, '/'.join([purpose, env, 'services/current-mobile-apps-dates/window']))
 
         google_scrape = Artifact(proxy, '/'.join([purpose, env, 'services/google_keywords/data-available']))
         google_keywords = Intersect(google_scrape)
-        return {'Web Analysis': web_analysis, 'Top Apps': top_apps, 'Google Scraping': google_keywords}
+        
+        return {
+            'Web Analysis': web_analysis,
+            'Apps': apps_window,
+            'Top Apps': top_apps,
+            'Google Scraping': google_keywords
+        }
 
     @staticmethod
     def min_viable_options():

@@ -28,8 +28,7 @@ def sub_keys(bucket, path, levels=1, delim='/'):
     return ret
 
 
-def validate_success(path):
-    print 'checking success for path ' + _dirify(path)
+def validate_success(bucket, path):
     return len([f for f in bucket.list(_dirify(path) + '_SUCCESS')]) > 0
 
 
@@ -40,7 +39,7 @@ def get_dates(bucket, path, is_ymd=True, check_success=False):
 
     sub_dirs = [sd.replace('_$folder$', '') for sd in sub_dirs]
     if check_success:
-        sub_dirs = [sd for sd in sub_dirs if validate_success(sd)]
+        sub_dirs = [sd for sd in sub_dirs if validate_success(bucket, sd)]
 
     date_fmt = 'year=%y/month=%m/day=%d/' if is_ymd else 'year=%y/month=%m/'
     return [datetime.strptime(_dirify(sd)[len(_dirify(path)):], date_fmt) for sd in sub_dirs]

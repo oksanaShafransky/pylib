@@ -4,6 +4,7 @@ import subprocess
 
 S3Bucket = namedtuple('S3Bucket', ['bucket_name', 'aws_access_key_id', 'aws_secret_access_key'])
 
+
 class S3Backup(object):
 
     @staticmethod
