@@ -1,9 +1,4 @@
-from airflow.models import Variable
-
 from pylib.sw_config.data import Artifact, Intersect
-from pylib.sw_config.kv_factory import provider_from_config
-
-AIRFLOW_VAR_NAME_PREFIX = 'key_value_'
 
 __author__ = 'Felix'
 
@@ -21,22 +16,20 @@ class SimilarWebWindowConfig(object):
         return []
 
     @staticmethod
-    def get_artifacts(purpose, env):
-        proxy = provider_from_config(Variable.get('%s%s' % (AIRFLOW_VAR_NAME_PREFIX, env)))
-
-        desktop_window = Artifact(proxy, '/'.join([purpose, env, 'services/current-web-dates/window']), required_value='true')
-        mw_window = Artifact(proxy, '/'.join([purpose, env, 'services/current-mobile-web-dates/window']), required_value='true')
+    def get_artifacts(proxy):
+        desktop_window = Artifact(proxy, 'services/current-web-dates/window', required_value='true')
+        mw_window = Artifact(proxy, 'services/current-mobile-web-dates/window', required_value='true')
         web_analysis = Intersect(desktop_window, mw_window)
 
-        app_ranks = Artifact(proxy, '/'.join([purpose, env, 'services/mobile-usage-ranks/data-available/window']))
-        scraping = Artifact(proxy, '/'.join([purpose, env, 'services/process_mobile_scraping/data-available']))
+        app_ranks = Artifact(proxy, 'services/mobile-usage-ranks/data-available/window')
+        scraping = Artifact(proxy, 'services/process_mobile_scraping/data-available')
         top_apps = Intersect(app_ranks, scraping)
 
-        apps_window = Artifact(proxy, '/'.join([purpose, env, 'services/current-mobile-apps-dates/window']))
+        apps_window = Artifact(proxy, 'services/current-mobile-apps-dates/window')
 
-        google_scrape = Artifact(proxy, '/'.join([purpose, env, 'services/google_keywords/data-available']))
+        google_scrape = Artifact(proxy, 'services/google_keywords/data-available')
         google_keywords = Intersect(google_scrape)
-        
+
         return {
             'Web Analysis': web_analysis,
             'Apps': apps_window,

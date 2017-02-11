@@ -47,3 +47,23 @@ class CompositeConfigurationProxy(KeyValueProxy):
 
     def __str__(self):
         return 'composite key value\n%s' % '\n'.join([str(proxy) for proxy in self.proxies])
+
+
+class PrefixedConfigurationProxy(KeyValueProxy):
+    def __init__(self, underlying_proxy, *prefixes):
+        self.proxy = underlying_proxy
+        self.prefix = '/'.join([pref for pref in prefixes if pref is not None])
+        if len(self.prefix) > 0:
+            self.prefix += '/'
+
+    def get(self, key):
+        return self.proxy.get('%s%s' % (self.prefix, key))
+
+    def set(self, key, value):
+        return self.proxy.set('%s%s' % (self.prefix, key), value)
+
+    def delete(self, key):
+        return self.proxy.delete('%s%s' % (self.prefix, key))
+
+    def sub_keys(self, key):
+        return self.proxy.sub_keys('%s%s' % (self.prefix, key))
