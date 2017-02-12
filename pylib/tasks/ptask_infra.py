@@ -433,7 +433,7 @@ class ContextualizedTasksInfra(object):
 
     @staticmethod
     def __latest_success_date_kv(base_path, fmt, days_lookback=None, date=None):
-        marked_dates_str = sorted(TasksInfra.kv.subkeys(base_path), reverse=True)
+        marked_dates_str = sorted(TasksInfra.kv.sub_keys(base_path), reverse=True)
         for marked_date_str in marked_dates_str:
             marked_date = TasksInfra.parse_date(marked_date_str, fmt)
             if (not date) or (marked_date<=date):
