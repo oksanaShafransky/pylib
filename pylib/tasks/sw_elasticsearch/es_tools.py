@@ -2,17 +2,18 @@ from elasticsearch import Elasticsearch
 
 
 class ElasticsearchActor(object):
-    def __init__(self, mode, export_date, index_name, es_uri):
+    def __init__(self, mode, export_date, index_name, es_uri, alias=""):
         """
         :param mode: window/snapshot
         :param export_date: date to generate
         :param index_name:
+        :param alias:
         :param es_uri: elasticsearch base url (e.g. http://host:9200)
         :return:
         """
         self.es = Elasticsearch(es_uri)
         self.current_index = self.ci_creator(mode=mode, export_date=export_date, index_name=index_name)
-        self.alias = index_name
+        self.alias = index_name if alias=="" else alias
 
     @staticmethod
     def ci_creator(mode, export_date, index_name):
@@ -57,8 +58,14 @@ class ElasticsearchActor(object):
         res = self.es.indices.put_alias(index=self.current_index, name=self.alias)
         print(" response: '%s'" % res)
 
-    def delete_index(self):
+    def delete_index(self, ignore_alias=False):
         if self.es.indices.exists(self.current_index):
+            if self.es.indices.exists_alias(name=self.alias):
+                aliased_index_name = self.es.indices.get_alias(self.alias).keys()[0]
+                # comparing strings to verify deleted index is not aliased
+                if not ignore_alias:
+                    assert self.current_index != aliased_index_name, \
+                        "Index %s is aliased! Avoiding deletion" % aliased_index_name
             print("Deleting '%s' index..." % self.current_index)
             res = self.es.indices.delete(index=self.current_index)
             print(" response: '%s'" % res)
