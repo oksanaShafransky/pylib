@@ -12,13 +12,13 @@ def validate_records_per_region(table_name, columns = None, minimum_regions_coun
 
     tbl = get_hbase_table(table_name, cluster_name)
 
-    #skipping last region, it can have few keys
-    regions = tbl.regions()[:-1]
+    regions = tbl.regions()
     if (len(regions) < minimum_regions_count):
         print 'too few regions in table (%d < %d)' % (len(regions), minimum_regions_count)
         return False
 
-    for region in regions:
+    #skipping last region, it can have few keys
+    for region in regions[:-1]:
         start_key = region['start_key']
         sc = tbl.scan(row_start=start_key, columns=columns, limit=rows_per_region)
         for i in range(rows_per_region):
@@ -32,7 +32,7 @@ def validate_records_per_region(table_name, columns = None, minimum_regions_coun
             except socket_error:
                 timeout_retry += 1
                 if timeout_retry < TIMEOUT_RETRIES:
-                    print 'socket timeout in region number %d. reloading table (retry %d)' % (i , timeout_retry)
+                    print 'socket timeout in region number %d. reloading table (retry %d)' % (i, timeout_retry)
                     tbl = get_hbase_table(table_name, cluster_name)
                     sc = tbl.scan(row_start=start_key, columns=columns, limit=rows_per_region - i)
                 else:
