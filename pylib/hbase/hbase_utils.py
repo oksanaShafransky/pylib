@@ -7,7 +7,7 @@ TIMEOUT_RETRIES = 5
 def get_hbase_table(table_name, cluster_name='hbase-mrp'):
     return happybase.Connection(CONNECTION_STRING_TEMPLATE.format(cluster_name)).table(table_name)
 
-def validate_records_per_region(table_name, columns = None, minimum_regions_count = 100, rows_per_region = 50, cluster_name = 'hbase-mrp'):
+def validate_records_per_region(table_name, columns = None, minimum_regions_count = 1, rows_per_region = 1000, cluster_name = 'hbase-mrp'):
     print 'checking validity of hbase table: %s' % table_name
 
     tbl = get_hbase_table(table_name, cluster_name)
