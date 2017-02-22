@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from monthdelta import monthmod
 
 __author__ = 'Felix'
@@ -17,36 +17,27 @@ class Artifact(object):
         self.lookback = lookback
         self.mode = mode
 
+    def _accept_date(self, dt):
+        now = datetime.now()
+        if self.mode == Artifact.Mode.window:
+            date_age = now - dt
+            return date_age < timedelta(days=self.lookback)
+        else:
+            date_age = monthmod(dt, now)
+            return date_age[0] < self.lookback
+
     @property
     def dates(self):
-        potential_dates = []
-        for key in self.proxy.sub_keys(self.root) or []:
-            if self.proxy.get('%s/%s' % (self.root, key)) == self.req_val:
-                potential_dates.append(datetime.strptime(key, self.fmt))
-        potential_dates = sorted(potential_dates, reverse=True)
-
-        if not potential_dates:
-            return []
-
-        # keep only lookback days/months prior to first date
         dates = []
-        delta = 0
-        newer_date = potential_dates[0]
+        for key in self.proxy.sub_keys(self.root) or []:
+            potential_date = datetime.strptime(key, self.fmt)
+            if not self._accept_date(potential_date):
+                continue
 
-        for curr_date in potential_dates:
-            overall_delta = monthmod(curr_date, newer_date)
-            if self.mode == Artifact.Mode.window:
-                delta += overall_delta[1].days
-            else:
-                delta += overall_delta[0].months
+            if self.proxy.get('%s/%s' % (self.root, key)) == self.req_val:
+                dates.append(potential_date)
 
-            if delta < self.lookback:
-                dates += [curr_date]
-                newer_date = curr_date
-            else:
-                break
-
-        return dates
+        return sorted(dates, reverse=True)
 
 
 class Intersect(object):
