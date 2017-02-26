@@ -10,7 +10,7 @@ class ElasticsearchActor(object):
         :return:
         """
         self.es = Elasticsearch(es_uri)
-        self.current_index = index_name + date_suffix
+        self.current_index = '%s_%s' % (index_name, date_suffix)
         self.alias = index_name if alias == "" else alias
 
     def assert_index_existence(self):
