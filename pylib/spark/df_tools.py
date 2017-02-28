@@ -26,7 +26,7 @@ def df_compare(df_left, df_right, join_columns, sort_by_column=None, compared_co
         compared_columns = common_columns - set(merged_columns)
 
     if sort_by_column is None:
-        sort_by_column = compared_columns[0]
+        sort_by_column = list(compared_columns)[0]
 
     left_joint, right_joint = df_left, df_right
 
@@ -52,7 +52,7 @@ def df_compare(df_left, df_right, join_columns, sort_by_column=None, compared_co
 
     return joint \
         .filter(~ isnan(joint['%s_right' % sort_by_column]) & ~ isnan(joint['%s_left' % sort_by_column])) \
-        .filter(greatest([joint['%s_diff' % col] for col in compared_columns]) > threshold) \
+        .filter(greatest(*[joint['%s_diff' % col] for col in compared_columns]) > threshold) \
         .orderBy('%s_diff' % sort_by_column, ascending=False)
 
 
