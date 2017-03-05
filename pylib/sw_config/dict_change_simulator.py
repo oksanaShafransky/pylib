@@ -54,11 +54,16 @@ class DictProxy(KeyValueProxy):
         self.db = kwargs
 
     def get(self, key):
-        return self.db[key]
+        return self.db.get(key, None)
 
     def set(self, key, value):
         self.db[key] = value
 
     def delete(self, key):
         self.db.__delitem__(key)
+
+    def sub_keys(self, key):
+        key_parts_len = len(key.split('/'))
+        return set([dk.split('/')[key_parts_len] for dk in self.db.keys()
+                    if dk.startswith(key + '/')])
 
