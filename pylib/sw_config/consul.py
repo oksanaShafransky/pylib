@@ -24,4 +24,4 @@ class ConsulProxy(KeyValueProxy):
                                         sub_key in self.client.kv.find(str(key))] if '/' not in sub_key]
 
     def __str__(self):
-        return 'consul key value'
+        return 'consul key value server=%s' % self.client.status.leader()
