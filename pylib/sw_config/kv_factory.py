@@ -14,14 +14,16 @@ def provider_from_config(config):
     else:
         kv_conf = config
 
-    proxies = []
     if not isinstance(kv_conf, list):
-        kv_conf = [kv_conf]
-    for proxy_def in kv_conf:
-        cls = proxy_def.pop('class')
-        proxies += [create_proxy(cls, proxy_def)]
+        cls = kv_conf.pop('class')
+        return create_proxy(cls, kv_conf)
+    else:
+        proxies = []
+        for proxy_def in kv_conf:
+            cls = proxy_def.pop('class')
+            proxies += [create_proxy(cls, proxy_def)]
 
-    return CompositeConfigurationProxy(proxies)
+        return CompositeConfigurationProxy(proxies)
 
 
 if __name__ == '__main__':
