@@ -1,25 +1,17 @@
 from elasticsearch import Elasticsearch
 
 class ElasticsearchActor(object):
-    def __init__(self, mode, export_date, index_name, es_uri, alias=""):
+    def __init__(self, index_name, date_suffix, es_uri, alias=""):
         """
-        :param mode: window/snapshot
-        :param export_date: date to generate
         :param index_name:
+        :param date_suffix:
         :param alias: alias name for update (defaults index name)
         :param es_uri: elasticsearch base url (e.g. http://host:9200)
         :return:
         """
         self.es = Elasticsearch(es_uri)
-        self.current_index = self.ci_creator(mode=mode, export_date=export_date, index_name=index_name)
+        self.current_index = '%s_%s' % (index_name, date_suffix)
         self.alias = index_name if alias == "" else alias
-
-    @staticmethod
-    def ci_creator(mode, export_date, index_name):
-        if mode == 'window':
-            return "%s_%s" % (index_name, export_date.strftime('%y_%m_%d'))
-        else:
-            return "%s_%s" % (index_name, export_date.strftime('%y_%m'))
 
     def assert_index_existence(self):
         assert self.es.indices.exists(self.current_index) is True, \
