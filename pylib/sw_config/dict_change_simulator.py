@@ -67,3 +67,9 @@ class DictProxy(KeyValueProxy):
         return set([dk.split('/')[key_parts_len] for dk in self.db.keys()
                     if dk.startswith(key + '/')])
 
+    def items(self, prefix=None):
+        if prefix is None:
+            return self.db.iteritems()
+        else:
+            return filter(lambda (k, v): k.startswith(prefix), self.db.iteritems())
+

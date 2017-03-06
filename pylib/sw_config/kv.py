@@ -7,14 +7,18 @@ class KeyValueProxy(object):
         pass
 
     def get(self, key):
-        pass
+        raise NotImplementedError()
 
     def set(self, key, value):
-        pass
+        raise NotImplementedError()
 
     def delete(self, key):
-        pass
+        raise NotImplementedError()
 
     # immediate sub keys only, with relative names
     def sub_keys(self, key):
-        pass
+        raise NotImplementedError()
+
+    # yield key,value pairs
+    def items(self, prefix=None):
+        raise NotImplementedError()

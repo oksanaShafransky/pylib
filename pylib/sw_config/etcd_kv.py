@@ -14,8 +14,11 @@ class EtcdProxy(KeyValueProxy):
     def _full_path(self, path):
         return '%s/%s' % (self.root_path, path)
 
+    def _get_raw(self, key):
+        return self.client.get(self._full_path(str(key)))
+
     def get(self, key):
-        return str(self.client.get(self._full_path(str(key))).value)
+        return str(self._get_raw(key).value)
 
     def set(self, key, value):
         try:
@@ -28,8 +31,25 @@ class EtcdProxy(KeyValueProxy):
         return self.client.delete(self._full_path(str(key)))
 
     def sub_keys(self, key):
-        return [res.key[len(self._full_path(str(key))) + 1:] for res in self.client.get(self._full_path(str(key))).children]
+        key_parts = key.split('/')
+        if key_parts == ['']:
+            key_parts = []
+
+        sub_nodes = self.client.get(self._full_path(str(key))).children
+        return set([sn.key.split('/')[len(key_parts)] for sn in sub_nodes])
+
+    def items(self, prefix=None):
+        next_keys = [prefix or '/']
+        while len(next_keys) > 0:
+            nk = next_keys.pop(0)
+            try_val = self._get_raw(nk)
+            if not try_val.dir:
+                yield nk.replace('//', '/'), str(try_val.value)
+            else:
+                for sk in self.sub_keys(nk):
+                    next_keys.insert(0, '%s/%s' % (nk, sk))
 
     def __str__(self):
         return 'etcd key value server=%s, port=%d, root_path=%s' % (self.client.host, self.client.port, self.root_path)
+
 
