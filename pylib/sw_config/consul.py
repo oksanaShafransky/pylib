@@ -33,7 +33,7 @@ class ConsulProxy(KeyValueProxy):
         return set([k.split('/')[len(key_parts)] for k in matching_keys])
 
     def items(self, prefix=None):
-        for key in self.client.kv.find(prefix):
+        for key in self.client.kv.find(prefix or ''):
             yield key, self.client.kv.get(key)
 
     def __str__(self):
