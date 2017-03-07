@@ -32,8 +32,7 @@ class EtcdProxy(KeyValueProxy):
 
     def sub_keys(self, key):
         key_parts = self._full_path(key).split('/')
-        if key_parts == ['']:
-            key_parts = []
+        key_parts.remove('')
 
         sub_nodes = self.client.get(self._full_path(str(key))).children
         return set([sn.key.split('/')[len(key_parts)] for sn in sub_nodes])
