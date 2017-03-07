@@ -31,7 +31,7 @@ class EtcdProxy(KeyValueProxy):
         return self.client.delete(self._full_path(str(key)))
 
     def sub_keys(self, key):
-        key_parts = key.split('/')
+        key_parts = self._full_path(key).split('/')
         if key_parts == ['']:
             key_parts = []
 
