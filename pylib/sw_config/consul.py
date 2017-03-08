@@ -20,6 +20,9 @@ class ConsulProxy(KeyValueProxy):
         return self.client.kv.delete(str(key), recurse=True)
 
     def sub_keys(self, key):
+        if self.get(key) is None:
+            return None
+
         key = key.lstrip('/').rstrip('/')
         key_parts = key.split('/')
         if key_parts == ['']:
@@ -38,3 +41,4 @@ class ConsulProxy(KeyValueProxy):
 
     def __str__(self):
         return 'consul key value server=%s' % self.client.status.leader()
+
