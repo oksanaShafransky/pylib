@@ -9,6 +9,12 @@ class KeyValueProxy(object):
     def get(self, key):
         raise NotImplementedError()
 
+    def get_or_default(self, key, default_value=None):
+        try:
+            return self.get(key)
+        except Exception:
+            return default_value
+
     def set(self, key, value):
         raise NotImplementedError()
 
