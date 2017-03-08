@@ -32,10 +32,11 @@ class EtcdProxy(KeyValueProxy):
 
     def sub_keys(self, key):
         key_parts = self._full_path(key).split('/')
-        key_parts.remove('')
+        key_parts = [kp for kp in key_parts if kp != '']
 
         sub_nodes = self.client.get(self._full_path(str(key))).children
-        return set([sn.key.split('/')[len(key_parts)] for sn in sub_nodes])
+        # the +1 is due to / always preceding the key, yielding an extra element
+        return set([sn.key.split('/')[len(key_parts) + 1] for sn in sub_nodes])
 
     def items(self, prefix=None):
         next_keys = [prefix or '/']
