@@ -34,9 +34,13 @@ class EtcdProxy(KeyValueProxy):
         key_parts = self._full_path(key).split('/')
         key_parts = [kp for kp in key_parts if kp != '']
 
-        sub_nodes = self.client.get(self._full_path(str(key))).children
+        res = self.client.get(self._full_path(str(key)))
+        if len(res._children) == 0:  # there is a bug in the client causing an empty dir to return itself as a child
+            return set()
+
+        sub_nodes = res.children
         # the +1 is due to / always preceding the key, yielding an extra element
-        return set([sn.key.split('/')[len(key_parts) + 1] for sn in sub_nodes])
+        return set([sn.key.split('/')[len(key_parts) + 1] for sn in sub_nodes if sn.key != self._full_path(key)])
 
     def items(self, prefix=None):
         next_keys = [prefix or '/']
@@ -51,6 +55,5 @@ class EtcdProxy(KeyValueProxy):
 
     def __str__(self):
         return 'etcd key value server=%s, port=%d, root_path=%s' % (self.client.host, self.client.port, self.root_path)
-
 
 
