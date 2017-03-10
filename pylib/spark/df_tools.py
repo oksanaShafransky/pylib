@@ -1,5 +1,25 @@
 
-from pyspark.sql.functions import abs, min, isnan, isnull, coalesce, least, greatest
+from pyspark.sql.functions import udf, abs, min, isnan, isnull, coalesce, least, greatest
+from pyspark.sql.types import BooleanType
+
+
+def any_none(*vals):
+    return any([val is None for val in vals])
+any_null = udf(lambda *cols: any_none(*cols), BooleanType())
+
+
+def all_none(*vals):
+    return all([val is None for val in vals])
+all_null = udf(lambda *cols: all_none(*cols), BooleanType())
+
+
+def preserve_nulls(df, how='any', subset=None):
+    if how == 'all':
+        return df.filter(all_null(*(subset or df.columns)))
+    elif how == 'any':
+        return df.filter(any_null(*(subset or df.columns)))
+    else:
+        raise Exception('unknown method. choose between any and all')
 
 
 def df_compare(df_left, df_right, join_columns, sort_by_column=None, compared_columns=None, threshold=0.01, cmp_type='abs',
@@ -86,14 +106,10 @@ def df_diff(df_left, df_right, join_columns, sort_by_column=None, col_trans_left
         right_2_join = right_2_join.withColumn('%s_ind' % col.replace('.', '_'), right_2_join[col])
 
     left_joint = left_joint.join(right_2_join, on=list(join_columns), how='left_outer')
-    right_missing = left_joint \
-        .withColumn('join_indicator', coalesce(*['%s_ind' % col.replace('.', '_') for col in join_columns])) \
-        .filter(isnull('join_indicator'))
+    right_missing = preserve_nulls(left_joint, subset=['%s_ind' % col.replace('.', '_') for col in join_columns])
 
     right_joint = right_joint.join(left_2_join, on=list(join_columns), how='left_outer')
-    left_missing = right_joint \
-        .withColumn('join_indicator', coalesce(*['%s_ind' % col.replace('.', '_') for col in join_columns])) \
-        .filter(isnull('join_indicator'))
+    left_missing = preserve_nulls(right_joint, subset=['%s_ind' % col.replace('.', '_') for col in join_columns])
 
     if sort_by_column is None:
         return right_missing, left_missing

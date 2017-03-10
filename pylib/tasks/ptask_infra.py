@@ -467,7 +467,6 @@ class ContextualizedTasksInfra(object):
                                                    days_lookback=days_lookback,
                                                    date=date)
 
-
     def mark_success(self, directory, opts=''):
         if self.dry_run or self.checks_only:
             sys.stdout.write('''Dry Run: If successful would create '%s/_SUCCESS' marker\n''' % directory)
@@ -604,7 +603,7 @@ class ContextualizedTasksInfra(object):
         if py_files is None:
             py_files = []
 
-        if py_files == []:
+        if len(py_files) == 0:
             py_files_cmd = ' '
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(py_files)
