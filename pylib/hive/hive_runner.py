@@ -18,6 +18,13 @@ class HiveParamBuilder(object):
         'snappy': 'org.apache.hadoop.io.compress.SnappyCodec'
     }
 
+    PARQUET_COMPRESSION_FORMATS = {
+        'gz': 'GZIP',
+        'snappy': 'SNAPPY',
+        'lzo': 'LZO',
+        'default': 'SNAPPY'
+    }
+
     def __init__(self):
         self.root_queue = None
         self.pool = 'calculation'
@@ -133,6 +140,9 @@ class HiveParamBuilder(object):
         ret['hive.exec.compress.output'] = 'true' if self.compression is not None else 'false'
         if self.compression is not None:
             ret['mapreduce.output.fileoutputformat.compress.codec'] = HiveParamBuilder.COMPRESSION_FORMATS[self.compression]
+            # not all compressions are supported, so defaulting this
+            ret['parquet.compression'] = HiveParamBuilder.PARQUET_COMPRESSION_FORMATS\
+                .get(self.compression, HiveParamBuilder.PARQUET_COMPRESSION_FORMATS['default'])
 
         return ret
 
@@ -148,8 +158,7 @@ class HiveProcessRunner(object):
         'hive.vectorized.execution.enabled': 'true',
         'hive.vectorized.execution.reduce.enabled': 'true',
         'hive.cbo.enable': 'true',
-        'hive.stats.fetch.column.stats': 'true',
-        'parquet.compression': 'SNAPPY'
+        'hive.stats.fetch.column.stats': 'true'
     }
 
     def __init__(self):

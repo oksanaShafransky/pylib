@@ -18,7 +18,7 @@ class EtcdProxy(KeyValueProxy):
         return self.client.get(self._full_path(str(key)))
 
     def get(self, key):
-        return str(self._get_raw(key).value)
+        return self._get_raw(key).value
 
     def set(self, key, value):
         try:
@@ -48,12 +48,17 @@ class EtcdProxy(KeyValueProxy):
             nk = next_keys.pop(0)
             try_val = self._get_raw(nk)
             if not try_val.dir:
-                yield nk.replace('//', '/'), str(try_val.value)
+                yield nk.replace('//', '/'), try_val.value
             else:
                 for sk in self.sub_keys(nk):
                     next_keys.insert(0, '%s/%s' % (nk, sk))
 
     def __str__(self):
         return 'etcd key value server=%s, port=%d, root_path=%s' % (self.client.host, self.client.port, self.root_path)
+
+
+if __name__ == '__main__':
+    et = EtcdProxy('etcd.service.production', root_path='/v1/production')
+    print len(et.sub_keys('/services/centralstation/proxies/840/proxy'))
 
 
