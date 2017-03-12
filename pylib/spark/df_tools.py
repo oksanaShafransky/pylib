@@ -72,7 +72,9 @@ def df_compare(df_left, df_right, join_columns, sort_by_column=None, compared_co
 
     return joint \
         .filter(~ isnan(joint['%s_right' % sort_by_column]) & ~ isnan(joint['%s_left' % sort_by_column])) \
-        .filter(greatest(*[joint['%s_diff' % col] for col in compared_columns]) > threshold) \
+        .filter(greatest(*[joint['%s_diff' % col] for col in compared_columns]) > threshold
+                if len(compared_columns) > 1 else
+                '%s_diff > %f' % (compared_columns[0], threshold)) \
         .orderBy('%s_diff' % sort_by_column, ascending=False)
 
 
