@@ -720,10 +720,13 @@ class ContextualizedTasksInfra(object):
     def type_date_suffix(self):
         return 'type=%s/' % self.mode_type + self.date_suffix
 
+    # suffix for hbase tables
     @property
     def table_suffix(self):
         if self.mode == 'snapshot':
             return '_%s' % self.date.strftime('%y_%m')
+        elif self.mode == 'daily':
+            return '_%s' % self.date.strftime('%y_%m_%d')
         else:
             return '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
 
