@@ -135,20 +135,21 @@ def df_equivalent(df_left, df_right, join_columns, sort_by_column, threshold=0.0
                   col_trans_left=None, col_trans_right=None):
 
     diff_r, diff_l = df_diff(df_left, df_right, join_columns, sort_by_column, col_trans_left, col_trans_right)
-    comp = df_compare(df_left, df_right, join_columns, sort_by_column, threshold, cmp_type, col_trans_left, col_trans_right)
+    comp = df_compare(df_left, df_right, join_columns, sort_by_column, [sort_by_column],
+                      threshold, cmp_type, col_trans_left, col_trans_right)
 
     ret = True
 
-    if diff_r.count() != 0:
-        print "right dataframe has unique keys. example:"
+    if diff_r.count() > 0:
+        print 'right dataframe has unique keys. example:'
         print diff_r.first()
         ret = False
-    if diff_l.count() != 0:
-        print "left dataframe has unique keys. example:"
+    if diff_l.count() > 0:
+        print 'left dataframe has unique keys. example:'
         print diff_l.first()
         ret = False
-    if comp.count() != 0:
-        print "some rows are not equivalent (threshold=%d). example:" % threshold
+    if comp.count() > 0:
+        print 'some rows are not equivalent (threshold=%d). example:' % threshold
         print comp.first()
         ret = False
 
