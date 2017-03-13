@@ -48,7 +48,11 @@ class HiveParamBuilder(object):
 
     def add_child_option(self, option, where='all', condition=True):
         if condition:
-            self.child_opts[where].add(option)
+            if where == 'all':
+                self.child_opts['map'].add(option)
+                self.child_opts['reduce'].add(option)
+            else:
+                self.child_opts[where].add(option)
         return self
 
     def with_memory(self, amount_in_mb, where='all', condition=True):
@@ -127,9 +131,6 @@ class HiveParamBuilder(object):
             'mapreduce.task.io.sort.mb': max(self.map_task_memory / 10, 256),
             'hive.merge.mapredfiles': 'true' if self.consolidate else 'false'
         }
-
-        if len(self.child_opts['all']) > 0:
-            ret['mapreduce.child.java.opts'] = ' '.join(self.child_opts['all'])
 
         if len(self.child_opts['map']) > 0:
             ret['mapreduce.map.java.opts'] = ' '.join(self.child_opts['map'])
