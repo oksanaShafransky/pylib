@@ -60,6 +60,9 @@ class KeyValueProvider(object):
         return KeyValueProvider.conf.sub_keys(key)
 
 
+JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
+
+
 class TasksInfra(object):
     kv = KeyValueProvider()
 
@@ -174,12 +177,14 @@ class ContextualizedTasksInfra(object):
 
     def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, rerun_root_queue=False):
         command = self.__compose_infra_command(
-            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
+            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s %(profile_opt)s' %
             {
                 'base_dir': self.execution_dir,
                 'jar_relative_path': jar_path,
                 'jar': jar_name,
-                'class': main_class
+                'class': main_class,
+                'profile_opt': '-Dmapreduce.reduce.java.opts=%s -Dmapreduce.map.java.opts=%s' % (JAVA_PROFILER, JAVA_PROFILER) if
+                self.should_profile else ''
             }
         )
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
@@ -319,7 +324,6 @@ class ContextualizedTasksInfra(object):
             assert validate_records_per_region(table_name, columns, minimum_regions_count, rows_per_region, cluster_name), \
                 'hbase table content is not valid, table name: %s' % table_name
 
-
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
             self.__compose_hadoop_runner_command(jar_path=jar_path,
@@ -336,6 +340,8 @@ class ContextualizedTasksInfra(object):
             managed_output_dirs = []
         if self.rerun:
             hive_params = hive_params.as_rerun()
+        if self.should_profile:
+            hive_params = hive_params.add_child_option('-agentpath:/opt/yjp/bin/libyjpagent.so')
 
         job_name = 'Hive. %s - %s - %s' % (query_name, self.date_title, self.mode)
         if query_name_suffix is not None:
@@ -532,6 +538,10 @@ class ContextualizedTasksInfra(object):
         if num_executors is not None:
             additional_confs += ' --num-executors %d' % num_executors
 
+        if self.should_profile:
+            additional_confs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
+            additional_confs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
+
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
                   ' --conf "spark.yarn.tags=$TASK_ID"' \
@@ -597,6 +607,10 @@ class ContextualizedTasksInfra(object):
         if named_spark_args:
             for key, value in named_spark_args.items():
                 additional_configs += ' --%s %s' % (key, value)
+
+        if self.should_profile:
+            additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
+            additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
 
         if use_bigdata_defaults:
             main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
@@ -738,6 +752,10 @@ class ContextualizedTasksInfra(object):
     @property
     def rerun(self):
         return self.__get_common_args()['rerun']
+
+    @property
+    def should_profile(self):
+        return self.__get_common_args()['profile']
 
     @property
     def env_type(self):

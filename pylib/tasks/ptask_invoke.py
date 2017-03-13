@@ -24,6 +24,7 @@ class PtaskConfig(Config):
                                         'base_dir': '/similargroup/data',
                                         'force': True,
                                         'rerun': False,
+                                        'profile': False,
                                         'dry_run': False,
                                         'checks_only': False,
                                         'execution_dir': '.'}
@@ -54,6 +55,8 @@ class PtaskInvoker(Program):
             Argument(names=('checks_only', 'co'), kind=bool, default=False, optional=True,
                      help="Checks would run, executions would only print commands"),
             Argument(names=('table_prefix', 'tp'), help="Table Prefix", optional=True, default=''),
+            Argument(names=('profile', 'prf'), kind=bool,
+                     help="Profile flag - run containers with yourkit profiler"),
         ]
         return core_args + extra_args
 
@@ -88,6 +91,8 @@ class PtaskInvoker(Program):
             sw_tasks['checks_only'] = True
         if self.args.dry_run.value:
             sw_tasks['dry_run'] = True
+        if self.args.profile.value:
+            sw_tasks['profile'] = True
 
         if 'TASK_ID' in os.environ:
             sw_tasks['has_task_id'] = True
