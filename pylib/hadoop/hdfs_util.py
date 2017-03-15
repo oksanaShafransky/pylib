@@ -90,7 +90,7 @@ def get_size(path):
     return hdfs_client.count([path]).next()['spaceConsumed']
 
 
-def test_size(path, min_size_required=None):
+def test_size(path, min_size_required=None, is_strict=False):
     hdfs_client = create_client()
     if min_size_required is not None:
         logger.info('Checking that dir %s exists and is larger than %d...' % (path, min_size_required))
@@ -101,6 +101,11 @@ def test_size(path, min_size_required=None):
         space_consumed = hdfs_client.count([path]).next()['spaceConsumed']
         if min_size_required is None or space_consumed >= min_size_required:
             logger.info('it does')
+            if is_strict:
+                logger.info('Checking that dir is not too large...')
+                if space_consumed > min_size_required * 10:
+                    logger.info('Dir %s is %d, which is too large for the check vs %d' % (path, space_consumed, min_size_required))
+                    return False
             return True
         else:
             logger.info('it does not')

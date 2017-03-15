@@ -192,7 +192,7 @@ class ContextualizedTasksInfra(object):
             command = self.__with_rerun_root_queue(command)
         return command
 
-    def __is_hdfs_collection_valid(self, directories, min_size_bytes=0, validate_marker=False):
+    def __is_hdfs_collection_valid(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
         ans = True
         if isinstance(directories, list):
             for directory in directories:
@@ -210,7 +210,7 @@ class ContextualizedTasksInfra(object):
             if validate_marker:
                 ans = ans and check_success(directory)
             if min_size_bytes > 0:
-                ans = ans and test_size(directory, min_size_bytes)
+                ans = ans and test_size(directory, min_size_bytes, is_strict)
         return ans
 
     def is_valid_output_exists(self, directories, min_size_bytes=0, validate_marker=False):
@@ -294,20 +294,23 @@ class ContextualizedTasksInfra(object):
                 break
         return cnt
 
-    def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False):
+    def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
         self.log_lineage_hdfs(directories, 'input')
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
-                                               validate_marker=validate_marker) is True, \
+                                               validate_marker=validate_marker,
+                                               is_strict=is_strict) is True, \
             'Input is not valid, given value is %s' % directories
 
     def assert_output_validity(self, directories,
                                min_size_bytes=0,
-                               validate_marker=False):
+                               validate_marker=False,
+                               is_strict=False):
         self.log_lineage_hdfs(directories, 'output')
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
-                                               validate_marker=validate_marker) is True, \
+                                               validate_marker=validate_marker,
+                                               is_strict=is_strict) is True, \
             'Output is not valid, given value is %s' % directories
 
     #----------- HBASE -----------
