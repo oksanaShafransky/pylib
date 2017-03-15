@@ -103,7 +103,7 @@ def test_size(path, min_size_required=None, is_strict=False):
             logger.info('it does')
             if is_strict:
                 logger.info('Checking that dir is not too large...')
-                if space_consumed > min_size_required * 10:
+                if space_consumed > min_size_required * 30: # Chang to 10 after fixing spaceConsumed
                     logger.info('Dir %s is %d, which is too large for the check vs %d' % (path, space_consumed, min_size_required))
                     return False
             return True
