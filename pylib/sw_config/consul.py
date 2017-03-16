@@ -20,9 +20,6 @@ class ConsulProxy(KeyValueProxy):
         return self.client.kv.delete(str(key), recurse=True)
 
     def sub_keys(self, key):
-        if self.get(key) is None:
-            return None
-
         key = key.lstrip('/').rstrip('/')
         key_parts = key.split('/')
         if key_parts == ['']:
@@ -33,7 +30,10 @@ class ConsulProxy(KeyValueProxy):
         else:
             matching_keys = [k for k in self.client.kv.find(str(key)) if k.startswith(key + '/')]
 
-        return set([k.split('/')[len(key_parts)] for k in matching_keys])
+        if len(matching_keys) == 0:
+            return None
+        else:
+            return set([k.split('/')[len(key_parts)] for k in matching_keys])
 
     def items(self, prefix=None):
         for key in self.client.kv.find(prefix or ''):
