@@ -56,12 +56,12 @@ def kv_diff(kv1, kv2, two_sided=False, branch=None, branch2=None):
     for key, val in kv1.items(prefix=branch):
         comparable = kv2.get_or_default(key)
         if val != comparable:
-            ret.add_kv(key, (val, comparable))
+            ret.add_kv(key, {'source': val, 'target': comparable})
 
     if two_sided:
         for key, val in kv2.items(prefix=branch2 or branch):
             comparable = kv1.get_or_default(key)
             if val != comparable:
-                ret.add_kv(key, (comparable, val))
+                ret.add_kv(key, {'source': comparable, 'target': val})
 
     return ret
