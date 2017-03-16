@@ -569,17 +569,32 @@ class ContextualizedTasksInfra(object):
         return self.run_bash(command).ok
 
     def get_jars_list(self, module_dir, jars_from_lib):
-        # TODO: use pylib - should include all jars?
+        lib_module_dir = '%s/lib' % module_dir
+        jars_in_dir = os.listdir(lib_module_dir)
         if jars_from_lib:
-            jars_from_lib = map(lambda x: '%s.jar' % x, jars_from_lib)
+            if self.dry_run or self.checks_only:
+                print('Dry run: Would try and attach the following jars ' + jars_from_lib)
+                selected_jars = []
+            else:
+                # regex removes non alpha characters and 'jar'. Zip to create a dict of de-versioned jar
+                # name and original jar name
+                module_jars_alpha = dict(zip(map(lambda s: re.sub('[^a-zA-Z]|jar', '', s), jars_in_dir), jars_in_dir))
+                jars_from_lib_alpha = map(lambda s: re.sub('[^a-zA-Z]|jar', '', s), jars_from_lib)
+
+                jar_matches = filter(lambda lib_jar: any(lib_jar in mod_jar for mod_jar in module_jars_alpha), jars_from_lib_alpha)
+                # get the name including version of the jars that matched
+                selected_jars = filter(None, [module_jars_alpha.get(jar) for jar in jar_matches])
+
+                # check if a jar the user provided was not matched to a jar in the lib module directory
+                jars_not_found = set(jar_matches).symmetric_difference(set(jars_from_lib_alpha))
+                assert len(jars_not_found) == 0, "The following jars were not found: %s" % ', '.join(jars_not_found)
         else:
-            lib_module_dir = '%s/lib' % module_dir
             if self.dry_run or self.checks_only:
                 print('Dry Run: Would attach jars from ' + lib_module_dir)
-                jars_from_lib = []
+                selected_jars = []
             else:
-                jars_from_lib = os.listdir(lib_module_dir)
-        jars = ','.join(map(lambda x: module_dir + '/lib/' + x, jars_from_lib))
+                selected_jars = jars_in_dir
+        jars = ','.join(map(lambda x: module_dir + '/lib/' + x, selected_jars))
         return jars
 
     def run_py_spark(self,
