@@ -4,6 +4,8 @@ import re
 
 import invoke
 import datetime
+
+import pytest
 from redis import StrictRedis
 
 from pylib.tasks.ptask_infra import TasksInfra, ContextualizedTasksInfra
@@ -157,3 +159,25 @@ class TestContextualizedTasksInfra(object):
         c_infra.log_lineage_hdfs(['/tmp/test', '/tmp/test2'], 'output')
         assert len(actual_values) == 2
         assert set(actual_values) == set(expected_values)
+
+    def test_get_jars_list(self, monkeypatch):
+        self._disable_invoke_debug()
+
+        def mock_listdir(path):
+            return ['httpcore-4.4.5.jar', 'annotations-15.0.jar', 'httpcore-nio-4.4.5.jar']
+
+        monkeypatch.setattr(os, 'listdir', mock_listdir)
+
+        config = PtaskConfig()
+        ctx = invoke.context.Context(config)
+        c_infra = ContextualizedTasksInfra(ctx)
+
+        jars = c_infra.get_jars_list(module_dir='analaytics', jars_from_lib=['httpcore.jar', 'annotations.jar'])
+
+        assert jars == 'analaytics/lib/httpcore-4.4.5.jar,analaytics/lib/annotations-15.0.jar'
+
+        # check that we throw assertion error for extraneous jar
+        with pytest.raises(AssertionError):
+            c_infra.get_jars_list(module_dir='analaytics', jars_from_lib=['alternativefact.jar',
+                                                                                 'annotations.jar'])
+
