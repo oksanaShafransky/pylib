@@ -586,7 +586,9 @@ class ContextualizedTasksInfra(object):
                 selected_jars = filter(None, [module_jars_alpha.get(jar) for jar in jar_matches])
 
                 # check if a jar the user provided was not matched to a jar in the lib module directory
-                jars_not_found = set(jar_matches).symmetric_difference(set(jars_from_lib_alpha))
+                module_jars_alpha_invert = {v: k for k, v in module_jars_alpha.items()}
+                jars_not_found = set([module_jars_alpha_invert[j] for j in selected_jars])\
+                    .symmetric_difference(set(jars_from_lib_alpha))
                 assert len(jars_not_found) == 0, "The following jars were not found: %s" % ', '.join(jars_not_found)
         else:
             if self.dry_run or self.checks_only:
