@@ -342,6 +342,8 @@ class ContextualizedTasksInfra(object):
                    file_exists(file_path=snapshot_path + 'data.manifest', hdfs_client=hdfs_client),\
                 'hbase snapshot not found in path {snapshot_path}'.format(**snapshot_params)
 
+            print('snapshot exists')
+
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
