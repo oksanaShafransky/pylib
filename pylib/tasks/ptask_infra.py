@@ -329,17 +329,18 @@ class ContextualizedTasksInfra(object):
                                                cluster_name), \
                 'hbase table content is not valid, table name: %s' % table_name
 
-    def assert_hbase_snapshot_exists(self, snapshot_name, target_root, name_node):
+    def assert_hbase_snapshot_exists(self, snapshot_name, target_root='/hbase', name_node=None):
         snapshot_params = {'snapshot_name': snapshot_name, 'target_root': target_root}
-        hdfs_client = create_client(name_node=name_node)
-        if self.dry_run:
-            print("Dry run: would have checked that {snapshot_name} exists at {target_root}".format(**snapshot_params))
-        else:
+        snapshot_params['snapshot_path'] = snapshot_path = '{target_root}/.hbase-snapshot/{snapshot_name}/'.format(**snapshot_params)
+        hdfs_client = create_client(name_node=name_node) if name_node else None
 
-            snapshot_path = '{target_root}/.hbase-snapshot/{snapshot_name}/'.format(**snapshot_params)
-            print(snapshot_path)
-            assert file_exists(file_path=snapshot_path + '.snapshotinfo', hdfs_client=hdfs_client) and file_exists(
-                file_path=snapshot_path + 'data.manifest', hdfs_client=hdfs_client)
+        if self.dry_run:
+            print("Dry run: would have checked that {snapshot_name} exists at {snapshot_path}".format(**snapshot_params))
+        else:
+            assert file_exists(file_path=snapshot_path + '.snapshotinfo', hdfs_client=hdfs_client) and \
+                   file_exists(file_path=snapshot_path + 'data.manifest', hdfs_client=hdfs_client),\
+                'hbase snapshot not found in path {snapshot_path}'.format(**snapshot_params)
+
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
