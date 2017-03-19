@@ -568,9 +568,14 @@ class ContextualizedTasksInfra(object):
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
         return self.run_bash(command).ok
 
+    @staticmethod
+    def sym_diff_lists(list1, list2):
+            return list(set(list1).symmetric_difference(set(list2)))
+
     def get_jars_list(self, module_dir, jars_from_lib):
         lib_module_dir = '%s/lib' % module_dir
         jars_in_dir = os.listdir(lib_module_dir)
+
         if jars_from_lib:
             if self.dry_run or self.checks_only:
                 print('Dry run: Would try and attach the following jars ' + jars_from_lib)
@@ -580,17 +585,31 @@ class ContextualizedTasksInfra(object):
                 # name and original jar name
                 module_jars_alpha = {alpha: ver for (alpha, ver) in
                                      map(lambda s: (re.sub('[^a-zA-Z]|jar', '', s), s), jars_in_dir)}
-                jars_from_lib_alpha = map(lambda s: re.sub('[^a-zA-Z]|jar', '', s), jars_from_lib)
+                jars_from_lib = map(lambda s: re.sub('(.jar)', '', s), jars_from_lib)
 
-                jar_matches = filter(lambda lib_jar: any(lib_jar in mod_jar for mod_jar in module_jars_alpha), jars_from_lib_alpha)
-                # get the name including version of the jars that matched
-                selected_jars = filter(None, [module_jars_alpha.get(jar) for jar in jar_matches])
+                # non versioned jar_matches
+                jfl_non_versioned = map(lambda s: re.sub('[^a-zA-Z]', '', s),
+                                        filter(lambda x: not bool(re.search('\d', x)), jars_from_lib))
+                jar_matches_nonversioned = filter(
+                    lambda lib_jar: any(lib_jar in mod_jar for mod_jar in module_jars_alpha.keys()), jfl_non_versioned)
 
-                # check if a jar the user provided was not matched to a jar in the lib module directory
-                module_jars_alpha_invert = {v: k for k, v in module_jars_alpha.items()}
-                jars_not_found = set([module_jars_alpha_invert[j] for j in selected_jars])\
-                    .symmetric_difference(set(jars_from_lib_alpha))
-                assert len(jars_not_found) == 0, "The following jars were not found: %s" % ', '.join(jars_not_found)
+                unmatched_unversioned = ContextualizedTasksInfra.sym_diff_lists(jfl_non_versioned, jar_matches_nonversioned)
+
+                # versioned jar_matches
+                jfl_versioned = filter(lambda x: bool(re.search('\d', x)), jars_from_lib)
+                jar_matches_versioned = filter(
+                    lambda lib_jar: any(lib_jar in mod_jar for mod_jar in module_jars_alpha.values()), jfl_versioned)
+
+                unmatched_versioned = ContextualizedTasksInfra.sym_diff_lists(jfl_versioned, jar_matches_versioned)
+
+                unmatched_jars = unmatched_unversioned + unmatched_versioned
+
+                assert len(unmatched_jars) == 0, "The following jars were not found: %s" % ', '.join(unmatched_jars)
+
+                total_matches = jar_matches_nonversioned + jar_matches_versioned
+                total_matches_alpha = map(lambda s: re.sub('[^a-zA-Z]|jar', '', s), total_matches)
+
+                selected_jars = filter(None, [module_jars_alpha.get(jar) for jar in total_matches_alpha])
         else:
             if self.dry_run or self.checks_only:
                 print('Dry Run: Would attach jars from ' + lib_module_dir)
