@@ -1,4 +1,4 @@
-class PathTree(object):
+class KeyValueTree(object):
     def __init__(self):
         self._entries = 0
         self.root = dict()
@@ -23,14 +23,14 @@ class PathTree(object):
             yield '/'.join(paths), node['_value']
         else:
             for sub_node, sub_tree in node.iteritems():
-                for k1, v1 in PathTree._iter_node(paths + [sub_node], sub_tree):
+                for k1, v1 in KeyValueTree._iter_node(paths + [sub_node], sub_tree):
                     yield k1, v1
 
     def __iter__(self):
         return self._iter_node([], self.root)
 
     def __add__(self, other):
-        ret = PathTree()
+        ret = KeyValueTree()
 
         for self_k, self_v in self:
             ret.add_kv(self_k, self_v)
@@ -44,7 +44,7 @@ class PathTree(object):
 
 
 def kv_to_tree(kv, branch=None):
-    ret = PathTree()
+    ret = KeyValueTree()
     for key, value in kv.items(prefix=branch):
         ret.add_kv(key, value)
 
@@ -52,7 +52,7 @@ def kv_to_tree(kv, branch=None):
 
 
 def kv_diff(kv1, kv2, two_sided=False, branch=None, branch2=None):
-    ret = PathTree()
+    ret = KeyValueTree()
     for key, val in kv1.items(prefix=branch):
         comparable = kv2.get_or_default(key)
         if val != comparable:
