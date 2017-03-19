@@ -4,6 +4,8 @@ import re
 
 import invoke
 import datetime
+
+import pytest
 from redis import StrictRedis
 
 from pylib.tasks.ptask_infra import TasksInfra, ContextualizedTasksInfra
@@ -157,3 +159,10 @@ class TestContextualizedTasksInfra(object):
         c_infra.log_lineage_hdfs(['/tmp/test', '/tmp/test2'], 'output')
         assert len(actual_values) == 2
         assert set(actual_values) == set(expected_values)
+
+    def test_assert_hbase_snapshot_exists(self):
+        config = PtaskConfig()
+        ctx = invoke.context.Context(config)
+        c_infra = ContextualizedTasksInfra(ctx)
+
+        c_infra.assert_hbase_snapshot_exists('top_lists_17_02_barak_test', '/hbase', 'hbase-production-hdfs-nn.service.consul')

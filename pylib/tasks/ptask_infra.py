@@ -19,7 +19,8 @@ from redis import StrictRedis
 
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
-from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file
+from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
+    create_client
 from pylib.sw_config.kv_factory import provider_from_config
 from pylib.hbase.hbase_utils import validate_records_per_region
 
@@ -324,8 +325,21 @@ class ContextualizedTasksInfra(object):
             log_message += '\n'
             sys.stdout.write(log_message)
         else:
-            assert validate_records_per_region(table_name, columns, minimum_regions_count, rows_per_region, cluster_name), \
+            assert validate_records_per_region(table_name, columns, minimum_regions_count, rows_per_region,
+                                               cluster_name), \
                 'hbase table content is not valid, table name: %s' % table_name
+
+    def assert_hbase_snapshot_exists(self, snapshot_name, target_root, name_node):
+        snapshot_params = {'snapshot_name': snapshot_name, 'target_root': target_root}
+        hdfs_client = create_client(name_node=name_node)
+        if self.dry_run:
+            print("Dry run: would have checked that {snapshot_name} exists at {target_root}".format(**snapshot_params))
+        else:
+
+            snapshot_path = '{target_root}/.hbase-snapshot/{snapshot_name}/'.format(**snapshot_params)
+            print(snapshot_path)
+            assert file_exists(file_path=snapshot_path + '.snapshotinfo', hdfs_client=hdfs_client) and file_exists(
+                file_path=snapshot_path + 'data.manifest', hdfs_client=hdfs_client)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
