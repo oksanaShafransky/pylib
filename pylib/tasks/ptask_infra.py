@@ -578,7 +578,8 @@ class ContextualizedTasksInfra(object):
             else:
                 # regex removes non alpha characters and 'jar'. Zip to create a dict of de-versioned jar
                 # name and original jar name
-                module_jars_alpha = dict(zip(map(lambda s: re.sub('[^a-zA-Z]|jar', '', s), jars_in_dir), jars_in_dir))
+                module_jars_alpha = {alpha: ver for (alpha, ver) in
+                                     map(lambda s: (re.sub('[^a-zA-Z]|jar', '', s), s), jars_in_dir)}
                 jars_from_lib_alpha = map(lambda s: re.sub('[^a-zA-Z]|jar', '', s), jars_from_lib)
 
                 jar_matches = filter(lambda lib_jar: any(lib_jar in mod_jar for mod_jar in module_jars_alpha), jars_from_lib_alpha)
