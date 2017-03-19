@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 # read config to rely on run environment
-def create_client():
-    return snakebite.client.Client(MRP_HDFS_NAMENODE_SERVER, MRP_HDFS_NAMENODE_PORT, use_trash=False)
+def create_client(name_node=MRP_HDFS_NAMENODE_SERVER):
+    return snakebite.client.Client(name_node, MRP_HDFS_NAMENODE_PORT, use_trash=False)
 
 
 # needed because the regular client throws an exception when a parent directory doesnt exist either
