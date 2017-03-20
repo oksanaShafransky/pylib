@@ -189,3 +189,11 @@ class TestContextualizedTasksInfra(object):
             c_infra.get_jars_list(module_dir='analytics', jars_from_lib=['alternativefact.jar',
                                                                                  'annotations.jar'])
 
+
+    #TODO Finalize unit test for assert_hbase_snapshot_exists
+    # def test_assert_hbase_snapshot_exists(self):
+    #     config = PtaskConfig()
+    #     ctx = invoke.context.Context(config)
+    #     c_infra = ContextualizedTasksInfra(ctx)
+    #
+    #     c_infra.assert_hbase_snapshot_exists('top_lists_17_02_barak_test', '/hbase', 'hbase-production-hdfs-nn.service.consul')
