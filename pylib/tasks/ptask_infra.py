@@ -570,28 +570,59 @@ class ContextualizedTasksInfra(object):
 
     @staticmethod
     def sym_diff_lists(list1, list2):
-            return list(set(list1).symmetric_difference(set(list2)))
+        """
+        Receives two lists and returns list with elements in either the first list or the second list, but not both.
+
+        :param list1:
+        :type list: list
+        :param list2:
+        :type list2: list
+        :return: list
+        """
+        return list(set(list1).symmetric_difference(set(list2)))
+
+    @staticmethod
+    def un_version_jar_names(jars, with_version=False):
+        """
+        Remove all non alphabetical characters and 'jar' from list of jars. If with_version is True
+        return list of tuples where first element is the un-versioned jar and the second element in the original jar.
+        """
+        if with_version:
+            return map(lambda s: (re.sub('[^a-zA-Z]|(jar)', '', s), s), jars)
+        else:
+            return map(lambda s: re.sub('[^a-zA-Z]|(jar)', '', s), jars)
+
 
     def get_jars_list(self, module_dir, jars_from_lib):
+        """
+        Returns a list of jars for a given module_dir. If jars_from_lib is not provided, returns a string of
+        paths of all jars from the appropriate library folder. If jars_from_lib is specified, accepts a list of
+        jars agnostic to version number and matches the provided jars with existing jars in the module lib directory. If
+        version numbers are included, will match only jars with the given version number.
+
+        :param module_dir: The module directory, ie: analytics or mobile
+        :type module_dir: str
+
+        :param jars_from_lib: Library jars you want to find
+        :type jars_from_lib: list
+
+        :return: str
+        """
         lib_module_dir = '%s/lib' % module_dir
         jars_in_dir = os.listdir(lib_module_dir)
 
         if jars_from_lib:
             if self.dry_run or self.checks_only:
-                print('Dry run: Would try and attach the following jars ' + jars_from_lib)
+                print('Dry run: Would try and attach the following jars ' + ''.join(jars_from_lib))
                 selected_jars = []
             else:
-                # regex removes non alpha characters and 'jar'. Zip to create a dict of de-versioned jar
+                # regex removes non alpha characters and 'jar'. Create a mapping of de-versioned jar
                 # name and original jar name
-                module_jars_alpha = {alpha: ver for (alpha, ver) in
-                                     map(lambda s: (re.sub('[^a-zA-Z]|jar', '', s), s), jars_in_dir)}
-                jars_from_lib = map(lambda s: re.sub('(.jar)', '', s), jars_from_lib)
+                module_jars_alpha = {alpha: ver for (alpha, ver) in ContextualizedTasksInfra.un_version_jar_names(jars_in_dir, True)}
 
                 # non versioned jar_matches
-                jfl_non_versioned = map(lambda s: re.sub('[^a-zA-Z]', '', s),
-                                        filter(lambda x: not bool(re.search('\d', x)), jars_from_lib))
-                jar_matches_nonversioned = filter(
-                    lambda lib_jar: any(lib_jar in mod_jar for mod_jar in module_jars_alpha.keys()), jfl_non_versioned)
+                jfl_non_versioned = ContextualizedTasksInfra.un_version_jar_names(filter(lambda x: not bool(re.search('\d', x)), jars_from_lib))
+                jar_matches_nonversioned = filter(lambda lib_jar: any(lib_jar in mod_jar for mod_jar in module_jars_alpha.keys()), jfl_non_versioned)
 
                 unmatched_unversioned = ContextualizedTasksInfra.sym_diff_lists(jfl_non_versioned, jar_matches_nonversioned)
 
@@ -607,7 +638,7 @@ class ContextualizedTasksInfra(object):
                 assert len(unmatched_jars) == 0, "The following jars were not found: %s" % ', '.join(unmatched_jars)
 
                 total_matches = jar_matches_nonversioned + jar_matches_versioned
-                total_matches_alpha = map(lambda s: re.sub('[^a-zA-Z]|jar', '', s), total_matches)
+                total_matches_alpha = ContextualizedTasksInfra.un_version_jar_names(total_matches)
 
                 selected_jars = filter(None, [module_jars_alpha.get(jar) for jar in total_matches_alpha])
         else:

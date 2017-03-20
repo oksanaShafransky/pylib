@@ -172,12 +172,20 @@ class TestContextualizedTasksInfra(object):
         ctx = invoke.context.Context(config)
         c_infra = ContextualizedTasksInfra(ctx)
 
-        jars = c_infra.get_jars_list(module_dir='analaytics', jars_from_lib=['httpcore.jar', 'annotations.jar'])
+        # test unversioned
+        jars = c_infra.get_jars_list(module_dir='analytics', jars_from_lib=['httpcore.jar', 'annotations.jar'])
+        assert jars == 'analytics/lib/httpcore-4.4.5.jar,analytics/lib/annotations-15.0.jar'
 
-        assert jars == 'analaytics/lib/httpcore-4.4.5.jar,analaytics/lib/annotations-15.0.jar'
+        # test versioned
+        jars = c_infra.get_jars_list(module_dir='analytics', jars_from_lib=['httpcore.jar', 'annotations-15.0.jar'])
+        assert jars == 'analytics/lib/httpcore-4.4.5.jar,analytics/lib/annotations-15.0.jar'
+
+        # test wrong version
+        with pytest.raises(AssertionError):
+            c_infra.get_jars_list(module_dir='analytics', jars_from_lib=['httpcore.jar', 'annotations-16.0.jar'])
 
         # check that we throw assertion error for extraneous jar
         with pytest.raises(AssertionError):
-            c_infra.get_jars_list(module_dir='analaytics', jars_from_lib=['alternativefact.jar',
+            c_infra.get_jars_list(module_dir='analytics', jars_from_lib=['alternativefact.jar',
                                                                                  'annotations.jar'])
 
