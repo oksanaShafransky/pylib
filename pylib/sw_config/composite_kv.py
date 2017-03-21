@@ -69,7 +69,9 @@ class PrefixedConfigurationProxy(KeyValueProxy):
         return self.proxy.sub_keys('%s%s' % (self.prefix, key))
 
     def items(self, prefix=None):
-        return self.proxy.items(prefix=self.prefix+(prefix or ''))
+        return map(lambda key_val: (key_val[0].lstrip(self.prefix), key_val[1]),
+                   self.proxy.items(prefix=self.prefix+(prefix or '')))
+
 
     def __str__(self):
         return '%s at branch %s' % (self.proxy, self.prefix)
