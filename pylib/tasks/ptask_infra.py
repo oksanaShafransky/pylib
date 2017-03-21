@@ -586,18 +586,59 @@ class ContextualizedTasksInfra(object):
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
         return self.run_bash(command).ok
 
+
+    @staticmethod
+    def match_jar(jar, jars_in_dir):
+        matched_jars = []
+        for dir_jar in jars_in_dir:
+            if dir_jar.startswith(jar.replace('.jar', '')):
+                matched_jars.append(dir_jar)
+        return matched_jars
+
+    @staticmethod
+    def match_jars_from_lib(jars_from_lib, jars_in_dir):
+        matches = []
+        unmatched = []
+        for jar in jars_from_lib:
+            match = ContextualizedTasksInfra.match_jar(jar, jars_in_dir)
+            if match:
+                matches.extend(match)
+            else:
+                unmatched.append(jar)
+        assert len(unmatched) == 0, "The following jars were not found: %s" % ', '.join(unmatched)
+        return matches
+
     def get_jars_list(self, module_dir, jars_from_lib):
-        # TODO: use pylib - should include all jars?
+        """
+        Returns a list of jars for a given module_dir. If jars_from_lib is not provided, returns a string of
+        paths of all jars from the appropriate library folder. If jars_from_lib is specified, accepts a list of
+        jars and matches the provided jars with existing jars in the module lib directory.
+        :param module_dir: The module directory, ie: analytics or mobile
+        :type module_dir: str
+
+        :param jars_from_lib: Library jars you want to find
+        :type jars_from_lib: list
+
+        :return: str
+        """
+        lib_module_dir = '%s/lib' % module_dir
+
+        jars_in_dir = os.listdir(lib_module_dir)
+
         if jars_from_lib:
-            jars_from_lib = map(lambda x: '%s.jar' % x, jars_from_lib)
+            if self.dry_run or self.checks_only:
+                selected_jars = ContextualizedTasksInfra.match_jars_from_lib(jars_from_lib, jars_in_dir)
+                print('Dry run: Would try and attach the following jars ' + ''.join(selected_jars))
+                selected_jars = []
+            else:
+                selected_jars = ContextualizedTasksInfra.match_jars_from_lib(jars_from_lib, jars_in_dir)
         else:
-            lib_module_dir = '%s/lib' % module_dir
             if self.dry_run or self.checks_only:
                 print('Dry Run: Would attach jars from ' + lib_module_dir)
-                jars_from_lib = []
+                selected_jars = []
             else:
-                jars_from_lib = os.listdir(lib_module_dir)
-        jars = ','.join(map(lambda x: module_dir + '/lib/' + x, jars_from_lib))
+                selected_jars = jars_in_dir
+        jars = ','.join(map(lambda x: module_dir + '/lib/' + x, selected_jars))
         return jars
 
     def run_py_spark(self,
