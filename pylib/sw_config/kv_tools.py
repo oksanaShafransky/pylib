@@ -10,7 +10,7 @@ class KeyValueTree(object):
         self.root = dict()
 
     def __init__(self, kv_repr):
-        self.root = json.loads(repr)
+        self.root = json.loads(kv_repr)
         self._entries = len([_ for (_, _) in self])
 
     def add_kv(self, key, value):

@@ -42,7 +42,7 @@ def open(s3_url, mode='r'):
         s3_file = bucket.new_key(filename)
 
     if mode == 'r':
-        return s3_file.open('r')
+        return s3_file
     elif mode == 'w':
         return S3WriterWrapper(s3_file)
     elif mode == 'a':
