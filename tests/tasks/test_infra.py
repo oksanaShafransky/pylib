@@ -162,49 +162,37 @@ class TestContextualizedTasksInfra(object):
 
     @staticmethod
     @pytest.fixture
-    def get_jars_list_fixture():
+    def get_jars_list_fixture(monkeypatch):
         config = PtaskConfig()
         ctx = invoke.context.Context(config)
         c_infra = ContextualizedTasksInfra(ctx)
-        return c_infra
-
-    def test_get_jars_list_unversioned(self, monkeypatch, get_jars_list_fixture):
-        self._disable_invoke_debug()
 
         def mock_listdir(path):
-                return ['httpcore-4.4.5.jar', 'annotations-15.0.jar', 'httpcore-nio-4.4.5.jar']
+            return ['httpcore-4.4.5.jar', 'annotations-15.0.jar', 'httpcore-nio-4.4.5.jar']
         monkeypatch.setattr(os, 'listdir', mock_listdir)
+
+        return c_infra
+
+    def test_get_jars_list_unversioned(self, get_jars_list_fixture):
+        self._disable_invoke_debug()
 
         jars = get_jars_list_fixture.get_jars_list(module_dir='analytics', jars_from_lib=['httpcore.jar', 'annotations.jar'])
         assert jars == 'analytics/lib/httpcore-4.4.5.jar,analytics/lib/httpcore-nio-4.4.5.jar,analytics/lib/annotations-15.0.jar'
 
-    def test_get_jars_list_versioned(self, monkeypatch, get_jars_list_fixture):
+    def test_get_jars_list_versioned(self, get_jars_list_fixture):
         self._disable_invoke_debug()
-
-        def mock_listdir(path):
-            return ['httpcore-4.4.5.jar', 'annotations-15.0.jar', 'httpcore-nio-4.4.5.jar']
-        monkeypatch.setattr(os, 'listdir', mock_listdir)
 
         jars = get_jars_list_fixture.get_jars_list(module_dir='analytics', jars_from_lib=['annotations-15.0.jar'])
         assert jars == 'analytics/lib/annotations-15.0.jar'
 
-    def test_get_jars_list_wrong_version(self, monkeypatch, get_jars_list_fixture):
+    def test_get_jars_list_wrong_version(self, get_jars_list_fixture):
         self._disable_invoke_debug()
-
-        def mock_listdir(path):
-            return ['httpcore-4.4.5.jar', 'annotations-15.0.jar', 'httpcore-nio-4.4.5.jar']
-
-        monkeypatch.setattr(os, 'listdir', mock_listdir)
 
         with pytest.raises(AssertionError):
             get_jars_list_fixture.get_jars_list(module_dir='analytics', jars_from_lib=['httpcore.jar', 'annotations-16.0.jar'])
 
-    def test_get_jars_list_extraneous_jar(self, monkeypatch, get_jars_list_fixture):
+    def test_get_jars_list_extraneous_jar(self, get_jars_list_fixture):
         self._disable_invoke_debug()
-
-        def mock_listdir(path):
-            return ['httpcore-4.4.5.jar', 'annotations-15.0.jar', 'httpcore-nio-4.4.5.jar']
-        monkeypatch.setattr(os, 'listdir', mock_listdir)
 
         with pytest.raises(AssertionError):
             get_jars_list_fixture.get_jars_list(module_dir='analytics', jars_from_lib=['alternativefact.jar',
