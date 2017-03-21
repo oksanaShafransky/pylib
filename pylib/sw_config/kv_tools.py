@@ -1,7 +1,17 @@
+try:
+    import ujson as json
+except ImportError:
+    import json
+
+
 class KeyValueTree(object):
     def __init__(self):
         self._entries = 0
         self.root = dict()
+
+    def __init__(self, kv_repr):
+        self.root = json.loads(repr)
+        self._entries = len([_ for (_, _) in self])
 
     def add_kv(self, key, value):
         key_parts = key.split('/')
@@ -44,6 +54,13 @@ class KeyValueTree(object):
 
 
 def kv_to_tree(kv, branch=None):
+    """
+
+    :param kv: key value proxy
+    :param branch: subtree
+    :return: KeyValueTree object mapping the key value store
+    """
+
     ret = KeyValueTree()
     for key, value in kv.items(prefix=branch):
         ret.add_kv(key, value)
@@ -52,6 +69,17 @@ def kv_to_tree(kv, branch=None):
 
 
 def kv_diff(kv1, kv2, two_sided=False, branch=None, branch2=None):
+    """
+    calculates the differences between tow given key value stores
+
+    :param kv1: key value proxy for first store
+    :param kv2: key value proxy for second store
+    :param two_sided: whether to also return kv2 - kv1, in addition to kv1 - kv2
+    :param branch: branch to iterate on both key values. default is the the root
+    :param branch2: option to override branch given, for kv2 alone
+    :return: KeyValueTree representing the differences
+    """
+
     ret = KeyValueTree()
     for key, val in kv1.items(prefix=branch):
         comparable = kv2.get_or_default(key)
@@ -65,3 +93,17 @@ def kv_diff(kv1, kv2, two_sided=False, branch=None, branch2=None):
                 ret.add_kv(key, {'source': comparable, 'target': val})
 
     return ret
+
+
+def load_kv(kv, kv_repr):
+    """
+    loads key value tree represented by the argument to the key value proxy kv
+
+    :param kv: target. key value proxy
+    :param repr: (string) json representation of the key value chain to load
+    :return: nothing
+    """
+
+    to_add = KeyValueTree(kv_repr)
+    for key, value in to_add:
+        kv.set(key, value)
