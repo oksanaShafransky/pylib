@@ -5,13 +5,13 @@ except ImportError:
 
 
 class KeyValueTree(object):
-    def __init__(self):
-        self._entries = 0
-        self.root = dict()
-
-    def __init__(self, kv_repr):
-        self.root = json.loads(kv_repr)
-        self._entries = len([_ for (_, _) in self])
+    def __init__(self, kv_repr=None):
+        if kv_repr is None:
+            self._entries = 0
+            self.root = dict()
+        else:
+            self.root = json.loads(kv_repr)
+            self._entries = len([_ for (_, _) in self])
 
     def add_kv(self, key, value):
         key_parts = key.split('/')
