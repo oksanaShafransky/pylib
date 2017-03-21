@@ -50,7 +50,7 @@ class CompositeConfigurationProxy(KeyValueProxy):
 
 
 class PrefixedConfigurationProxy(KeyValueProxy):
-    def __init__(self, underlying_proxy, *prefixes):
+    def __init__(self, underlying_proxy, prefixes):
         self.proxy = underlying_proxy
         self.prefix = '/'.join([pref for pref in prefixes if pref is not None])
         if len(self.prefix) > 0:
@@ -67,3 +67,26 @@ class PrefixedConfigurationProxy(KeyValueProxy):
 
     def sub_keys(self, key):
         return self.proxy.sub_keys('%s%s' % (self.prefix, key))
+
+    def __str__(self):
+        return '%s at branch %s' % (self.proxy, self.prefix)
+
+
+if __name__ == '__main__':
+    conf = '''
+    {
+        "class": "pylib.sw_config.composite_kv.PrefixedConfigurationProxy",
+        "underlying_proxy": {
+            "class": "pylib.sw_config.etcd_kv.EtcdProxy",
+            "server": "etcd.service.production",
+            "port": 4001,
+            "root_path": "v1/production"
+        },
+        "prefixes": ["backup","retention-process"]
+    }
+    '''
+
+    from pylib.sw_config.kv_factory import provider_from_config
+    kvp = provider_from_config(conf)
+    print kvp
+

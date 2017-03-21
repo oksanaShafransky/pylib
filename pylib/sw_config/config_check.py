@@ -85,7 +85,7 @@ if __name__ == '__main__':
     """)
 
     from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
-    wrapped_kv = PrefixedConfigurationProxy(test_conf, 'web', 'production')
+    wrapped_kv = PrefixedConfigurationProxy(test_conf, ['web', 'production'])
 
     if not check_config(SimilarWebWindowConfig, wrapped_kv, sets=sets, deletes=deletes):
         print 'check failed'
