@@ -612,9 +612,7 @@ class ContextualizedTasksInfra(object):
         """
         Returns a list of jars for a given module_dir. If jars_from_lib is not provided, returns a string of
         paths of all jars from the appropriate library folder. If jars_from_lib is specified, accepts a list of
-        jars and matches the provided jars with existing jars in the module lib directory. Can provide location of
-        local library to lib_dir_location in order to match in dry run
-
+        jars and matches the provided jars with existing jars in the module lib directory.
         :param module_dir: The module directory, ie: analytics or mobile
         :type module_dir: str
 
