@@ -591,7 +591,7 @@ class ContextualizedTasksInfra(object):
     def match_jar(jar, jars_in_dir):
         matched_jars = []
         for dir_jar in jars_in_dir:
-            if dir_jar.startswith(jar.rstrip('.jar')):
+            if dir_jar.startswith(jar.replace('.jar', '')):
                 matched_jars.append(dir_jar)
         return matched_jars
 
