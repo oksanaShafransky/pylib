@@ -608,7 +608,7 @@ class ContextualizedTasksInfra(object):
         assert len(unmatched) == 0, "The following jars were not found: %s" % ', '.join(unmatched)
         return matches
 
-    def get_jars_list(self, module_dir, jars_from_lib, lib_dir_location=None):
+    def get_jars_list(self, module_dir, jars_from_lib):
         """
         Returns a list of jars for a given module_dir. If jars_from_lib is not provided, returns a string of
         paths of all jars from the appropriate library folder. If jars_from_lib is specified, accepts a list of
@@ -623,21 +623,15 @@ class ContextualizedTasksInfra(object):
 
         :return: str
         """
-        if lib_dir_location:
-            lib_module_dir = lib_dir_location
-        else:
-            lib_module_dir = '%s/lib' % module_dir
+        lib_module_dir = '%s/lib' % module_dir
 
         jars_in_dir = os.listdir(lib_module_dir)
 
         if jars_from_lib:
             if self.dry_run or self.checks_only:
-                if lib_dir_location:
-                    selected_jars = ContextualizedTasksInfra.match_jars_from_lib(jars_from_lib, jars_in_dir)
-                    print('Dry run: Would try and attach the following jars ' + ''.join(selected_jars))
-                else:
-                    print('Dry run: Would try and attach the following jars ' + ''.join(jars_from_lib))
-                    selected_jars = []
+                selected_jars = ContextualizedTasksInfra.match_jars_from_lib(jars_from_lib, jars_in_dir)
+                print('Dry run: Would try and attach the following jars ' + ''.join(selected_jars))
+                selected_jars = []
             else:
                 selected_jars = ContextualizedTasksInfra.match_jars_from_lib(jars_from_lib, jars_in_dir)
         else:
