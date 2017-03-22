@@ -14,7 +14,6 @@ class AppsEngagementConfig(object):
         self._device_weights_whitelist_per_country = None
         self._users_weights_whitelist_per_country = None
 
-
     @property
     def countries(self):
         if not self._countries:

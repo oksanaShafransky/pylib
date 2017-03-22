@@ -20,19 +20,25 @@ from redis import StrictRedis
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
-    create_client
+                                   create_client
 from pylib.sw_config.kv_factory import provider_from_config
+from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
 from pylib.hbase.hbase_utils import validate_records_per_region
 
 logger = logging.getLogger('ptask')
 
 
-class KeyValueProvider(object):
-    conf = """
+class KeyValueConfig(object):
+    _kv_conf = """
               [
                 {
                      "class": "pylib.sw_config.consul.ConsulProxy",
                      "server":"consul.service.production"
+                },
+                {
+                     "class": "pylib.sw_config.consul.ConsulProxy",
+                     "server": "consul.service.op-us-east-1.consul",
+                     "token": "30597bf6-1144-472e-bdf1-0b46cac45486"
                 },
                 {
                      "class": "pylib.sw_config.etcd_kv.EtcdProxy",
@@ -42,30 +48,14 @@ class KeyValueProvider(object):
                 }
               ]
     """
-    conf = provider_from_config(conf)
 
-    @staticmethod
-    def get(key):
-        return KeyValueProvider.conf.get(key)
-
-    @staticmethod
-    def set(key, value):
-        return KeyValueProvider.conf.set(key, value)
-
-    @staticmethod
-    def delete(key):
-        return KeyValueProvider.conf.delete(key)
-
-    @staticmethod
-    def sub_keys(key):
-        return KeyValueProvider.conf.sub_keys(key)
+    kv = provider_from_config(_kv_conf)
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
 
 
 class TasksInfra(object):
-    kv = KeyValueProvider()
 
     @staticmethod
     def parse_date(date_str, fmt='%Y-%m-%d'):
@@ -159,6 +149,10 @@ class TasksInfra(object):
             else:
                 ans += " -%s %s%s%s" % (key, value_wrap, str(value), value_wrap)
         return ans
+
+    @staticmethod
+    def kv(purpose='bigdata'):
+        return KeyValueConfig.kv if purpose is None else PrefixedConfigurationProxy(KeyValueConfig.kv, prefixes=[purpose])
 
 
 class ContextualizedTasksInfra(object):
@@ -344,7 +338,6 @@ class ContextualizedTasksInfra(object):
 
             print('snapshot exists')
 
-
     def run_hadoop(self, jar_path, jar_name, main_class, command_params):
         return self.run_bash(
             self.__compose_hadoop_runner_command(jar_path=jar_path,
@@ -466,9 +459,9 @@ class ContextualizedTasksInfra(object):
         marked_dates_str = sorted(TasksInfra.kv.sub_keys(base_path), reverse=True)
         for marked_date_str in marked_dates_str:
             marked_date = TasksInfra.parse_date(marked_date_str, fmt)
-            if (not date) or (marked_date<=date):
+            if (not date) or (marked_date <= date):
                 if (not days_lookback) or (marked_date + datetime.timedelta(days=days_lookback)>=date):
-                    if TasksInfra.kv.get('%s/%s' % (base_path, marked_date_str)) == 'success':
+                    if TasksInfra.kv().get('%s/%s' % (base_path, marked_date_str)) == 'success':
                         return marked_date
 
         return None
@@ -484,18 +477,18 @@ class ContextualizedTasksInfra(object):
         if not date:
             date = self.date
         return ContextualizedTasksInfra.__latest_success_date_kv(base_path,
-                                                   fmt='%Y-%m-%d',
-                                                   days_lookback=days_lookback,
-                                                   date=date)
+                                                                 fmt='%Y-%m-%d',
+                                                                 days_lookback=days_lookback,
+                                                                 date=date)
 
     def latest_monthly_success_date_kv(self, base_path, days_lookback=90, date=None):
         """" Similar to latest_daily_success_date, but returns the 1st of the month"""
         if not date:
             date = self.date
         return ContextualizedTasksInfra.__latest_success_date_kv(base_path,
-                                                   fmt='%Y-%m',
-                                                   days_lookback=days_lookback,
-                                                   date=date)
+                                                                 fmt='%Y-%m',
+                                                                 days_lookback=days_lookback,
+                                                                 date=date)
 
     def mark_success(self, directory, opts=''):
         if self.dry_run or self.checks_only:
