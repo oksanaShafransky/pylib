@@ -244,6 +244,12 @@ def hbase_table_name(table):
     raise Exception('Cannot find the name for table %s stdout[%s] stderr[%s]' % (table, output, err))
 
 
+def copy_from_path(src_path, target_path):
+    delete_path(target_path)
+    subprocess.call(["hadoop", "fs", "-mkdir", "-p", target_path])
+    subprocess.call(("hadoop", "fs", "-cp", "-f", src_path + "/*", target_path))
+
+
 def delete_path(path):
     subprocess.call(("hadoop", "fs", "-rm", "-r", path))
 
