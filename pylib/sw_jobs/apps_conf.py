@@ -1,27 +1,11 @@
-from pylib.sw_config.kv_factory import provider_from_config
 from pycountry import countries
-#from airflow.models import Variable
+from pylib.tasks.ptask_infra import TasksInfra
 
 
 class AppsEngagementConfig(object):
-    def __init__(self, env):
-        self.root = 'services/app-engagement/env/%s' % env
-        # conf = Variable.get('key_value_production')
-        conf = """
-              [
-                {
-                     "class": "pylib.sw_config.consul.ConsulProxy",
-                     "server":"consul.service.production"
-                },
-                {
-                     "class": "pylib.sw_config.etcd_kv.EtcdProxy",
-                     "server":"etcd.service.production",
-                     "port": 4001,
-                     "root_path": "v1/production"
-                }
-              ]
-        """
-        self.conf = provider_from_config(conf)
+    def __init__(self, app_eng_env, kv_provider=None):
+        self.conf = kv_provider or TasksInfra.kv()
+        self.root = 'services/app-engagement/env/%s' % app_eng_env
 
         self._countries = {}
         self._default_sqs_decay_factor = None
