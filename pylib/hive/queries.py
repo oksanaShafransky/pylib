@@ -58,3 +58,28 @@ def load_to_hbase_query(date, mode, mode_type, hive_db, source_table_name, sourc
                    [get_range_where_clause(year, month, day, mode, mode_type)] +
                    (where_filters or []))
            }
+
+
+@formatted
+@TableProvided(alias='scraped_kw_hdfs', table_name_resolver=lambda **kwargs: '%s.%s_kw_scraping' % (kwargs['hive_db'], kwargs['mode']), path_param='output_path')
+@HBaseTableProvided(alias='scraped_kw_hbase', table_name_resolver=lambda **kwargs: '%s.%s_%s' % (kwargs['hive_db'], kwargs['mode'], kwargs['scraping_hbase_table_name']))
+def extract_scraped_keywords(date, mode, mode_type, hive_db, hbase_table_name, scraping_hbase_table_name, output_path, **kwargs):
+    year, month, day = parse_date(date)
+    partition_str = getDatePartitionString(year, month)
+
+    query = """
+            use %(db)s;
+            insert overwrite table %(target_table)s partition %(partition_str)s
+            SELECT
+                sr_keyword,
+                map_keys(data) as ts,
+                map_values(data) as page_data
+            FROM %(scraped_hbase)s;
+        """ % {
+        'db': hive_db,
+        'target_table': kwargs['scraped_kw_hdfs'],
+        'partition_str': partition_str,
+        'scraped_hbase': kwargs['scraped_kw_hbase']
+    }
+
+    return query
