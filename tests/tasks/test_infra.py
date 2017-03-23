@@ -103,7 +103,7 @@ class TestContextualizedTasksInfra(object):
     def test_run_spark(self, monkeypatch):
         self._disable_invoke_debug()
         actual_commands = []
-        expected_regexp = '''cd .*/mobile;spark-submit --queue research_shared .* --name "TestRun" .*--jars .*/test.jar,.*/test2.jar --files "" --class com.similarweb.mobile.Test ./mobile.jar   -number %(wrap)s32%(wrap)s''' \
+        expected_regexp = '''cd .*/mobile;spark-submit --queue research_shared .* --name "TestRun" .*--conf key1\=val1 --key2 val2  --jars .*/test.jar,.*/test2.jar --files "" --class com.similarweb.mobile.Test ./mobile.jar   -number %(wrap)s32%(wrap)s''' \
             % \
                 {
                     'wrap': TasksInfra.EXEC_WRAPPERS['bash']
@@ -123,7 +123,9 @@ class TestContextualizedTasksInfra(object):
         ctx = invoke.context.Context(config)
         c_infra = ContextualizedTasksInfra(ctx)
         options = {'number': 32}
-        c_infra.run_spark('com.similarweb.mobile.Test', 'mobile', 'research_shared', 'TestRun', options)
+        configs = {'key1': 'val1'}
+        named_args = {'key2': 'val2'}
+        c_infra.run_spark('com.similarweb.mobile.Test', 'mobile', 'research_shared', 'TestRun', options, spark_configs=configs, named_spark_args=named_args)
         # Only a single command is ran
         assert len(actual_commands) == 1
         # The correct python command line is executed
