@@ -547,6 +547,8 @@ class ContextualizedTasksInfra(object):
                   jars_from_lib=None,
                   num_executors=None,
                   files=None,
+                  spark_configs=None,
+                  named_spark_args=None,
                   managed_output_dirs=None):
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
@@ -554,14 +556,7 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        additional_confs = ''
-
-        if num_executors is not None:
-            additional_confs += ' --num-executors %d' % num_executors
-
-        if self.should_profile:
-            additional_confs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
-            additional_confs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
+        additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
@@ -577,7 +572,7 @@ class ContextualizedTasksInfra(object):
                   {'jar_path': jar_path,
                    'queue': queue,
                    'app_name': app_name,
-                   'add_opts': additional_confs,
+                   'add_opts': additional_configs,
                    'jars': self.get_jars_list(jar_path, jars_from_lib),
                    'files': ','.join(files or []),
                    'main_class': main_class,
@@ -660,19 +655,8 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        additional_configs = ''
         module_dir = self.execution_dir + '/' + module
-
-        if spark_configs:
-            for key, value in spark_configs.items():
-                additional_configs += ' --conf %s=%s' % (key, value)
-        if named_spark_args:
-            for key, value in named_spark_args.items():
-                additional_configs += ' --%s %s' % (key, value)
-
-        if self.should_profile:
-            additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
-            additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
+        additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         if use_bigdata_defaults:
             main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
@@ -711,6 +695,19 @@ class ContextualizedTasksInfra(object):
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         return self.run_bash(command).ok
+
+    def build_spark_additional_configs(self, named_spark_args, spark_configs):
+        additional_configs = ''
+        if spark_configs:
+            for key, value in spark_configs.items():
+                additional_configs += ' --conf %s=%s' % (key, value)
+        if named_spark_args:
+            for key, value in named_spark_args.items():
+                additional_configs += ' --%s %s' % (key, value)
+        if self.should_profile:
+            additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
+            additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
+        return additional_configs
 
     def read_s3_configuration(self, property_key):
         config = configparser.ConfigParser()
