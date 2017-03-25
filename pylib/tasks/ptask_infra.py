@@ -29,7 +29,7 @@ logger = logging.getLogger('ptask')
 
 
 class KeyValueConfig(object):
-    _kv_conf = """
+    _kv_prod_conf = """
               [
                 {
                      "class": "pylib.sw_config.consul.ConsulProxy",
@@ -39,17 +39,23 @@ class KeyValueConfig(object):
                      "class": "pylib.sw_config.consul.ConsulProxy",
                      "server": "consul.service.op-us-east-1.consul",
                      "token": "30597bf6-1144-472e-bdf1-0b46cac45486"
-                },
-                {
-                     "class": "pylib.sw_config.etcd_kv.EtcdProxy",
-                     "server":"etcd.service.production",
-                     "port": 4001,
-                     "root_path": "v1/production"
                 }
               ]
     """
 
-    kv = provider_from_config(_kv_conf)
+    _kv_stage_conf = """
+                  [
+                    {
+                         "class": "pylib.sw_config.consul.ConsulProxy",
+                         "server":"consul.service.staging"
+                    }
+                  ]
+        """
+
+    base_kv = {
+        'production': provider_from_config(_kv_prod_conf),
+        'staging': provider_from_config(_kv_stage_conf)
+    }
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
@@ -151,8 +157,9 @@ class TasksInfra(object):
         return ans
 
     @staticmethod
-    def kv(purpose='bigdata'):
-        return KeyValueConfig.kv if purpose is None else PrefixedConfigurationProxy(KeyValueConfig.kv, prefixes=[purpose])
+    def kv(env='production', purpose='bigdata'):
+        basic_kv = KeyValueConfig.base_kv[env.lower()]
+        return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
 
 
 class ContextualizedTasksInfra(object):
