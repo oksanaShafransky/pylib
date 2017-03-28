@@ -3,6 +3,9 @@ from pylib.tasks.ptask_infra import TasksInfra
 
 
 class AppsEngagementConfig(object):
+
+    ALLOW_ALL = '*'
+
     def __init__(self, app_eng_env, kv_provider=None):
         self.conf = kv_provider or TasksInfra.kv()
         self.root = 'services/app-engagement/env/%s' % app_eng_env
@@ -14,11 +17,18 @@ class AppsEngagementConfig(object):
         self._device_weights_whitelist_per_country = None
         self._users_weights_whitelist_per_country = None
 
+    def _parse_list_or_default(self, key):
+        kv_val = self.conf.get(key)
+        if kv_val == AppsEngagementConfig.ALLOW_ALL:
+            return []
+        else:
+            return [elem for elem in kv_val.split(',') if elem not in [None, '']]
+
     @property
     def countries(self):
         if not self._countries:
             self._countries = dict([(country_code, countries.get(numeric='%s' % country_code.zfill(3)).alpha2)
-                               for country_code in self.conf.get('%s/countries' % self.root).split(',') if country_code not in [None,'']])
+                                    for country_code in self._parse_list_or_default('%s/countries' % self.root)])
         return self._countries
 
     @property
@@ -64,8 +74,9 @@ class AppsEngagementConfig(object):
 
         if self._device_weights_whitelist_per_country is None:
 
-            self._device_weights_whitelist_per_country = dict([(key, self.conf.get('%s/devices_sqs_whitelist/%s' % (self.root, key)))
-                                         for key in self.conf.sub_keys('%s/devices_sqs_whitelist' % self.root)])
+            self._device_weights_whitelist_per_country = dict([(key, ','.join(
+                self._parse_list_or_default('%s/devices_sqs_whitelist/%s' % (self.root, key))))
+                        for key in self.conf.sub_keys('%s/devices_sqs_whitelist' % self.root)])
             return self._device_weights_whitelist_per_country
 
     @property
@@ -73,6 +84,7 @@ class AppsEngagementConfig(object):
 
         if self._users_weights_whitelist_per_country is None:
 
-            self._users_weights_whitelist_per_country = dict([(key, self.conf.get('%s/users_sqs_whitelist/%s' % (self.root, key)))
-                                                               for key in self.conf.sub_keys('%s/users_sqs_whitelist' % self.root)])
+            self._users_weights_whitelist_per_country = dict([(key, ','.join(
+                self._parse_list_or_default('%s/users_sqs_whitelist/%s' % (self.root, key))))
+                        for key in self.conf.sub_keys('%s/users_sqs_whitelist' % self.root)])
             return self._users_weights_whitelist_per_country
