@@ -45,6 +45,13 @@ class CompositeConfigurationProxy(KeyValueProxy):
         else:
             return None
 
+    def items(self, prefix=None):
+        detected_keys = set()
+        for proxy in self.proxies:
+            for key, val in proxy.items(prefix=prefix):
+                if key not in detected_keys:
+                    yield key, val
+
     def __str__(self):
         return 'composite key value\n%s' % '\n'.join([str(proxy) for proxy in self.proxies])
 
@@ -71,7 +78,6 @@ class PrefixedConfigurationProxy(KeyValueProxy):
     def items(self, prefix=None):
         return map(lambda key_val: (key_val[0].lstrip(self.prefix), key_val[1]),
                    self.proxy.items(prefix=self.prefix+(prefix or '')))
-
 
     def __str__(self):
         return '%s at branch %s' % (self.proxy, self.prefix)
