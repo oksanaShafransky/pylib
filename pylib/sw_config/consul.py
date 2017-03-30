@@ -1,8 +1,9 @@
-__author__ = 'Felix'
-
-import consulate
-
 from kv import KeyValueProxy
+
+import logging
+import consulate
+# Adjust log level
+logging.getLogger('consulate').setLevel(logging.WARNING)
 
 
 class ConsulProxy(KeyValueProxy):
@@ -41,4 +42,5 @@ class ConsulProxy(KeyValueProxy):
 
     def __str__(self):
         return 'consul key value server=%s' % self.client.status.leader()
+
 

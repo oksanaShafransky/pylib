@@ -11,7 +11,8 @@ import time
 from six.moves import configparser
 
 # Adjust log level
-logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('requests').setLevel(logging.WARNING)
 
 from invoke import Result
 from invoke.exceptions import Failure
@@ -26,6 +27,7 @@ from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
 from pylib.hbase.hbase_utils import validate_records_per_region
 
 logger = logging.getLogger('ptask')
+logger.addHandler(logging.StreamHandler())
 
 
 class KeyValueConfig(object):
