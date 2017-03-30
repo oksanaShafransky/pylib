@@ -159,6 +159,13 @@ class TasksInfra(object):
         return ans
 
     @staticmethod
+    def add_hadoop_options(command, hadoop_options):
+        if hadoop_options:
+            for key, value in hadoop_options.items():
+                command += ' -D {}={}'.format(key, value)
+        return command
+
+    @staticmethod
     def kv(env='production', purpose='bigdata'):
         basic_kv = KeyValueConfig.base_kv[env.lower()]
         return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
@@ -179,7 +186,7 @@ class ContextualizedTasksInfra(object):
     def __with_rerun_root_queue(self, command):
         return 'source %s/scripts/common.sh && setRootQueue reruns && %s' % (self.execution_dir, command)
 
-    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, rerun_root_queue=False):
+    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, hadoop_options=None, rerun_root_queue=False):
         command = self.__compose_infra_command(
             'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s %(profile_opt)s' %
             {
@@ -191,6 +198,7 @@ class ContextualizedTasksInfra(object):
                 self.should_profile else ''
             }
         )
+        command = TasksInfra.add_hadoop_options(command, hadoop_options)
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
         if rerun_root_queue:
             command = self.__with_rerun_root_queue(command)
@@ -347,13 +355,15 @@ class ContextualizedTasksInfra(object):
 
             print('snapshot exists')
 
-    def run_hadoop(self, jar_path, jar_name, main_class, command_params):
+    def run_hadoop(self, jar_path, jar_name, main_class, command_params, hadoop_options=None):
         return self.run_bash(
-            self.__compose_hadoop_runner_command(jar_path=jar_path,
-                                                 jar_name=jar_name,
-                                                 main_class=main_class,
-                                                 command_params=command_params,
-                                                 rerun_root_queue=self.rerun)
+            self.__compose_hadoop_runner_command(
+                jar_path=jar_path,
+                jar_name=jar_name,
+                main_class=main_class,
+                command_params=command_params,
+                hadoop_options=hadoop_options,
+                rerun_root_queue=self.rerun)
         ).ok
 
     # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
@@ -410,17 +420,21 @@ class ContextualizedTasksInfra(object):
     # Todo: Move it to the mobile project
     def run_mobile_hadoop(self, command_params,
                           main_class='com.similargroup.mobile.main.MobileRunner',
+                          hadoop_options=None,
                           rerun_root_queue=False):
         return self.run_hadoop(jar_path='mobile',
                                jar_name='mobile.jar',
                                main_class=main_class,
-                               command_params=command_params)
+                               command_params=command_params,
+                               hadoop_options=hadoop_options)
 
-    def run_analytics_hadoop(self, command_params, main_class):
-        return self.run_hadoop(jar_path='analytics',
-                               jar_name='analytics.jar',
-                               main_class=main_class,
-                               command_params=command_params)
+    def run_analytics_hadoop(self, command_params, main_class, hadoop_options=None):
+        return self.run_hadoop(
+            jar_path='analytics',
+            jar_name='analytics.jar',
+            main_class=main_class,
+            command_params=command_params,
+            hadoop_options=hadoop_options)
 
     def run_bash(self, command):
         sys.stdout.write("#####\nFinal bash command: \n-----------------\n%s\n#####\n" % command)
