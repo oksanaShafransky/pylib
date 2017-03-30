@@ -162,7 +162,7 @@ class TasksInfra(object):
     def add_hadoop_options(command, hadoop_options):
         if hadoop_options:
             for key, value in hadoop_options.items():
-                command += ' -D {}={}'.format(key, value)
+                command += ' -D {}={}'.format(str(key), str(value))
         return command
 
     @staticmethod
@@ -188,16 +188,21 @@ class ContextualizedTasksInfra(object):
 
     def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, hadoop_options=None, rerun_root_queue=False):
         command = self.__compose_infra_command(
-            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s %(profile_opt)s' %
+            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
             {
                 'base_dir': self.execution_dir,
                 'jar_relative_path': jar_path,
                 'jar': jar_name,
-                'class': main_class,
-                'profile_opt': '-Dmapreduce.reduce.java.opts=%s -Dmapreduce.map.java.opts=%s' % (JAVA_PROFILER, JAVA_PROFILER) if
-                self.should_profile else ''
+                'class': main_class
             }
         )
+
+        if self.should_profile:
+            if hadoop_options is None:
+                hadoop_options = {}
+            hadoop_options['mapreduce.reduce.java.opts'] = JAVA_PROFILER
+            hadoop_options['mapreduce.map.java.opts'] = JAVA_PROFILER
+
         command = TasksInfra.add_hadoop_options(command, hadoop_options)
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
         if rerun_root_queue:
