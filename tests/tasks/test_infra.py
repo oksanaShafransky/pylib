@@ -35,19 +35,19 @@ class TestTasksInfra(object):
                                                'param1', 'param2')
         assert expected == actual
 
-    def test_hadoop_options(self):
+    def test_jvm_options(self):
         expected = 'cmd.py -D cats.fluffnessEnabled=True -D cats.lives=9 -D yarn.string.chaser=duffles -D yarn.string.entangler=fluffles'
         options = {'yarn.string.entangler': 'fluffles',
                    'yarn.string.chaser': 'duffles',
                    'cats.fluffnessEnabled': True,
                    'cats.lives': 9}
-        actual = TasksInfra.add_hadoop_options('cmd.py', options)
+        actual = TasksInfra.add_jvm_options('cmd.py', options)
         split = actual.split(' -D')
         actual = ' -D'.join([split[0]] + sorted(split[1:]))
         assert expected == actual
 
         expected = 'cmd.py'
-        actual = TasksInfra.add_hadoop_options('cmd.py', None)
+        actual = TasksInfra.add_jvm_options('cmd.py', None)
         assert expected == actual
 
     def test_command_value_wrapping(self):
