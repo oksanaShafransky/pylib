@@ -163,6 +163,14 @@ class TasksInfra(object):
         basic_kv = KeyValueConfig.base_kv[env.lower()]
         return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
 
+    @staticmethod
+    def get_rserve_host():
+        return TasksInfra.kv(purpose="v1/production").get('services/rserve/host')
+
+    @staticmethod
+    def get_rserve_port():
+        return TasksInfra.kv(purpose="v1/production").get('services/rserve/port')
+
 
 class ContextualizedTasksInfra(object):
     def __init__(self, ctx):
