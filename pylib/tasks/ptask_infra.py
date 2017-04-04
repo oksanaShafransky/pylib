@@ -240,6 +240,14 @@ class TasksInfra(object):
 
                 TasksInfra.send_mail(mail_from, mail_to, subject, message)
 
+    @staticmethod
+    def get_rserve_host():
+        return TasksInfra.kv().get('services/rserve/host')
+
+    @staticmethod
+    def get_rserve_port():
+        return TasksInfra.kv().get('services/rserve/port')
+
 
 class ContextualizedTasksInfra(object):
     def __init__(self, ctx):
