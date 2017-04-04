@@ -203,7 +203,7 @@ class TasksInfra(object):
         apps = get_applications(applicationTags=task_id)
         for app in apps:
             for job in get_app_jobs(app):
-                files_to_treat.update(get_corrupt_input_files(job['id']))
+                files_to_treat.update(get_corrupt_input_files(job['job_id']))
 
         if len(files_to_treat) == 0:
             logging.info('No corrupt files detected')
