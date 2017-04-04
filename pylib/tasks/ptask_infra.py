@@ -213,16 +213,13 @@ class TasksInfra(object):
             quarantine_dir = '/similargroup/corrupt-data/%s' % task_id
 
             import subprocess
-            from pylib.hadoop.hdfs_util import mkdir, read_files
-            mkdir(quarantine_dir)
+            subprocess.Popen('hadoop', 'fs', 'mkdir', '-p', 'quarantine_dir')
             for corrupt_file in files_to_treat:
                 hdfs_dir, relative_name = '/'.join(corrupt_file.split('/')[:-1]), corrupt_file.split('/')[-1]
                 local_file = '/tmp/%s' % relative_name
-
-                with open(local_file, 'w') as temp_file:
-                    temp_file.write(read_files([corrupt_file]))
-                    temp_file.close()
-                    subprocess.Popen('hadoop', 'fs', '-put', local_file, hdfs_dir)
+                subprocess.Popen('hadoop', 'fs', '-text', '>', corrupt_file, local_file)
+                subprocess.Popen('hadoop', 'fs', '-mv', corrupt_file, '%s/%s' % (quarantine_dir, relative_name))
+                subprocess.Popen('hadoop', 'fs', '-put', local_file, hdfs_dir)
 
             # Report, if asked
             if mail_recipients is not None:

@@ -40,10 +40,3 @@ def get_app_jobs(application_or_app_id):
         return [{'job_id': re.search('MapReduce Job (job(_[0-9]+)+)', job_title).group(1)}]
 
 
-if __name__ == '__main__':
-
-    jobs = get_app_jobs('application_1490857033855_9998')
-    print jobs
-    jobs = get_app_jobs('application_1490857033855_15395')
-    print jobs
-
