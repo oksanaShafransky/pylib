@@ -226,13 +226,13 @@ class TasksInfra(object):
 
             # Report, if asked
             if mail_recipients is not None:
-                mail_from = 'Dr. File'
+                mail_from = 'Dr.File'
                 mail_to = [mail_recipients] if isinstance(mail_recipients, basestring) else mail_recipients
                 subject = 'Corrupt Files Report %s' % (report_name or task_id)
-                message = '''Corrupt Files Detected
-                    %(file_listing)s
-
-                    Have been repaired. Original Corrupt Files are present on HDFS at %(eviction)s
+                message = '''
+Corrupt Files Detected:
+%(file_listing)s
+All have been repaired. Original Corrupt Files are present on HDFS at %(eviction)s
                     ''' % {
                     'file_listing': '\n'.join(files_to_treat),
                     'eviction': quarantine_dir
