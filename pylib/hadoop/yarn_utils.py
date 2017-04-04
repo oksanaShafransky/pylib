@@ -37,7 +37,7 @@ def get_app_jobs(application_or_app_id):
         content = BeautifulSoup(resp.read(), 'html.parser')
         job_title = content.title.string.strip()
         # wrapping in dict and list to partially comply with json response
-        return [{'job_id': re.search('')}]
+        return [{'job_id': re.search('MapReduce Job (job_[0-9]+)', job_title).group(1)}]
 
 
 if __name__ == '__main__':
