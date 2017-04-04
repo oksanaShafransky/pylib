@@ -153,16 +153,18 @@ def list_files(paths, hdfs_client=None):
 def count_files(path, hdfs_client=None):
     if not hdfs_client:
         hdfs_client = create_client()
-        return hdfs_client.count([path]).next()['fileCount']
+    return hdfs_client.count([path]).next()['fileCount']
 
 
-def read_files(paths):
-    hdfs_client = create_client()
+def read_files(paths, hdfs_client=None):
+    if not hdfs_client:
+        hdfs_client = create_client()
     return ''.join(hdfs_client.text(paths))
 
 
-def get_file(file_path, local_name):
-    hdfs_client = create_client()
+def get_file(file_path, local_name, hdfs_client=None):
+    if not hdfs_client:
+        hdfs_client = create_client()
     return hdfs_client.copyToLocal([file_path], local_name).next()
 
 
