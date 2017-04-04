@@ -46,6 +46,12 @@ def upload_file_to_hdfs(file_path, target_path):
     subprocess.call(put_cmd.split(' '))
 
 
+def copy_dir_from_path(src_path, target_path):
+    delete_dir(target_path)
+    subprocess.call(["hadoop", "fs", "-mkdir", "-p", target_path])
+    subprocess.call(("hadoop", "fs", "-cp", "-f", src_path + "/*", target_path))
+
+
 def delete_file(path, hdfs_client=None):
     if hdfs_client is None:
         hdfs_client = create_client()
