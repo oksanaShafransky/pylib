@@ -10,6 +10,9 @@ import sys
 import time
 from six.moves import configparser
 
+import smtplib
+from email.mime.text import MIMEText
+
 # Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('requests').setLevel(logging.WARNING)
@@ -169,6 +172,88 @@ class TasksInfra(object):
     def kv(env='production', purpose='bigdata'):
         basic_kv = KeyValueConfig.base_kv[env.lower()]
         return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
+
+    SMTP_SERVER = 'mta01.sg.internal'
+    @staticmethod
+    def send_mail(mail_from, mail_to, mail_subject, content):
+        msg = MIMEText(content)
+        msg['From'] = mail_from
+        msg['To'] = ','.join(mail_to)
+        msg['Subject'] = mail_subject
+
+        mail = smtplib.SMTP(TasksInfra.SMTP_SERVER)
+        mail.sendmail(mail_from, mail_to, msg.as_string())
+        mail.quit()
+
+    @staticmethod
+    def handle_bad_input(mail_recipients=None, report_name=None):
+        """
+        Mitigates bad input in the operation performed within this context.
+        Currently only works if a MapReduce job(s) was run. Salvages the portion of the input which is fine
+        The original corrupt files are stored aside and an optional report is sent
+
+        :param mail_recipients: Optional (string or collection of strings).
+        if passed, will generate a report sent to the specified recipients
+        :param report_name: Prefix on the report to tell which input is corrupt. defaults to the task name
+        :return: None
+        """
+
+        from pylib.hadoop.yarn_utils import get_applications, get_app_jobs
+        from pylib.hadoop.bad_splits import get_corrupt_input_files
+
+        # remove following code, move method to ContexualizedTaskInfra, make method non static and use self.task_id
+        # once we have no bash clients for it
+        import os
+        task_id = os.environ['TASK_ID']
+
+        files_to_treat = set()
+        apps = get_applications(applicationTags=task_id)
+        for app in apps:
+            for job in get_app_jobs(app):
+                files_to_treat.update(get_corrupt_input_files(job['job_id']))
+
+        if len(files_to_treat) == 0:
+            logging.info('No corrupt files detected')
+            return
+        else:
+            logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
+            quarantine_dir = '/similargroup/corrupt-data/%s' % task_id
+
+            import subprocess
+            subprocess.call(['hadoop', 'fs', '-mkdir', '-p', 'quarantine_dir'])
+            for corrupt_file in files_to_treat:
+                hdfs_dir, relative_name = '/'.join(corrupt_file.split('/')[:-1]), corrupt_file.split('/')[-1]
+                local_file = '/tmp/%s' % relative_name
+
+                with open(local_file, 'w') as temp_writer:
+                    subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
+
+                subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, '%s/%s' % (quarantine_dir, relative_name)])
+                subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
+
+            # Report, if asked
+            if mail_recipients is not None:
+                mail_from = 'Dr.File'
+                mail_to = [mail_recipients] if isinstance(mail_recipients, basestring) else mail_recipients
+                subject = 'Corrupt Files Report %s' % (report_name or task_id)
+                message = '''
+Corrupt Files Detected:
+%(file_listing)s
+All have been repaired. Original Corrupt Files are present on HDFS at %(eviction)s
+                    ''' % {
+                    'file_listing': '\n'.join(files_to_treat),
+                    'eviction': quarantine_dir
+                }
+
+                TasksInfra.send_mail(mail_from, mail_to, subject, message)
+
+    @staticmethod
+    def get_rserve_host():
+        return TasksInfra.kv().get('services/rserve/host')
+
+    @staticmethod
+    def get_rserve_port():
+        return TasksInfra.kv().get('services/rserve/port')
 
 
 class ContextualizedTasksInfra(object):

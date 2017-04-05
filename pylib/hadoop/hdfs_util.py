@@ -46,6 +46,12 @@ def upload_file_to_hdfs(file_path, target_path):
     subprocess.call(put_cmd.split(' '))
 
 
+def copy_dir_from_path(src_path, target_path):
+    delete_dir(target_path)
+    subprocess.call(["hadoop", "fs", "-mkdir", "-p", target_path])
+    subprocess.call(("hadoop", "fs", "-cp", "-f", src_path + "/*", target_path))
+
+
 def delete_file(path, hdfs_client=None):
     if hdfs_client is None:
         hdfs_client = create_client()
@@ -153,16 +159,18 @@ def list_files(paths, hdfs_client=None):
 def count_files(path, hdfs_client=None):
     if not hdfs_client:
         hdfs_client = create_client()
-        return hdfs_client.count([path]).next()['fileCount']
+    return hdfs_client.count([path]).next()['fileCount']
 
 
-def read_files(paths):
-    hdfs_client = create_client()
+def read_files(paths, hdfs_client=None):
+    if not hdfs_client:
+        hdfs_client = create_client()
     return ''.join(hdfs_client.text(paths))
 
 
-def get_file(file_path, local_name):
-    hdfs_client = create_client()
+def get_file(file_path, local_name, hdfs_client=None):
+    if not hdfs_client:
+        hdfs_client = create_client()
     return hdfs_client.copyToLocal([file_path], local_name).next()
 
 
