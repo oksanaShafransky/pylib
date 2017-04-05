@@ -17,4 +17,9 @@ if(length(commandArgs(TRUE)) > 3){
     }
 }
 
-RS.eval(rsc,as.call(command.list),lazy=F)
+res <- try(RS.eval(rsc,as.call(command.list),lazy=F))
+if(class(res) == "try-error"){
+    RS.eval(rsc, traceback())
+}else{
+    res
+}

@@ -1,7 +1,6 @@
 import calendar
 import logging
 import os
-import inspect
 import re
 import shutil
 
@@ -524,16 +523,15 @@ class ContextualizedTasksInfra(object):
             "execute Rscript %s/%s %s" % (self.execution_dir, r_executable, ' '.join(command_params)))).ok
 
     def run_rserve(self, r_executable, command_params=None):
-        current_file_path = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-        run_rserve = "%s/resources/RunRserve.R" % current_file_path
-        rserve_host = TasksInfra.kv().get('services/rserve/host')
-        rserve_port = TasksInfra.kv().get('services/rserve/port')
-        executable_path = "%s/%s" % (self.execution_dir, r_executable) if self.execution_dir else r_executable
+        current_file_path = os.path.abspath(os.path.dirname(__file__))
+        run_rserve = '%s/resources/RunRserve.R' % current_file_path
+        rserve_host = TasksInfra.get_rserve_host()
+        rserve_port = TasksInfra.get_rserve_port()
+        executable_path = '%s/%s' % (self.execution_dir, r_executable) if self.execution_dir else r_executable
         return self.run_bash(self.__compose_infra_command(
-            "execute Rscript %s %s %s %s %s" % (run_rserve, rserve_host, rserve_port,
+            'execute Rscript %s %s %s %s %s' % (run_rserve, rserve_host, rserve_port,
                                                 executable_path,
-                                           ' '.join(command_params) if command_params else ""))).ok
-
+                                                ' '.join(command_params) if command_params else ""))).ok
 
     def latest_daily_success_date(self, directory, month_lookback, date=None):
         """
