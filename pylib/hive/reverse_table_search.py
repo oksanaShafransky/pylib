@@ -1,5 +1,5 @@
 from __future__ import print_function
-import psycopg2
+from hive_meta import get_tables_by_location
 import sys
 
 __author__ = 'barakg'
@@ -12,14 +12,7 @@ Example query:
 
 
 def find_table_name(location, print_query=True):
-    with psycopg2.connect("postgresql://readonly:readonly@hive-postgres-mrp.service.production:5432/hive") as conn:
-        with conn.cursor() as cur:
-            location = '%' + location + '%'
-            qry = """select db_name, table_name from hive_table_location where location_uri like %s;"""
-            if print_query:
-                sys.stdout.write(cur.mogrify(qry, [location]) + '\n')
-            cur.execute(qry, [location])
-            return cur.fetchall()
+    return get_tables_by_location(location, print_query)
 
 
 def get_table_names(location, print_query):
