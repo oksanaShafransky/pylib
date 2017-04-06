@@ -67,6 +67,8 @@ def get_corrupt_input_files(job_id):
         attempts_url = attempts_endpoint % {'server': job_history_server, 'port': job_history_port,
                                             'job_id': job_id, 'task_id': task['id']}
         resp = json.load(urllib.urlopen(attempts_url))
+        if resp is None:
+            continue
         attempts = resp.get('taskAttempts', {}).get('taskAttempt', [])
         for attempt in attempts:
             if attempt['state'] == 'FAILED' and 'input stream' in attempt['diagnostics']:
