@@ -219,11 +219,13 @@ class TasksInfra(object):
         else:
             logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
             quarantine_dir = '/similargroup/corrupt-data/%s' % task_id
+            compression_suffixes = ['.bz2', '.gz', '.deflate', '.snappy']
 
             import subprocess
             subprocess.call(['hadoop', 'fs', '-mkdir', '-p', quarantine_dir])
             for corrupt_file in files_to_treat:
-                hdfs_dir, relative_name = '/'.join(corrupt_file.split('/')[:-1]), corrupt_file.split('/')[-1]
+                hdfs_dir = '/'.join(corrupt_file.split('/')[:-1])
+                relative_name = corrupt_file.split('/')[-1].rstrip('|'.join(compression_suffixes))
                 local_file = '/tmp/%s' % relative_name
 
                 with open(local_file, 'w') as temp_writer:
