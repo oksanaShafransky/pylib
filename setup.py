@@ -14,7 +14,5 @@ setup(
     entry_points={
         'console_scripts': ['ptask = pylib.tasks.ptask_invoke:main']
     },
-    data_files=[
-        ('pylib/tasks/resources', ['pylib/tasks/resources/RunRserve.R'])
-    ]
+    include_package_data=True
 )
