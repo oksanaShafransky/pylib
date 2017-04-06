@@ -221,7 +221,7 @@ class TasksInfra(object):
             quarantine_dir = '/similargroup/corrupt-data/%s' % task_id
 
             import subprocess
-            subprocess.call(['hadoop', 'fs', '-mkdir', '-p', 'quarantine_dir'])
+            subprocess.call(['hadoop', 'fs', '-mkdir', '-p', quarantine_dir])
             for corrupt_file in files_to_treat:
                 hdfs_dir, relative_name = '/'.join(corrupt_file.split('/')[:-1]), corrupt_file.split('/')[-1]
                 local_file = '/tmp/%s' % relative_name
