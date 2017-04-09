@@ -1,4 +1,5 @@
 import psycopg2
+import urlparse
 import re
 
 HIVE_METASTORE_CONN_STR = 'postgresql://readonly:readonly@hive-postgres-mrp.service.production:5432/hive'
@@ -17,10 +18,17 @@ def _sql_like(path):
     return '%' + path + '%'
 
 
+def _db_conn():
+    conn_conf = urlparse.urlparse(HIVE_METASTORE_CONN_STR)
+    # if postgreSQL 9.2 is install, can initiate connection directly with connection string. Check back in the future
+    return psycopg2.connect(database=conn_conf.path[1:], user=conn_conf.username,
+                            password=conn_conf.password, host=conn_conf.hostname)
+
+
 def get_table_location(hive_table):
     db_name, table_name = hive_table.split('.')
     location_query = 'SELECT location_uri FROM hive_table_location WHERE db_name=%s AND table_name=%s'
-    with psycopg2.connect(HIVE_METASTORE_CONN_STR) as conn:
+    with _db_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(location_query, [db_name, table_name])
             return extract_relative_path(cur.fetchall()[0][0])
@@ -29,7 +37,7 @@ def get_table_location(hive_table):
 def get_tables_by_location(location, verbose=False):
     find_query = 'SELECT location_uri, db_name, table_name FROM hive_table_location WHERE location_uri LIKE %s'
     search_term = _sql_like(location)
-    with psycopg2.connect(HIVE_METASTORE_CONN_STR) as conn:
+    with _db_conn() as conn:
         with conn.cursor() as cur:
             if verbose:
                 import sys
