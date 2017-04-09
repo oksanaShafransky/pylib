@@ -18,12 +18,14 @@ def get_table_as_df(context, table, path=None, dt=None, **additional_filters):
     """
 
     if path is None or path == get_table_location(table):
+        context.sql('MSCK REPAIR TABLE %s' % table)
         table_to_use = context.table(table)
     else:
         schema = context.table(table).schema
         from random import randrange
         temp_table_name = '%s_tmp_%d' % (table, randrange(1000))
         table_to_use = context.createExternalTable(temp_table_name, path, schema=schema)
+        context.sql('MSCK REPAIR TABLE %s' % temp_table_name)
         context.sql('DROP TABLE %s' % temp_table_name)
 
     filters = date_partition(dt) if dt is not None else dict()

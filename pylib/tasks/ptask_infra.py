@@ -782,18 +782,18 @@ class ContextualizedTasksInfra(object):
         module_dir = self.execution_dir + '/' + module
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
+        final_py_files = py_files or []
+
         if use_bigdata_defaults:
             main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
             module_source_egg_path = '%s/sw_%s-0.0.0.dev0-py2.7.egg' % (module_dir, module)
-            if not py_files and os.path.exists(module_source_egg_path):
-                py_files = [module_source_egg_path]
-        if py_files is None:
-            py_files = []
+            if os.path.exists(module_source_egg_path):
+                final_py_files.append(module_source_egg_path)
 
         if len(py_files) == 0:
             py_files_cmd = ' '
         else:
-            py_files_cmd = ' --py-files "%s"' % ','.join(py_files)
+            py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
