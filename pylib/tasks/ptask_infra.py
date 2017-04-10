@@ -790,7 +790,7 @@ class ContextualizedTasksInfra(object):
             if os.path.exists(module_source_egg_path):
                 final_py_files.append(module_source_egg_path)
 
-        if len(py_files) == 0:
+        if len(final_py_files) == 0:
             py_files_cmd = ' '
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
