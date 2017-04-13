@@ -13,5 +13,6 @@ setup(
     test_suite='tests',
     entry_points={
         'console_scripts': ['ptask = pylib.tasks.ptask_invoke:main']
-    }
+    },
+    include_package_data=True
 )

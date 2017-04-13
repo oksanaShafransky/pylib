@@ -91,20 +91,24 @@ def move_dir(path, target, hdfs_client=None):
     hdfs_client.rename([path], target).next()
 
 
-def get_size(path):
+def get_size(path, with_replicas=False):
+    """
+    :param path: path to size
+    :param with_replicas: whether to consider physical space consumed by all replication or just the canonical size
+    :return: size in bytes
+    """
     hdfs_client = create_client()
-    return hdfs_client.count([path]).next()['spaceConsumed']
+    return hdfs_client.count([path]).next()['spaceConsumed' if with_replicas else 'length']
 
 
-def test_size(path, min_size_required=None, is_strict=False):
-    hdfs_client = create_client()
+def test_size(path, min_size_required=None, is_strict=False, with_replicas=False):
     if min_size_required is not None:
         logger.info('Checking that dir %s exists and is larger than %d...' % (path, min_size_required))
     else:
         logger.info('Checking that dir %s exists...' % path)
 
     try:
-        space_consumed = hdfs_client.count([path]).next()['spaceConsumed']
+        space_consumed = get_size(path, with_replicas=with_replicas)
         if min_size_required is None or space_consumed >= min_size_required:
             logger.info('it does')
             if is_strict:
@@ -208,4 +212,6 @@ def change_file_extension(path, new_ext, hdfs_client=None):
         last_dot = path.rfind('.')
         new_name = (path[:last_dot] if last_dot > 0 else path) + '.' + new_ext
         hdfs_client.rename([path], new_name).next()
+
+
 

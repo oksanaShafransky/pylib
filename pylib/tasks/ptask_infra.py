@@ -1,5 +1,8 @@
 import calendar
 import logging
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+
 import os
 import re
 import shutil
@@ -9,6 +12,7 @@ import six
 import sys
 import time
 from six.moves import configparser
+from copy import copy
 
 import smtplib
 from email.mime.text import MIMEText
@@ -162,17 +166,31 @@ class TasksInfra(object):
         return ans
 
     @staticmethod
+    def add_jvm_options(command, jvm_options):
+        if jvm_options:
+            for key, value in jvm_options.items():
+                command += ' -D {}={}'.format(str(key), str(value))
+        return command
+
+    @staticmethod
     def kv(env='production', purpose='bigdata'):
         basic_kv = KeyValueConfig.base_kv[env.lower()]
         return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
 
     SMTP_SERVER = 'mta01.sg.internal'
     @staticmethod
-    def send_mail(mail_from, mail_to, mail_subject, content):
-        msg = MIMEText(content)
+    def send_mail(mail_from, mail_to, mail_subject, content, image_attachment=None):
+
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(content, 'plain'))
+
         msg['From'] = mail_from
         msg['To'] = ','.join(mail_to)
         msg['Subject'] = mail_subject
+
+        if image_attachment:
+            img = MIMEImage(image_attachment)
+            msg.attach(img)
 
         mail = smtplib.SMTP(TasksInfra.SMTP_SERVER)
         mail.sendmail(mail_from, mail_to, msg.as_string())
@@ -211,11 +229,13 @@ class TasksInfra(object):
         else:
             logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
             quarantine_dir = '/similargroup/corrupt-data/%s' % task_id
+            compression_suffixes = ['.bz2', '.gz', '.deflate', '.snappy']
 
             import subprocess
-            subprocess.call(['hadoop', 'fs', '-mkdir', '-p', 'quarantine_dir'])
+            subprocess.call(['hadoop', 'fs', '-mkdir', '-p', quarantine_dir])
             for corrupt_file in files_to_treat:
-                hdfs_dir, relative_name = '/'.join(corrupt_file.split('/')[:-1]), corrupt_file.split('/')[-1]
+                hdfs_dir = '/'.join(corrupt_file.split('/')[:-1])
+                relative_name = corrupt_file.split('/')[-1].rstrip('|'.join(compression_suffixes))
                 local_file = '/tmp/%s' % relative_name
 
                 with open(local_file, 'w') as temp_writer:
@@ -256,6 +276,7 @@ class ContextualizedTasksInfra(object):
         """
         self.ctx = ctx
         self.redis = None
+        self.jvm_opts = {}
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -264,18 +285,27 @@ class ContextualizedTasksInfra(object):
     def __with_rerun_root_queue(self, command):
         return 'source %s/scripts/common.sh && setRootQueue reruns && %s' % (self.execution_dir, command)
 
-    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, rerun_root_queue=False):
+    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, override_jvm_opts=None, rerun_root_queue=False):
         command = self.__compose_infra_command(
-            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s %(profile_opt)s' %
+            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
             {
                 'base_dir': self.execution_dir,
                 'jar_relative_path': jar_path,
                 'jar': jar_name,
-                'class': main_class,
-                'profile_opt': '-Dmapreduce.reduce.java.opts=%s -Dmapreduce.map.java.opts=%s' % (JAVA_PROFILER, JAVA_PROFILER) if
-                self.should_profile else ''
+                'class': main_class
             }
         )
+
+        if override_jvm_opts is None:
+            override_jvm_opts = {}
+
+        if self.should_profile:
+            override_jvm_opts['mapreduce.reduce.java.opts'] = JAVA_PROFILER
+            override_jvm_opts['mapreduce.map.java.opts'] = JAVA_PROFILER
+
+        curr_jvm_opts = copy(self.jvm_opts)
+        curr_jvm_opts.update(override_jvm_opts)
+        command = TasksInfra.add_jvm_options(command, curr_jvm_opts)
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
         if rerun_root_queue:
             command = self.__with_rerun_root_queue(command)
@@ -432,13 +462,15 @@ class ContextualizedTasksInfra(object):
 
             print('snapshot exists')
 
-    def run_hadoop(self, jar_path, jar_name, main_class, command_params):
+    def run_hadoop(self, jar_path, jar_name, main_class, command_params, jvm_opts=None):
         return self.run_bash(
-            self.__compose_hadoop_runner_command(jar_path=jar_path,
-                                                 jar_name=jar_name,
-                                                 main_class=main_class,
-                                                 command_params=command_params,
-                                                 rerun_root_queue=self.rerun)
+            self.__compose_hadoop_runner_command(
+                jar_path=jar_path,
+                jar_name=jar_name,
+                main_class=main_class,
+                command_params=command_params,
+                override_jvm_opts=jvm_opts,
+                rerun_root_queue=self.rerun)
         ).ok
 
     # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
@@ -495,17 +527,21 @@ class ContextualizedTasksInfra(object):
     # Todo: Move it to the mobile project
     def run_mobile_hadoop(self, command_params,
                           main_class='com.similargroup.mobile.main.MobileRunner',
+                          jvm_opts=None,
                           rerun_root_queue=False):
         return self.run_hadoop(jar_path='mobile',
                                jar_name='mobile.jar',
                                main_class=main_class,
-                               command_params=command_params)
+                               command_params=command_params,
+                               jvm_opts=jvm_opts)
 
-    def run_analytics_hadoop(self, command_params, main_class):
-        return self.run_hadoop(jar_path='analytics',
-                               jar_name='analytics.jar',
-                               main_class=main_class,
-                               command_params=command_params)
+    def run_analytics_hadoop(self, command_params, main_class, jvm_opts=None):
+        return self.run_hadoop(
+            jar_path='analytics',
+            jar_name='analytics.jar',
+            main_class=main_class,
+            command_params=command_params,
+            jvm_opts=jvm_opts)
 
     def run_bash(self, command):
         sys.stdout.write("#####\nFinal bash command: \n-----------------\n%s\n#####\n" % command)
@@ -521,6 +557,17 @@ class ContextualizedTasksInfra(object):
     def run_r(self, r_executable, command_params):
         return self.run_bash(self.__compose_infra_command(
             "execute Rscript %s/%s %s" % (self.execution_dir, r_executable, ' '.join(command_params)))).ok
+
+    def run_rserve(self, r_executable, command_params=None):
+        current_file_path = os.path.abspath(os.path.dirname(__file__))
+        run_rserve = '%s/resources/RunRserve.R' % current_file_path
+        rserve_host = TasksInfra.get_rserve_host()
+        rserve_port = TasksInfra.get_rserve_port()
+        executable_path = '%s/%s' % (self.execution_dir, r_executable) if self.execution_dir else r_executable
+        return self.run_bash(self.__compose_infra_command(
+            'execute Rscript %s %s %s %s %s' % (run_rserve, rserve_host, rserve_port,
+                                                executable_path,
+                                                ' '.join(command_params) if command_params else ""))).ok
 
     def latest_daily_success_date(self, directory, month_lookback, date=None):
         """
@@ -745,18 +792,18 @@ class ContextualizedTasksInfra(object):
         module_dir = self.execution_dir + '/' + module
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
+        final_py_files = py_files or []
+
         if use_bigdata_defaults:
             main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
             module_source_egg_path = '%s/sw_%s-0.0.0.dev0-py2.7.egg' % (module_dir, module)
-            if not py_files and os.path.exists(module_source_egg_path):
-                py_files = [module_source_egg_path]
-        if py_files is None:
-            py_files = []
+            if os.path.exists(module_source_egg_path):
+                final_py_files.append(module_source_egg_path)
 
-        if len(py_files) == 0:
+        if len(final_py_files) == 0:
             py_files_cmd = ' '
         else:
-            py_files_cmd = ' --py-files "%s"' % ','.join(py_files)
+            py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
@@ -800,6 +847,10 @@ class ContextualizedTasksInfra(object):
         config = configparser.ConfigParser()
         config.read('%s/scripts/.s3cfg' % self.execution_dir)
         return config.get('default', property_key)
+
+    def set_s3_keys(self, access=None, secret=None):
+        self.jvm_opts['fs.s3a.access.key'] = access if access else self.read_s3_configuration('access_key')
+        self.jvm_opts['fs.s3a.secret.key'] = secret if secret else self.read_s3_configuration('secret_key')
 
     def consolidate_dir(self, path, io_format=None, codec=None):
 
