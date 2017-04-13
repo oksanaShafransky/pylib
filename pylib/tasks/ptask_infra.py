@@ -1,5 +1,8 @@
 import calendar
 import logging
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+
 import os
 import re
 import shutil
@@ -176,11 +179,18 @@ class TasksInfra(object):
 
     SMTP_SERVER = 'mta01.sg.internal'
     @staticmethod
-    def send_mail(mail_from, mail_to, mail_subject, content):
-        msg = MIMEText(content)
+    def send_mail(mail_from, mail_to, mail_subject, content, image_attachment=None):
+
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(content, 'plain'))
+
         msg['From'] = mail_from
         msg['To'] = ','.join(mail_to)
         msg['Subject'] = mail_subject
+
+        if image_attachment:
+            img = MIMEImage(image_attachment)
+            msg.attach(img)
 
         mail = smtplib.SMTP(TasksInfra.SMTP_SERVER)
         mail.sendmail(mail_from, mail_to, msg.as_string())
