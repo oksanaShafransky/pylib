@@ -244,16 +244,6 @@ def hbase_table_name(table):
     raise Exception('Cannot find the name for table %s stdout[%s] stderr[%s]' % (table, output, err))
 
 
-def copy_from_path(src_path, target_path):
-    delete_path(target_path)
-    subprocess.call(["hadoop", "fs", "-mkdir", "-p", target_path])
-    subprocess.call(("hadoop", "fs", "-cp", "-f", src_path + "/*", target_path))
-
-
-def delete_path(path):
-    subprocess.call(("hadoop", "fs", "-rm", "-r", path))
-
-
 def temp_table_cmds_internal(orig_table_name, temp_root):
     table_name = generate_randomized_table_name(orig_table_name)
     drop_cmd = '\nDROP TABLE IF EXISTS %s;\n' % table_name

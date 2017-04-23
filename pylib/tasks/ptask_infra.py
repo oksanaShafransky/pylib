@@ -1,5 +1,8 @@
 import calendar
 import logging
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+
 import os
 import re
 import shutil
@@ -176,11 +179,18 @@ class TasksInfra(object):
 
     SMTP_SERVER = 'mta01.sg.internal'
     @staticmethod
-    def send_mail(mail_from, mail_to, mail_subject, content):
-        msg = MIMEText(content)
+    def send_mail(mail_from, mail_to, mail_subject, content, image_attachment=None):
+
+        msg = MIMEMultipart()
+        msg.attach(MIMEText(content, 'plain'))
+
         msg['From'] = mail_from
         msg['To'] = ','.join(mail_to)
         msg['Subject'] = mail_subject
+
+        if image_attachment:
+            img = MIMEImage(image_attachment)
+            msg.attach(img)
 
         mail = smtplib.SMTP(TasksInfra.SMTP_SERVER)
         mail.sendmail(mail_from, mail_to, msg.as_string())
@@ -782,18 +792,18 @@ class ContextualizedTasksInfra(object):
         module_dir = self.execution_dir + '/' + module
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
+        final_py_files = py_files or []
+
         if use_bigdata_defaults:
             main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
             module_source_egg_path = '%s/sw_%s-0.0.0.dev0-py2.7.egg' % (module_dir, module)
-            if not py_files and os.path.exists(module_source_egg_path):
-                py_files = [module_source_egg_path]
-        if py_files is None:
-            py_files = []
+            if os.path.exists(module_source_egg_path):
+                final_py_files.append(module_source_egg_path)
 
-        if len(py_files) == 0:
+        if len(final_py_files) == 0:
             py_files_cmd = ' '
         else:
-            py_files_cmd = ' --py-files "%s"' % ','.join(py_files)
+            py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
