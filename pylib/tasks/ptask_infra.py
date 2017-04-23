@@ -548,7 +548,7 @@ class ContextualizedTasksInfra(object):
         return self.run_bash(self.__compose_infra_command(
             "execute Rscript %s/%s %s" % (self.execution_dir, r_executable, ' '.join(command_params)))).ok
 
-    def run_rserve(self, r_executable, command_params=None):
+    def run_r_on_rserve(self, r_executable, command_params=None):
         current_file_path = os.path.abspath(os.path.dirname(__file__))
         run_rserve = '%s/resources/RunRserve.R' % current_file_path
         rserve_host = TasksInfra.get_rserve_host()
