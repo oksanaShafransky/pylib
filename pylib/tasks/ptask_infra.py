@@ -28,7 +28,7 @@ from redis import StrictRedis
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.hive.common import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
-                                   create_client
+                                   create_client, directory_exists, copy_dir_from_path
 from pylib.sw_config.kv_factory import provider_from_config
 from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
 from pylib.hbase.hbase_utils import validate_records_per_region
@@ -872,6 +872,33 @@ class ContextualizedTasksInfra(object):
         else:
             command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
+
+    def consolidate_parquet_dir(self, dir):
+        tmp_dir = "/tmp/crush/" + datetime.now().strftime('%Y%m%d%H%M%S')
+        params = {'src': dir,
+                  'dst': tmp_dir,
+                  'm': 1
+                  }
+        ret_val = self.run_py_spark(app_name="Consolidate:" + dir,
+                               module='common',
+                               use_bigdata_defaults=False,
+                               files=['/etc/hive/conf/hive-site.xml'],
+                               py_files=[self.execution_dir + '/mobile/python/sw_mobile/apps_common/spark_logger.py'],
+                               main_py_file='scripts/utils/crush_parquet.py',
+                               queue='consolidation',
+                               command_params=params,
+                               spark_configs={'spark.yarn.executor.memoryOverhead': '1024'},
+                               named_spark_args={'num-executors': '20', 'driver-memory': '2G',
+                                                 'executor-memory': '2G'}
+                               )
+        logging.info("Return value from spark-submit: %s" % ret_val)
+        if ret_val:
+            self.assert_output_validity(tmp_dir)
+            if directory_exists(tmp_dir) and not self.dry_run:
+                copy_dir_from_path(tmp_dir, dir)
+            else:
+                ret_val = False
+        return ret_val
 
     def write_to_hbase(self, key, table, col_family, col, value, log=True):
         if log:
