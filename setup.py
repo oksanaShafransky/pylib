@@ -10,7 +10,6 @@ setup(
     setup_requires=['pytest-runner'],
     tests_require=['pytest', 'python-dateutil', 'boto==2.42.0', 'snakebite', 'invoke==0.12.2', 'redis', 'ujson==1.33',
                    'mrjob==0.5.2'],
-    test_suite='tests',
     entry_points={
         'console_scripts': ['ptask = pylib.tasks.ptask_invoke:main']
     },
