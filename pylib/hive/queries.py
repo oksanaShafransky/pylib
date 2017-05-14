@@ -36,7 +36,7 @@ def sum_query(dt, mode, mode_type, daily_table, daily_table_path, sum_table, sum
 @deploy_jars
 @TableProvided(alias='source_table', table_name_resolver=lambda **kwargs: '%s.%s' % (kwargs['hive_db'],kwargs['source_table_name']), path_param='source_table_path')
 @HBaseTableProvided(alias='target_hbase_table', table_name_resolver=lambda **kwargs: '%s.%s' % (kwargs['hive_db'], kwargs['target_hive_template']), hbase_table_name_param='hbase_table_name')
-def load_to_hbase_query(date, mode, mode_type, hive_db, source_table_name, source_table_path, target_hive_template, hbase_table_name, deploy_path, cols, where_filters=None, temp_functions=None, **kwargs):
+def load_to_hbase_query(date, mode, mode_type, hive_db, source_table_name, source_table_path, target_hive_template, hbase_table_name, deploy_path, cols, where_filters=None, temp_functions=None, input_range_mode_type=None, **kwargs):
     year, month, day = parse_date(date)
     return '''
         use %(hive_db)s;
@@ -55,6 +55,6 @@ def load_to_hbase_query(date, mode, mode_type, hive_db, source_table_name, sourc
                'target_hbase_table': kwargs['target_hbase_table'],
                'source_table': kwargs['source_table'],
                'where_clause': ' AND '.join(
-                   [get_range_where_clause(year, month, day, mode, mode_type)] +
+                   [get_range_where_clause(year, month, day, mode, input_range_mode_type or mode_type)] +
                    (where_filters or []))
            }
