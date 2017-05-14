@@ -428,6 +428,8 @@ def get_range_where_clause(year, month, day, mode, mode_type, prefix=''):
             prefix, end_date.year % 100, prefix, start_date.month, prefix, end_date.month)
     elif mode_type == "annually":
         return " (%syear = %02d) " % (prefix, end_date.year % 100)
+    elif mode_type == "exact-date":
+        start_date = end_date
 
     where_clause = ""
 
