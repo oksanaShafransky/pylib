@@ -11,7 +11,7 @@ setup(
     tests_require=[
         'pytest',
         'python-dateutil',
-        'boto==2.42.0',
+        'boto>=2.42.0',
         'snakebite',
         'invoke==0.12.2',
         'redis',
