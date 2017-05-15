@@ -19,7 +19,7 @@ setup(
         'urllib3==1.16'
     ],
     setup_requires=[
-        'pytest-runner'
+        'pytest-runner',
         'wheel==0.29.0'
     ],
     tests_require=[
