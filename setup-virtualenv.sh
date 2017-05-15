@@ -1,5 +1,6 @@
 #!/bin/bash
 
-virtualenv .
+virtualenv --no-setuptools .
 source bin/activate
-bin/pip install --upgrade pip
+wget https://bootstrap.pypa.io/ez_setup.py -O - | python
+bin/easy_install pip
