@@ -6,6 +6,7 @@ source bin/activate
 bin/easy_install pip
 bin/pip install pip==9.0.1
 bin/pip install setuptools==35.0.2
+bin/pip install boto==2.35.0
 
 
 # virtualenv --no-setuptools .
