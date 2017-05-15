@@ -11,18 +11,12 @@ setup(
     tests_require=[
         'pytest',
         'python-dateutil',
-        'boto>=2.42.0',
+        'boto==2.42.0',
         'snakebite',
         'invoke==0.12.2',
         'redis',
         'ujson==1.33',
-        'mrjob==0.5.2',
-        'jsonschema==2.3.0',
-        'mock==2.0.0',
-        'testscenarios==0.5.0',
-        'testresources==2.0.1',
-        'virtualenv==15.1.0',
-        'contextlib2==0.5.4'],
+        'mrjob==0.5.2'],
     test_suite='tests',
     entry_points={
         'console_scripts': ['ptask = pylib.tasks.ptask_invoke:main']
