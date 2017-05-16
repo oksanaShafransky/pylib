@@ -893,9 +893,9 @@ class ContextualizedTasksInfra(object):
                                )
         logging.info("Return value from spark-submit: %s" % ret_val)
         if ret_val:
-            self.assert_output_validity(tmp_dir)
             if directory_exists(tmp_dir) and not self.dry_run:
                 copy_dir_from_path(tmp_dir, dir)
+                self.assert_output_validity(tmp_dir)
             else:
                 ret_val = False
         return ret_val
