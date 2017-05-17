@@ -875,7 +875,7 @@ class ContextualizedTasksInfra(object):
         self.run_bash(command)
 
     def consolidate_parquet_dir(self, dir):
-        tmp_dir = "/tmp/crush/" + datetime.now().strftime('%Y%m%d%H%M%S')
+        tmp_dir = "/tmp/crush/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
         params = {'src': dir,
                   'dst': tmp_dir,
                   'm': 1
