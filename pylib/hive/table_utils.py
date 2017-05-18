@@ -99,7 +99,7 @@ def drop_partition(table_name, partition):
 
 def drop_partition_str(table_name, partition_str):
     with get_hive_connection().cursor() as curr:
-        curr.execute('alter table %s drop if exists partition (%s)' % (table_name, partition_str))
+        curr.execute('alter table %s drop if exists partition %s' % (table_name, partition_str))
 
 
 class TableProvided(object):
