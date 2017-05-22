@@ -852,11 +852,11 @@ class ContextualizedTasksInfra(object):
     def set_s3_keys(self, access=None, secret=None):
         access_key = access or self.read_s3_configuration('access_key')
         self.jvm_opts['fs.s3a.access.key'] = access_key
-        self.run_bash('aws configure set aws_access_key_id %s') % access_key
+        self.run_bash('aws configure set aws_access_key_id %s' % access_key)
 
         secret_key = secret or self.read_s3_configuration('secret_key')
         self.jvm_opts['fs.s3a.secret.key'] = secret_key
-        self.run_bash('aws configure set aws_secret_access_key %s') % secret_key
+        self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
 
     def consolidate_dir(self, path, io_format=None, codec=None):
 
