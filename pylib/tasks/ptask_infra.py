@@ -2,6 +2,7 @@ import calendar
 import logging
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
+from datetime import datetime
 
 import os
 import re
@@ -849,8 +850,13 @@ class ContextualizedTasksInfra(object):
         return config.get('default', property_key)
 
     def set_s3_keys(self, access=None, secret=None):
-        self.jvm_opts['fs.s3a.access.key'] = access if access else self.read_s3_configuration('access_key')
-        self.jvm_opts['fs.s3a.secret.key'] = secret if secret else self.read_s3_configuration('secret_key')
+        access_key = access or self.read_s3_configuration('access_key')
+        self.jvm_opts['fs.s3a.access.key'] = access_key
+        self.run_bash('aws configure set aws_access_key_id %s' % access_key)
+
+        secret_key = secret or self.read_s3_configuration('secret_key')
+        self.jvm_opts['fs.s3a.secret.key'] = secret_key
+        self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
 
     def consolidate_dir(self, path, io_format=None, codec=None):
 
@@ -874,7 +880,7 @@ class ContextualizedTasksInfra(object):
         self.run_bash(command)
 
     def consolidate_parquet_dir(self, dir):
-        tmp_dir = "/tmp/crush/" + datetime.now().strftime('%Y%m%d%H%M%S')
+        tmp_dir = "/tmp/crush/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + dir
         params = {'src': dir,
                   'dst': tmp_dir,
                   'm': 1
@@ -893,9 +899,9 @@ class ContextualizedTasksInfra(object):
                                )
         logging.info("Return value from spark-submit: %s" % ret_val)
         if ret_val:
-            self.assert_output_validity(tmp_dir)
             if directory_exists(tmp_dir) and not self.dry_run:
                 copy_dir_from_path(tmp_dir, dir)
+                self.assert_output_validity(tmp_dir)
             else:
                 ret_val = False
         return ret_val

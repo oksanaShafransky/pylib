@@ -5,6 +5,7 @@ setup(
     version='1.0.0',
     packages=find_packages(),
     zip_safe=True,
+
     install_requires=[
         'invoke==0.12.2',
         'tld',
