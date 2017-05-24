@@ -227,7 +227,7 @@
                         </goals>
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="build-python" if="teamcity.exec">
+                            <target name="build-python">
                                 <exec executable="/bin/bash" osfamily="unix" dir="${project.basedir}">
                                     <arg line="./setup-virtualenv.sh"/>
                                 </exec>
@@ -242,7 +242,7 @@
                         </goals>
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="build-python" if="teamcity.exec">
+                            <target name="build-python">
                                 <exec executable="bin/pip" osfamily="unix" dir="${project.basedir}">
                                     <arg line="install --requirement=${project.basedir}/requirements.txt"/>
                                 </exec>
