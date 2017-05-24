@@ -803,7 +803,7 @@ class ContextualizedTasksInfra(object):
             if os.path.exists(module_source_egg_path):
                 final_py_files.append(module_source_egg_path)
 
-        pylib_path = self.execution_dir + '/' + 'pylib.egg'
+        pylib_path = '/tmp/pylib.egg'
         if use_pylib:
             opener = urllib.URLopener()
             opener.retrieve('https://artifactory.similarweb.io/api/pypi/similar-pypi/packages/sw_pylib/1.0.0/sw_pylib-1.0.0-py2.7.egg',
