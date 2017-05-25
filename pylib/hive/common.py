@@ -112,6 +112,19 @@ def getDatePartitionString(year, month, day=None, **kwargs):
 
     return '(%s)' % partition_parts
 
+def get_date_partition_path(year, month, day=None, **kwargs):
+    if day:
+        partition_parts = "year=%s/month=%02d/day=%02d" % (year, month, day)
+    else:
+        partition_parts = "year=%s/month=%02d" % (year, month)
+
+    for key, value in six.iteritems(kwargs):
+        if value:
+            partition_parts += '/%s=%s' % (key, value)
+        else:
+            partition_parts += '/%s' % key
+
+    return '%s' % partition_parts
 
 def getWhereString(table_prefix, mode, mode_type, year, month, day):
     if mode == "window" or mode_type == "weekly":
