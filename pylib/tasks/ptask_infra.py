@@ -858,6 +858,9 @@ class ContextualizedTasksInfra(object):
         self.jvm_opts['fs.s3a.secret.key'] = secret_key
         self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
 
+    def set_hdfs_replication_factor(self, replication_factor):
+        self.jvm_opts['dfs.replication'] = replication_factor
+
     def consolidate_dir(self, path, io_format=None, codec=None):
 
         # several sanity checks over the given path
