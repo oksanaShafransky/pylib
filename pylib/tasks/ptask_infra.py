@@ -852,6 +852,9 @@ class ContextualizedTasksInfra(object):
         self.jvm_opts['fs.s3a.access.key'] = access if access else self.read_s3_configuration('access_key')
         self.jvm_opts['fs.s3a.secret.key'] = secret if secret else self.read_s3_configuration('secret_key')
 
+    def set_hdfs_replication_factor(self, replication_factor):
+        self.jvm_opts['dfs.replication'] = replication_factor
+
     def consolidate_dir(self, path, io_format=None, codec=None):
 
         # several sanity checks over the given path
