@@ -7,6 +7,8 @@ setup(
     zip_safe=True,
 
     install_requires=[
+        'requests==2.14.2',
+        'cryptography==1.8.2',
         'invoke==0.12.2',
         'tld',
         'redis',
