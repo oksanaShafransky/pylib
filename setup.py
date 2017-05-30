@@ -24,6 +24,8 @@ setup(
         'wheel==0.29.0'
     ],
     tests_require=[
+        'requests==2.14.2',
+        'cryptography==1.8.2',
         'pytest',
         'python-dateutil',
         'boto==2.42.0',
