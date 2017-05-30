@@ -16,7 +16,6 @@ setup(
         'ujson==1.33',
         'mrjob==0.5.2',
         'consulate==0.6.0',
-        'python-etcd==0.3.3',
         'urllib3==1.16',
         'monthdelta'
     ],
