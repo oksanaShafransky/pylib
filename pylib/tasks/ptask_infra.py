@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 import re
 import shutil
-import uuid
+#import uuid
 
 import datetime
 import six
@@ -19,7 +19,7 @@ from copy import copy
 import smtplib
 from email.mime.text import MIMEText
 
-import urllib3
+#import urllib3
 
 # Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
@@ -787,8 +787,8 @@ class ContextualizedTasksInfra(object):
                      spark_configs=None,
                      use_bigdata_defaults=False,
                      queue=None,
-                     managed_output_dirs=None,
-                     use_pylib=False
+                     managed_output_dirs=None
+                     #use_pylib=False
                      ):
 
         # delete output on start
@@ -805,13 +805,13 @@ class ContextualizedTasksInfra(object):
             if os.path.exists(module_source_egg_path):
                 final_py_files.append(module_source_egg_path)
 
-        pylib_path = '/tmp/%s-pylib.egg' % str(uuid.uuid4())
-        pylib_url = 'https://artifactory.similarweb.io/api/pypi/similar-pypi/packages/sw_pylib/1.0.0/sw_pylib-1.0.0-py2.7.egg'
-        if use_pylib:
-            pm = urllib3.PoolManager()
-            with pm.request('GET', pylib_url, preload_content=False) as resp, open(pylib_path, 'wb') as out_file:
-                shutil.copyfileobj(resp, out_file)
-            final_py_files.append(pylib_path)
+        # pylib_path = '/tmp/%s-pylib.egg' % str(uuid.uuid4())
+        # pylib_url = 'https://artifactory.similarweb.io/api/pypi/similar-pypi/packages/sw_pylib/1.0.0/sw_pylib-1.0.0-py2.7.egg'
+        # if use_pylib:
+        #     pm = urllib3.PoolManager()
+        #     with pm.request('GET', pylib_url, preload_content=False) as resp, open(pylib_path, 'wb') as out_file:
+        #         shutil.copyfileobj(resp, out_file)
+        #     final_py_files.append(pylib_path)
 
 
         if len(final_py_files) == 0:
@@ -843,8 +843,8 @@ class ContextualizedTasksInfra(object):
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         res = self.run_bash(command).ok
-        if use_pylib:
-            os.remove(pylib_path)
+        # if use_pylib:
+        #     os.remove(pylib_path)
         return res
 
     def build_spark_additional_configs(self, named_spark_args, spark_configs):
