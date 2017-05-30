@@ -19,7 +19,7 @@ from copy import copy
 import smtplib
 from email.mime.text import MIMEText
 
-import urllib
+import urllib3
 
 # Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
@@ -806,10 +806,11 @@ class ContextualizedTasksInfra(object):
                 final_py_files.append(module_source_egg_path)
 
         pylib_path = '/tmp/%s-pylib.egg' % str(uuid.uuid4())
+        pylib_url = 'https://artifactory.similarweb.io/api/pypi/similar-pypi/packages/sw_pylib/1.0.0/sw_pylib-1.0.0-py2.7.egg'
         if use_pylib:
-            opener = urllib.URLopener()
-            opener.retrieve('https://artifactory.similarweb.io/api/pypi/similar-pypi/packages/sw_pylib/1.0.0/sw_pylib-1.0.0-py2.7.egg',
-                            pylib_path)
+            pm = urllib3.PoolManager()
+            with pm.request('GET', pylib_url, preload_content=False) as resp, open(pylib_path, 'wb') as out_file:
+                shutil.copyfileobj(resp, out_file)
             final_py_files.append(pylib_path)
 
 
