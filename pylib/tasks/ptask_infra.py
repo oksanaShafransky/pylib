@@ -788,7 +788,7 @@ class ContextualizedTasksInfra(object):
                      use_bigdata_defaults=False,
                      queue=None,
                      managed_output_dirs=None,
-                     use_pylib=False
+                     additional_artifacts=[]
                      ):
 
         # delete output on start
@@ -805,13 +805,14 @@ class ContextualizedTasksInfra(object):
             if os.path.exists(module_source_egg_path):
                 final_py_files.append(module_source_egg_path)
 
-        pylib_path = '/tmp/%s-pylib.egg' % str(uuid.uuid4())
-        if use_pylib:
+        additional_artifacts_paths = []
+        for artifact in additional_artifacts:
+            artifact_path = '/tmp/%s-%s.egg' % (str(uuid.uuid4()), artifact)
+            artifact_url = 'https://artifactory.similarweb.io/api/pypi/similar-pypi/packages/%s/1.0.0/%s-1.0.0-py2.7.egg' % artifact
             opener = urllib.URLopener()
-            opener.retrieve('https://artifactory.similarweb.io/api/pypi/similar-pypi/packages/sw_pylib/1.0.0/sw_pylib-1.0.0-py2.7.egg',
-                            pylib_path)
-            final_py_files.append(pylib_path)
-
+            opener.retrieve(artifact_url, artifact_path)
+            final_py_files.append(artifact_path)
+            additional_artifacts_paths.append(artifact_path)
 
         if len(final_py_files) == 0:
             py_files_cmd = ' '
@@ -842,8 +843,8 @@ class ContextualizedTasksInfra(object):
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         res = self.run_bash(command).ok
-        if use_pylib:
-            os.remove(pylib_path)
+        for artifact_path in additional_artifacts_paths:
+            os.remove(artifact_path)
         return res
 
     def build_spark_additional_configs(self, named_spark_args, spark_configs):
