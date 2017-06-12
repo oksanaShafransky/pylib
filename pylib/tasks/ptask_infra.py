@@ -220,9 +220,14 @@ class TasksInfra(object):
 
         files_to_treat = set()
         apps = get_applications(applicationTags=task_id)
-        for app in apps:
-            for job in get_app_jobs(app):
-                files_to_treat.update(get_corrupt_input_files(job['job_id']))
+
+        def cmp_ts(app1, app2):
+            ts1, ts2 = app1['finishedTime'], app2['finishedTime']
+            return -1 if ts1 < ts2 else 0 if ts1 == ts2 else 1
+
+        last_app = sorted(apps, cmp=cmp_ts)
+        for job in get_app_jobs(last_app):
+            files_to_treat.update(get_corrupt_input_files(job['job_id']))
 
         if len(files_to_treat) == 0:
             logging.info('No corrupt files detected')
