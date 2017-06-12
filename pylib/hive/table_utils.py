@@ -103,9 +103,10 @@ def drop_partition_str(table_name, partition_str):
 
 
 class TableProvided(object):
-    def __init__(self, alias, table_name_resolver, path_param):
+    def __init__(self, alias, table_name_resolver, path_param, pre_post=True):
         self.table_alias = alias
         self.param = path_param
+        self.pre_post = pre_post
 
         if isfunction(table_name_resolver):
             self.table_name = table_name_resolver
@@ -120,7 +121,10 @@ class TableProvided(object):
         pre_cmd = drop_cmd + create_cmd
         post_cmd = drop_cmd
         kwargs[self.table_alias] = effective_table_name
-        return pre_cmd + f(*args, **kwargs) + post_cmd
+        if self.pre_post:
+            return pre_cmd + f(*args, **kwargs) + post_cmd
+        else:
+            return f(*args, **kwargs)
 
     def __call__(self, fnc):
         return lambda *args, **kwargs: self.invoke_fnc(fnc, *args, **kwargs)

@@ -7,6 +7,7 @@ from datetime import datetime
 import os
 import re
 import shutil
+import uuid
 
 import datetime
 import six
@@ -17,6 +18,8 @@ from copy import copy
 
 import smtplib
 from email.mime.text import MIMEText
+
+import urllib
 
 # Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
@@ -789,7 +792,8 @@ class ContextualizedTasksInfra(object):
                      spark_configs=None,
                      use_bigdata_defaults=False,
                      queue=None,
-                     managed_output_dirs=None
+                     managed_output_dirs=None,
+                     additional_artifacts=[]
                      ):
 
         # delete output on start
@@ -805,6 +809,16 @@ class ContextualizedTasksInfra(object):
             module_source_egg_path = '%s/sw_%s-0.0.0.dev0-py2.7.egg' % (module_dir, module)
             if os.path.exists(module_source_egg_path):
                 final_py_files.append(module_source_egg_path)
+
+        additional_artifacts_paths = []
+        for artifact in additional_artifacts:
+            artifact_path = '/tmp/%s-%s.egg' % (str(uuid.uuid4()), artifact)
+            artifact_url = 'https://artifactory.similarweb.io/api/pypi/similar-pypi/packages/%(artifact)s/1.0.0/%(artifact)s-1.0.0-py2.7.egg' % \
+                           {'artifact': artifact}
+            opener = urllib.URLopener()
+            opener.retrieve(artifact_url, artifact_path)
+            final_py_files.append(artifact_path)
+            additional_artifacts_paths.append(artifact_path)
 
         if len(final_py_files) == 0:
             py_files_cmd = ' '
@@ -834,7 +848,10 @@ class ContextualizedTasksInfra(object):
                      }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
-        return self.run_bash(command).ok
+        res = self.run_bash(command).ok
+        for artifact_path in additional_artifacts_paths:
+            os.remove(artifact_path)
+        return res
 
     def build_spark_additional_configs(self, named_spark_args, spark_configs):
         additional_configs = ''

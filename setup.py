@@ -7,6 +7,8 @@ setup(
     zip_safe=True,
 
     install_requires=[
+        'requests==2.14.2',
+        'cryptography==1.8.2',
         'invoke==0.12.2',
         'tld',
         'redis',
@@ -16,7 +18,6 @@ setup(
         'ujson==1.33',
         'mrjob==0.5.2',
         'consulate==0.6.0',
-        'python-etcd==0.3.3',
         'urllib3==1.16',
         'monthdelta'
     ],
@@ -25,6 +26,8 @@ setup(
         'wheel==0.29.0'
     ],
     tests_require=[
+        'requests==2.14.2',
+        'cryptography==1.8.2',
         'pytest',
         'python-dateutil',
         'boto==2.42.0',
