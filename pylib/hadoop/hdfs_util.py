@@ -181,9 +181,13 @@ def get_file(file_path, local_name, hdfs_client=None):
 def check_success(directory):
     hdfs_client = create_client()
     logging.info("Checking that dir '%s' contains _SUCCESS..." % directory)
-    res = hdfs_client.test(path=(directory + "/_SUCCESS"))
-    logging.info('it does' if res else "it doesn't")
-    return res
+    try:
+        res = hdfs_client.test(path=(directory + "/_SUCCESS"))
+        logging.info('it does' if res else "it doesn't")
+        return res
+    except FileNotFoundException:
+        logger.info('it does not')
+        return False
 
 
 def mark_success(dir_path, create_missing_path=False):
