@@ -11,23 +11,28 @@ class DataCompleter(object):
 
     Usage Example:
 
-     table_paths = {'daily_country_source_device_metrics': '/similargroup/data/mobile-analytics/daily/aggregate/aggkey=CountrySourceDeviceKey',
-                   'daily_app_metrics': '/imilargroup/data/mobile-analytics/daily/aggregate/aggkey=ApspCountrySourceKey'}
+    table_paths = {'daily_country_source_device_metrics': '/similargroup/data/mobile-analytics/daily/aggregate/aggkey=CountrySourceDeviceKey',
+                   'daily_app_metrics': '/similargroup/data/mobile-analytics/daily/aggregate/aggkey=AppCountrySourceKey'}
 
-    data_completions = [{'date_to_complete': '2017-03-20',
-                     'days_delta' : 7,
-                     'type' : 'hive',
-                     'tables': ['daily_country_source_device_metrics','daily_app_metrics'],
-                     'conditions' : {'complete': 'source in (650, 653)',
-                                     'keep': 'source not in (650, 653)'},
-                     'description': 'An array of sources sent partial data in that day, so their data is invalid'}]
+    data_completions = [
+        HiveDataCompletion(date_to_complete='2017-03-20',
+                           description='An array of sources sent partial data in that day, so their data is invalid',
+                           db='mobile',
+                           table_paths=table_paths,
+                           day_delta= 7,
+                           conditions= {'complete': 'source in (650, 653, 654, 655, 868, 955, 957, 961, 971, 981, 5019, 5063, 5072, 5079, 5084, 5087, 5197, 5220, 5274, 5304, 5401, 5415, 5424, 5432, 5476, 5482, 5497)',
+                                        'keep': 'source not in (650, 653, 654, 655, 868, 955, 957, 961, 971, 981, 5019, 5063, 5072, 5079, 5084, 5087, 5197, 5220, 5274, 5304, 5401, 5415, 5424, 5432, 5476, 5482, 5497)'},
+                           table_names=['daily_country_source_device_metrics','daily_app_metrics'],
+                           )
+        ]
 
 
     @ptask
     def fix_daily_aggregation(ctx):
         ti = ContextualizedTasksInfra(ctx)
         DataCompleter(ti).complete_data(data_completions,
-                                        table_paths)
+                                    table_paths)
+
     """
 
 
@@ -35,12 +40,42 @@ class DataCompleter(object):
     def __init__(self, contextualized_tasks_infra):
         self.ti = contextualized_tasks_infra
 
-    def __complete_data_hive_query(self,
-                       table_full_name,
-                       src_where,
-                       dst_where,
-                       dst_partition,
-                       conditions):
+    def complete_data(self, completers, table_paths=[]):
+        date_str = self.ti.date.isoformat()
+        for completer in completers:
+            if date_str == completer.date_to_complete:
+                print ('Applying data-complete - %s' % completer.description)
+                completer.complete(self.ti)
+
+
+class AbstractDataCompletion(object):
+    def __init__(self, date_to_complete, description):
+        self.date_to_complete = date_to_complete
+        self.description = description
+
+    def complete(self, contextualizedTaskInfra):
+        print ('Applying data-complete - %s' % self.description)
+        self.do_complete(contextualizedTaskInfra)
+
+    def do_complete(self, contextualizedTaskInfra):
+        raise NotImplementedError
+
+
+class HiveDataCompletion(AbstractDataCompletion):
+    def __init__(self, db, table_paths, day_delta, conditions, table_names, *args, **kwargs):
+        super(HiveDataCompletion, self).__init__(*args, **kwargs)
+        self.db = db
+        self.table_paths = table_paths
+        self.day_delta = day_delta
+        self.conditions = conditions
+        self.table_names = table_names
+
+    @staticmethod
+    def __complete_data_hive_query(table_full_name,
+                                   src_where,
+                                   dst_where,
+                                   dst_partition,
+                                   conditions):
         if conditions != {}:
             where_str = "(%s AND %s) OR (%s AND %s)" % (dst_where,
                                                         conditions['keep'],
@@ -58,40 +93,36 @@ class DataCompleter(object):
                  }
         return query
 
-    def __complete_data_hive_collection(self, db, table_path, day_delta, conditions, table_name):
-        table_full_name = ".".join([db, table_name])
-        dst_year, dst_month, dst_day = common.parse_date(self.ti.date)
-        src_year, src_month, src_day = common.parse_date(self.ti.date - timedelta(days=day_delta))
-        dst_partition = common.getDatePartitionString(dst_year, dst_month, dst_day)
-        src_where = common.get_monthly_where(src_year, src_month, src_day)
-        dst_where = common.get_monthly_where(dst_year, dst_month, dst_day)
-        hive_settings = '''SET hive.support.quoted.identifiers=none;\n'''
-        table_full_name, table_drop_cmd, table_create_cmd = common.temp_table_cmds(table_full_name, table_path)
-        query = self.__complete_data_hive_query(table_full_name=table_full_name,
-                               src_where=src_where, dst_where=dst_where,
-                               dst_partition=dst_partition, conditions=conditions)
-        print ("Date in hive holes list, Moving from: %s to: %s" % (src_where, dst_where))
-        self.ti.run_hive(hive_settings + table_drop_cmd + table_create_cmd + query,
-                    query_name="Overwrite data with previous date according to some condition")
+    def do_complete(self, ti):
+        db = 'mobile'
+        for table_name in self.table_names:
+            table_path = self.table_paths[table_name]
+            print ('Applying the data-complete for hive table %s whose path is %s' % (table_name, table_path))
+            table_full_name = ".".join([db, table_name])
+            dst_year, dst_month, dst_day = common.parse_date(ti.date)
+            src_year, src_month, src_day = common.parse_date(ti.date - timedelta(days=self.day_delta))
+            dst_partition = common.getDatePartitionString(dst_year, dst_month, dst_day)
+            src_where = common.get_monthly_where(src_year, src_month, src_day)
+            dst_where = common.get_monthly_where(dst_year, dst_month, dst_day)
+            hive_settings = '''SET hive.support.quoted.identifiers=none;\n'''
+            table_full_name, table_drop_cmd, table_create_cmd = common.temp_table_cmds(table_full_name, table_path)
+            query = self.__complete_data_hive_query(table_full_name=table_full_name,
+                                                    src_where=src_where, dst_where=dst_where,
+                                                    dst_partition=dst_partition, conditions=self.conditions)
+            print ("Date in hive holes list, Moving from: %s to: %s" % (src_where, dst_where))
+            ti.run_hive(hive_settings + table_drop_cmd + table_create_cmd + query,
+                             query_name="Overwrite data with previous date according to some condition")
 
-    def __complete_data_hdfs_collection(ti, hdfs_path, day_delta):
-        source = "/".join([hdfs_path, TasksInfra.year_month_day(ti.date - timedelta(days=day_delta))])
-        target = "/".join([hdfs_path, TasksInfra.year_month_day(ti.date)])
+
+class HdfsDataCompletion(AbstractDataCompletion):
+    def __init__(self, day_delta, hdfs_path, *args, **kwargs):
+        super(HiveDataCompletion, self).__init__(*args, **kwargs)
+        self.hdfs_path = hdfs_path
+        self.day_delta = day_delta
+
+    def do_complete(self, ti):
+        source = "/".join([self.hdfs_path, TasksInfra.year_month_day(ti.date - timedelta(days=self.day_delta))])
+        target = "/".join([self.hdfs_path, TasksInfra.year_month_day(ti.date)])
         print ("Date in HDFS holes list, Moving from: %s to: %s" % (source, target))
         if not ti.dry_run:
             copy_dir_from_path(source, target)
-
-    def complete_data(self, completions, table_paths=[]):
-        date_str = self.ti.date.isoformat()
-        for completion in completions:
-            if date_str == completion['date_to_complete']:
-                print ('Applying data-complete - %s' % completion['description'])
-                if completion['type'] == 'hive':
-                    for table in completion['tables']:
-                        table_path = table_paths[table]
-                        print ('Applying the data-complete for hive table %s whose path is %s' % (table, table_path))
-                        self.__complete_data_hive_collection('mobile', table_path, completion['days_delta'], completion['conditions'], table)
-                if completion['type'] == 'hdfs':
-                    for hdfs_path in completion['paths']:
-                        print ('Applying the data-complete for hive table %s whose path is %s' % (table, table_path))
-                        self.__complete_data_hdfs_collection(hdfs_path, completion['days_delta'])
