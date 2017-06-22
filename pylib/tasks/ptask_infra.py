@@ -226,7 +226,7 @@ class TasksInfra(object):
 
         def cmp_ts(app1, app2):
             ts1, ts2 = app1['finishedTime'], app2['finishedTime']
-            return -1 if ts1 < ts2 else 0 if ts1 == ts2 else 1
+            return -1 if ts1 > ts2 else 0 if ts1 == ts2 else 1
 
         last_app = sorted(apps, cmp=cmp_ts)[0]
         for job in get_app_jobs(last_app):
