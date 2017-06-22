@@ -186,7 +186,7 @@ def check_success(directory):
         logging.info('it does' if res else "it doesn't")
         return res
     except FileNotFoundException:
-        logger.info('it does not')
+        logger.info('directory does not exist')
         return False
 
 
