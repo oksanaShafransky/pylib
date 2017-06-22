@@ -40,7 +40,7 @@ class DataCompleter(object):
     def __init__(self, contextualized_tasks_infra):
         self.ti = contextualized_tasks_infra
 
-    def complete_data(self, completers, table_paths=[]):
+    def complete_data(self, completers):
         date_str = self.ti.date.isoformat()
         for completer in completers:
             if date_str == completer.date_to_complete:
