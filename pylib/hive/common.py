@@ -15,22 +15,7 @@ from six.moves.urllib.parse import urlparse
 
 GLOBAL_DRYRUN = False  # This is crazy ugly, should allow executor to deploy jars
 
-
-class ContextFilter(logging.Filter):
-    CURRENT_LOG_NUM = 1
-
-    def filter(self, record):
-        record.count = self.CURRENT_LOG_NUM
-        self.CURRENT_LOG_NUM += 1
-        return True
-
-
-logging.basicConfig(format='%(asctime)s [ %(process)s : %(count)s ] %(filename)s %(levelname)s %(message)s',
-                    # datefmt='%Y-%m-%d %H:%M:%S',
-                    level=logging.DEBUG,
-                    stream=sys.stdout)
-logger = logging.getLogger(os.path.basename(__file__))
-logger.addFilter(ContextFilter())
+logger = logging.getLogger('hive')
 
 MOBILE_ALL_CATEGORY = '\"\"'
 UNRANKED = -1
