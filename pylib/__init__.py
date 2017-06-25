@@ -8,7 +8,7 @@ from logging import config
 
 import os
 curr_path = os.path.dirname(os.path.realpath(__file__)) + '/'
-config.fileConfig(curr_path + 'logging.cfg')
+config.fileConfig(curr_path + 'logging.cfg', disable_existing_loggers=False)
 
 
 class ContextFilter(logging.Filter):
