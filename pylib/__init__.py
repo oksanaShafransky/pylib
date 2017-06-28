@@ -7,6 +7,8 @@ from logging import config
 #################################
 
 # a bit ugly, but for now keeps us from overriding airflow's logger
+# TODO once root cause of mrjob malfunction is resolved, restore logging
+"""
 if len(logging.root.handlers) == 0:
     import os
     curr_path = os.path.dirname(os.path.realpath(__file__)) + '/'
@@ -22,3 +24,4 @@ class ContextFilter(logging.Filter):
         return True
 
 logging.getLogger('hive').addFilter(ContextFilter())
+"""
