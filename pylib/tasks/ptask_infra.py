@@ -216,7 +216,8 @@ class TasksInfra(object):
             local_file = '/tmp/%s' % relative_name
 
             with open(local_file, 'w') as temp_writer:
-                subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
+                if subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer) != 0:
+                    continue
 
             quarantine_path = '%s/%s' % (quarantine_dir, relative_name)
             if subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, quarantine_path]) == 0:
@@ -280,8 +281,9 @@ All have been repaired. Original Corrupt Files are present on HDFS at %(eviction
 
     @staticmethod
     def repair_single_job_corrupt_input(job_id, quarantine_name=None):
+        from pylib.hadoop.bad_splits import get_corrupt_input_files
         quarantine_dir = '/similargroup/corrupt-data/%s' % quarantine_name or random_str(10)
-        files_to_treat = TasksInfra.get_corrupt_input_files(job_id)
+        files_to_treat = get_corrupt_input_files(job_id)
 
         if len(files_to_treat) == 0:
             logging.info('No corrupt files detected')
