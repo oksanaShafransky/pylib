@@ -326,11 +326,6 @@ def formatted(f):
     return lambda *args, **kwargs: dedent(f(*args, **kwargs))
 
 
-def random_str(length):
-    chars = [chr(ord('a') + x) for x in range(ord('z') - ord('a'))]
-    return ''.join(random.choice(chars) for i in range(length))
-
-
 def deploy_jars(f):
     def invoke(fnc, *args, **kwargs):
         add_jars_cmd = '\n'.join(['add jar %s;' % jar_name for jar_name in detect_local_jars(kwargs['deploy_path'])])

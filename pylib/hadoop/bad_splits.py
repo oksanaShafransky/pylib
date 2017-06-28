@@ -18,8 +18,8 @@ log_port = 8041
 
 
 def get_relative_file(split):
-    if split.startswith('hdfs'):
-        split = '/' + '/'.join(split[len('hdfs://'):].split('/')[1:])
+    if 'hdfs' in split:
+        split = '/' + '/'.join(split[split.find('hdfs') + len('hdfs://'):].split('/')[1:])
 
     return split.split(':')[0]
 

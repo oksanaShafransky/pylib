@@ -1,4 +1,4 @@
-__author__ = 'Felix'
+import random
 
 
 def sanitize(raw_str):
@@ -11,3 +11,8 @@ def sanitize(raw_str):
             pass
 
     return buff.getvalue()
+
+
+def random_str(length):
+    chars = [chr(ord('a') + x) for x in range(ord('z') - ord('a'))]
+    return ''.join(random.choice(chars) for i in range(length))
