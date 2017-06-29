@@ -209,15 +209,15 @@ class TasksInfra(object):
         for corrupt_file in corrupt_files:
             hdfs_dir = '/'.join(corrupt_file.split('/')[:-1])
             relative_name = corrupt_file.split('/')[-1]
-            for cmp_suff in compression_suffixes:
-                if relative_name.endswith(cmp_suff):
-                    relative_name = relative_name[:-len(cmp_suff)]
-                    break
             local_file = '/tmp/%s' % relative_name
 
+            for cmp_suff in compression_suffixes:
+                if local_file.endswith(cmp_suff):
+                    local_file = local_file[:-len(cmp_suff)]
+                    break
+
             with open(local_file, 'w') as temp_writer:
-                if subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer) != 0:
-                    continue
+                subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
 
             quarantine_path = '%s/%s' % (quarantine_dir, relative_name)
             if subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, quarantine_path]) == 0:
