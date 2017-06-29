@@ -12,8 +12,7 @@ class MessageAggregator(object):
         self.messages.append(msg)
 
 
-# TODO read the name of the following method
-class ChangeThisToTestLog(object):
+class TestLog(object):
 
     @pytest.fixture(scope='function')
     def handler(self):
