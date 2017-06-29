@@ -20,8 +20,8 @@ class DataCompleter(object):
                            db='mobile',
                            table_paths=table_paths,
                            day_delta= 7,
-                           conditions= {'complete': 'source in (650, 653, 654, 655, 868, 955, 957, 961, 971, 981, 5019, 5063, 5072, 5079, 5084, 5087, 5197, 5220, 5274, 5304, 5401, 5415, 5424, 5432, 5476, 5482, 5497)',
-                                        'keep': 'source not in (650, 653, 654, 655, 868, 955, 957, 961, 971, 981, 5019, 5063, 5072, 5079, 5084, 5087, 5197, 5220, 5274, 5304, 5401, 5415, 5424, 5432, 5476, 5482, 5497)'},
+                           conditions= {'complete': 'source in (650, 653)',
+                                        'keep': 'source not in (650, 653)'},
                            table_names=['daily_country_source_device_metrics','daily_app_metrics'],
                            )
         ]
