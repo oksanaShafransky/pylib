@@ -208,8 +208,8 @@ class TasksInfra(object):
             consumer_type = 'kafka-consumer'
             return re.compile('.*/app=%s-([a-z]+)([0-9]+)([a-z]+)/*' % consumer_type)
 
-        def adjust_path(path):
-            try_match = consumer_re().search(path)
+        def adjust_path(path, original):
+            try_match = consumer_re().search(original)
             if try_match is None:
                 return path
             else:
@@ -232,7 +232,7 @@ class TasksInfra(object):
                 subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
 
             quarantine_path = '%s/%s' % (quarantine_dir, relative_name)
-            quarantine_path = adjust_path(quarantine_path)
+            quarantine_path = adjust_path(quarantine_path, corrupt_file)
             if subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, quarantine_path]) == 0:
                 subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
 
