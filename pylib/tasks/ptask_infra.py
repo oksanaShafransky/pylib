@@ -206,7 +206,7 @@ class TasksInfra(object):
 
         def consumer_re():
             consumer_type = 'kafka-consumer'
-            return re.compile('.*/app=%s-([a-z]+)([0-9]+)([a-z]+)/*') % consumer_type
+            return re.compile('.*/app=%s-([a-z]+)([0-9]+)([a-z]+)/*' % consumer_type)
 
         def adjust_path(path):
             try_match = consumer_re().search(path)
