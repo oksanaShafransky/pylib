@@ -19,6 +19,7 @@ if len(logging.root.handlers) == 0:
     if not is_hadoop_streaming():
         config.fileConfig(curr_path + 'logging.cfg', disable_existing_loggers=False)
     else:
+        # hadoop streaming relies on stdout to pass records, so need to ensure no logs are written there
         config.fileConfig(curr_path + 'streaming_logging.cfg', disable_existing_loggers=False)
 
 

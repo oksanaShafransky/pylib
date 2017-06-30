@@ -204,6 +204,18 @@ class TasksInfra(object):
     def _replace_corrupt_files(corrupt_files, quarantine_dir):
         compression_suffixes = ['.bz2', '.gz', '.deflate', '.snappy']
 
+        def consumer_re():
+            consumer_type = 'kafka-consumer'
+            return re.compile('.*/app=%s-([a-z]+)([0-9]+)([a-z]+)/*') % consumer_type
+
+        def adjust_path(path):
+            try_match = consumer_re().search(path)
+            if try_match is None:
+                return path
+            else:
+                node, num, sub_consumer = try_match.groups()
+                return path.replace(node + num, node + num + sub_consumer)
+
         import subprocess
         subprocess.call(['hadoop', 'fs', '-mkdir', '-p', quarantine_dir])
         for corrupt_file in corrupt_files:
@@ -220,6 +232,7 @@ class TasksInfra(object):
                 subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
 
             quarantine_path = '%s/%s' % (quarantine_dir, relative_name)
+            quarantine_path = adjust_path(quarantine_path)
             if subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, quarantine_path]) == 0:
                 subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
 
