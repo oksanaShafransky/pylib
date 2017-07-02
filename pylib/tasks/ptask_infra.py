@@ -30,7 +30,7 @@ from invoke.exceptions import Failure
 from redis import StrictRedis
 
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
-from pylib.hive.common import random_str
+from pylib.common.string_utils import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
                                    create_client, directory_exists, copy_dir_from_path
 from pylib.sw_config.kv_factory import provider_from_config
@@ -204,6 +204,42 @@ class TasksInfra(object):
         mail.quit()
 
     @staticmethod
+    def _replace_corrupt_files(corrupt_files, quarantine_dir):
+        compression_suffixes = ['.bz2', '.gz', '.deflate', '.snappy']
+
+        def consumer_re():
+            consumer_type = 'kafka-consumer'
+            return re.compile('.*/app=%s-([a-z]+)([0-9]+)([a-z]+)/*' % consumer_type)
+
+        def adjust_path(path, original):
+            try_match = consumer_re().search(original)
+            if try_match is None:
+                return path
+            else:
+                node, num, sub_consumer = try_match.groups()
+                return path.replace(node + num, node + num + sub_consumer)
+
+        import subprocess
+        subprocess.call(['hadoop', 'fs', '-mkdir', '-p', quarantine_dir])
+        for corrupt_file in corrupt_files:
+            hdfs_dir = '/'.join(corrupt_file.split('/')[:-1])
+            relative_name = corrupt_file.split('/')[-1]
+            local_file = '/tmp/%s' % relative_name
+
+            for cmp_suff in compression_suffixes:
+                if local_file.endswith(cmp_suff):
+                    local_file = local_file[:-len(cmp_suff)]
+                    break
+
+            with open(local_file, 'w') as temp_writer:
+                subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
+
+            quarantine_path = '%s/%s' % (quarantine_dir, relative_name)
+            quarantine_path = adjust_path(quarantine_path, corrupt_file)
+            if subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, quarantine_path]) == 0:
+                subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
+
+    @staticmethod
     def handle_bad_input(mail_recipients=None, report_name=None):
         """
         Mitigates bad input in the operation performed within this context.
@@ -241,20 +277,7 @@ class TasksInfra(object):
         else:
             logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
             quarantine_dir = '/similargroup/corrupt-data/%s' % task_id
-            compression_suffixes = ['.bz2', '.gz', '.deflate', '.snappy']
-
-            import subprocess
-            subprocess.call(['hadoop', 'fs', '-mkdir', '-p', quarantine_dir])
-            for corrupt_file in files_to_treat:
-                hdfs_dir = '/'.join(corrupt_file.split('/')[:-1])
-                relative_name = corrupt_file.split('/')[-1].rstrip('|'.join(compression_suffixes))
-                local_file = '/tmp/%s' % relative_name
-
-                with open(local_file, 'w') as temp_writer:
-                    subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
-
-                subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, '%s/%s' % (quarantine_dir, relative_name)])
-                subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
+            TasksInfra._replace_corrupt_files(files_to_treat, quarantine_dir)
 
             # Report, if asked
             if mail_recipients is not None:
@@ -271,6 +294,19 @@ All have been repaired. Original Corrupt Files are present on HDFS at %(eviction
                 }
 
                 TasksInfra.send_mail(mail_from, mail_to, subject, message)
+
+    @staticmethod
+    def repair_single_job_corrupt_input(job_id, quarantine_name=None):
+        from pylib.hadoop.bad_splits import get_corrupt_input_files
+        quarantine_dir = '/similargroup/corrupt-data/%s' % quarantine_name or random_str(10)
+        files_to_treat = get_corrupt_input_files(job_id)
+
+        if len(files_to_treat) == 0:
+            logging.info('No corrupt files detected')
+            return
+        else:
+            logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
+            TasksInfra._replace_corrupt_files(files_to_treat, quarantine_dir)
 
     @staticmethod
     def get_rserve_host():

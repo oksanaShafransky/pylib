@@ -1,7 +1,5 @@
 import six
 
-__author__ = 'Felix'
-
 from struct import *
 
 
