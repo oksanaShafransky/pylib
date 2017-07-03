@@ -72,9 +72,11 @@ class KeyValueConfig(object):
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
-JMX_JAVA_OPTIONS = ['-Dcom.sun.management.jmxremote',
-                  '-Dcom.sun.management.jmxremote.port=0', '-Dcom.sun.management.jmxremote.local.only=false',
-                  '-Dcom.sun.management.jmxremote.authenticate=false', '-Dcom.sun.management.jmxremote.ssl=false']
+JMX_JAVA_OPTIONS = {'com.sun.management.jmxremote': None,
+                    'com.sun.management.jmxremote.port': '0',
+                    'com.sun.management.jmxremote.local.only': 'false',
+                    'com.sun.management.jmxremote.authenticate': 'false',
+                    'com.sun.management.jmxremote.ssl': 'false'}
 
 
 class TasksInfra(object):
@@ -896,7 +898,8 @@ class ContextualizedTasksInfra(object):
         additional_configs = ''
         extra_java_options = []
 
-        extra_java_options += JMX_JAVA_OPTIONS
+        jmx_options_str_lits = ['-D%s=%s' % (key, value) if value is not None else '-D%s' % key for (key, value) in JMX_JAVA_OPTIONS.iteritems()]
+        extra_java_options += jmx_options_str_lits
         if spark_configs:
             for key, value in spark_configs.items():
                 additional_configs += ' --conf %s=%s' % (key, value)
