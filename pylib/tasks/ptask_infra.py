@@ -72,11 +72,6 @@ class KeyValueConfig(object):
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
-JMX_JAVA_OPTIONS = {'com.sun.management.jmxremote': None,
-                    'com.sun.management.jmxremote.port': '0',
-                    'com.sun.management.jmxremote.local.only': 'false',
-                    'com.sun.management.jmxremote.authenticate': 'false',
-                    'com.sun.management.jmxremote.ssl': 'false'}
 
 
 class TasksInfra(object):
@@ -896,10 +891,6 @@ class ContextualizedTasksInfra(object):
 
     def build_spark_additional_configs(self, named_spark_args, spark_configs):
         additional_configs = ''
-        extra_java_options = []
-
-        jmx_options_str_lits = ['-D%s=%s' % (key, value) if value is not None else '-D%s' % key for (key, value) in JMX_JAVA_OPTIONS.iteritems()]
-        extra_java_options += jmx_options_str_lits
         if spark_configs:
             for key, value in spark_configs.items():
                 additional_configs += ' --conf %s=%s' % (key, value)
@@ -907,10 +898,8 @@ class ContextualizedTasksInfra(object):
             for key, value in named_spark_args.items():
                 additional_configs += ' --%s %s' % (key, value)
         if self.should_profile:
-            extra_java_options += JAVA_PROFILER
-        additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % " ".join(extra_java_options)
-        additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % " ".join(extra_java_options)
-
+            additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
+            additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
         return additional_configs
 
     def read_s3_configuration(self, property_key):
