@@ -1,5 +1,6 @@
 import logging
 from logging import config
+import pkg_resources
 
 
 #################################
@@ -17,10 +18,12 @@ if len(logging.root.handlers) == 0:
     import os
     curr_path = os.path.dirname(os.path.realpath(__file__)) + '/'
     if not is_hadoop_streaming():
-        config.fileConfig(curr_path + 'logging.cfg', disable_existing_loggers=False)
+        config.fileConfig(pkg_resources.resource_stream('.'.join([__package__, 'resources', 'logging']), 'logging.cfg'),
+                          disable_existing_loggers=False)
     else:
         # hadoop streaming relies on stdout to pass records, so need to ensure no logs are written there
-        config.fileConfig(curr_path + 'streaming_logging.cfg', disable_existing_loggers=False)
+        config.fileConfig(pkg_resources.resource_stream('.'.join([__package__, 'resources', 'logging']),
+                                                        'streaming_logging.cfg'), disable_existing_loggers=False)
 
 
 class ContextFilter(logging.Filter):
