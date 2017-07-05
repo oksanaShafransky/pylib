@@ -78,7 +78,7 @@ class JobBuilder(object):
         self.follow_ups = []
 
         self.add_follow_up(PostJobHandler([PrintRecorder()]).handle_job)
-        self.include_absolute_dir('/opt/anaconda/envs/mrp27/lib/python2.7/site-packages','pylib')
+        self.include_absolute_dir('/opt/anaconda/envs/mrp27/lib/python2.7/site-packages', 'pylib')
 
     def with_combined_text_input(self, split_size=128 * 1024 * 1024):
         self.args += ['--hadoop-arg', '-libjars']

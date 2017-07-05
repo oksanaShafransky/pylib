@@ -72,6 +72,9 @@ class KeyValueConfig(object):
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
+JMX_JAVA_OPTIONS = ['-Dcom.sun.management.jmxremote',
+                  '-Dcom.sun.management.jmxremote.port=0', '-Dcom.sun.management.jmxremote.local.only=false',
+                  '-Dcom.sun.management.jmxremote.authenticate=false', '-Dcom.sun.management.jmxremote.ssl=false']
 
 
 class TasksInfra(object):
@@ -204,6 +207,18 @@ class TasksInfra(object):
     def _replace_corrupt_files(corrupt_files, quarantine_dir):
         compression_suffixes = ['.bz2', '.gz', '.deflate', '.snappy']
 
+        def consumer_re():
+            consumer_type = 'kafka-consumer'
+            return re.compile('.*/app=%s-([a-z]+)([0-9]+)([a-z]+)/*' % consumer_type)
+
+        def adjust_path(path, original):
+            try_match = consumer_re().search(original)
+            if try_match is None:
+                return path
+            else:
+                node, num, sub_consumer = try_match.groups()
+                return path.replace(node + num, node + num + sub_consumer)
+
         import subprocess
         subprocess.call(['hadoop', 'fs', '-mkdir', '-p', quarantine_dir])
         for corrupt_file in corrupt_files:
@@ -220,6 +235,7 @@ class TasksInfra(object):
                 subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
 
             quarantine_path = '%s/%s' % (quarantine_dir, relative_name)
+            quarantine_path = adjust_path(quarantine_path, corrupt_file)
             if subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, quarantine_path]) == 0:
                 subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
 
@@ -883,6 +899,9 @@ class ContextualizedTasksInfra(object):
 
     def build_spark_additional_configs(self, named_spark_args, spark_configs):
         additional_configs = ''
+        extra_java_options = []
+
+        extra_java_options += JMX_JAVA_OPTIONS
         if spark_configs:
             for key, value in spark_configs.items():
                 additional_configs += ' --conf %s=%s' % (key, value)
@@ -890,8 +909,10 @@ class ContextualizedTasksInfra(object):
             for key, value in named_spark_args.items():
                 additional_configs += ' --%s %s' % (key, value)
         if self.should_profile:
-            additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
-            additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
+            extra_java_options += JAVA_PROFILER
+        additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % " ".join(extra_java_options)
+        additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % " ".join(extra_java_options)
+
         return additional_configs
 
     def read_s3_configuration(self, property_key):

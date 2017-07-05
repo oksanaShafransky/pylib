@@ -6,13 +6,21 @@ from logging import config
 #       pylib_log               #
 #################################
 
+
+def is_hadoop_streaming():
+    # TODO consider a better way to infer this
+    import os
+    return 'stream_reduce_output_reader_class' in os.environ or 'stream_map_output_reader_class' in os.environ
+
 # a bit ugly, but for now keeps us from overriding airflow's logger
-# TODO once root cause of mrjob malfunction is resolved, restore logging
-"""
 if len(logging.root.handlers) == 0:
     import os
     curr_path = os.path.dirname(os.path.realpath(__file__)) + '/'
-    config.fileConfig(curr_path + 'logging.cfg', disable_existing_loggers=False)
+    if not is_hadoop_streaming():
+        config.fileConfig(curr_path + 'logging.cfg', disable_existing_loggers=False)
+    else:
+        # hadoop streaming relies on stdout to pass records, so need to ensure no logs are written there
+        config.fileConfig(curr_path + 'streaming_logging.cfg', disable_existing_loggers=False)
 
 
 class ContextFilter(logging.Filter):
@@ -24,4 +32,3 @@ class ContextFilter(logging.Filter):
         return True
 
 logging.getLogger('hive').addFilter(ContextFilter())
-"""

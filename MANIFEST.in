@@ -1,2 +1,3 @@
 include pylib/tasks/resources/RunRserve.R
 include pylib/logging.cfg
+include pylib/streaming_logging.cfg
