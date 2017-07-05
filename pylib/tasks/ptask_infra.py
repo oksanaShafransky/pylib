@@ -32,7 +32,7 @@ from redis import StrictRedis
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.common.string_utils import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
-                                   create_client, directory_exists, copy_dir_from_path
+    create_client, directory_exists, copy_dir_from_path
 from pylib.sw_config.kv_factory import provider_from_config
 from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
 from pylib.hbase.hbase_utils import validate_records_per_region
@@ -75,7 +75,6 @@ JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
 
 
 class TasksInfra(object):
-
     @staticmethod
     def parse_date(date_str, fmt='%Y-%m-%d'):
         return datetime.datetime.strptime(date_str, fmt).date()
@@ -119,7 +118,7 @@ class TasksInfra(object):
     def year_previous_month(date, zero_padding=True):
         if date is None:
             raise AttributeError("date wasn't passed")
-        last_month = date.month-1 if date.month > 1 else 12
+        last_month = date.month - 1 if date.month > 1 else 12
         year = date.year if date.month > 1 else date.year - 1
         year_str = str(year)[2:]
         if zero_padding:
@@ -182,6 +181,7 @@ class TasksInfra(object):
         return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
 
     SMTP_SERVER = 'mta01.sg.internal'
+
     @staticmethod
     def send_mail(mail_from, mail_to, mail_subject, content, image_attachment=None):
 
@@ -317,7 +317,8 @@ class ContextualizedTasksInfra(object):
     def __with_rerun_root_queue(self, command):
         return 'source %s/scripts/common.sh && setRootQueue reruns && %s' % (self.execution_dir, command)
 
-    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, override_jvm_opts=None, rerun_root_queue=False):
+    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, override_jvm_opts=None,
+                                        rerun_root_queue=False):
         command = self.__compose_infra_command(
             'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
             {
@@ -464,13 +465,15 @@ class ContextualizedTasksInfra(object):
                                                is_strict=is_strict) is True, \
             'Output is not valid, given value is %s' % directories
 
-    #----------- HBASE -----------
+    # ----------- HBASE -----------
     def hbase_table_full_name(self, name):
         return self.table_prefix + name + self.table_suffix
 
-    def assert_hbase_table_valid(self, table_name, columns = None, minimum_regions_count = 30, rows_per_region = 50, cluster_name = 'hbase-mrp'):
+    def assert_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
+                                 cluster_name='hbase-mrp'):
         if self.dry_run:
-            log_message = "Dry Run: would have checked that table '%s' has %d regions and %d keys per region" % (table_name, minimum_regions_count, rows_per_region)
+            log_message = "Dry Run: would have checked that table '%s' has %d regions and %d keys per region" % (
+                table_name, minimum_regions_count, rows_per_region)
             log_message += ' in columns: %s' % ','.join(columns) if columns else ''
             log_message += '\n'
             sys.stdout.write(log_message)
@@ -481,15 +484,17 @@ class ContextualizedTasksInfra(object):
 
     def assert_hbase_snapshot_exists(self, snapshot_name, hbase_root='/hbase', name_node=None):
         snapshot_params = {'snapshot_name': snapshot_name, 'hbase_root': hbase_root}
-        snapshot_params['snapshot_path'] = snapshot_path = '{hbase_root}/.hbase-snapshot/{snapshot_name}/'.format(**snapshot_params)
+        snapshot_params['snapshot_path'] = snapshot_path = '{hbase_root}/.hbase-snapshot/{snapshot_name}/'.format(
+            **snapshot_params)
         hdfs_client = create_client(name_node=name_node) if name_node else None
 
         if self.dry_run:
-            print("Dry run: would have checked that {snapshot_name} exists at {snapshot_path}".format(**snapshot_params))
+            print(
+                "Dry run: would have checked that {snapshot_name} exists at {snapshot_path}".format(**snapshot_params))
         else:
             print("validating existence of snapshotinfo and manifest in {snapshot_path}".format(**snapshot_params))
             assert file_exists(file_path=snapshot_path + '.snapshotinfo', hdfs_client=hdfs_client) and \
-                   file_exists(file_path=snapshot_path + 'data.manifest', hdfs_client=hdfs_client),\
+                   file_exists(file_path=snapshot_path + 'data.manifest', hdfs_client=hdfs_client), \
                 'hbase snapshot not found in path {snapshot_path}'.format(**snapshot_params)
 
             print('snapshot exists')
@@ -633,7 +638,7 @@ class ContextualizedTasksInfra(object):
         for marked_date_str in marked_dates_str:
             marked_date = TasksInfra.parse_date(marked_date_str, fmt)
             if (not date) or (marked_date <= date):
-                if (not days_lookback) or (marked_date + datetime.timedelta(days=days_lookback)>=date):
+                if (not days_lookback) or (marked_date + datetime.timedelta(days=days_lookback) >= date):
                     if TasksInfra.kv().get('%s/%s' % (base_path, marked_date_str)) == 'success':
                         return marked_date
 
@@ -693,7 +698,7 @@ class ContextualizedTasksInfra(object):
 
     def year_previous_month(self, zero_padding=True):
         return TasksInfra.year_previous_month(self.__get_common_args()['date'],
-                                     zero_padding=zero_padding)
+                                              zero_padding=zero_padding)
 
     ym = year_month
 
@@ -746,7 +751,6 @@ class ContextualizedTasksInfra(object):
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
         return self.run_bash(command).ok
-
 
     @staticmethod
     def match_jar(jar, jars_in_dir):
@@ -829,7 +833,8 @@ class ContextualizedTasksInfra(object):
 
         if use_bigdata_defaults:
             main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
-            module_source_egg_path = '%s/sw_%s-0.0.0.dev0-py2.7.egg' % (module_dir, module)
+            module_source_egg_path = '%(module_dir)s/sw_%(module)s-0.0.0.dev0-py2.7.egg' % {'module_dir': module_dir,
+                                                                                            'module': module}
             if os.path.exists(module_source_egg_path):
                 final_py_files.append(module_source_egg_path)
 
@@ -933,18 +938,18 @@ class ContextualizedTasksInfra(object):
                   'dst': tmp_dir,
                   'm': 1
                   }
-        ret_val = self.run_py_spark(app_name="Consolidate:" + dir,
-                               module='common',
-                               use_bigdata_defaults=False,
-                               files=['/etc/hive/conf/hive-site.xml'],
-                               py_files=[self.execution_dir + '/mobile/python/sw_mobile/apps_common/spark_logger.py'],
-                               main_py_file='scripts/utils/crush_parquet.py',
-                               queue='consolidation',
-                               command_params=params,
-                               spark_configs={'spark.yarn.executor.memoryOverhead': '1024'},
-                               named_spark_args={'num-executors': '20', 'driver-memory': '2G',
-                                                 'executor-memory': '2G'}
-                               )
+        ret_val = self.run_py_spark(
+            app_name="Consolidate:" + dir,
+            module='common',
+            use_bigdata_defaults=False,
+            files=['/etc/hive/conf/hive-site.xml'],
+            py_files=[self.execution_dir + '/mobile/python/sw_mobile/apps_common/spark_logger.py'],
+            main_py_file='scripts/utils/crush_parquet.py',
+            queue='consolidation',
+            command_params=params,
+            spark_configs={'spark.yarn.executor.memoryOverhead': '1024'},
+            named_spark_args={'num-executors': '20', 'driver-memory': '2G', 'executor-memory': '2G'}
+        )
         logging.info("Return value from spark-submit: %s" % ret_val)
         if ret_val:
             if directory_exists(tmp_dir) and not self.dry_run:
