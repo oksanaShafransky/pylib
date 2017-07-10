@@ -223,3 +223,4 @@ class TestContextualizedTasksInfra(object):
     #     c_infra = ContextualizedTasksInfra(ctx)
     #
     #     c_infra.assert_hbase_snapshot_exists('top_lists_17_02_barak_test', '/hbase', 'hbase-production-hdfs-nn.service.consul')
+    #
