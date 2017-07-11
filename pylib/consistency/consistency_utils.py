@@ -67,11 +67,12 @@ class ConsistencyTestInfra(object):
     @staticmethod
     def get_model_training_command_params(name,
                                           data_date,
-                                          collector_type,
                                           source_db,
                                           source_table,
                                           data_column,
                                           has_day_partition,
+                                          platform,
+                                          date_type,
                                           countries,
                                           reverse_dates=None,
                                           collector_threshold=100000,
@@ -89,10 +90,11 @@ class ConsistencyTestInfra(object):
             't': name,
             'dt': data_date,
             'c': countries,
-            'ct': collector_type,
             'sdb': source_db,
             'sta': source_table,
             'dc': data_column,
+            'pl': platform,
+            'dty': date_type,
             'rv': reverse_dates,
             'r': apps_rank,
             'col_thr': collector_threshold,
@@ -109,6 +111,13 @@ class ConsistencyTestInfra(object):
         }
 
         return params
+
+    @staticmethod
+    def get_latest_model_date(name):
+        key = 'services/consistency/model/%s' % name
+        d = TasksInfra.kv().get(key)
+        print('got %s from key %s' % (d, key))
+        return d
 
     def run_consistency_test_py_spark(self, command_params, spark_args=None):
         main_py_file = 'consistency_test_driver.py'
@@ -141,19 +150,52 @@ class ConsistencyTestInfra(object):
         )
 
     @staticmethod
-    def get_latest_model_date(name):
-        key = 'services/consistency/model/%s' % name
-        d = TasksInfra.kv().get(key)
-        print('got %s from key %s' % (d, key))
-        return d
+    def get_consistency_test_command_params(name,
+                                            data_date,
+                                            source_db,
+                                            source_table,
+                                            data_column,
+                                            has_day_partition,
+                                            countries_list,
+                                            platform,
+                                            date_type,
+                                            reverse_dates=None,
+                                            apps_rank='0-2000',
+                                            first_column=None,
+                                            cp_threshold=0.90,
+                                            model_date=None,
+                                            email_to=None):
+
+        model_date_to_use = ConsistencyTestInfra.get_latest_model_date(name) \
+            if not model_date else model_date.strftime('%Y-%m-%d')
+
+        print('Running test %s with model %s' % (name, model_date_to_use))
+        params = {
+            't': name,
+            'dt': data_date,
+            'c': ','.join(map(str, countries_list)),
+            'sdb': source_db,
+            'sta': source_table,
+            'dc': data_column,
+            'pl': platform,
+            'dty': date_type,
+            'rv': reverse_dates,
+            'r': apps_rank,
+            'dp': has_day_partition,
+            'fc': first_column,
+            'cp_thr': cp_threshold,
+            'emt': email_to,
+            'md': model_date_to_use
+        }
+        return params
 
     def train_model(self,
                     name,
-                    collector_type,
                     source_db,
                     source_table,
                     data_column,
                     input_path,
+                    platform,
                     has_day_partition,
                     date_type,
                     countries,
@@ -181,11 +223,12 @@ class ConsistencyTestInfra(object):
 
         command_params = ConsistencyTestInfra.get_model_training_command_params(name=name,
                                                                                 data_date=self.ti.date,
-                                                                                collector_type=collector_type,
                                                                                 source_db=source_db,
                                                                                 source_table=source_table,
                                                                                 data_column=data_column,
                                                                                 has_day_partition=has_day_partition,
+                                                                                platform=platform,
+                                                                                date_type=date_type,
                                                                                 countries=countries,
                                                                                 reverse_dates=reverse_dates,
                                                                                 collector_threshold=collector_threshold,
@@ -213,52 +256,14 @@ class ConsistencyTestInfra(object):
         )
         self.ti.assert_output_validity(model_paths, min_size_bytes=10, validate_marker=True)
 
-    @staticmethod
-    def get_consistency_test_command_params(name,
-                                            data_date,
-                                            collector_type,
-                                            source_db,
-                                            source_table,
-                                            data_column,
-                                            has_day_partition,
-                                            countries_list,
-                                            reverse_dates=None,
-                                            apps_rank='0-2000',
-                                            first_column=None,
-                                            cp_threshold=0.90,
-                                            model_date=None,
-                                            email_to=None):
-
-        model_date_to_use = ConsistencyTestInfra.get_latest_model_date(name) \
-            if not model_date else model_date.strftime('%Y-%m-%d')
-
-        print('Running test %s with model %s' % (name, model_date_to_use))
-        params = {
-            't': name,
-            'dt': data_date,
-            'c': ','.join(map(str, countries_list)),
-            'ct': collector_type,
-            'sdb': source_db,
-            'sta': source_table,
-            'dc': data_column,
-            'rv': reverse_dates,
-            'r': apps_rank,
-            'dp': has_day_partition,
-            'fc': first_column,
-            'cp_thr': cp_threshold,
-            'emt': email_to,
-            'md': model_date_to_use
-        }
-
-        return params
-
     def test(self,
              name,
-             collector_type,
              source_db,
              source_table,
              data_column,
              has_day_partition,
+             platform,
+             date_type,
              countries,
              reverse_dates=None,
              apps_rank='0-2000',
@@ -287,11 +292,12 @@ class ConsistencyTestInfra(object):
         command_params = ConsistencyTestInfra.get_consistency_test_command_params(
             name=name,
             data_date=self.ti.date,
-            collector_type=collector_type,
             source_db=source_db,
             source_table=source_table,
             data_column=data_column,
             has_day_partition=has_day_partition,
+            platform=platform,
+            date_type=date_type,
             countries_list=countries_list,
             reverse_dates=reverse_dates,
             apps_rank=apps_rank,
