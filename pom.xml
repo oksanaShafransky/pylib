@@ -327,7 +327,7 @@
                         </goals>
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="deploy-python" unless="teamcity.exec">
+                            <target name="deploy-python" unless="${production.deployment}">
                                 <exec executable="${build_python_path}python" osfamily="windows"
                                       dir="${project.basedir}">
                                     <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
@@ -354,7 +354,7 @@
                         </goals>
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="deploy-python" if="teamcity.exec">
+                            <target name="deploy-python" if="${production.deployment}">
                                 <exec executable="${build_python_path}python" osfamily="windows"
                                       dir="${project.basedir}">
                                     <arg line="setup.py
