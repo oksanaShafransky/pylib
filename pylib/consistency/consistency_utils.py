@@ -52,7 +52,6 @@ class ConsistencyTestInfra(object):
         else:
             return []
 
-
     @staticmethod
     def gen_input_paths(base_dir, path, base_date, date_type):
         return ['%(base_dir)s%(path)s/%(date_part)s' %
@@ -277,7 +276,6 @@ class ConsistencyTestInfra(object):
         model_date = ConsistencyTestInfra.get_latest_model_date(name) \
             if not model_date else model_date
         model_date_parsed = datetime.strptime(model_date, '%Y-%m-%d')
-
 
         # input checks
         model_paths = ConsistencyTestInfra.gen_model_paths(
