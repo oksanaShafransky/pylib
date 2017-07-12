@@ -20,7 +20,7 @@ class ConsistencyTestInfra(object):
                 } for country in countries_list]
 
     @staticmethod
-    def gen_result_paths(base_dir, name, test_date, countries_list, has_day_partition):
+    def gen_result_paths(base_dir, name, test_date, has_day_partition, countries_list):
         return ['%(base_dir)s/consistency/output/%(name)s/bycountry/country=%(country)s/%(date)s' %
                 {
                     'base_dir': base_dir,
@@ -130,7 +130,7 @@ class ConsistencyTestInfra(object):
     def run_consistency_py_spark(self, main_py_file, command_params, spark_args=None):
         self.ti.run_py_spark(
             app_name='Consistency Test For %s' % command_params['t'],
-            main_py_file=main_py_file,
+            main_py_file='drivers/' + main_py_file,
             command_params=command_params,
             module='consistency',
             queue=spark_args['queue'] if 'queue' in spark_args else 'calculation',
