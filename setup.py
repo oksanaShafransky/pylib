@@ -7,17 +7,16 @@ setup(
     zip_safe=True,
 
     install_requires=[
+        'ujson==1.33',
+        'thriftpy==0.3.8',
+        'snakebite==2.11.0',
+        'happybase==0.9',
         'requests==2.14.2',
+        'mrjob==0.5.1',
         'cryptography==1.8.2',
+        'redis==2.10.5',
         'invoke==0.12.2',
         'tld',
-        'redis',
-        'python-dateutil==2.6.0',
-        'happybase',
-        'snakebite',
-        'thriftpy==0.3.8',
-        'ujson==1.33',
-        'mrjob==0.5.2',
         'consulate==0.6.0',
         'urllib3==1.16',
         'monthdelta'
@@ -27,16 +26,18 @@ setup(
         'wheel==0.29.0'
     ],
     tests_require=[
-        'requests==2.14.2',
-        'cryptography==1.8.2',
-        'pytest',
-        'python-dateutil==2.6.0',
-        'boto==2.42.0',
-        'snakebite',
-        'invoke==0.12.2',
-        'redis',
+        'pytest==3.1.3',
         'ujson==1.33',
-        'mrjob==0.5.2'
+        'thriftpy==0.3.8',
+        'boto==2.38.0',
+        'snakebite==2.11.0',
+        'happybase==0.9',
+        'requests==2.14.2',
+        'mrjob==0.5.1',
+        'cryptography==1.8.2',
+        'redis==2.10.5',
+        'invoke==0.12.2',
+        'python-dateutil'
     ],
     test_suite='tests',
     entry_points={
