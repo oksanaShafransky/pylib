@@ -9,6 +9,7 @@ setup(
     install_requires=[
         'ujson==1.33',
         'thriftpy==0.3.8',
+        'boto==2.38.0',
         'snakebite==2.11.0',
         'happybase==0.9',
         'requests==2.14.2',
