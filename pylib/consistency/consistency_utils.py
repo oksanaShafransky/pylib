@@ -137,12 +137,12 @@ class ConsistencyTestInfra(object):
 
         return params
 
-    @staticmethod
-    def _get_latest_model_date(test_name):
-        key = 'services/consistency/model/%s' % test_name
-        d = TasksInfra.kv().get(key)
-        print('got %s from key %s' % (d, key))
-        return d
+    # @staticmethod
+    # def _get_latest_model_date(test_name):
+    #     key = 'services/consistency/model/%s' % test_name
+    #     d = TasksInfra.kv().get(key)
+    #     print('got %s from key %s' % (d, key))
+    #     return d
 
     def run_consistency_py_spark(self, main_py_file, command_params, named_spark_args=None,
                                  spark_configs=None, queue='calculation'):
@@ -206,11 +206,6 @@ class ConsistencyTestInfra(object):
             cp_threshold,
             model_date,
             email_to):
-
-        # if not model_date:
-        #     model_date_to_use = ConsistencyTestInfra._get_latest_model_date(test_name)
-        # else:
-        #     model_date_to_use = model_date.strftime('%Y-%m-%d')
 
         print('Running test %s with model %s' % (test_name, model_date))
 
@@ -359,14 +354,12 @@ class ConsistencyTestInfra(object):
         :return:
         """
         countries_list = map(int, countries.split(','))
-        model_date = ConsistencyTestInfra._get_latest_model_date(test_name) \
-            if not model_date else model_date
 
         # input checks for model only if specific model is requested
         model_date_parsed = None
         if model_date:
             model_base_dir = model_base_dir if model_base_dir is not None else self.ti.base_dir
-            model_date_parsed = datetime.strptime(model_date, '%Y-%m-%d')
+            model_date_parsed = datetime.strptime(model_date, '%Y-%m-%d').date()
             model_paths = ConsistencyTestInfra._gen_model_paths(
                 base_dir=model_base_dir,
                 test_name=test_name,
