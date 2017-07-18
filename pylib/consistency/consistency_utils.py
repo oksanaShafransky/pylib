@@ -6,6 +6,16 @@ import pylib.hive.common as common
 class ConsistencyTestInfra(object):
     def __init__(self, ti):
         self.ti = ti
+        self.default_spark_args = {
+            'num-executors': 100,
+            'executor-memory': '4G',
+            'driver-memory': '10G',
+            'master': 'yarn-cluster'
+        }
+
+        self.default_spark_config = {
+            'spark.yarn.executor.memoryOverhead': '1024'
+        }
 
     @staticmethod
     def _gen_model_paths(base_dir, test_name, model_date, has_day_partition, countries_list):
@@ -158,25 +168,15 @@ class ConsistencyTestInfra(object):
             queue='calculation'
     ):
 
-        actual_named_spark_args = dict()
-        # copy spark args dictionary if exists
+        # Take default spark args and override with given parameters
+        actual_named_spark_args = self.default_spark_args.copy()
         if named_spark_args is not None:
-            actual_named_spark_args = {k: v for (k, v) in named_spark_args.iteritems()}
+            actual_named_spark_args.update(named_spark_args)
 
-        # set default values where no value present
-        if 'num-executors' not in actual_named_spark_args:
-            actual_named_spark_args['num-executors'] = 200
-        if 'executor-memory' not in actual_named_spark_args:
-            actual_named_spark_args['executor-memory'] = '4G'
-        if 'driver-memory' not in actual_named_spark_args:
-            actual_named_spark_args['driver-memory'] = '10G'
-        if 'master' not in actual_named_spark_args:
-            actual_named_spark_args['master'] = 'yarn-cluster'
-
-        actual_spark_configs = dict()
-        # copy configs dictionary if exists
+        # Take default spark config and override with given parameters
+        actual_spark_configs = self.default_spark_config.copy()
         if spark_configs is not None:
-            actual_spark_configs = {k: v for (k, v) in spark_configs.iteritems()}
+            actual_spark_configs.update(spark_configs)
 
         # set default values where no value present
         if 'spark.yarn.executor.memoryOverhead' not in actual_spark_configs:
