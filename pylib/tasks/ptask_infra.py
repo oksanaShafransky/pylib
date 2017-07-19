@@ -528,6 +528,9 @@ class ContextualizedTasksInfra(object):
                  managed_output_dirs=None, cache_files=None, aux_jars=None, **extra_hive_conf):
         if managed_output_dirs is None:
             managed_output_dirs = []
+        elif isinstance(managed_output_dirs, basestring):
+            managed_output_dirs = [managed_output_dirs]
+
         if self.rerun:
             hive_params = hive_params.as_rerun()
         if self.should_profile:
