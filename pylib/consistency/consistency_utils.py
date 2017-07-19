@@ -121,7 +121,7 @@ class ConsistencyTestInfra(object):
             reverse_dates,
             sites_visit_filter,
             apps_rank_filter,
-            first_column,
+            entity_column,
             num_features,
             sig_noise_coeff,
             std_cp,
@@ -146,7 +146,7 @@ class ConsistencyTestInfra(object):
             '-apps_rank_filter': apps_rank_filter,
             '-sites_visit_filter': sites_visit_filter,
             '-has_day_partition': has_day_partition,
-            '-first_column': first_column,
+            '-entity_column': entity_column,
             '-num_features': num_features,
             '-sig_noise_coeff': sig_noise_coeff,
             '-std_cp': std_cp,
@@ -163,6 +163,7 @@ class ConsistencyTestInfra(object):
             self,
             main_py_file,
             command_params,
+            output_dirs,
             named_spark_args=None,
             spark_configs=None,
             queue='calculation'
@@ -196,6 +197,7 @@ class ConsistencyTestInfra(object):
             named_spark_args=actual_named_spark_args,
             spark_configs=actual_spark_configs,
             use_bigdata_defaults=True,
+            managed_output_dirs=output_dirs
         )
 
     @staticmethod
@@ -212,7 +214,7 @@ class ConsistencyTestInfra(object):
             platform,
             date_type,
             reverse_dates,
-            first_column,
+            entity_column,
             cp_threshold,
             model_date,
             email_to):
@@ -233,7 +235,7 @@ class ConsistencyTestInfra(object):
             '-date_type': date_type,
             '-reverse_dates': reverse_dates,
             '-has_day_partition': has_day_partition,
-            '-first_column': first_column,
+            '-entity_column': entity_column,
             '-cp_threshold': cp_threshold,
             '-email_to': email_to,
             '-model_date': model_date
@@ -254,7 +256,7 @@ class ConsistencyTestInfra(object):
             reverse_dates=None,
             sites_visit_filter=100000,
             apps_rank_filter='0-2000',
-            first_column=None,
+            entity_column=None,
             num_features=2,
             sig_noise_coeff=0.01,
             std_cp=0.036,
@@ -285,7 +287,7 @@ class ConsistencyTestInfra(object):
             default is False (test against past data)
         :param sites_visit_filter: lower visits threshold websites filtering
         :param apps_rank_filter: filter for apps rank. string format is a-b
-        :param first_column: first column in data is usually 'site' or 'app', if it is different, use this
+        :param entity_column: entity column in data is usually 'site' or 'app', if it is different, use this
             argument to override
         :param num_features:
         :param sig_noise_coeff: signal to noise coefficient
@@ -322,7 +324,7 @@ class ConsistencyTestInfra(object):
             reverse_dates=reverse_dates,
             sites_visit_filter=sites_visit_filter,
             apps_rank_filter=apps_rank_filter,
-            first_column=first_column,
+            entity_column=entity_column,
             num_features=num_features,
             sig_noise_coeff=sig_noise_coeff,
             std_cp=std_cp,
@@ -332,10 +334,7 @@ class ConsistencyTestInfra(object):
             tv_gauss=tv_gauss,
             tv_symm=tv_symm)
 
-        self.run_consistency_py_spark('consistency_model_driver.py', command_params, named_spark_args,
-                                      spark_configs, spark_queue)
-
-        countries_list = map(int, countries.split(','))
+        countries_list = countries.split(',')
         # output checks
         model_paths = ConsistencyTestInfra._gen_model_paths(
             base_dir=output_path,
@@ -344,6 +343,16 @@ class ConsistencyTestInfra(object):
             model_date=self.ti.date,
             countries_list=countries_list
         )
+
+        self.run_consistency_py_spark(
+            main_py_file='consistency_model_driver.py',
+            command_params=command_params,
+            output_dirs=model_paths,
+            named_spark_args=named_spark_args,
+            spark_configs=spark_configs,
+            queue=spark_queue
+        )
+
         self.ti.assert_output_validity(model_paths, min_size_bytes=10, validate_marker=True)
 
     def test(
@@ -357,7 +366,7 @@ class ConsistencyTestInfra(object):
             date_type,
             countries,
             reverse_dates=None,
-            first_column=None,
+            entity_column=None,
             cp_threshold=0.90,
             model_base_dir=None,
             model_date=None,
@@ -380,7 +389,7 @@ class ConsistencyTestInfra(object):
         :param countries: comma separated  list of country codes
         :param reverse_dates: should data points be reversed, i.e test date against future data.
             default is False (test against past data)
-        :param first_column: first column in data is usually 'site' or 'app', if it is different, use this
+        :param entity_column: entity column in data is usually 'site' or 'app', if it is different, use this
             argument to override
         :param cp_threshold:
         :param model_base_dir: custom base dir from which model is taken
@@ -421,21 +430,12 @@ class ConsistencyTestInfra(object):
             date_type=date_type,
             countries_list=countries_list,
             reverse_dates=reverse_dates,
-            first_column=first_column,
+            entity_column=entity_column,
             cp_threshold=cp_threshold,
             model_date=model_date_parsed if model_date else None,
             email_to=email_to
         )
 
-        self.run_consistency_py_spark(
-            'consistency_test_driver.py',
-            command_params,
-            named_spark_args,
-            spark_configs,
-            spark_queue
-        )
-
-        # output checks
         result_paths = ConsistencyTestInfra._gen_result_paths(
             base_dir=self.ti.base_dir,
             test_name=test_name,
@@ -443,6 +443,17 @@ class ConsistencyTestInfra(object):
             countries_list=countries_list,
             has_day_partition=has_day_partition
         )
+
+        self.run_consistency_py_spark(
+            main_py_file='consistency_test_driver.py',
+            command_params=command_params,
+            output_dirs=result_paths,
+            named_spark_args=named_spark_args,
+            spark_configs=spark_configs,
+            queue=spark_queue
+        )
+
+        # output checks
         self.ti.assert_output_validity(result_paths, min_size_bytes=100, validate_marker=True)
         grouped_result_path = ConsistencyTestInfra._gen_grouped_result_path(
             base_dir=self.ti.base_dir,
