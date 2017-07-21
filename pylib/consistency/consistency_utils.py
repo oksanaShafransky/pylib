@@ -38,7 +38,7 @@ class ConsistencyTestInfra(object):
         return [gen_path_for_country(country) for country in countries_list]
 
     @staticmethod
-    def _gen_result_paths(base_dir, test_name, test_date, has_day_partition, countries_list):
+    def _gen_result_paths(base_dir, test_name, path_type, test_date, has_day_partition, countries_list):
         date_partition = common.get_date_partition_path(
             year=test_date.year % 100,
             month=test_date.month,
@@ -46,10 +46,11 @@ class ConsistencyTestInfra(object):
         )
 
         def gen_path_for_country(country):
-            return '%(base_dir)s/consistency/output/%(name)s/type=bycountry/%(date)s/country=%(country)s' % \
+            return '%(base_dir)s/consistency/output/%(name)s/type=%(path_type)s/%(date)s/country=%(country)s' % \
                    {
                        'base_dir': base_dir,
                        'name': test_name,
+                       'path_type': path_type,
                        'country': country,
                        'date': date_partition
                    }
@@ -57,13 +58,13 @@ class ConsistencyTestInfra(object):
         return [gen_path_for_country(country) for country in countries_list]
 
     @staticmethod
-    def _gen_grouped_result_path(base_dir, test_name, test_date, has_day_partition):
+    def _gen_total_result_path(base_dir, test_name, test_date, has_day_partition):
         date_partition = common.get_date_partition_path(
             year=test_date.year % 100,  # two-digits year
             month=test_date.month,
             day=test_date.day if has_day_partition else None
         )
-        return '%(base_dir)s/consistency/output/%(name)s/type=grouped/%(date)s' % \
+        return '%(base_dir)s/consistency/output/%(name)s/type=total/%(date)s' % \
                {
                    'base_dir': base_dir,
                    'name': test_name,
@@ -439,26 +440,39 @@ class ConsistencyTestInfra(object):
         result_paths = ConsistencyTestInfra._gen_result_paths(
             base_dir=self.ti.base_dir,
             test_name=test_name,
+            path_type='country',
             test_date=self.ti.date,
             countries_list=countries_list,
+            has_day_partition=has_day_partition
+        )
+        model_result_paths = ConsistencyTestInfra._gen_result_paths(
+            base_dir=self.ti.base_dir,
+            test_name=test_name,
+            path_type='model',
+            test_date=self.ti.date,
+            countries_list=countries_list,
+            has_day_partition=has_day_partition
+        )
+
+        total_result_path = ConsistencyTestInfra._gen_total_result_path(
+            base_dir=self.ti.base_dir,
+            test_name=test_name,
+            test_date=self.ti.date,
             has_day_partition=has_day_partition
         )
 
         self.run_consistency_py_spark(
             main_py_file='consistency_test_driver.py',
             command_params=command_params,
-            output_dirs=result_paths,
+            output_dirs=result_paths + model_result_paths + [total_result_path],
             named_spark_args=named_spark_args,
             spark_configs=spark_configs,
             queue=spark_queue
         )
 
+
+
         # output checks
         self.ti.assert_output_validity(result_paths, min_size_bytes=100, validate_marker=True)
-        grouped_result_path = ConsistencyTestInfra._gen_grouped_result_path(
-            base_dir=self.ti.base_dir,
-            test_name=test_name,
-            test_date=self.ti.date,
-            has_day_partition=has_day_partition
-        )
-        self.ti.assert_output_validity(grouped_result_path, min_size_bytes=100, validate_marker=True)
+        self.ti.assert_output_validity(model_result_paths, min_size_bytes=10, validate_marker=True)
+        self.ti.assert_output_validity(total_result_path, min_size_bytes=100, validate_marker=True)
