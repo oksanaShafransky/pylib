@@ -470,8 +470,6 @@ class ConsistencyTestInfra(object):
             queue=spark_queue
         )
 
-
-
         # output checks
         self.ti.assert_output_validity(result_paths, min_size_bytes=100, validate_marker=True)
         self.ti.assert_output_validity(model_result_paths, min_size_bytes=10, validate_marker=True)
