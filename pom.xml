@@ -44,6 +44,8 @@
 
     <build>
         <finalName>${project.artifactId}</finalName>
+        <sourceDirectory>pylib</sourceDirectory>
+        <testSourceDirectory>${project.basedir}/tests</testSourceDirectory>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -258,7 +260,8 @@
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
                             <target name="build-python" unless="teamcity.exec">
-                                <exec executable="${build_python_path}python" osfamily="windows" dir="${project.basedir}">
+                                <exec executable="${build_python_path}python" osfamily="windows"
+                                      dir="${project.basedir}">
                                     <arg line="setup.py
                                         build
                                         sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
@@ -286,10 +289,12 @@
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
                             <target name="test-python" unless="${skipTests}">
-                                <exec executable="${build_python_path}python" osfamily="windows" dir="${project.basedir}" failonerror="true">
+                                <exec executable="${build_python_path}python" osfamily="windows"
+                                      dir="${project.basedir}" failonerror="true">
                                     <arg line="setup.py pytest"/>
                                 </exec>
-                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}" failonerror="true">
+                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}"
+                                      failonerror="true">
                                     <arg line="setup.py pytest"/>
                                 </exec>
                             </target>
@@ -304,7 +309,7 @@
                         <configuration>
                             <skip>${skip_local_python_install}</skip>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="install-python" unless="teamcity.exec" >
+                            <target name="install-python" unless="teamcity.exec">
                                 <exec executable="${build_python_path}pip" osfamily="windows" dir="${project.basedir}">
                                     <arg line="install --ignore-installed --editable ."/>
                                 </exec>
