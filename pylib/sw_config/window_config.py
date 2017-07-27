@@ -45,7 +45,7 @@ class SimilarWebWindowConfig(object):
         filtered_artifacts = {}
         for name, artifact in six.iteritems(artifacts):
             if artifact.deletes_in_roots(deletes):
-                filtered_artifacts.update(name=artifact)
+                filtered_artifacts[name] = artifact
         return filtered_artifacts
 
     @staticmethod
