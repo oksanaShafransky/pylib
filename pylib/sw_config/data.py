@@ -47,3 +47,14 @@ class Intersect(object):
     @property
     def dates(self):
         return list(set.intersection(*[set(arg.dates) for arg in self.sub_artifacts]))
+
+    @property
+    def roots(self):
+        return list(arg.root for arg in self.sub_artifacts)
+
+    def deletes_in_roots(self, deletes):
+        for delete in deletes:
+            for root in self.roots:
+                if root in delete:
+                    return True
+        return False

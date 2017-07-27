@@ -55,7 +55,7 @@ def check_config(settings_provider, base_kv, sets=None, deletes=None, health_lev
     setup_simulation(base_kv, changes=sets, deletes=deletes)
 
     success = True
-    for name, artifact in six.iteritems(settings_provider.get_artifacts(base_kv)):
+    for name, artifact in six.iteritems(settings_provider.get_artifacts_filtered(base_kv, deletes)):
         num_dates = len(artifact.dates)
         if num_dates < settings_provider.min_viable_options():
             logging.error('%s is in a dangerous state with %d valid days' % (name, num_dates))
