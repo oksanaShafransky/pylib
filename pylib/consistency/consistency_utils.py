@@ -99,7 +99,7 @@ class ConsistencyTestInfra(object):
                 d.month,
                 d.day if date_type is not 'month' else None
             )
-        return ['%(base_dir)s%(path)s/%(date_part)s' %
+        return ['%(base_dir)s/%(path)s/%(date_part)s' %
                 {
                     'base_dir': base_dir,
                     'path': path,
