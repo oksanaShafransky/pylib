@@ -1,4 +1,5 @@
 from pylib.sw_config.data import Artifact, Intersect
+import six
 
 __author__ = 'Felix'
 
@@ -26,16 +27,26 @@ class SimilarWebWindowConfig(object):
         top_apps = Intersect(app_ranks, scraping)
 
         apps_window = Artifact(proxy, 'services/current-mobile-apps-dates/window', required_value='true')
+        apps = Intersect(apps_window)
 
         google_scrape = Artifact(proxy, 'services/google_keywords/data-available')
         google_keywords = Intersect(google_scrape)
 
         return {
             'Web Analysis': web_analysis,
-            'Apps': apps_window,
+            'Apps': apps,
             'Top Apps': top_apps,
             'Google Scraping': google_keywords
         }
+
+    @staticmethod
+    def get_artifacts_filtered(proxy, deletes):
+        artifacts = SimilarWebWindowConfig.get_artifacts(proxy)
+        filtered_artifacts = {}
+        for name, artifact in six.iteritems(artifacts):
+            if artifact.deletes_in_roots(deletes):
+                filtered_artifacts[name] = artifact
+        return filtered_artifacts
 
     @staticmethod
     def min_viable_options():
