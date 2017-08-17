@@ -224,3 +224,23 @@ class TestContextualizedTasksInfra(object):
     #
     #     c_infra.assert_hbase_snapshot_exists('top_lists_17_02_barak_test', '/hbase', 'hbase-production-hdfs-nn.service.consul')
     #
+
+    class TestDaysInRange(object):
+
+        def test_monthly_mode_type(self):
+            days = list(TasksInfra.days_in_range(datetime.date(2017, 1, 15), 'monthly'))
+            assert len(days) == 31
+            for day in days:
+                assert day.month == 1
+            assert days[0].day == 1
+            assert days[30].day == 31
+
+        def test_last_28_mode_type(self):
+            days = list(TasksInfra.days_in_range(datetime.date(2017, 1, 15), 'last-28'))
+            assert len(days) == 28
+            assert days[0] == datetime.date(2016, 12, 19)
+            assert days[27] == datetime.date(2017, 1, 15)
+
+        def test_unknown_mode_type(self):
+            with pytest.raises(ValueError):
+                list(TasksInfra.days_in_range(datetime.date(2017, 1, 15), 'unknown'))
