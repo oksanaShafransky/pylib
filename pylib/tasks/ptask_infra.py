@@ -910,10 +910,10 @@ class ContextualizedTasksInfra(object):
             additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
         return additional_configs
 
-    def read_s3_configuration(self, property_key):
-        config = configparser.ConfigParser()
-        config.read('%s/scripts/.s3cfg' % self.execution_dir)
-        return config.get('default', property_key)
+    def read_s3_configuration(self, property_key, section='default'):
+        import boto
+        config = boto.pyami.config.Config(path='%s/scripts/.s3cfg' % self.execution_dir)
+        return config.get(section, property_key)
 
     def set_s3_keys(self, access=None, secret=None):
         access_key = access or self.read_s3_configuration('access_key')
