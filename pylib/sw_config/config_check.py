@@ -1,12 +1,10 @@
 import logging
-import sys
 
 import six
+import sys
 
 from dict_change_simulator import WithDelete, WithSet
 from etcd_kv import EtcdProxy
-from kv import KeyValueProxy
-from pylib.common.dependency import register_instance
 from window_config import SimilarWebWindowConfig
 
 __author__ = 'Felix'

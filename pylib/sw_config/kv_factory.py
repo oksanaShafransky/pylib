@@ -1,5 +1,5 @@
-from pydoc import locate
 import json
+from pydoc import locate
 
 from composite_kv import CompositeConfigurationProxy
 
@@ -40,12 +40,6 @@ if __name__ == '__main__':
                     {
                          "class": "pylib.sw_config.consul.ConsulProxy",
                          "server":"consul.service.production"
-                    },
-                    {
-                         "class": "pylib.sw_config.etcd_kv.EtcdProxy",
-                         "server":"etcd.service.production",
-                         "port": 4001,
-                         "root_path": "v1/production"
                     }
                   ]
     """
