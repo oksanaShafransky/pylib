@@ -384,6 +384,7 @@ class ContextualizedTasksInfra(object):
 
     def clear_output_dirs(self, output_dirs):
         if output_dirs is not None:
+            assert isinstance(output_dirs, list), "Output dirs need to be passed in a list."
             for dir in output_dirs:
                 if not (self.dry_run or self.checks_only):
                     delete_dir(dir)
