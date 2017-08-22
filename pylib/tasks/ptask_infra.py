@@ -383,6 +383,8 @@ class ContextualizedTasksInfra(object):
         return self.__is_hdfs_collection_valid(directories, min_size_bytes, validate_marker)
 
     def clear_output_dirs(self, output_dirs):
+        assert isinstance(output_dirs, list), "Output dirs must be passed as list!"
+
         if output_dirs is not None:
             for dir in output_dirs:
                 if not (self.dry_run or self.checks_only):
