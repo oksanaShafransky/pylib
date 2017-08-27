@@ -17,7 +17,7 @@ def get_dates_range(end, range_len, step_type='days', step_size=1, date_offset=0
     step = relativedelta(**{step_type:step_size})
     range_end = truncated_end - step*date_offset
     range_start = range_end - step*(range_len-1)
-    return list(reversed(get_dates_list(range_start, range_end, step)))
+    return get_dates_list(range_start, range_end, step)
 
 
 def get_dates_list(start, end, step=relativedelta(days=1)):
@@ -30,8 +30,10 @@ def get_dates_list(start, end, step=relativedelta(days=1)):
     """
     dates_range = []
     curr = start
+    delta = step
     while curr <= end:
         dates_range.append(curr)
-        curr += step
+        curr = start + delta
+        delta = delta + step
     return dates_range
 
