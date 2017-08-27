@@ -99,7 +99,7 @@ class ConsistencyTestInfra(object):
                 d.month,
                 d.day if date_type is not 'month' else None
             )
-        return ['%(base_dir)s%(path)s/%(date_part)s' %
+        return ['%(base_dir)s/%(path)s/%(date_part)s' %
                 {
                     'base_dir': base_dir,
                     'path': path,
@@ -438,7 +438,7 @@ class ConsistencyTestInfra(object):
         )
 
         result_paths = ConsistencyTestInfra._gen_result_paths(
-            base_dir=self.ti.base_dir,
+            base_dir=output_path,
             test_name=test_name,
             path_type='country',
             test_date=self.ti.date,
@@ -446,7 +446,7 @@ class ConsistencyTestInfra(object):
             has_day_partition=has_day_partition
         )
         model_result_paths = ConsistencyTestInfra._gen_result_paths(
-            base_dir=self.ti.base_dir,
+            base_dir=output_path,
             test_name=test_name,
             path_type='model',
             test_date=self.ti.date,
@@ -455,7 +455,7 @@ class ConsistencyTestInfra(object):
         )
 
         total_result_path = ConsistencyTestInfra._gen_total_result_path(
-            base_dir=self.ti.base_dir,
+            base_dir=output_path,
             test_name=test_name,
             test_date=self.ti.date,
             has_day_partition=has_day_partition

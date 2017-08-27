@@ -1,25 +1,20 @@
 import calendar
 import logging
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-from datetime import datetime
-
 import os
 import re
 import shutil
+import smtplib
+import urllib
 import uuid
+from copy import copy
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import datetime
 import six
 import sys
 import time
-from six.moves import configparser
-from copy import copy
-
-import smtplib
-from email.mime.text import MIMEText
-
-import urllib
 
 # Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
@@ -384,6 +379,7 @@ class ContextualizedTasksInfra(object):
 
     def clear_output_dirs(self, output_dirs):
         if output_dirs is not None:
+            assert isinstance(output_dirs, list), "Output dirs need to be passed in a list."
             for dir in output_dirs:
                 if not (self.dry_run or self.checks_only):
                     delete_dir(dir)
@@ -436,8 +432,7 @@ class ContextualizedTasksInfra(object):
 
     def get_redis_client(self):
         if self.redis is None:
-            # self.redis = StrictRedis(host='redis-bigdata.service.production',
-            self.redis = StrictRedis(host='10.0.13.34',
+            self.redis = StrictRedis(host='redis-bigdata.service.production',
                                      socket_timeout=15,
                                      socket_connect_timeout=15,
                                      retry_on_timeout=True)
@@ -910,10 +905,10 @@ class ContextualizedTasksInfra(object):
             additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
         return additional_configs
 
-    def read_s3_configuration(self, property_key):
-        config = configparser.ConfigParser()
-        config.read('%s/scripts/.s3cfg' % self.execution_dir)
-        return config.get('default', property_key)
+    def read_s3_configuration(self, property_key, section='default'):
+        import boto
+        config = boto.pyami.config.Config(path='%s/scripts/.s3cfg' % self.execution_dir)
+        return config.get(section, property_key)
 
     def set_s3_keys(self, access=None, secret=None):
         access_key = access or self.read_s3_configuration('access_key')

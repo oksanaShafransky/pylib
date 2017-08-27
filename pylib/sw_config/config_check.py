@@ -1,18 +1,12 @@
 import logging
-import sys
 
 import six
+import sys
 
 from dict_change_simulator import WithDelete, WithSet
-from etcd_kv import EtcdProxy
-from kv import KeyValueProxy
-from pylib.common.dependency import register_instance
 from window_config import SimilarWebWindowConfig
 
 __author__ = 'Felix'
-
-ETCD_PATHS = {'production': 'v1/production', 'staging': 'v1/staging', 'dev': 'v1/dev'}
-PROXY_CLASS = EtcdProxy
 
 HEALTHY = 1
 MINIMAL = 0
