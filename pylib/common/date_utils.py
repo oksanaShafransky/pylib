@@ -31,6 +31,7 @@ def get_dates_list(start, end, step=relativedelta(days=1)):
     dates_range = []
     curr = start
     delta = step
+    assert start <= end, "Start date can't be greater than End date!"
     while curr <= end:
         dates_range.append(curr)
         curr = start + delta
