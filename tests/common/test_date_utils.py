@@ -34,3 +34,13 @@ class TestDateUtils(TestCase):
         output = date_utils.get_dates_range(date(year=2016, month=2, day=2), 3, 'weeks', step_size=2)
         expected = [date(year=2016, month=1, day=5), date(year=2016, month=1, day=19), date(year=2016, month=2, day=2)]
         assert output == expected
+
+    def test_get_last_days_of_months(self):
+        output = date_utils.get_dates_range(date(year=2016, month=12, day=31), 12, 'months')
+        expected = [date(year=2016, month=1, day=31), date(year=2016, month=2, day=29),
+                    date(year=2016, month=3, day=31), date(year=2016, month=4, day=30),
+                    date(year=2016, month=5, day=31), date(year=2016, month=6, day=30),
+                    date(year=2016, month=7, day=31), date(year=2016, month=8, day=31),
+                    date(year=2016, month=9, day=30), date(year=2016, month=10, day=31),
+                    date(year=2016, month=11, day=30), date(year=2016, month=12, day=31)]
+        assert output == expected
