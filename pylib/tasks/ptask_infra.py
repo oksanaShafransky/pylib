@@ -1,27 +1,20 @@
 import calendar
 import logging
-from email.mime.image import MIMEImage
-from email.mime.multipart import MIMEMultipart
-from datetime import datetime
-
 import os
 import re
 import shutil
+import smtplib
+import urllib
 import uuid
+from copy import copy
+from email.mime.image import MIMEImage
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import datetime
 import six
 import sys
 import time
-
-from pylib.hive.table_utils import get_table_partitions, get_table_partition_path
-from six.moves import configparser
-from copy import copy
-
-import smtplib
-from email.mime.text import MIMEText
-
-import urllib
 
 # Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
@@ -439,8 +432,7 @@ class ContextualizedTasksInfra(object):
 
     def get_redis_client(self):
         if self.redis is None:
-            # self.redis = StrictRedis(host='redis-bigdata.service.production',
-            self.redis = StrictRedis(host='10.0.13.34',
+            self.redis = StrictRedis(host='redis-bigdata.service.production',
                                      socket_timeout=15,
                                      socket_connect_timeout=15,
                                      retry_on_timeout=True)
@@ -990,8 +982,6 @@ class ContextualizedTasksInfra(object):
 
     def repair_table(self, db, table):
         self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db, table))
-
-
 
     @property
     def base_dir(self):
