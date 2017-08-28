@@ -113,7 +113,7 @@ def test_size(path, min_size_required=None, is_strict=False, with_replicas=False
             logger.info('it does')
             if is_strict:
                 logger.info('Checking that dir is not too large...')
-                if space_consumed > min_size_required * 30: # Chang to 10 after fixing spaceConsumed
+                if space_consumed > min_size_required * 30:  # Chang to 10 after fixing spaceConsumed
                     logger.info('Dir %s is %d, which is too large for the check vs %d' % (path, space_consumed, min_size_required))
                     return False
             return True
@@ -218,4 +218,30 @@ def change_file_extension(path, new_ext, hdfs_client=None):
         hdfs_client.rename([path], new_name).next()
 
 
+class HdfsApi(object):
+    """
+    An OO wrapper for utility functions from pylib.hadoop.hdfs_util.
+    The idea is to keep using the same hdfs client instead of recreating it every call.
+    """
 
+    def __init__(self):
+        self.client = create_client()
+
+    def list_files(self, dir):
+        return list_files(dir, self.client)
+
+    def get_file(self, path, local_path):
+        return get_file(path, local_path, self.client)
+
+    @staticmethod
+    def copy_from_local(local_path, hdfs_path):
+        cp_res = subprocess.call([
+            'hdfs',
+            'dfs',
+            '-copyFromLocal',
+            local_path,
+            hdfs_path
+        ])
+
+        if cp_res != 0:
+            raise Exception('Error while copying file to hdfs: {}'.format(cp_res))
