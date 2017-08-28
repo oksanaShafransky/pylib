@@ -6,9 +6,10 @@ def date_partition(dt):
 
 
 class HiveTableHelper(object):
-    def __init__(self, db, tbl):
+    def __init__(self, db, tbl, path=None):
         self.db_name = db
         self.tbl_name = tbl
+        self.tbl_path = path
 
     @property
     def name(self):
@@ -18,8 +19,13 @@ class HiveTableHelper(object):
     def db(self):
         return self.db_name
 
+    @property
+    def hdfs_path(self):
+        return self.tbl_path
+
     def repair(self, ctx):
         ctx.repair_table(self.db_name, self.tbl_name)
+
 
 
 class HiveHelper(object):
