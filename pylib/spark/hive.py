@@ -20,12 +20,15 @@ class HiveTableHelper(object):
         return self.db_name
 
     @property
+    def full_name(self):
+        return self.db + "." + self.name
+
+    @property
     def hdfs_path(self):
         return self.tbl_path
 
     def repair(self, ctx):
         ctx.repair_table(self.db_name, self.tbl_name)
-
 
 
 class HiveHelper(object):
