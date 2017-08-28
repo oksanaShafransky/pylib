@@ -991,62 +991,6 @@ class ContextualizedTasksInfra(object):
     def repair_table(self, db, table):
         self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db, table))
 
-    @staticmethod
-    def _get_partition_pattern(table_mode):
-        if table_mode == 'daily':
-            partition_pattern = "{'month':'%s','day':'%s','year':'%s'}"
-        elif table_mode == 'window':
-            partition_pattern = "{'month':'%s','day': '%s','year': '%s','mode_type':'last-28'}"
-        elif table_mode == 'snapshot':
-            partition_pattern = "{'month': '%s','year': '%s','mode_type':'monthly'}"
-        else:
-            raise ValueError('Unable to determine mode_type')
-        return partition_pattern
-
-    def get_table_partition_paths(self, table_name, table_mode, days_back):
-        '''
-        Return a list of paths for a hive table's partitions.
-
-        :param table_name: name of hive table, including db
-        :type table_name: str
-        :param table_mode: hive table's mode, used to determine partition pattern. Can be daily, window or snapshot
-        :type table_mode: str
-        :param days_back: number of days back to search for partitions from and including the run date,
-        :type days_back: int
-        :return: list of paths
-        '''
-
-        date_range = [self.date - datetime.timedelta(days=x) for x in range(0, days_back)]
-        table_partitions = get_table_partitions(table_name)
-
-        partition_pattern = self._get_partition_pattern(table_mode)
-
-        partition_strings = {partition_pattern % (s['month'], s['day'], s['year']): s for s in table_partitions}
-
-        missing_partitions = []
-        partition_paths = []
-        missing_partition_paths = []
-
-        for day in date_range:
-            # check if we have a partition corresponding to the day
-            day_string = partition_pattern % (str(day.month).zfill(2), str(day.day).zfill(2) ,str(day.year)[2:])
-            if partition_strings.get(day_string) is None:
-                missing_partitions.append(day)
-                continue
-
-            # get the path for each partition
-            partition_path = get_table_partition_path(table_name, partition_strings[day_string])
-            if partition_path is None:
-                missing_partition_paths.append(day_string)
-
-            partition_paths.append(partition_path)
-
-        assert len(missing_partitions) == 0, \
-            "The following partitions were not found in the hive metastore: %s" % str(missing_partitions)
-        assert len(partition_paths) == days_back, \
-            "Could not find paths for the following partitions: %s" % str(missing_partition_paths)
-
-        return partition_paths
 
 
     @property

@@ -6,6 +6,7 @@ import invoke
 import datetime
 
 import pytest
+from pylib.hive import table_utils
 from redis import StrictRedis
 
 from pylib.tasks.ptask_infra import TasksInfra, ContextualizedTasksInfra
@@ -224,6 +225,8 @@ class TestContextualizedTasksInfra(object):
     #
     #     c_infra.assert_hbase_snapshot_exists('top_lists_17_02_barak_test', '/hbase', 'hbase-production-hdfs-nn.service.consul')
     #
+
+
 
     class TestDaysInRange(object):
 
