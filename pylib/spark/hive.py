@@ -1,12 +1,25 @@
-from collections import namedtuple
-
 from pylib.hive.hive_meta import get_table_location
-
-HiveTableName = namedtuple("HiveTableName", ["db", "tbl"])
 
 
 def date_partition(dt):
     return {'year': dt.strftime('%y'), 'month': dt.strftime('%m'), 'day': dt.strftime('%d')}
+
+
+class HiveTableHelper(object):
+    def __init__(self, db, tbl):
+        self.db_name = db
+        self.tbl_name = tbl
+
+    @property
+    def name(self):
+        return self.tbl_name
+
+    @property
+    def db(self):
+        return self.db_name
+
+    def repair(self, ctx):
+        ctx.repair_table(self.db_name, self.tbl_name)
 
 
 class HiveHelper(object):
