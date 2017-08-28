@@ -233,6 +233,9 @@ class HdfsApi(object):
     def get_file(self, path, local_path):
         return get_file(path, local_path, self.client)
 
+    def delete_file(self, path):
+        return delete_file(path, self.client)
+
     @staticmethod
     def copy_from_local(local_path, hdfs_path):
         cp_res = subprocess.call([
@@ -245,3 +248,7 @@ class HdfsApi(object):
 
         if cp_res != 0:
             raise Exception('Error while copying file to hdfs: {}'.format(cp_res))
+
+    @staticmethod
+    def upload_file_to_hdfs(file_path, target_path):
+        upload_file_to_hdfs(file_path, target_path)
