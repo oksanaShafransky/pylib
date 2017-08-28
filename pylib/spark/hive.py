@@ -1,4 +1,8 @@
+from collections import namedtuple
+
 from pylib.hive.hive_meta import get_table_location
+
+HiveTableName = namedtuple("HiveTableName", ["db", "tbl"])
 
 
 def date_partition(dt):
@@ -54,4 +58,3 @@ class HiveHelper(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.drop_temp_tables()
-
