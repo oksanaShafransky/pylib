@@ -119,10 +119,10 @@ class TestContextualizedTasksInfra(object):
         self._disable_invoke_debug()
         actual_commands = []
         expected_regexp = '''cd .*/mobile;spark-submit --queue research_shared .* --name "TestRun" .*--conf key1\=val1 --key2 val2  --jars .*/test.jar,.*/test2.jar --files "" --class com.similarweb.mobile.Test ./mobile.jar   -number %(wrap)s32%(wrap)s''' \
-            % \
-                {
-                    'wrap': TasksInfra.EXEC_WRAPPERS['bash']
-                }
+                          % \
+                          {
+                              'wrap': TasksInfra.EXEC_WRAPPERS['bash']
+                          }
 
         def mockrun(self, command, **kwargs):
             actual_commands.append(command)
@@ -213,7 +213,7 @@ class TestContextualizedTasksInfra(object):
 
         with pytest.raises(AssertionError):
             get_jars_list_fixture.get_jars_list(module_dir='analytics', jars_from_lib=['alternativefact.jar',
-                                                                                 'annotations.jar'])
+                                                                                       'annotations.jar'])
 
 
     #TODO Finalize unit test for assert_hbase_snapshot_exists

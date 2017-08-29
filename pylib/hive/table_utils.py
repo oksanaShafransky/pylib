@@ -5,8 +5,8 @@ try:
 except ImportError as e:
     pass
 import getpass
-from datetime import datetime
-from dateutil import parser
+from datetime import datetime, timedelta
+from dateutil import parser, relativedelta
 from inspect import isfunction
 
 __author__ = 'Felix'
@@ -50,10 +50,12 @@ def get_table_partitions(table_name):
 
 def get_table_dates(table_name):
     return [datetime.strptime(
-        '%02d-%02d-%02d' % (int(partition['year']) % 100, int(partition['month']), int(partition.get('day', 1))),
-        '%y-%m-%d') for
-            partition in get_table_partitions(table_name)
-            ]
+        '%02d-%02d-%02d' % (int(partition['year']) % 100,
+                            int(partition['month']),
+                            int(partition.get('day', 1))),
+        '%y-%m-%d')
+        for partition in get_table_partitions(table_name)
+    ]
 
 
 def create_temp_table(original_table_name, cloned_table_name, location):
@@ -102,6 +104,97 @@ def drop_partition_str(table_name, partition_str):
         curr.execute('alter table %s drop if exists partition %s' % (table_name, partition_str))
 
 
+def _get_table_partition_path(table_name, partition):
+    partition_info = get_table_partition_info(table_name, partition)
+    for info in partition_info:
+        if str.startswith(info[0], 'Location'):
+            return info[1]
+
+
+def _part_str(table_mode, year, month, day=None):
+    year_str = str(year)
+    if len(year_str) > 2:
+        year_str = year_str[2:]
+
+    month_str = str(month).zfill(2)
+
+    if day:
+        day_str = str(day).zfill(2)
+    else:
+        day_str = None
+
+    if table_mode == 'daily':
+        partition_pattern = "{'month':'%s','day':'%s','year':'%s'}" % (month_str, day_str, year_str)
+    elif table_mode == 'window':
+        partition_pattern = "{'month':'%s','day': '%s','year': '%s','mode_type':'last-28'}" % (month_str, day_str, year_str)
+    elif table_mode == 'snapshot':
+        partition_pattern = "{'month': '%s','year': '%s','mode_type':'monthly'}" % (month_str, year_str)
+    else:
+        raise ValueError('Unable to determine mode_type')
+    return partition_pattern
+
+
+def _get_lookback(rundate, lookback, lookback_interval):
+    if lookback_interval == 'daily':
+        date_range = [rundate - timedelta(days=x) for x in range(0, lookback)]
+    elif lookback_interval == 'monthly':
+        date_range = [rundate - relativedelta.relativedelta(months=x) for x in range(0, lookback)]
+    else:
+        raise ValueError('{} invalid lookback interval'.format(lookback_interval))
+    return date_range
+
+
+def get_table_partition_paths(rundate, table_name, mode, lookback, lookback_interval='daily'):
+    '''
+    Return a list of paths for a hive table's partitions.
+
+    :param rundate: the job's run date
+    :type rundate: datetime
+    :param table_name: name of hive table, including db
+    :type table_name: str
+    :param mode: hive table's mode, used to determine partition pattern. Can be daily, window or snapshot
+    :type mode: str
+    :param lookback: number of days back to search for partitions from and including the run date,
+    :type lookback: int
+    :param lookback_interval: the interval for finding partitions, daily or monthly
+    :param lookback_interval: str
+    :return: list of paths
+    '''
+
+    date_range = _get_lookback(rundate, lookback, lookback_interval)
+    parts = get_table_partitions(table_name)
+
+    # does the table mode include days
+    days = False if mode == 'snapshot' else True
+
+    part_strings = {_part_str(mode, s['year'], s['month'], s['day'] if days else None): s for s in parts}
+
+    missing_partitions = []
+    partition_paths = []
+    missing_partition_paths = []
+
+    for day in date_range:
+        # check if we have a partition corresponding to the day
+        day_str = _part_str(mode, day.year, day.month, day.day if days else None)
+        if part_strings.get(day_str) is None:
+            missing_partitions.append(day)
+            continue
+
+        # get the path for each partition
+        partition_path = _get_table_partition_path(table_name, part_strings[day_str])
+        if partition_path is None:
+            missing_partition_paths.append(day_str)
+
+        partition_paths.append(partition_path)
+
+    assert len(missing_partitions) == 0, \
+        "The following partitions were not found in the hive metastore: %s" % str(missing_partitions)
+    assert len(partition_paths) == lookback, \
+        "Could not find paths for the following partitions: %s" % str(missing_partition_paths)
+
+    return partition_paths
+
+
 class TableProvided(object):
     def __init__(self, alias, table_name_resolver, path_param, pre_post=True):
         self.table_alias = alias
@@ -143,7 +236,8 @@ class HBaseTableProvided(object):
             self.table_name = lambda **kwargs: table_name_resolver
 
     def assign_table_from_params(self, **kwargs):
-        return temp_hbase_table_cmds(self.table_name(**kwargs), kwargs[self.hbase_table_name], kwargs[self.mode_param], kwargs[self.mode_type_param], kwargs[self.date_param])
+        return temp_hbase_table_cmds(self.table_name(**kwargs), kwargs[self.hbase_table_name], kwargs[self.mode_param],
+                                     kwargs[self.mode_type_param], kwargs[self.date_param])
 
     def invoke_fnc(self, f, *args, **kwargs):
         effective_table_name, drop_cmd, create_cmd = self.assign_table_from_params(**kwargs)
