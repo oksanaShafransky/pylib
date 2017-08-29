@@ -5,6 +5,32 @@ def date_partition(dt):
     return {'year': dt.strftime('%y'), 'month': dt.strftime('%m'), 'day': dt.strftime('%d')}
 
 
+class HiveTableHelper(object):
+    def __init__(self, db, tbl, path=None):
+        self.db_name = db
+        self.tbl_name = tbl
+        self.tbl_path = path
+
+    @property
+    def name(self):
+        return self.tbl_name
+
+    @property
+    def db(self):
+        return self.db_name
+
+    @property
+    def full_name(self):
+        return self.db + "." + self.name
+
+    @property
+    def hdfs_path(self):
+        return self.tbl_path
+
+    def repair(self, ctx):
+        ctx.repair_table(self.db_name, self.tbl_name)
+
+
 class HiveHelper(object):
     def __init__(self, sql_context):
         self._ctx = sql_context
@@ -54,4 +80,3 @@ class HiveHelper(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.drop_temp_tables()
-
