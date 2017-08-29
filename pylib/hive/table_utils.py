@@ -50,9 +50,11 @@ def get_table_partitions(table_name):
 
 def get_table_dates(table_name):
     return [datetime.strptime(
-        '%02d-%02d-%02d' % (int(partition['year']) % 100, int(partition['month']), int(partition.get('day', 1))),
-        '%y-%m-%d') for
-        partition in get_table_partitions(table_name)
+        '%02d-%02d-%02d' % (int(partition['year']) % 100,
+                            int(partition['month']),
+                            int(partition.get('day', 1))),
+        '%y-%m-%d')
+        for partition in get_table_partitions(table_name)
     ]
 
 
