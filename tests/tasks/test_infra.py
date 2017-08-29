@@ -6,7 +6,6 @@ import invoke
 import datetime
 
 import pytest
-from pylib.hive import table_utils
 from redis import StrictRedis
 
 from pylib.tasks.ptask_infra import TasksInfra, ContextualizedTasksInfra

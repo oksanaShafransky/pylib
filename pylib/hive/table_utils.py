@@ -20,7 +20,7 @@ HIVE_SERVER = 'hive-server2-mrp.service.production'
 
 
 def get_hive_connection():
-    return pyhs2.connect(HIVE_SERVER, authMechanism='PLAIN', user="steven")
+    return pyhs2.connect(HIVE_SERVER, authMechanism='PLAIN', user=getpass.getuser())
 
 
 def get_databases():
@@ -91,13 +91,6 @@ def get_table_partition_info(table_name, partition):
         return list(curr.fetch())
 
 
-def get_table_partition_path(table_name, partition):
-    partition_info = get_table_partition_info(table_name, partition)
-    for info in partition_info:
-        if str.startswith(info[0], 'Location'):
-            return info[1]
-
-
 def drop_partition(table_name, partition):
     partition_str = ', '.join(["%s='%s'" % (k, v) for k, v in partition.items()])
     with get_hive_connection().cursor() as curr:
@@ -109,13 +102,31 @@ def drop_partition_str(table_name, partition_str):
         curr.execute('alter table %s drop if exists partition %s' % (table_name, partition_str))
 
 
+def _get_table_partition_path(table_name, partition):
+    partition_info = get_table_partition_info(table_name, partition)
+    for info in partition_info:
+        if str.startswith(info[0], 'Location'):
+            return info[1]
+
+
 def _part_str(table_mode, year, month, day=None):
+    year_str = str(year)
+    if len(year_str) > 2:
+        year_str = year_str[2:]
+
+    month_str = str(month).zfill(2)
+
+    if day:
+        day_str = str(day).zfill(2)
+    else:
+        day_str = None
+
     if table_mode == 'daily':
-        partition_pattern = "{'month':'%s','day':'%s','year':'%s'}" % (month, day, year)
+        partition_pattern = "{'month':'%s','day':'%s','year':'%s'}" % (month_str, day_str, year_str)
     elif table_mode == 'window':
-        partition_pattern = "{'month':'%s','day': '%s','year': '%s','mode_type':'last-28'}" % (month, day, year)
+        partition_pattern = "{'month':'%s','day': '%s','year': '%s','mode_type':'last-28'}" % (month_str, day_str, year_str)
     elif table_mode == 'snapshot':
-        partition_pattern = "{'month': '%s','year': '%s','mode_type':'monthly'}" % (month, year)
+        partition_pattern = "{'month': '%s','year': '%s','mode_type':'monthly'}" % (month_str, year_str)
     else:
         raise ValueError('Unable to determine mode_type')
     return partition_pattern
@@ -162,13 +173,13 @@ def get_table_partition_paths(rundate, table_name, mode, lookback, lookback_inte
 
     for day in date_range:
         # check if we have a partition corresponding to the day
-        day_str = _part_str(mode, str(day.year)[2:], str(day.month).zfill(2), str(day.day).zfill(2) if days else None)
+        day_str = _part_str(mode, day.year, day.month, day.day if days else None)
         if part_strings.get(day_str) is None:
             missing_partitions.append(day)
             continue
 
         # get the path for each partition
-        partition_path = get_table_partition_path(table_name, part_strings[day_str])
+        partition_path = _get_table_partition_path(table_name, part_strings[day_str])
         if partition_path is None:
             missing_partition_paths.append(day_str)
 
