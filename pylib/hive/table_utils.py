@@ -108,7 +108,11 @@ def _get_table_partition_path(table_name, partition):
     partition_info = get_table_partition_info(table_name, partition)
     for info in partition_info:
         if str.startswith(info[0], 'Location'):
-            return info[1]
+            path =  info[1]
+            if 'hdfs://nameservice-mrp' in path:
+                return path.replace('hdfs://nameservice-mrp', '')
+            else:
+                return path
 
 
 def _part_str(table_mode, year, month, day=None):
