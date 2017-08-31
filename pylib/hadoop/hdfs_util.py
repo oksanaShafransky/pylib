@@ -238,16 +238,17 @@ class HdfsApi(object):
 
     @staticmethod
     def copy_from_local(local_path, hdfs_path):
-        cp_res = subprocess.call([
-            'hdfs',
-            'dfs',
-            '-copyFromLocal',
-            local_path,
-            hdfs_path
-        ])
+        HdfsApi._cmd_exec_helper(['hdfs', 'dfs', '-copyFromLocal', local_path, hdfs_path])
 
-        if cp_res != 0:
-            raise Exception('Error while copying file to hdfs: {}'.format(cp_res))
+    @staticmethod
+    def put(local_path, hdfs_path):
+        HdfsApi._cmd_exec_helper(['hdfs', 'dfs', '-put', local_path, hdfs_path])
+
+    @staticmethod
+    def _cmd_exec_helper(cmd_args):
+        cmd_res = subprocess.call(cmd_args)
+        if cmd_res != 0:
+            raise Exception('Command returned non zero value ({}): {}'.format(cmd_res, cmd_args))
 
     @staticmethod
     def upload_file_to_hdfs(file_path, target_path):
