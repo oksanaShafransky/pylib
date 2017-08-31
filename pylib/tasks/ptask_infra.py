@@ -1056,7 +1056,7 @@ class ContextualizedTasksInfra(object):
 
     @property
     def env_type(self):
-        return self.__get_common_args()['env_type']
+        return self.__get_common_args().get('env_type')
 
     @property
     def dry_run(self):
