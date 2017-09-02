@@ -248,6 +248,10 @@ class HdfsApi(object):
         HdfsApi._cmd_exec_helper(['hdfs', 'dfs', '-put', local_path, hdfs_path])
 
     @staticmethod
+    def put_force(local_path, hdfs_path):
+        HdfsApi._cmd_exec_helper(['hdfs', 'dfs', '-put', '-f', local_path, hdfs_path])
+
+    @staticmethod
     def _cmd_exec_helper(cmd_args):
         cmd_res = subprocess.call(cmd_args)
         if cmd_res != 0:
