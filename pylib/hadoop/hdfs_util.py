@@ -240,7 +240,10 @@ class HdfsApi(object):
         return delete_dir(path, self.client)
 
     def exists(self, path, is_dir=False):
-        return self.client.test(path=path, directory=is_dir)
+        try:
+            return self.client.test(path=path, directory=is_dir)
+        except FileNotFoundException:
+            return False
 
     def exists_dir(self, path):
         return self.exists(path, is_dir=True)
