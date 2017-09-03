@@ -239,6 +239,15 @@ class HdfsApi(object):
     def delete_dir(self, path):
         return delete_dir(path, self.client)
 
+    def exists(self, path, is_dir=False):
+        return self.client.test(path=path, directory=is_dir)
+
+    def exists_dir(self, path):
+        return self.exists(path, is_dir=True)
+
+    def exists_file(self, path):
+        return self.exists(path, is_dir=False)
+
     @staticmethod
     def copy_from_local(local_path, hdfs_path):
         HdfsApi._cmd_exec_helper(['hdfs', 'dfs', '-copyFromLocal', local_path, hdfs_path])
