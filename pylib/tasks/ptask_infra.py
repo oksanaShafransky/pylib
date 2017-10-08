@@ -722,7 +722,7 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.year_previous_month(self.__get_common_args()['date'],
                                               zero_padding=zero_padding)
 
-    def year_month_presious_day(self, zero_padding=True):
+    def year_month_previous_day(self, zero_padding=True):
         return TasksInfra.year_month_previous_day(self.__get_common_args()['date'],
                                                   zero_padding=zero_padding)
 
