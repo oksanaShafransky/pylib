@@ -52,6 +52,21 @@ def copy_dir_from_path(src_path, target_path):
     subprocess.call(("hadoop", "fs", "-cp", "-f", src_path + "/*", target_path))
 
 
+def copy_file(file_path, target_path):
+    if not directory_exists(target_path):
+        mkdir_cmd = 'hadoop fs -mkdir -p %s' % target_path
+        subprocess.call(mkdir_cmd.split(' '))
+
+    cp_cmd = 'hadoop fs -cp %s %s' % (file_path, target_path)
+    subprocess.call(cp_cmd.split(' '))
+
+
+def append_to_file(file_path, string):
+    printf_cmd = subprocess.Popen(('printf', string), stdout=subprocess.PIPE)
+    append_cmd = 'hadoop fs -appendToFile - %s' % file_path
+    subprocess.call(append_cmd.split(' '), stdin=printf_cmd.stdout)
+
+
 def delete_file(path, hdfs_client=None):
     if hdfs_client is None:
         hdfs_client = create_client()
