@@ -133,6 +133,17 @@ class TasksInfra(object):
             return 'year=%s/month=%s/day=%s' % (year_str, previous_day.month, previous_day.day)
 
     @staticmethod
+    def year_month_next_day(date, zero_padding=True):
+        if date is None:
+            raise AttributeError("date wasn't passed")
+        next_day = date + datetime.timedelta(days=1)
+        year_str = str(next_day.year)[2:]
+        if zero_padding:
+            return 'year=%s/month=%s/day=%s' % (year_str, str(next_day.month).zfill(2), str(next_day.day).zfill(2))
+        else:
+            return 'year=%s/month=%s/day=%s' % (year_str, next_day.month, next_day.day)
+
+    @staticmethod
     def year_month_country(date, country, zero_padding=True):
         return '%s/country=%s' % (TasksInfra.year_month(date, zero_padding=zero_padding), country)
 
@@ -725,6 +736,10 @@ class ContextualizedTasksInfra(object):
     def year_month_previous_day(self, zero_padding=True):
         return TasksInfra.year_month_previous_day(self.__get_common_args()['date'],
                                                   zero_padding=zero_padding)
+
+    def year_month_next_day(self, zero_padding=True):
+        return TasksInfra.year_month_next_day(self.__get_common_args()['date'],
+                                              zero_padding=zero_padding)
 
     ym = year_month
 
