@@ -557,7 +557,7 @@ class ContextualizedTasksInfra(object):
         if query_name_suffix is not None:
             job_name = job_name + ' ' + query_name_suffix
 
-        # delete output on start
+        # delete output on start (supports dr and co)
         self.clear_output_dirs(managed_output_dirs)
 
         log_dir = '/tmp/logs/%s' % random_str(5)
@@ -580,7 +580,7 @@ class ContextualizedTasksInfra(object):
                 query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
 
         HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir,
-                                      is_dry_run=self.dry_run, aux_jars=aux_jars)
+                                      is_dry_run=self.dry_run or self.checks_only, aux_jars=aux_jars)
         for mdir in managed_output_dirs:
             self.mark_success(mdir)
 
