@@ -99,6 +99,7 @@ class ConsistencyTestInfra(object):
                 d.month,
                 d.day if date_type is not 'month' else None
             )
+
         return ['%(base_dir)s/%(path)s/%(date_part)s' %
                 {
                     'base_dir': base_dir,
@@ -218,7 +219,8 @@ class ConsistencyTestInfra(object):
             entity_column,
             cp_threshold,
             model_date,
-            email_to):
+            email_to,
+            benchmark_mode):
 
         print('Running test %s with model %s' % (test_name, model_date))
 
@@ -239,7 +241,8 @@ class ConsistencyTestInfra(object):
             '-entity_column': entity_column,
             '-cp_threshold': cp_threshold,
             '-email_to': email_to,
-            '-model_date': model_date
+            '-model_date': model_date,
+            '-benchmark_mode': benchmark_mode
         }
         return params
 
@@ -258,6 +261,7 @@ class ConsistencyTestInfra(object):
             sites_visit_filter=100000,
             apps_rank_filter='0-2000',
             entity_column=None,
+            cp_threshold=0.9,
             num_features=2,
             sig_noise_coeff=0.01,
             std_cp=0.036,
@@ -268,7 +272,8 @@ class ConsistencyTestInfra(object):
             tv_symm=1.0,
             named_spark_args=None,
             spark_configs=None,
-            spark_queue='calculation'
+            spark_queue='calculation',
+            email_to=None
     ):
         """
         :param test_name: unique test name - used for hdfs path generation and spark job name
@@ -351,10 +356,29 @@ class ConsistencyTestInfra(object):
             output_dirs=model_paths,
             named_spark_args=named_spark_args,
             spark_configs=spark_configs,
-            queue=spark_queue
+           queue=spark_queue
         )
 
         self.ti.assert_output_validity(model_paths, min_size_bytes=10, validate_marker=True)
+
+        # run benchmark test
+        self.test(test_name,
+                  source_db,
+                  source_table,
+                  data_column,
+                  has_day_partition,
+                  platform,
+                  date_type,
+                  countries,
+                  reverse_dates=reverse_dates,
+                  entity_column=entity_column,
+                  cp_threshold=cp_threshold,
+                  model_date=self.ti.date.strftime('%Y-%m-%d'),
+                  named_spark_args=named_spark_args,
+                  spark_configs=spark_configs,
+                  spark_queue=spark_queue,
+                  email_to=email_to,
+                  benchmark_mode=True)
 
     def test(
             self,
@@ -374,7 +398,8 @@ class ConsistencyTestInfra(object):
             email_to=None,
             named_spark_args=None,
             spark_configs=None,
-            spark_queue='calculation'
+            spark_queue='calculation',
+            benchmark_mode=False
     ):
         """
         :param test_name: unique test name - used for hdfs path generation and spark job name
@@ -434,7 +459,8 @@ class ConsistencyTestInfra(object):
             entity_column=entity_column,
             cp_threshold=cp_threshold,
             model_date=model_date_parsed if model_date else None,
-            email_to=email_to
+            email_to=email_to,
+            benchmark_mode=benchmark_mode
         )
 
         result_paths = ConsistencyTestInfra._gen_result_paths(
