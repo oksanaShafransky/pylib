@@ -122,6 +122,28 @@ class TasksInfra(object):
             return 'year=%s/month=%s' % (year_str, last_month)
 
     @staticmethod
+    def year_month_previous_day(date, zero_padding=True):
+        if date is None:
+            raise AttributeError("date wasn't passed")
+        previous_day = date - datetime.timedelta(days=1)
+        year_str = str(previous_day.year)[2:]
+        if zero_padding:
+            return 'year=%s/month=%s/day=%s' % (year_str, str(previous_day.month).zfill(2), str(previous_day.day).zfill(2))
+        else:
+            return 'year=%s/month=%s/day=%s' % (year_str, previous_day.month, previous_day.day)
+
+    @staticmethod
+    def year_month_next_day(date, zero_padding=True):
+        if date is None:
+            raise AttributeError("date wasn't passed")
+        next_day = date + datetime.timedelta(days=1)
+        year_str = str(next_day.year)[2:]
+        if zero_padding:
+            return 'year=%s/month=%s/day=%s' % (year_str, str(next_day.month).zfill(2), str(next_day.day).zfill(2))
+        else:
+            return 'year=%s/month=%s/day=%s' % (year_str, next_day.month, next_day.day)
+
+    @staticmethod
     def year_month_country(date, country, zero_padding=True):
         return '%s/country=%s' % (TasksInfra.year_month(date, zero_padding=zero_padding), country)
 
@@ -178,10 +200,10 @@ class TasksInfra(object):
     SMTP_SERVER = 'mta01.sg.internal'
 
     @staticmethod
-    def send_mail(mail_from, mail_to, mail_subject, content, image_attachment=None):
+    def send_mail(mail_from, mail_to, mail_subject, content, format='plain', image_attachment=None):
 
         msg = MIMEMultipart()
-        msg.attach(MIMEText(content, 'plain'))
+        msg.attach(MIMEText(content, format))
 
         msg['From'] = mail_from
         msg['To'] = ','.join(mail_to)
@@ -535,7 +557,7 @@ class ContextualizedTasksInfra(object):
         if query_name_suffix is not None:
             job_name = job_name + ' ' + query_name_suffix
 
-        # delete output on start
+        # delete output on start (supports dr and co)
         self.clear_output_dirs(managed_output_dirs)
 
         log_dir = '/tmp/logs/%s' % random_str(5)
@@ -558,7 +580,7 @@ class ContextualizedTasksInfra(object):
                 query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
 
         HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir,
-                                      is_dry_run=self.dry_run, aux_jars=aux_jars)
+                                      is_dry_run=self.dry_run or self.checks_only, aux_jars=aux_jars)
         for mdir in managed_output_dirs:
             self.mark_success(mdir)
 
@@ -709,6 +731,14 @@ class ContextualizedTasksInfra(object):
 
     def year_previous_month(self, zero_padding=True):
         return TasksInfra.year_previous_month(self.__get_common_args()['date'],
+                                              zero_padding=zero_padding)
+
+    def year_month_previous_day(self, zero_padding=True):
+        return TasksInfra.year_month_previous_day(self.__get_common_args()['date'],
+                                                  zero_padding=zero_padding)
+
+    def year_month_next_day(self, zero_padding=True):
+        return TasksInfra.year_month_next_day(self.__get_common_args()['date'],
                                               zero_padding=zero_padding)
 
     ym = year_month

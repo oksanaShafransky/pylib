@@ -244,3 +244,68 @@ class TestContextualizedTasksInfra(object):
         def test_unknown_mode_type(self):
             with pytest.raises(ValueError):
                 list(TasksInfra.days_in_range(datetime.date(2017, 1, 15), 'unknown'))
+
+    class TestYearMonthPreviousDay(object):
+
+        def test_regular_day(self):
+            d = datetime.date(2017, 5, 20)
+            ymd = TasksInfra.year_month_previous_day(d)
+            assert ymd == 'year=17/month=05/day=19'
+
+        def test_first_day_of_month(self):
+            d = datetime.date(2017, 5, 1)
+            ymd = TasksInfra.year_month_previous_day(d)
+            assert ymd == 'year=17/month=04/day=30'
+
+        def test_first_day_of_year(self):
+            d = datetime.date(2017, 1, 1)
+            ymd = TasksInfra.year_month_previous_day(d)
+            assert ymd == 'year=16/month=12/day=31'
+
+        def test_regular_day_no_padding(self):
+            d = datetime.date(2017, 5, 10)
+            ymd = TasksInfra.year_month_previous_day(d, zero_padding=False)
+            assert ymd == 'year=17/month=5/day=9'
+
+        def test_first_day_of_month_no_padding(self):
+            d = datetime.date(2017, 5, 1)
+            ymd = TasksInfra.year_month_previous_day(d, zero_padding=False)
+            assert ymd == 'year=17/month=4/day=30'
+
+        def test_first_day_of_year_no_padding(self):
+            d = datetime.date(2017, 1, 1)
+            ymd = TasksInfra.year_month_previous_day(d, zero_padding=False)
+            assert ymd == 'year=16/month=12/day=31'
+
+    class TestYearMonthNextDay(object):
+
+        def test_regular_day(self):
+            d = datetime.date(2017, 5, 20)
+            ymd = TasksInfra.year_month_next_day(d)
+            assert ymd == 'year=17/month=05/day=21'
+
+        def test_last_day_of_month(self):
+            d = datetime.date(2017, 5, 31)
+            ymd = TasksInfra.year_month_next_day(d)
+            assert ymd == 'year=17/month=06/day=01'
+
+        def test_last_day_of_year(self):
+            d = datetime.date(2016, 12, 31)
+            ymd = TasksInfra.year_month_next_day(d)
+            assert ymd == 'year=17/month=01/day=01'
+
+        def test_regular_day_no_padding(self):
+            d = datetime.date(2017, 5, 8)
+            ymd = TasksInfra.year_month_next_day(d, zero_padding=False)
+            assert ymd == 'year=17/month=5/day=9'
+
+        def test_last_day_of_month_no_padding(self):
+            d = datetime.date(2017, 5, 31)
+            ymd = TasksInfra.year_month_next_day(d, zero_padding=False)
+            assert ymd == 'year=17/month=6/day=1'
+
+        def test_last_day_of_year_no_padding(self):
+            d = datetime.date(2016, 12, 31)
+            ymd = TasksInfra.year_month_next_day(d, zero_padding=False)
+            assert ymd == 'year=17/month=1/day=1'
+
