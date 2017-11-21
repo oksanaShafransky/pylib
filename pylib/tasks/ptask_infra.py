@@ -757,7 +757,6 @@ class ContextualizedTasksInfra(object):
                   app_name,
                   command_params,
                   jars_from_lib=None,
-                  num_executors=None,
                   files=None,
                   spark_configs=None,
                   named_spark_args=None,
