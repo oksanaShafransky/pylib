@@ -896,7 +896,7 @@ class ContextualizedTasksInfra(object):
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
-                  ' --queue %(queue)s' \
+                  ' %(queue)s' \
                   ' --conf "spark.yarn.tags=$TASK_ID"' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
@@ -906,7 +906,7 @@ class ContextualizedTasksInfra(object):
                   ' "%(execution_dir)s/%(main_py)s"' \
                   % {'app_name': app_name if app_name else os.path.basename(main_py_file),
                      'execution_dir': module_dir,
-                     'queue': queue,
+                     'queue': '--queue %s' % queue if queue else '',
                      'files': ','.join(files or []),
                      'py_files_cmd': py_files_cmd,
                      'spark-confs': additional_configs,
