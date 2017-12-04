@@ -200,10 +200,10 @@ class TasksInfra(object):
     SMTP_SERVER = 'mta01.sg.internal'
 
     @staticmethod
-    def send_mail(mail_from, mail_to, mail_subject, content, image_attachment=None):
+    def send_mail(mail_from, mail_to, mail_subject, content, format='plain', image_attachment=None):
 
         msg = MIMEMultipart()
-        msg.attach(MIMEText(content, 'plain'))
+        msg.attach(MIMEText(content, format))
 
         msg['From'] = mail_from
         msg['To'] = ','.join(mail_to)
@@ -757,7 +757,6 @@ class ContextualizedTasksInfra(object):
                   app_name,
                   command_params,
                   jars_from_lib=None,
-                  num_executors=None,
                   files=None,
                   spark_configs=None,
                   named_spark_args=None,
