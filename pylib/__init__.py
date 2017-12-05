@@ -1,3 +1,4 @@
+import sys
 import logging
 from logging import config
 import pkg_resources
@@ -13,8 +14,10 @@ def is_hadoop_streaming():
     import os
     return 'stream_reduce_output_reader_class' in os.environ or 'stream_map_output_reader_class' in os.environ
 
+
 # a bit ugly, but for now keeps us from overriding airflow's logger
-if len(logging.root.handlers) == 0:
+logger_preserving_modules = ['airflow']
+if not any([mod in sys.modules for mod in logger_preserving_modules]):
     import os
     curr_path = os.path.dirname(os.path.realpath(__file__)) + '/'
     if not is_hadoop_streaming():
