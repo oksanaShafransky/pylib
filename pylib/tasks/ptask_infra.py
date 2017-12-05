@@ -128,7 +128,8 @@ class TasksInfra(object):
         previous_day = date - datetime.timedelta(days=1)
         year_str = str(previous_day.year)[2:]
         if zero_padding:
-            return 'year=%s/month=%s/day=%s' % (year_str, str(previous_day.month).zfill(2), str(previous_day.day).zfill(2))
+            return 'year=%s/month=%s/day=%s' % (
+                year_str, str(previous_day.month).zfill(2), str(previous_day.day).zfill(2))
         else:
             return 'year=%s/month=%s/day=%s' % (year_str, previous_day.month, previous_day.day)
 
@@ -872,9 +873,10 @@ class ContextualizedTasksInfra(object):
         final_py_files = py_files or []
 
         if use_bigdata_defaults:
-            main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
+            python_named_module = module.replace("-", "_")
+            main_py_file = 'python/sw_%s/%s' % (python_named_module, main_py_file)
             module_source_egg_path = '%(module_dir)s/sw_%(module)s-0.0.0.dev0-py2.7.egg' % {'module_dir': module_dir,
-                                                                                            'module': module}
+                                                                                            'module': python_named_module}
             if os.path.exists(module_source_egg_path):
                 final_py_files.append(module_source_egg_path)
 
