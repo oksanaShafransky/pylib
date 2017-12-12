@@ -790,7 +790,7 @@ class ContextualizedTasksInfra(object):
                       'add_opts': additional_configs,
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
-                      'extra_pkg_cmd': ','.join(packages) if packages is not None else '',
+                      'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'main_class': main_class,
                       'jar': jar
                   }
@@ -919,7 +919,7 @@ class ContextualizedTasksInfra(object):
                       'queue': '--queue %s' % queue if queue else '',
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
-                      'extra_pkg_cmd': ','.join(packages) if packages is not None else '',
+                      'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                          ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
