@@ -947,7 +947,7 @@ class ContextualizedTasksInfra(object):
 
     def read_s3_configuration(self, property_key, section='default'):
         import boto
-        config = boto.pyami.config.Config(path='%s/scripts/.s3cfg' % self.execution_dir)
+        config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
         return config.get(section, property_key)
 
     def set_s3_keys(self, access=None, secret=None):
