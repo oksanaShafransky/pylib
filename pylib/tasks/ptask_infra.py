@@ -128,7 +128,8 @@ class TasksInfra(object):
         previous_day = date - datetime.timedelta(days=1)
         year_str = str(previous_day.year)[2:]
         if zero_padding:
-            return 'year=%s/month=%s/day=%s' % (year_str, str(previous_day.month).zfill(2), str(previous_day.day).zfill(2))
+            return 'year=%s/month=%s/day=%s' % (
+                year_str, str(previous_day.month).zfill(2), str(previous_day.day).zfill(2))
         else:
             return 'year=%s/month=%s/day=%s' % (year_str, previous_day.month, previous_day.day)
 
@@ -760,6 +761,7 @@ class ContextualizedTasksInfra(object):
                   files=None,
                   spark_configs=None,
                   named_spark_args=None,
+                  packages=None,
                   managed_output_dirs=None):
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
@@ -778,16 +780,20 @@ class ContextualizedTasksInfra(object):
                   ' %(add_opts)s ' \
                   ' --jars %(jars)s' \
                   ' --files "%(files)s"' \
+                  '%(extra_pkg_cmd)s' \
                   ' --class %(main_class)s' \
                   ' %(jar)s ' % \
-                  {'jar_path': jar_path,
-                   'queue': queue,
-                   'app_name': app_name,
-                   'add_opts': additional_configs,
-                   'jars': self.get_jars_list(jar_path, jars_from_lib),
-                   'files': ','.join(files or []),
-                   'main_class': main_class,
-                   'jar': jar}
+                  {
+                      'jar_path': jar_path,
+                      'queue': queue,
+                      'app_name': app_name,
+                      'add_opts': additional_configs,
+                      'jars': self.get_jars_list(jar_path, jars_from_lib),
+                      'files': ','.join(files or []),
+                      'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'main_class': main_class,
+                      'jar': jar
+                  }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
         return self.run_bash(command).ok
@@ -855,6 +861,7 @@ class ContextualizedTasksInfra(object):
                      jars_from_lib=None,
                      module='mobile',
                      named_spark_args=None,
+                     packages=None,
                      py_files=None,
                      spark_configs=None,
                      use_bigdata_defaults=False,
@@ -872,9 +879,10 @@ class ContextualizedTasksInfra(object):
         final_py_files = py_files or []
 
         if use_bigdata_defaults:
-            main_py_file = 'python/sw_%s/%s' % (module, main_py_file)
+            python_named_module = module.replace("-", "_")
+            main_py_file = 'python/sw_%s/%s' % (python_named_module, main_py_file)
             module_source_egg_path = '%(module_dir)s/sw_%(module)s-0.0.0.dev0-py2.7.egg' % {'module_dir': module_dir,
-                                                                                            'module': module}
+                                                                                            'module': python_named_module}
             if os.path.exists(module_source_egg_path):
                 final_py_files.append(module_source_egg_path)
 
@@ -901,18 +909,21 @@ class ContextualizedTasksInfra(object):
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
+                  '%(extra_pkg_cmd)s' \
                   ' %(py_files_cmd)s' \
                   ' %(spark-confs)s' \
                   ' "%(execution_dir)s/%(main_py)s"' \
-                  % {'app_name': app_name if app_name else os.path.basename(main_py_file),
-                     'execution_dir': module_dir,
-                     'queue': '--queue %s' % queue if queue else '',
-                     'files': ','.join(files or []),
-                     'py_files_cmd': py_files_cmd,
-                     'spark-confs': additional_configs,
-                     'jars': self.get_jars_list(module_dir, jars_from_lib) + (
+                  % {
+                      'app_name': app_name if app_name else os.path.basename(main_py_file),
+                      'execution_dir': module_dir,
+                      'queue': '--queue %s' % queue if queue else '',
+                      'files': ','.join(files or []),
+                      'py_files_cmd': py_files_cmd,
+                      'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'spark-confs': additional_configs,
+                      'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                          ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
-                     'main_py': main_py_file
+                      'main_py': main_py_file
                      }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
@@ -936,7 +947,7 @@ class ContextualizedTasksInfra(object):
 
     def read_s3_configuration(self, property_key, section='default'):
         import boto
-        config = boto.pyami.config.Config(path='%s/scripts/.s3cfg' % self.execution_dir)
+        config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
         return config.get(section, property_key)
 
     def set_s3_keys(self, access=None, secret=None):
