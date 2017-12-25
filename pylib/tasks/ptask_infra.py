@@ -1012,6 +1012,11 @@ class ContextualizedTasksInfra(object):
     def repair_table(self, db, table):
         self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db, table))
 
+    def repair_tables(self, tables):
+        repair_statements = '; '.join(['use %s; msck repair table %s' % (t[0], t[1]) for t in tables])
+        bash = 'hive -e "%s" 2>&1' % repair_statements
+        self.run_bash(bash)
+
     @property
     def base_dir(self):
         return self.__get_common_args()['base_dir']
