@@ -12,12 +12,16 @@ def get_glue_client():
     return client
 
 
-def repair_table(db, table_name):
-    client = get_athena_client()
-    response = client.start_query_execution(
-        QueryString='msck repair table {table}'.format(table=table_name),
+def __filter_out_dict(dictionary, keys):
+    return {k: v for k, v in dictionary.items() if k not in keys}
+
+
+def repair_checkpointed_table(db, table_name):
+    athena_client = get_athena_client()
+    response = athena_client.start_query_execution(
+        QueryString='msck repair table {}'.format(table_name),
         QueryExecutionContext={
-            'Database': '{database}'.format(database=db)
+            'Database': '{}'.format(db)
         },
         ResultConfiguration={
             'OutputLocation': 's3://sw-dag-published-v2/tmp/',
@@ -32,47 +36,52 @@ def repair_table(db, table_name):
         return response['QueryExecution']['Status']['State'] in ['SUCCEEDED','FAILED','CANCELLED']
 
     terminal_response = polling.poll(
-        lambda: client.get_query_execution(
-            QueryExecutionId=query_execution_id
-        ),
-        check_success=query_finished,
-        step=0.5,
-        timeout=7)
-    return terminal_response['QueryExecution']['Status']['State'] == 'SUCCEEDED'
+        lambda: athena_client.get_query_execution(QueryExecutionId=query_execution_id),
+        check_success=query_finished, step=0.5, timeout=7)
+    assert terminal_response['QueryExecution']['Status']['State'] == 'SUCCEEDED'
+    return True
 
 
-def create_new_version(db, table_name, prev_version, new_version):
+def create_new_checkpoint(db, table_name, new_checkpoint_id):
     client = get_glue_client()
-    response = client.get_table(
-        DatabaseName='{db}'.format(db=db),
-        Name='{table_name}'.format(table_name=table_name)
+    existing_table_def_response = client.get_table(
+        DatabaseName='{}'.format(db),
+        #Name='{}_latest'.format(checkpointed_table_name)
+        Name=table_name
     )
-    existing_table_def = response['Table']
-    new_table_def = existing_table_def
-    del new_table_def['UpdateTime']
-    del new_table_def['CreatedBy']
-    del new_table_def['CreateTime']
-    new_table_name = existing_table_def['Name'] + '_' + new_version
+    existing_table_def = existing_table_def_response['Table']
+    new_table_def = __filter_out_dict(existing_table_def, ['UpdateTime', 'CreatedBy', 'CreateTime'])
+    new_table_name = existing_table_def['Name'] + '_' + new_checkpoint_id
     new_table_def['Name'] = new_table_name
-    new_table_def['StorageDescriptor']['Location'] =\
-        existing_table_def['StorageDescriptor']['Location'] + new_version + '/'
-    client.create_table(DatabaseName='{db}'.format(db=db),
+    client.create_table(DatabaseName='{}'.format(db),
                         TableInput=new_table_def)
 
-    assert repair_table(db, table_name)
-
     prev_partitions_response = client.get_partitions(
-        DatabaseName='{db}'.format(db=db),
-        TableName='{table_name}'.format(table_name=table_name)
+        DatabaseName='{}'.format(db),
+        #TableName='{}_latest'.format(checkpointed_table_name)
+        TableName=table_name
     )
 
     new_partitions_response=client.batch_create_partition(
-        DatabaseName='{db}'.format(db=db),
-        TableName='{table_name}'.format(table_name=new_table_name),
-        PartitionInputList=
-        map(lambda d: {k:v for k, v in d.items()
-                       if k not in ['CreationTime','TableName','DatabaseName']},
-            prev_partitions_response['Partitions'])
+        DatabaseName='{}'.format(db),
+        TableName='{}'.format(new_table_name),
+        PartitionInputList=map(lambda d:__filter_out_dict(d,['CreationTime','TableName','DatabaseName']),
+                               prev_partitions_response['Partitions'])
     )
 
-    return not new_partitions_response['Errors']
+    assert not new_partitions_response['Errors']
+
+    new_table_def['Name'] = existing_table_def['Name']
+    if 'from_' in existing_table_def['StorageDescriptor']['Location']:
+        new_table_location = '{}from_{}/' \
+            .format(existing_table_def['StorageDescriptor']['Location'].rsplit('from_',1)[0], new_checkpoint_id)
+    else:
+        new_table_location = '{}from_{}/' \
+            .format(existing_table_def['StorageDescriptor']['Location'], new_checkpoint_id)
+    new_table_def['StorageDescriptor']['Location'] = new_table_location
+    response = client.update_table(
+        DatabaseName='{}'.format(db),
+        TableInput=new_table_def
+    )
+
+    return response
