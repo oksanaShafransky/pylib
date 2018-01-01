@@ -202,6 +202,16 @@ class TasksInfra(object):
 
     @staticmethod
     def send_mail(mail_from, mail_to, mail_subject, content, format='plain', image_attachment=None):
+        """
+        Send an email with an optional image attachment.
+
+        :param str mail_from: From field for email.
+        :param str mail_to: To field for email.
+        :param str mail_subject: Subject field for email.
+        :param str content: Email's content.
+        :param str format: Format for email content. Defaults to plain. Is optional.
+        :param str image_attachment: Image as byte string. Is optional.
+        """
 
         msg = MIMEMultipart()
         msg.attach(MIMEText(content, format))
