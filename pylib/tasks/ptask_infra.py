@@ -42,11 +42,6 @@ class KeyValueConfig(object):
                 {
                      "class": "pylib.sw_config.consul.ConsulProxy",
                      "server":"consul.service.production"
-                },
-                {
-                     "class": "pylib.sw_config.consul.ConsulProxy",
-                     "server": "consul.service.op-us-east-1.consul",
-                     "token": "30597bf6-1144-472e-bdf1-0b46cac45486"
                 }
               ]
     """
