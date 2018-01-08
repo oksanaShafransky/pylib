@@ -1,8 +1,14 @@
 import psycopg2
 import urlparse
 import re
+import logging
 
-HIVE_METASTORE_CONN_STR = 'postgresql://readonly:readonly@hive-postgres-mrp.service.production:5432/hive'
+logger = logging.getLogger('ptask')
+logger.addHandler(logging.StreamHandler())
+
+HIVE_METASTORE_CONN_STR_CONSUL_KEY = 'services/hive-metastore-connection-string'
+HIVE_METASTORE_CONN_STR_DEFAULT = 'postgresql://readonly:readonly@hive-postgres-mrp.service.production:5432/hive'
+
 HDFS_PATH_RE = re.compile('hdfs://([^/])*(/.*)')
 
 
@@ -19,7 +25,14 @@ def _sql_like(path):
 
 
 def _db_conn():
-    conn_conf = urlparse.urlparse(HIVE_METASTORE_CONN_STR)
+    from pylib.tasks.ptask_infra import TasksInfra
+    kv = TasksInfra.kv()
+
+    connection_string = kv.get(HIVE_METASTORE_CONN_STR_CONSUL_KEY) or HIVE_METASTORE_CONN_STR_DEFAULT
+
+    logging.info('Hive metastore connection string: ' + connection_string)
+
+    conn_conf = urlparse.urlparse(connection_string)
     # if postgreSQL 9.2 is install, can initiate connection directly with connection string. Check back in the future
     return psycopg2.connect(database=conn_conf.path[1:], user=conn_conf.username,
                             password=conn_conf.password, host=conn_conf.hostname)
