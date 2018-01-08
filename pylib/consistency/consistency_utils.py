@@ -315,7 +315,6 @@ class ConsistencyTestInfra(object):
         )
         self.ti.assert_input_validity(input_paths, validate_marker=True)
 
-        output_path = self.ti.calc_dir if self.ti.calc_dir else self.ti.base_dir
         command_params = ConsistencyTestInfra._get_model_training_command_params(
             test_name=test_name,
             data_date=self.ti.date,
@@ -326,7 +325,7 @@ class ConsistencyTestInfra(object):
             platform=platform,
             date_type=date_type,
             countries=countries,
-            output_path=output_path,
+            output_path=self.ti.calc_dir,
             reverse_dates=reverse_dates,
             sites_visit_filter=sites_visit_filter,
             apps_rank_filter=apps_rank_filter,
@@ -343,7 +342,7 @@ class ConsistencyTestInfra(object):
         countries_list = countries.split(',')
         # output checks
         model_paths = ConsistencyTestInfra._gen_model_paths(
-            base_dir=output_path,
+            base_dir=self.ti.calc_dir,
             test_name=test_name,
             has_day_partition=has_day_partition,
             model_date=self.ti.date,
@@ -442,7 +441,6 @@ class ConsistencyTestInfra(object):
             )
             self.ti.assert_input_validity(model_paths, min_size_bytes=10, validate_marker=True)
 
-        output_path = self.ti.calc_dir if self.ti.calc_dir else self.ti.base_dir
         command_params = ConsistencyTestInfra._get_consistency_test_command_params(
             test_name=test_name,
             data_date=self.ti.date,
@@ -450,7 +448,7 @@ class ConsistencyTestInfra(object):
             source_table=source_table,
             data_column=data_column,
             has_day_partition=has_day_partition,
-            output_path=output_path,
+            output_path=self.ti.calc_dir,
             model_base_dir=model_base_dir,
             platform=platform,
             date_type=date_type,
@@ -464,7 +462,7 @@ class ConsistencyTestInfra(object):
         )
 
         result_paths = ConsistencyTestInfra._gen_result_paths(
-            base_dir=output_path,
+            base_dir=self.ti.calc_dir,
             test_name=test_name,
             path_type='country',
             test_date=self.ti.date,
@@ -472,7 +470,7 @@ class ConsistencyTestInfra(object):
             has_day_partition=has_day_partition
         )
         model_result_paths = ConsistencyTestInfra._gen_result_paths(
-            base_dir=output_path,
+            base_dir=self.ti.calc_dir,
             test_name=test_name,
             path_type='model',
             test_date=self.ti.date,
@@ -481,7 +479,7 @@ class ConsistencyTestInfra(object):
         )
 
         total_result_path = ConsistencyTestInfra._gen_total_result_path(
-            base_dir=output_path,
+            base_dir=self.ti.calc_dir,
             test_name=test_name,
             test_date=self.ti.date,
             has_day_partition=has_day_partition
