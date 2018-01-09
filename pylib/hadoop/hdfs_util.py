@@ -1,6 +1,7 @@
 import logging
 import subprocess
 
+import math
 import six
 import snakebite.client
 from snakebite.errors import FileNotFoundException
@@ -16,6 +17,19 @@ logger = logging.getLogger(__name__)
 # read config to rely on run environment
 def create_client(name_node=MRP_HDFS_NAMENODE_SERVER):
     return snakebite.client.Client(name_node, MRP_HDFS_NAMENODE_PORT, use_trash=True)
+
+
+def server_defaults(hdfs_client=None, force_reload=False):
+    if not hdfs_client:
+        hdfs_client = create_client()
+    return hdfs_client.serverdefaults(force_reload)
+
+
+def calc_desired_partitions(dir_name):
+    dfs_blocksize = int(server_defaults()['blockSize'])
+    print("HDFS Blocksize is %d" % dfs_blocksize)
+    path_size = get_size(dir_name)
+    return int(math.ceil(float(path_size) / dfs_blocksize))
 
 
 # needed because the regular client throws an exception when a parent directory doesnt exist either
