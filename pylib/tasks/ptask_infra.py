@@ -969,6 +969,9 @@ class ContextualizedTasksInfra(object):
 
     def calc_desired_output_partitions(self, base_path):
         print("Calculating partitions for path: " + base_path)
+        if self.dry_run:
+            print("Avoiding partitions calculation, this is just a dry run! returning -1")
+            return -1
         path, date = self.latest_success_path_and_date(base_path)
         if path is None:
             raise ValueError("Couldn't find a past valid path for partitions calculation!!")
