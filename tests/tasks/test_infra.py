@@ -163,10 +163,14 @@ class TestContextualizedTasksInfra(object):
         monkeypatch.setattr(c_infra, 'latest_success_path_and_date', latest_success_path_and_date)
 
         def get_size(path):
-            return 10000000000
+            return 1280
         monkeypatch.setattr(hdfs_util, 'get_size', get_size)
+
+        def server_defaults(**kwargs):
+            return {'blockSize': 128}
+        monkeypatch.setattr(hdfs_util, 'server_defaults', server_defaults)
         command_params, jvm_opts = c_infra.determine_mr_output_partitions(command_params, determine_reduces_by_output=True, jvm_opts={})
-        assert command_params == {'a': 1} and (reducers_config_key in jvm_opts) and jvm_opts[reducers_config_key] == 75
+        assert command_params == {'a': 1} and (reducers_config_key in jvm_opts) and jvm_opts[reducers_config_key] == 10
 
     def test_determine_spark_output_partitions(self, monkeypatch):
         config = PtaskConfig()
@@ -183,10 +187,14 @@ class TestContextualizedTasksInfra(object):
         monkeypatch.setattr(c_infra, 'latest_success_path_and_date', latest_success_path_and_date)
 
         def get_size(path):
-            return 10000000000
+            return 1280
         monkeypatch.setattr(hdfs_util, 'get_size', get_size)
+
+        def server_defaults(**kwargs):
+            return {'blockSize': 128}
+        monkeypatch.setattr(hdfs_util, 'server_defaults', server_defaults)
         command_params, spark_configs = c_infra.determine_spark_output_partitions(command_params, determine_partitions_by_output=True, spark_configs={})
-        assert command_params == {'a': 1} and (partitions_config_key in spark_configs) and spark_configs[partitions_config_key] == 75
+        assert command_params == {'a': 1} and (partitions_config_key in spark_configs) and spark_configs[partitions_config_key] == 10
 
     def ignore_latest_daily_success_date(self):
         config = PtaskConfig()
