@@ -44,7 +44,11 @@ def _db_conn():
 
 def get_table_location(hive_table):
     db_name, table_name = hive_table.split('.')
-    location_query = 'SELECT location_uri FROM hive_table_location WHERE db_name=%s AND table_name=%s'
+    location_query = 'SELECT s."LOCATION" location_uri ' \
+                     'FROM "TBLS" t ' \
+                     'JOIN "SDS" s using ("SD_ID") ' \
+                     'JOIN "DBS" d using ("DB_ID") ' \
+                     'WHERE d."NAME"=%s AND t."TBL_NAME"=%s'
     with _db_conn() as conn:
         with conn.cursor() as cur:
             cur.execute(location_query, [db_name, table_name])
@@ -52,7 +56,11 @@ def get_table_location(hive_table):
 
 
 def get_tables_by_location(location, verbose=False):
-    find_query = 'SELECT location_uri, db_name, table_name FROM hive_table_location WHERE location_uri LIKE %s'
+    find_query = 'SELECT s."LOCATION" location_uri, d."NAME" db_name, t."TBL_NAME" table_name ' \
+                 'FROM "TBLS" t ' \
+                 'JOIN "SDS" s using ("SD_ID") ' \
+                 'JOIN "DBS" d using ("DB_ID") ' \
+                 'WHERE s."LOCATION" LIKE %s'
     search_term = _sql_like(location)
     with _db_conn() as conn:
         with conn.cursor() as cur:
