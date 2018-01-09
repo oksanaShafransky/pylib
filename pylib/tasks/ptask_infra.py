@@ -44,11 +44,6 @@ class KeyValueConfig(object):
                 {
                      "class": "pylib.sw_config.consul.ConsulProxy",
                      "server":"consul.service.production"
-                },
-                {
-                     "class": "pylib.sw_config.consul.ConsulProxy",
-                     "server": "consul.service.op-us-east-1.consul",
-                     "token": "30597bf6-1144-472e-bdf1-0b46cac45486"
                 }
               ]
     """
@@ -213,6 +208,16 @@ class TasksInfra(object):
 
     @staticmethod
     def send_mail(mail_from, mail_to, mail_subject, content, format='plain', image_attachment=None):
+        """
+        Send an email with an optional image attachment.
+
+        :param str mail_from: From field for email.
+        :param str mail_to: To field for email.
+        :param str mail_subject: Subject field for email.
+        :param str content: Email's content.
+        :param str format: Format for email content. Defaults to plain. Is optional.
+        :param str image_attachment: Image as byte string. Is optional.
+        """
 
         msg = MIMEMultipart()
         msg.attach(MIMEText(content, format))
@@ -788,6 +793,7 @@ class ContextualizedTasksInfra(object):
                   spark_configs=None,
                   named_spark_args=None,
                   determine_partitions_by_output=None,
+                  packages=None,
                   managed_output_dirs=None):
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
@@ -807,16 +813,20 @@ class ContextualizedTasksInfra(object):
                   ' %(add_opts)s ' \
                   ' --jars %(jars)s' \
                   ' --files "%(files)s"' \
+                  '%(extra_pkg_cmd)s' \
                   ' --class %(main_class)s' \
                   ' %(jar)s ' % \
-                  {'jar_path': jar_path,
-                   'queue': queue,
-                   'app_name': app_name,
-                   'add_opts': additional_configs,
-                   'jars': self.get_jars_list(jar_path, jars_from_lib),
-                   'files': ','.join(files or []),
-                   'main_class': main_class,
-                   'jar': jar}
+                  {
+                      'jar_path': jar_path,
+                      'queue': queue,
+                      'app_name': app_name,
+                      'add_opts': additional_configs,
+                      'jars': self.get_jars_list(jar_path, jars_from_lib),
+                      'files': ','.join(files or []),
+                      'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'main_class': main_class,
+                      'jar': jar
+                  }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
         return self.run_bash(command).ok
@@ -884,6 +894,7 @@ class ContextualizedTasksInfra(object):
                      jars_from_lib=None,
                      module='mobile',
                      named_spark_args=None,
+                     packages=None,
                      py_files=None,
                      spark_configs=None,
                      use_bigdata_defaults=False,
@@ -933,18 +944,21 @@ class ContextualizedTasksInfra(object):
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
+                  '%(extra_pkg_cmd)s' \
                   ' %(py_files_cmd)s' \
                   ' %(spark-confs)s' \
                   ' "%(execution_dir)s/%(main_py)s"' \
-                  % {'app_name': app_name if app_name else os.path.basename(main_py_file),
-                     'execution_dir': module_dir,
-                     'queue': '--queue %s' % queue if queue else '',
-                     'files': ','.join(files or []),
-                     'py_files_cmd': py_files_cmd,
-                     'spark-confs': additional_configs,
-                     'jars': self.get_jars_list(module_dir, jars_from_lib) + (
+                  % {
+                      'app_name': app_name if app_name else os.path.basename(main_py_file),
+                      'execution_dir': module_dir,
+                      'queue': '--queue %s' % queue if queue else '',
+                      'files': ','.join(files or []),
+                      'py_files_cmd': py_files_cmd,
+                      'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'spark-confs': additional_configs,
+                      'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                          ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
-                     'main_py': main_py_file
+                      'main_py': main_py_file
                      }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
@@ -1009,7 +1023,7 @@ class ContextualizedTasksInfra(object):
 
     def read_s3_configuration(self, property_key, section='default'):
         import boto
-        config = boto.pyami.config.Config(path='%s/scripts/.s3cfg' % self.execution_dir)
+        config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
         return config.get(section, property_key)
 
     def set_s3_keys(self, access=None, secret=None):
@@ -1084,6 +1098,11 @@ class ContextualizedTasksInfra(object):
 
     def repair_table(self, db, table):
         self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db, table))
+
+    def repair_tables(self, tables):
+        repair_statements = '; '.join(['use %s; msck repair table %s' % (t[0], t[1]) for t in tables])
+        bash = 'hive -e "%s" 2>&1' % repair_statements
+        self.run_bash(bash)
 
     @property
     def base_dir(self):
