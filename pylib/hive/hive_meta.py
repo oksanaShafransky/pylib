@@ -7,7 +7,9 @@ logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
 
 HIVE_METASTORE_CONN_STR_CONSUL_KEY = 'services/hive-metastore-connection-string'
-HIVE_METASTORE_CONN_STR_DEFAULT = 'postgresql://readonly:readonly@hive-postgres-mrp.service.production:5432/hive'
+HIVE_METASTORE_CONN_STR_DEFAULT = 'postgresql://readonly:readonly@hive-postgres-mrp.service.production/hive'
+HIVE_METASTORE_PORT_CONSUL_KEY = 'services/hive-metastore-port'
+HIVE_METASTORE_PORT_DEFAULT = 5432
 
 HDFS_PATH_RE = re.compile('hdfs://([^/])*(/.*)')
 
@@ -29,13 +31,15 @@ def _db_conn():
     kv = TasksInfra.kv()
 
     connection_string = kv.get(HIVE_METASTORE_CONN_STR_CONSUL_KEY) or HIVE_METASTORE_CONN_STR_DEFAULT
+    port = kv.get(HIVE_METASTORE_PORT_CONSUL_KEY) or HIVE_METASTORE_PORT_DEFAULT
 
     logging.info('Hive metastore connection string: ' + connection_string)
+    logging.info('Hive metastore port: ' + port)
 
     conn_conf = urlparse.urlparse(connection_string)
     # if postgreSQL 9.2 is install, can initiate connection directly with connection string. Check back in the future
     return psycopg2.connect(database=conn_conf.path[1:], user=conn_conf.username,
-                            password=conn_conf.password, host=conn_conf.hostname)
+                            password=conn_conf.password, host=conn_conf.hostname, port=port)
 
 
 def get_table_location(hive_table):
