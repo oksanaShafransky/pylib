@@ -34,7 +34,7 @@ def _db_conn():
     port = kv.get(HIVE_METASTORE_PORT_CONSUL_KEY) or HIVE_METASTORE_PORT_DEFAULT
 
     logging.info('Hive metastore connection string: ' + connection_string)
-    logging.info('Hive metastore port: ' + port)
+    logging.info('Hive metastore port: ' + str(port))
 
     conn_conf = urlparse.urlparse(connection_string)
     # if postgreSQL 9.2 is install, can initiate connection directly with connection string. Check back in the future
