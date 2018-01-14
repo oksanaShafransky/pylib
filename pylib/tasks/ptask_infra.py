@@ -913,6 +913,9 @@ class ContextualizedTasksInfra(object):
 
         final_py_files = py_files or []
 
+        if determine_partitions_by_output:
+            final_py_files.append(self.execution_dir + '/sw-spark-common/sw_spark-0.0.0.dev0-py2.7.egg')
+
         if use_bigdata_defaults:
             python_named_module = module.replace("-", "_")
             main_py_file = 'python/sw_%s/%s' % (python_named_module, main_py_file)
@@ -969,6 +972,9 @@ class ContextualizedTasksInfra(object):
 
     def calc_desired_output_partitions(self, base_path):
         print("Calculating partitions for path: " + base_path)
+        if self.dry_run:
+            print("Avoiding partitions calculation, this is just a dry run! returning -1")
+            return -1
         path, date = self.latest_success_path_and_date(base_path)
         if path is None:
             raise ValueError("Couldn't find a past valid path for partitions calculation!!")
