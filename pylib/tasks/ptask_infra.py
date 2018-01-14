@@ -988,7 +988,7 @@ class ContextualizedTasksInfra(object):
 
         if jvm_opts and reducers_config_key in jvm_opts:
             print("Num reducers set by Ptask")
-            return jvm_opts
+            return command_params, jvm_opts
 
         if determine_reduces_by_output:
             jvm_opts = jvm_opts or {}
@@ -1004,7 +1004,7 @@ class ContextualizedTasksInfra(object):
 
         if spark_configs and partitions_config_key in spark_configs:
             print("Num partitions set by Ptask")
-            return spark_configs
+            return command_params, spark_configs
 
         if determine_partitions_by_output:
             spark_configs = spark_configs or {}
