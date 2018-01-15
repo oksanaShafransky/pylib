@@ -111,7 +111,7 @@ def _get_table_partition_path(table_name, partition):
             path =  info[1]
             # remove namenode hostname for hdfs locations
             if 'hdfs://' in path:
-                return path[path.find('/', 7)]
+                return path[path.find('/', 7):]
             else:
                 return path
 
