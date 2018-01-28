@@ -347,6 +347,14 @@ All have been repaired. Original Corrupt Files are present on HDFS at %(eviction
     def get_rserve_port():
         return TasksInfra.kv().get('services/rserve/port')
 
+    @staticmethod
+    def get_mr_partitions_config_key():
+        return 'mapreduce.job.reduces'
+
+    @staticmethod
+    def get_spark_partitions_config_key():
+        return 'spark.sw.appMasterEnv.numPartitions'
+
 
 class ContextualizedTasksInfra(object):
     def __init__(self, ctx):
@@ -960,9 +968,9 @@ class ContextualizedTasksInfra(object):
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
-                         ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
+                              ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': main_py_file
-                     }
+                  }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         res = self.run_bash(command).ok
@@ -984,7 +992,7 @@ class ContextualizedTasksInfra(object):
 
     def determine_mr_output_partitions(self, command_params, determine_reduces_by_output, jvm_opts):
         base_partition_output_key = 'base_partition_output'
-        reducers_config_key = 'mapreduce.job.reduces'
+        reducers_config_key = TasksInfra.get_mr_partitions_config_key()
 
         if jvm_opts and reducers_config_key in jvm_opts:
             print("Num reducers set by Ptask")
@@ -1000,7 +1008,7 @@ class ContextualizedTasksInfra(object):
 
     def determine_spark_output_partitions(self, command_params, determine_partitions_by_output, spark_configs):
         base_partition_output_key = 'base_partition_output'
-        partitions_config_key = 'spark.sw.appMasterEnv.numPartitions'
+        partitions_config_key = TasksInfra.get_spark_partitions_config_key()
 
         if spark_configs and partitions_config_key in spark_configs:
             print("Num partitions set by Ptask")
