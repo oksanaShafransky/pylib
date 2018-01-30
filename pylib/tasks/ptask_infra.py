@@ -988,7 +988,8 @@ class ContextualizedTasksInfra(object):
             return -1
         path, date = self.latest_success_path_and_date(base_path)
         if path is None:
-            raise ValueError("Couldn't find a past valid path for partitions calculation!!")
+            print("Couldn't find a past valid path for partitions calculation, avoiding calculation")
+            return None
         num_partitions = calc_desired_partitions(path)
         print("Number of desired partitions for %s is %d" % (path, num_partitions))
         return num_partitions
@@ -1005,7 +1006,9 @@ class ContextualizedTasksInfra(object):
             jvm_opts = jvm_opts or {}
             if base_partition_output_key not in command_params:
                 raise KeyError("Base path for reducers calculation should have been passed!")
-            jvm_opts[reducers_config_key] = self.calc_desired_output_partitions(command_params[base_partition_output_key])
+            desired_output_partitions = self.calc_desired_output_partitions(command_params[base_partition_output_key])
+            if desired_output_partitions is not None:
+                jvm_opts[reducers_config_key] = self.calc_desired_output_partitions(command_params[base_partition_output_key])
             del command_params[base_partition_output_key]
         return command_params, jvm_opts
 
@@ -1021,7 +1024,9 @@ class ContextualizedTasksInfra(object):
             spark_configs = spark_configs or {}
             if base_partition_output_key not in command_params:
                 raise KeyError("Base path for output partitions calculation should have been passed!")
-            spark_configs[partitions_config_key] = self.calc_desired_output_partitions(command_params[base_partition_output_key])
+            desired_output_partitions = self.calc_desired_output_partitions(command_params[base_partition_output_key])
+            if desired_output_partitions is not None:
+                spark_configs[partitions_config_key] = desired_output_partitions
             del command_params[base_partition_output_key]
         return command_params, spark_configs
 
