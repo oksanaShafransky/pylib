@@ -1008,7 +1008,7 @@ class ContextualizedTasksInfra(object):
                 raise KeyError("Base path for reducers calculation should have been passed!")
             desired_output_partitions = self.calc_desired_output_partitions(command_params[base_partition_output_key])
             if desired_output_partitions is not None:
-                jvm_opts[reducers_config_key] = self.calc_desired_output_partitions(command_params[base_partition_output_key])
+                jvm_opts[reducers_config_key] = desired_output_partitions
             del command_params[base_partition_output_key]
         return command_params, jvm_opts
 
