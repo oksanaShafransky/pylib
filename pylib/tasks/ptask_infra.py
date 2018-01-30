@@ -165,6 +165,9 @@ class TasksInfra(object):
         if mode == 'snapshot':
             dates_range = get_dates_range(end_date, lookback or 24, step_type='months')
             return [(directory + TasksInfra.year_month(date), date) for date in dates_range]
+        elif mode == 'window':
+            dates_range = get_dates_range(end_date, lookback or 28)
+            return [(directory + TasksInfra.year_month_day(date), date) for date in dates_range]
         else:
             dates_range = get_dates_range(end_date, lookback or 150)
             return [(directory + TasksInfra.year_month_day(date), date) for date in dates_range]
