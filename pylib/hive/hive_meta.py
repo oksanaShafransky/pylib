@@ -37,6 +37,9 @@ def _db_conn():
     database = kv.get(HIVE_METASTORE_DB_CONSUL_KEY) or HIVE_METASTORE_DB_DEFAULT
     port = kv.get(HIVE_METASTORE_PORT_CONSUL_KEY) or HIVE_METASTORE_PORT_DEFAULT
 
+    if not isinstance(port, (int, long)):
+        port = int(port)
+
     logging.info('Hive metastore connection string: ' + connection_string)
     logging.info('Hive metastore port: ' + str(port))
 
@@ -48,7 +51,7 @@ def _db_conn():
                                 password=conn_conf.password, host=conn_conf.hostname, port=port)
     else:
         import MySQLdb
-        return MySQLdb.connect(host=conn_conf.hostname, port=port,user=conn_conf.username,passwd=conn_conf.password,db=database)
+        return MySQLdb.connect(host=conn_conf.hostname, port=port, user=conn_conf.username,passwd=conn_conf.password, db=database)
 
 
 def get_table_location(hive_table):
