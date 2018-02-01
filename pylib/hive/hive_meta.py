@@ -61,7 +61,8 @@ def _fetch_all(conn, query, term):
     # should be 1 'with' for mysql and 2 'with' for postgres
     try:
         cursor = conn.cursor()
-        cursor.execute(query, term)
+        fixed_query = check_quotting(conn, query)
+        cursor.execute(fixed_query, term)
         return cursor.fetchall()
     finally:
         if cursor is not None:
@@ -69,23 +70,31 @@ def _fetch_all(conn, query, term):
         conn.close()
 
 
+def check_quotting(conn, query):
+    if 'escape_string' in dir(conn):
+        import string
+        return string.replace(query, '"', '`')
+    else:
+        return query
+
+
 def get_table_location(hive_table):
     db_name, table_name = hive_table.split('.')
-    location_query = 'SELECT s.LOCATION location_uri ' \
-                     'FROM TBLS t ' \
-                     'JOIN SDS s using (SD_ID) ' \
-                     'JOIN DBS d using (DB_ID) ' \
-                     'WHERE d.NAME=%s AND t.TBL_NAME=%s'
+    location_query = 'SELECT s."LOCATION" location_uri ' \
+                     'FROM "TBLS" t ' \
+                     'JOIN "SDS" s using ("SD_ID") ' \
+                     'JOIN "DBS" d using ("DB_ID") ' \
+                     'WHERE d."NAME"=%s AND t."TBL_NAME"=%s'
     res = _fetch_all(_db_conn(), location_query, [db_name, table_name])
     return extract_relative_path(res[0][0])
 
 
 def get_tables_by_location(location, verbose=False):
-    find_query = 'SELECT s.LOCATION location_uri, d.NAME db_name, t.TBL_NAME table_name ' \
-                 'FROM TBLS t ' \
-                 'JOIN SDS s using (SD_ID) ' \
-                 'JOIN DBS d using (DB_ID) ' \
-                 'WHERE s.LOCATION LIKE %s'
+    find_query = 'SELECT s."LOCATION" location_uri, d."NAME" db_name, t."TBL_NAME" table_name ' \
+                 'FROM "TBLS" t ' \
+                 'JOIN "SDS" s using ("SD_ID") ' \
+                 'JOIN "DBS" d using ("DB_ID") ' \
+                 'WHERE s."LOCATION" LIKE %s'
     search_term = _sql_like(location)
     res = _fetch_all(_db_conn(), find_query, [search_term])
     potential_matches = res
