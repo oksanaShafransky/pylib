@@ -51,36 +51,44 @@ def _db_conn():
                                 password=conn_conf.password, host=conn_conf.hostname, port=port)
     else:
         import MySQLdb
-        return MySQLdb.connect(host=conn_conf.hostname, port=port, user=conn_conf.username,passwd=conn_conf.password, db=database)
+        return MySQLdb.connect(host=conn_conf.hostname, port=port, user=conn_conf.username, passwd=conn_conf.password, db=database)
+
+
+def _fetch_all(conn, query, term):
+    cursor = None
+
+    # Cannot be done with 'with' statement: MySQL extracts cursor and Postgres does not, so there
+    # should be 1 'with' for mysql and 2 'with' for postgres
+    try:
+        cursor = conn.cursor()
+        cursor.execute(query, term)
+        return cursor.fetchall()
+    finally:
+        if cursor is not None:
+            cursor.close()
+        conn.close()
 
 
 def get_table_location(hive_table):
     db_name, table_name = hive_table.split('.')
-    location_query = 'SELECT s."LOCATION" location_uri ' \
-                     'FROM "TBLS" t ' \
-                     'JOIN "SDS" s using ("SD_ID") ' \
-                     'JOIN "DBS" d using ("DB_ID") ' \
-                     'WHERE d."NAME"=%s AND t."TBL_NAME"=%s'
-    with _db_conn() as conn:
-        with conn.cursor() as cur:
-            cur.execute(location_query, [db_name, table_name])
-            return extract_relative_path(cur.fetchall()[0][0])
+    location_query = 'SELECT s.LOCATION location_uri ' \
+                     'FROM TBLS t ' \
+                     'JOIN SDS s using (SD_ID) ' \
+                     'JOIN DBS d using (DB_ID) ' \
+                     'WHERE d.NAME=%s AND t.TBL_NAME=%s'
+    res = _fetch_all(_db_conn(), location_query, [db_name, table_name])
+    return extract_relative_path(res[0][0])
 
 
 def get_tables_by_location(location, verbose=False):
-    find_query = 'SELECT s."LOCATION" location_uri, d."NAME" db_name, t."TBL_NAME" table_name ' \
-                 'FROM "TBLS" t ' \
-                 'JOIN "SDS" s using ("SD_ID") ' \
-                 'JOIN "DBS" d using ("DB_ID") ' \
-                 'WHERE s."LOCATION" LIKE %s'
+    find_query = 'SELECT s.LOCATION location_uri, d.NAME db_name, t.TBL_NAME table_name ' \
+                 'FROM TBLS t ' \
+                 'JOIN SDS s using (SD_ID) ' \
+                 'JOIN DBS d using (DB_ID) ' \
+                 'WHERE s.LOCATION LIKE %s'
     search_term = _sql_like(location)
-    with _db_conn() as conn:
-        with conn.cursor() as cur:
-            if verbose:
-                import sys
-                sys.stdout.write(cur.mogrify(find_query, [location]) + '\n')
-            cur.execute(find_query, [search_term])
-            potential_matches = cur.fetchall()
+    res = _fetch_all(_db_conn(), find_query, [search_term])
+    potential_matches = res
 
     match_re = hdfs_branch_re(location)
     return [(db, table) for (table_loc, db, table) in potential_matches if match_re.match(table_loc) is not None]
