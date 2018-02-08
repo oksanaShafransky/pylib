@@ -17,6 +17,8 @@ import sys
 import time
 
 # Adjust log level
+from pylib.common.date_utils import get_dates_range
+
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('requests').setLevel(logging.WARNING)
 
@@ -27,7 +29,7 @@ from redis import StrictRedis
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.common.string_utils import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
-    create_client, directory_exists, copy_dir_from_path
+    create_client, directory_exists, copy_dir_from_path, calc_desired_partitions
 from pylib.sw_config.kv_factory import provider_from_config
 from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
 from pylib.hbase.hbase_utils import validate_records_per_region
@@ -42,11 +44,6 @@ class KeyValueConfig(object):
                 {
                      "class": "pylib.sw_config.consul.ConsulProxy",
                      "server":"consul.service.production"
-                },
-                {
-                     "class": "pylib.sw_config.consul.ConsulProxy",
-                     "server": "consul.service.op-us-east-1.consul",
-                     "token": "30597bf6-1144-472e-bdf1-0b46cac45486"
                 }
               ]
     """
@@ -163,6 +160,18 @@ class TasksInfra(object):
         for i in range((end_date - start_date).days + 1):
             yield start_date + datetime.timedelta(days=i)
 
+    @staticmethod
+    def dates_range_paths(directory, mode, end_date, lookback=None):
+        if mode == 'snapshot':
+            dates_range = get_dates_range(end_date, lookback or 24, step_type='months')
+            return [(directory + TasksInfra.year_month(date), date) for date in dates_range]
+        elif mode == 'window':
+            dates_range = get_dates_range(end_date, lookback or 28)
+            return [(directory + TasksInfra.year_month_day(date), date) for date in dates_range]
+        else:
+            dates_range = get_dates_range(end_date, lookback or 150)
+            return [(directory + TasksInfra.year_month_day(date), date) for date in dates_range]
+
     EXEC_WRAPPERS = {
         'python': '"',
         'java': '\\"\'\\"',
@@ -202,6 +211,16 @@ class TasksInfra(object):
 
     @staticmethod
     def send_mail(mail_from, mail_to, mail_subject, content, format='plain', image_attachment=None):
+        """
+        Send an email with an optional image attachment.
+
+        :param str mail_from: From field for email.
+        :param str mail_to: To field for email.
+        :param str mail_subject: Subject field for email.
+        :param str content: Email's content.
+        :param str format: Format for email content. Defaults to plain. Is optional.
+        :param str image_attachment: Image as byte string. Is optional.
+        """
 
         msg = MIMEMultipart()
         msg.attach(MIMEText(content, format))
@@ -330,6 +349,14 @@ All have been repaired. Original Corrupt Files are present on HDFS at %(eviction
     @staticmethod
     def get_rserve_port():
         return TasksInfra.kv().get('services/rserve/port')
+
+    @staticmethod
+    def get_mr_partitions_config_key():
+        return 'mapreduce.job.reduces'
+
+    @staticmethod
+    def get_spark_partitions_config_key():
+        return 'spark.sw.appMasterEnv.numPartitions'
 
 
 class ContextualizedTasksInfra(object):
@@ -530,7 +557,8 @@ class ContextualizedTasksInfra(object):
 
             print('snapshot exists')
 
-    def run_hadoop(self, jar_path, jar_name, main_class, command_params, jvm_opts=None):
+    def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False, jvm_opts=None):
+        command_params, jvm_opts = self.determine_mr_output_partitions(command_params, determine_reduces_by_output, jvm_opts)
         return self.run_bash(
             self.__compose_hadoop_runner_command(
                 jar_path=jar_path,
@@ -599,19 +627,22 @@ class ContextualizedTasksInfra(object):
     def run_mobile_hadoop(self, command_params,
                           main_class='com.similargroup.mobile.main.MobileRunner',
                           jvm_opts=None,
+                          determine_reduces_by_output=False,
                           rerun_root_queue=False):
         return self.run_hadoop(jar_path='mobile',
                                jar_name='mobile.jar',
                                main_class=main_class,
                                command_params=command_params,
+                               determine_reduces_by_output=determine_reduces_by_output,
                                jvm_opts=jvm_opts)
 
-    def run_analytics_hadoop(self, command_params, main_class, jvm_opts=None):
+    def run_analytics_hadoop(self, command_params, main_class, determine_reduces_by_output=False, jvm_opts=None):
         return self.run_hadoop(
             jar_path='analytics',
             jar_name='analytics.jar',
             main_class=main_class,
             command_params=command_params,
+            determine_reduces_by_output=determine_reduces_by_output,
             jvm_opts=jvm_opts)
 
     def run_bash(self, command):
@@ -639,6 +670,17 @@ class ContextualizedTasksInfra(object):
             'execute Rscript %s %s %s %s %s' % (run_rserve, rserve_host, rserve_port,
                                                 executable_path,
                                                 ' '.join(command_params) if command_params else ""))).ok
+
+    def dates_range_paths(self, directory, lookback=None):
+        return TasksInfra.dates_range_paths(directory, self.mode, self.date, lookback)
+
+    def latest_success_path_and_date(self, directory, lookback=None, min_size_bytes=None):
+        for path, date in reversed(self.dates_range_paths(directory, lookback)):
+            if self.is_valid_input_exists(path, min_size_bytes=min_size_bytes or 1, validate_marker=True):
+                print("latest success date for %s is %s" % (directory, date))
+                return path, date
+        print("No latest success date found for %s" % directory)
+        return None, None
 
     def latest_daily_success_date(self, directory, month_lookback, date=None):
         """
@@ -761,6 +803,7 @@ class ContextualizedTasksInfra(object):
                   files=None,
                   spark_configs=None,
                   named_spark_args=None,
+                  determine_partitions_by_output=None,
                   packages=None,
                   managed_output_dirs=None):
         jar = './%s.jar' % module
@@ -769,6 +812,7 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         command = 'cd %(jar_path)s;spark-submit' \
@@ -866,6 +910,7 @@ class ContextualizedTasksInfra(object):
                      spark_configs=None,
                      use_bigdata_defaults=False,
                      queue=None,
+                     determine_partitions_by_output=False,
                      managed_output_dirs=None,
                      additional_artifacts=[]
                      ):
@@ -874,9 +919,13 @@ class ContextualizedTasksInfra(object):
         self.clear_output_dirs(managed_output_dirs)
 
         module_dir = self.execution_dir + '/' + module
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         final_py_files = py_files or []
+
+        if determine_partitions_by_output:
+            final_py_files.append(self.execution_dir + '/sw-spark-common/sw_spark-0.0.0.dev0-py2.7.egg')
 
         if use_bigdata_defaults:
             python_named_module = module.replace("-", "_")
@@ -922,15 +971,64 @@ class ContextualizedTasksInfra(object):
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
-                         ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
+                              ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': main_py_file
-                     }
+                  }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
             os.remove(artifact_path)
         return res
+
+    def calc_desired_output_partitions(self, base_path):
+        print("Calculating partitions for path: " + base_path)
+        if self.dry_run:
+            print("Avoiding partitions calculation, this is just a dry run! returning -1")
+            return -1
+        path, date = self.latest_success_path_and_date(base_path)
+        if path is None:
+            print("Couldn't find a past valid path for partitions calculation, avoiding calculation")
+            return None
+        num_partitions = calc_desired_partitions(path)
+        print("Number of desired partitions for %s is %d" % (path, num_partitions))
+        return num_partitions
+
+    def determine_mr_output_partitions(self, command_params, determine_reduces_by_output, jvm_opts):
+        base_partition_output_key = 'base_partition_output'
+        reducers_config_key = TasksInfra.get_mr_partitions_config_key()
+
+        if jvm_opts and reducers_config_key in jvm_opts:
+            print("Num reducers set by Ptask")
+            return command_params, jvm_opts
+
+        if determine_reduces_by_output:
+            jvm_opts = jvm_opts or {}
+            if base_partition_output_key not in command_params:
+                raise KeyError("Base path for reducers calculation should have been passed!")
+            desired_output_partitions = self.calc_desired_output_partitions(command_params[base_partition_output_key])
+            if desired_output_partitions is not None:
+                jvm_opts[reducers_config_key] = desired_output_partitions
+            del command_params[base_partition_output_key]
+        return command_params, jvm_opts
+
+    def determine_spark_output_partitions(self, command_params, determine_partitions_by_output, spark_configs):
+        base_partition_output_key = 'base_partition_output'
+        partitions_config_key = TasksInfra.get_spark_partitions_config_key()
+
+        if spark_configs and partitions_config_key in spark_configs:
+            print("Num partitions set by Ptask")
+            return command_params, spark_configs
+
+        if determine_partitions_by_output:
+            spark_configs = spark_configs or {}
+            if base_partition_output_key not in command_params:
+                raise KeyError("Base path for output partitions calculation should have been passed!")
+            desired_output_partitions = self.calc_desired_output_partitions(command_params[base_partition_output_key])
+            if desired_output_partitions is not None:
+                spark_configs[partitions_config_key] = desired_output_partitions
+            del command_params[base_partition_output_key]
+        return command_params, spark_configs
 
     def build_spark_additional_configs(self, named_spark_args, spark_configs):
         additional_configs = ''
@@ -947,7 +1045,7 @@ class ContextualizedTasksInfra(object):
 
     def read_s3_configuration(self, property_key, section='default'):
         import boto
-        config = boto.pyami.config.Config(path='%s/scripts/.s3cfg' % self.execution_dir)
+        config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
         return config.get(section, property_key)
 
     def set_s3_keys(self, access=None, secret=None):
@@ -1022,6 +1120,11 @@ class ContextualizedTasksInfra(object):
 
     def repair_table(self, db, table):
         self.run_bash('hive -e "use %s; msck repair table %s;" 2>&1' % (db, table))
+
+    def repair_tables(self, tables):
+        repair_statements = '; '.join(['use %s; msck repair table %s' % (t[0], t[1]) for t in tables])
+        bash = 'hive -e "%s" 2>&1' % repair_statements
+        self.run_bash(bash)
 
     @property
     def base_dir(self):
