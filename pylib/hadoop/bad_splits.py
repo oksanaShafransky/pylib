@@ -33,14 +33,16 @@ def fix_log_url(unchecked_log_url):
 
 
 def get_bad_splits(log_str):
-    current_split = None
+    splits = None
     bad_splits = []
     for line in log_str:
         if 'Processing split' in line:
-            current_split = get_relative_file(line.split(' ')[-1])
-        if 'Unexpected end of input stream' in line and current_split is not None:
-            bad_splits += [current_split]
-            current_split = None
+            splits_str = line.split(' ')[-1]
+            combined_input_qualifier = 'Paths:'
+            splits = [get_relative_file(split) for split in splits_str[len(combined_input_qualifier):].split(',')] if \
+                splits_str.startswith(combined_input_qualifier) else [get_relative_file(splits_str)]
+        if 'Unexpected end of input stream' in line and splits is not None:
+            bad_splits += splits
 
     return bad_splits
 
@@ -69,7 +71,7 @@ def get_corrupt_input_files(job_id):
         resp = json.load(urllib.urlopen(attempts_url))
         if resp is None:
             continue
-        attempts = resp.get('taskAttempts', {}).get('taskAttempt', [])
+        attempts = (resp.get('taskAttempts', None) or {}).get('taskAttempt', [])
         for attempt in attempts:
             if attempt['state'] == 'FAILED' and 'input stream' in attempt['diagnostics']:
                 logging.info('attempt failed due to input stream issues')
