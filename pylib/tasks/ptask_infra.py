@@ -147,8 +147,9 @@ class TasksInfra(object):
 
     @staticmethod
     def days_in_range(end_date, mode_type):
-        if mode_type == 'last-28':
-            start_date = end_date - datetime.timedelta(days=27)
+        if mode_type.startswith('last-'):
+            last_days = int(mode_type[len('last-'):])
+            start_date = end_date - datetime.timedelta(days=last_days-1)
         elif mode_type == 'monthly':
             # get last day in month
             last = calendar.monthrange(end_date.year, end_date.month)[1]

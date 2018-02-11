@@ -13,7 +13,7 @@ from invoke.exceptions import Failure, ParseError, Exit
 
 # TODO: should check cross validation?
 known_modes = ['snapshot', 'window', 'daily']
-known_mode_types = ['monthly', 'last-28', 'daily']
+known_mode_types = ['monthly', 'last-28', 'daily', 'last-7', 'last-1']
 
 
 class PtaskConfig(Config):
