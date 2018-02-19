@@ -48,7 +48,7 @@ class TestTableUtils(object):
                 def get_table(*args, **kwargs):
                     calls.append({'foo': 'get_table', 'args': args, 'kwargs': kwargs})
                     return {u'Table': {u'StorageDescriptor': {
-                        u'Location': u's3://some-path',
+                        u'Location': u's3://sw-dag-published-v2/testmetric/1514732684',
                         u'PartitionKeys': [{u'Type': u'string', u'Name': u'year'},
                                            {u'Type': u'string', u'Name': u'month'},
                                            {u'Type': u'string', u'Name': u'day'}],
@@ -63,7 +63,7 @@ class TestTableUtils(object):
                     return {
                         u'Partitions': [{
                             u'StorageDescriptor': {
-                                u'Location': u's3://sw-dag-published-v2/iddo_downloads/1514732684',
+                                u'Location': u's3://sw-dag-published-v2/testmetric/1514732684',
                             },
                             u'TableName': u'testmetric_1514732684',
                             u'Values': [
