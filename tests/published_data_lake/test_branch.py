@@ -1,6 +1,6 @@
 from __future__ import print_function
 import pprint
-from pylib.athena_glue.table_utils import GlueBranch
+from pylib.athena_glue.published_data_lake import GlueBranch
 import pytest
 
 
