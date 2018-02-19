@@ -67,7 +67,7 @@ class GlueBranch(object):
 
     def put_partition(self, branchable_table, partition):
         table = self.__table_name(branchable_table)
-        partition_sql = ', '.join(['{}="{}"'.format(kv.split('=')[0], kv.split('=')[1])
+        partition_sql = ', '.join(["{}='{}'".format(kv.split('=')[0], kv.split('=')[1])
                                    for kv in partition.split('/')])
         query_response_state = self.__athena_query("ALTER TABLE {table_name} ADD PARTITION ({partition_sql}) "
                                                    "location '{location}'"
@@ -92,13 +92,13 @@ class GlueBranch(object):
 
     def fork_branch(self, new_branch_name):
         new_branch = GlueBranch(self.db, new_branch_name)
-        print(1)
-        new_branch.pull_from_branch(self)
-        print(2)
+        return new_branch.pull_from_branch(self)
 
     def pull_from_branch(self, reference_branch):
         for branchable_table in reference_branch.list_branchable_tables():
-            self.__pull_table_from_branch(branchable_table, reference_branch)
+            table_pull_succeeded = self.__pull_table_from_branch(branchable_table, reference_branch)
+            assert table_pull_succeeded
+        return True
 
     def __pull_table_from_branch(self, branchable_table, reference_branch):
         client = get_glue_client()
@@ -130,6 +130,8 @@ class GlueBranch(object):
             PartitionInputList=map(lambda d: filter_out_dict(d, ['CreationTime', 'TableName', 'DatabaseName']),
                                    table_partitions_response['Partitions'])
         )
+
+        print(checkpoint_table_partitions_response)
         assert checkpoint_table_partitions_response['ResponseMetadata']['HTTPStatusCode'] == 200
         if 'Errors' in checkpoint_table_partitions_response:
             errors = checkpoint_table_partitions_response['Errors']
