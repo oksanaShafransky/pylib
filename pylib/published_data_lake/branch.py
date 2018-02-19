@@ -131,7 +131,6 @@ class GlueBranch(object):
                                    table_partitions_response['Partitions'])
         )
 
-        print(checkpoint_table_partitions_response)
         assert checkpoint_table_partitions_response['ResponseMetadata']['HTTPStatusCode'] == 200
         if 'Errors' in checkpoint_table_partitions_response:
             errors = checkpoint_table_partitions_response['Errors']
