@@ -219,7 +219,7 @@ class HiveProcessRunner(object):
         params['hive.log.dir'] = log_dir
         params['hive.log.file'] = 'hive.log'
 
-        hive_cmd = ['hive']
+        hive_cmd = ['hive', '-v']
         if len(aux_jars) > 0:
             hive_cmd += ['--auxpath', ','.join(aux_jars)]
 

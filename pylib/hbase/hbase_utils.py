@@ -4,8 +4,10 @@ from socket import error as socket_error
 CONNECTION_STRING_TEMPLATE = '{0}.service.production'
 TIMEOUT_RETRIES = 5
 
+
 def get_hbase_table(table_name, cluster_name='hbase-mrp'):
-    return happybase.Connection(CONNECTION_STRING_TEMPLATE.format(cluster_name)).table(table_name)
+    return happybase.Connection(CONNECTION_STRING_TEMPLATE.format(cluster_name), timeout=5*60*1000).table(table_name)
+
 
 def validate_records_per_region(table_name, columns = None, minimum_regions_count = 1, rows_per_region = 1000, cluster_name = 'hbase-mrp'):
     print 'checking validity of hbase table: %s' % table_name
@@ -13,11 +15,11 @@ def validate_records_per_region(table_name, columns = None, minimum_regions_coun
     tbl = get_hbase_table(table_name, cluster_name)
 
     regions = tbl.regions()
-    if (len(regions) < minimum_regions_count):
+    if len(regions) < minimum_regions_count:
         print 'too few regions in table (%d < %d)' % (len(regions), minimum_regions_count)
         return False
 
-    #skipping last region, it can have few keys
+    # skipping last region, it can have few keys
     for region in regions[:-1]:
         timeout_retry = 0
         start_key = region['start_key']
