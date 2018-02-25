@@ -1,5 +1,7 @@
 urllib3==1.16
 setuptools==35.0.2
+
+#package published_data_lake requirements:
 boto3==1.5.26
 retry==0.9.2
 botocore

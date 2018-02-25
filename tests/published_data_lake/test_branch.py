@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pylib.published_data_lake.branch import GlueBranch
+from pylib.published_data_lake.branch import GlueBranch, BranchableTable
 import pylib.published_data_lake.branch
 # noinspection PyPackageRequirements
 import pytest
@@ -7,13 +7,15 @@ import pytest
 
 class TestTableUtils(object):
 
+    db = 'sw_published_mobile'
+
     @pytest.fixture(scope="module")
     def glue_branch(self):
-        return GlueBranch('iddoa', '1514732684')
+        return GlueBranch(name='1514732684')
 
     @pytest.fixture(scope="module")
     def branched_table(self):
-        return 'metrica'
+        return BranchableTable(name='metrica', db=TestTableUtils.db)
 
     def test_put_partition(self, monkeypatch, glue_branch, branched_table):
 
@@ -30,10 +32,10 @@ class TestTableUtils(object):
         monkeypatch.setattr(GlueBranch, '_GlueBranch__athena_query', mock_athena_query)
         ans = glue_branch.put_partition(branched_table, 'year=18/month=10/day=25')
 
-        assert "ALTER TABLE {table}_{branch} ADD PARTITION (year='18', month='10', day='25') location"\
-            .format(table=branched_table, branch=glue_branch.name) in actual_commands[0]
-        assert "ALTER TABLE {table}_{branch} PARTITION (year='18', month='10', day='25') set location"\
-            .format(table=branched_table, branch=glue_branch.name) in actual_commands[1]
+        assert "ALTER TABLE {db}.{table}__{branch} ADD PARTITION (year='18', month='10', day='25') location"\
+            .format(db=TestTableUtils.db, table=branched_table.name, branch=glue_branch.name) in actual_commands[0]
+        assert "ALTER TABLE {db}.{table}__{branch} PARTITION (year='18', month='10', day='25') set location"\
+            .format(db=TestTableUtils.db, table=branched_table.name, branch=glue_branch.name) in actual_commands[1]
         assert ans
 
     def test_fork_branch(self, monkeypatch, glue_branch, branched_table):
@@ -54,14 +56,14 @@ class TestTableUtils(object):
                         .format(table=branched_table, branch=glue_branch.name),
                         u'PartitionKeys': [{u'Type': u'string', u'Name': u'year'},
                                            {u'Type': u'string', u'Name': u'month'},
-                                           {u'Type': u'string', u'Name': u'day'}],
+                                           {u'Type': u'string', u'Name': u'day'}]},
                         u'Name': u'{table}_{branch}'
-                            .format(table=branched_table, branch=glue_branch.name)}}}
+                            .format(table=branched_table, branch=glue_branch.name)}}
 
                 # noinspection PyMethodMayBeStatic,PyPep8Naming
                 def create_table(self, TableInput=None, *args, **kwargs):
-                    assert TableInput['Name'] == '{table}_{branch}'\
-                        .format(table=branched_table, branch=forked_branch_name)
+                    assert TableInput['Name'] == '{table}__{branch}'\
+                        .format(table=branched_table.name, branch=forked_branch_name)
                     calls.append({'foo': 'create_table', 'args': args, 'kwargs': kwargs})
 
                 def get_partitions(*args, **kwargs):
@@ -69,15 +71,15 @@ class TestTableUtils(object):
                     return {
                         u'Partitions': [{
                             u'StorageDescriptor': {
-                                u'Location': u's3://sw-dag-published-v2/{table}/{branch}'
-                                .format(table=branched_table, branch=glue_branch.name),
+                                u'Location': u's3://sw-dag-published-v2/{db}/{table}/{branch}'
+                                .format(db=TestTableUtils.db, table=branched_table.name, branch=glue_branch.name),
                             },
-                            u'TableName': u'{table}_{branch}'.format(table=branched_table, branch=glue_branch.name),
+                            u'TableName': u'{table}__{branch}'.format(table=branched_table.name, branch=glue_branch.name),
                             u'Values': [
                                 u'18',
                                 u'10',
                                 u'25'],
-                            u'DatabaseName': u'{db}'.format(db=glue_branch.db)}
+                            u'DatabaseName': u'{db}'.format(db=TestTableUtils.db)}
                         ]}
 
                 def batch_create_partition(*args, **kwargs):
@@ -93,8 +95,10 @@ class TestTableUtils(object):
 
             return MockClient()
 
+        monkeypatch.setattr(GlueBranch, 'list_dbs',
+                            lambda _: [TestTableUtils.db])
         monkeypatch.setattr(GlueBranch, 'list_branchable_tables',
-                            lambda _: [branched_table])
+                            lambda _, dbs: {dbs[0]: [branched_table]})
 
         monkeypatch.setattr(pylib.published_data_lake.branch, 'get_glue_client', mock_get_client)
 
