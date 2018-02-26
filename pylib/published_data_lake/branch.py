@@ -20,6 +20,10 @@ def filter_out_dict(dictionary, keys):
 PUBLISHED_DATA_LAKE_DB_PREFIX = 'sw_published_'
 
 
+def db_without_prefix(db):
+    return db.split(PUBLISHED_DATA_LAKE_DB_PREFIX)[0]
+
+
 class BranchableTable(object):
     def __init__(self, db=None, name=None):
         assert db
@@ -171,6 +175,6 @@ class GlueBranch(object):
                               self.__table_name(branchable_table))
 
     def __table_location(self, branchable_table):
-        return 's3://sw-dag-published-v2/{}/{}/{}'.format(branchable_table.db.split(PUBLISHED_DATA_LAKE_DB_PREFIX)[0],
+        return 's3://sw-dag-published-v2/{}/{}/{}'.format(db_without_prefix(branchable_table.db),
                                                           branchable_table.name,
                                                           self.name)

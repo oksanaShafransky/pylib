@@ -74,7 +74,8 @@ class TestTableUtils(object):
                                 u'Location': u's3://sw-dag-published-v2/{db}/{table}/{branch}'
                                 .format(db=TestTableUtils.db, table=branched_table.name, branch=glue_branch.name),
                             },
-                            u'TableName': u'{table}__{branch}'.format(table=branched_table.name, branch=glue_branch.name),
+                            u'TableName': u'{table}__{branch}'
+                            .format(table=branched_table.name, branch=glue_branch.name),
                             u'Values': [
                                 u'18',
                                 u'10',
