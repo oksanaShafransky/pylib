@@ -20,7 +20,10 @@ setup(
         'tld',
         'consulate==0.6.0',
         'urllib3==1.16',
-        'monthdelta'
+        'monthdelta',
+        'boto3==1.5.26',
+        'retry==0.9.2',
+        'botocore'
     ],
     setup_requires=[
         'pytest-runner',
@@ -38,7 +41,10 @@ setup(
         'cryptography==1.8.2',
         'redis==2.10.5',
         'invoke==0.12.2',
-        'python-dateutil'
+        'python-dateutil',
+        'boto3==1.5.26',
+        'retry==0.9.2',
+        'botocore'
     ],
     test_suite='tests',
     entry_points={

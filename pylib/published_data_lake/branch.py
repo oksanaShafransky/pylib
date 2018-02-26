@@ -178,3 +178,6 @@ class GlueBranch(object):
         return 's3://sw-dag-published-v2/{}/{}/{}'.format(db_without_prefix(branchable_table.db),
                                                           branchable_table.name,
                                                           self.name)
+
+    def partition_location(self, branchable_table, partition):
+        return '{}/{}'.format(self.__table_location(self, branchable_table), partition)
