@@ -180,4 +180,4 @@ class GlueBranch(object):
                                                           self.name)
 
     def partition_location(self, branchable_table, partition):
-        return '{}/{}'.format(self.__table_location(self, branchable_table), partition)
+        return '{}/{}'.format(self.__table_location(branchable_table), partition)
