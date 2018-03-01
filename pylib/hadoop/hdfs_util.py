@@ -175,6 +175,39 @@ def get_hive_partition_values(base_path, column_name):
     return extract_hive_partition_values(relevant_paths, column_name)
 
 
+def get_hive_partitions(base_path):
+
+    if base_path[-1] != '/':
+        base_path='{}/'.format(base_path)
+
+    def get_hive_partitions_inner(base_path):
+        partitions = []
+        hdfs_client = create_client()
+        all_paths = [v['path'] for v in hdfs_client.ls([base_path], recurse=False, include_toplevel=False)]
+        is_empty_path = len(all_paths)==0
+        relevant_paths = filter(lambda p: '/_' not in p and '/.' not in p and '.gz' not in p, all_paths)
+        nested_paths_are_children = False
+        for path in relevant_paths:
+            path_component_to_check = path.split('/')[-1]
+            if '=' in path_component_to_check:
+                path_component_to_check_parts = path_component_to_check.split('=')
+                if len(path_component_to_check_parts) == 2:
+                    assert '' != path_component_to_check_parts[1], 'Empty partition value is not expected here.' + path
+                    if nested_paths_are_children:
+                        partitions += [path]
+                    else:
+                        new_partitions, is_empty_path = get_hive_partitions_inner(path)
+                        if len(new_partitions) == 0 and not is_empty_path:
+                            nested_paths_are_children = True
+                            partitions += [path]
+                        else:
+                            partitions += new_partitions
+        return partitions, is_empty_path
+
+    paths = get_hive_partitions_inner(base_path)[0]
+    return [path.split(base_path,1)[-1] for path in paths]
+
+
 def list_dirs(paths, hdfs_client=None):
     if not hdfs_client:
         hdfs_client = create_client()
