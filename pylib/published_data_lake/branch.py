@@ -109,7 +109,7 @@ class GlueBranch(object):
                 'Table not found' in query_response_state['state_change_reason']\
                 and create_new_table_if_missing:
             self.__create_new_table(branchable_table)
-            return self.put_partition(branchable_table, partition, create_branchable_table_if_missing=False)
+            return self.put_partition(branchable_table, partition, create_new_table_if_missing=False)
         else:
             return False
 
@@ -238,9 +238,3 @@ class GlueBranch(object):
 
     def partition_location(self, branchable_table, partition):
         return '{}/{}'.format(self.__table_location(branchable_table), partition)
-
-
-if __name__ == "__main__":
-    branch = GlueBranch(name='test123')
-    branchable_table = BranchableTable(db=PUBLISHED_DATA_LAKE_DB_PREFIX+'analytics', name='toplists')
-    branch.put_partition(branchable_table, 'type=monthly/yearmonth=2017-12', create_branchable_table_if_missing=True)
