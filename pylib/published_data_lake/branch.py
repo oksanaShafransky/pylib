@@ -86,32 +86,47 @@ class GlueBranch(object):
         table = self.__fully_qualified_table_name(branchable_table)
         partition_sql = ', '.join(["{}='{}'".format(kv.split('=')[0], kv.split('=')[1])
                                    for kv in partition.split('/')])
-        query_response_state = self.__athena_query("ALTER TABLE {table} ADD PARTITION ({partition_sql}) "
-                                                   "location '{location}'"
-                                                   .format(table=table,
-                                                           location=self.__table_location(branchable_table),
-                                                           partition_sql=partition_sql))
-        if query_response_state['state'] == 'SUCCEEDED':
+        query_response = self.__athena_query("ALTER TABLE {table} ADD PARTITION ({partition_sql}) "
+                                             "location '{location}'"
+                                             .format(table=table,
+                                                     location=self.__table_location(branchable_table),
+                                                     partition_sql=partition_sql))
+        if query_response['state'] == 'SUCCEEDED':
             return True
 
-        elif query_response_state['state'] == 'FAILED' and \
-                'Partition already exists' in query_response_state['state_change_reason']:
-            query_response_state = \
-                self.__athena_query("ALTER TABLE {table_name} PARTITION ({partition_sql}) "
-                                    "set location '{location}'"
-                                    .format(table_name=table,
-                                            location=self.__table_location(branchable_table),
-                                            partition_sql=partition_sql))
-            if query_response_state['state'] == 'SUCCEEDED':
-                return True
+        elif query_response['state'] == 'FAILED' and \
+                'Partition already exists' in query_response['state_change_reason']:
+            # query_response = \
+            #     self.__athena_query("ALTER TABLE {table} PARTITION ({partition_sql}) "
+            #                         "set location '{location}';"
+            #                         .format(table=table,
+            #                                 location=self.__table_location(branchable_table),
+            #                                 partition_sql=partition_sql))
+            # if query_response['state'] == 'SUCCEEDED':
+            #     return True
+            client = get_glue_client()
+            response = client.get_partition(
+                DatabaseName=branchable_table.db,
+                TableName=self.__table_name(branchable_table),
+                PartitionValues=[kv.split('=')[1] for kv in partition.split('/')]
+            )
+            assert response['ResponseMetadata']['HTTPStatusCode'] == 200
+            partition_input = response['Partition']
+            partition_input = filter_out_dict(partition_input, ['CreationTime', 'TableName', 'DatabaseName'])
+            partition_input['StorageDescriptor']['Location'] = self.__table_location(branchable_table)
+            response = client.update_partition(DatabaseName=branchable_table.db,
+                                               TableName=self.__table_name(branchable_table),
+                                               PartitionValueList=[kv.split('=')[1] for kv in partition.split('/')],
+                                               PartitionInput=partition_input)
+            assert response['ResponseMetadata']['HTTPStatusCode'] == 200
+            return True
 
-        elif query_response_state['state'] == 'FAILED' and\
-                'Table not found' in query_response_state['state_change_reason']\
+        elif query_response['state'] == 'FAILED' and \
+                'Table not found' in query_response['state_change_reason'] \
                 and create_new_table_if_missing:
             self.__create_new_table(branchable_table)
             return self.put_partition(branchable_table, partition, create_new_table_if_missing=False)
-        else:
-            return False
+        return False
 
     def __create_new_table(self, branchable_table):
         client = get_glue_client()
@@ -142,11 +157,12 @@ class GlueBranch(object):
             last_crawl_status = status['LastCrawl']['Status'] if 'LastCrawl' in status else None
             assert state in ['READY']
             return last_crawl_status
+
         assert response['ResponseMetadata']['HTTPStatusCode'] == 200
         assert crawl_status() == 'SUCCEEDED'
         response = client.delete_crawler(Name=crawler_name)
         assert response['ResponseMetadata']['HTTPStatusCode'] == 200
-        temp_table_name = crawler_name+self.name
+        temp_table_name = crawler_name + self.name
         table_def_response = client.get_table(
             DatabaseName=branchable_table.db,
             Name=temp_table_name
