@@ -129,7 +129,7 @@ class PtaskInvoker(Program):
             self.execute()
             end_time = time.time()
             execution_time_delta = datetime.timedelta(seconds=(end_time - start_time))
-            print('\nFinished ptask "{0}. Total execution time: {1}"'.format(task_name, str(execution_time_delta)))
+            print('\nFinished ptask "{0}". Total execution time: {1}'.format(task_name, str(execution_time_delta)))
         except (Failure, Exit, ParseError) as e:
             print('Received a possibly-skippable exception: {0!r}'.format(e))
             if isinstance(e, ParseError):
