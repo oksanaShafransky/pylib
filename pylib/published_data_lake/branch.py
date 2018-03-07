@@ -21,7 +21,7 @@ PUBLISHED_DATA_LAKE_DB_PREFIX = 'sw_published_'
 
 
 def db_without_prefix(db):
-    return db.split(PUBLISHED_DATA_LAKE_DB_PREFIX)[0]
+    return db.split(PUBLISHED_DATA_LAKE_DB_PREFIX)[1]
 
 
 class BranchableTable(object):
@@ -30,6 +30,7 @@ class BranchableTable(object):
         assert name
         self.db = db
         self.name = name
+
 
 class GlueBranch(object):
 
@@ -81,30 +82,102 @@ class GlueBranch(object):
         query_response_state = query_response_state()
         return query_response_state
 
-    def put_partition(self, branchable_table, partition):
+    def put_partition(self, branchable_table, partition, create_new_table_if_missing=True):
         table = self.__fully_qualified_table_name(branchable_table)
         partition_sql = ', '.join(["{}='{}'".format(kv.split('=')[0], kv.split('=')[1])
                                    for kv in partition.split('/')])
-        query_response_state = self.__athena_query("ALTER TABLE {table} ADD PARTITION ({partition_sql}) "
-                                                   "location '{location}'"
-                                                   .format(table=table,
-                                                           location=self.__table_location(branchable_table),
-                                                           partition_sql=partition_sql))
-        if query_response_state['state'] == 'SUCCEEDED':
+        query_response = self.__athena_query("ALTER TABLE {table} ADD PARTITION ({partition_sql}) "
+                                             "location '{location}'"
+                                             .format(table=table,
+                                                     location=self.__table_location(branchable_table),
+                                                     partition_sql=partition_sql))
+        if query_response['state'] == 'SUCCEEDED':
             return True
 
-        elif query_response_state['state'] == 'FAILED' and \
-                'Partition already exists' in query_response_state['state_change_reason']:
-            query_response_state = \
-                self.__athena_query("ALTER TABLE {table_name} PARTITION ({partition_sql}) "
-                                    "set location '{location}'"
-                                    .format(table_name=table,
-                                            location=self.__table_location(branchable_table),
-                                            partition_sql=partition_sql))
-            if query_response_state['state'] == 'SUCCEEDED':
-                return True
+        elif query_response['state'] == 'FAILED' and \
+                'Partition already exists' in query_response['state_change_reason']:
+            # query_response = \
+            #     self.__athena_query("ALTER TABLE {table} PARTITION ({partition_sql}) "
+            #                         "set location '{location}';"
+            #                         .format(table=table,
+            #                                 location=self.__table_location(branchable_table),
+            #                                 partition_sql=partition_sql))
+            # if query_response['state'] == 'SUCCEEDED':
+            #     return True
+            client = get_glue_client()
+            response = client.get_partition(
+                DatabaseName=branchable_table.db,
+                TableName=self.__table_name(branchable_table),
+                PartitionValues=[kv.split('=')[1] for kv in partition.split('/')]
+            )
+            assert response['ResponseMetadata']['HTTPStatusCode'] == 200
+            partition_input = response['Partition']
+            partition_input = filter_out_dict(partition_input, ['CreationTime', 'TableName', 'DatabaseName'])
+            partition_input['StorageDescriptor']['Location'] = self.__table_location(branchable_table)
+            response = client.update_partition(DatabaseName=branchable_table.db,
+                                               TableName=self.__table_name(branchable_table),
+                                               PartitionValueList=[kv.split('=')[1] for kv in partition.split('/')],
+                                               PartitionInput=partition_input)
+            assert response['ResponseMetadata']['HTTPStatusCode'] == 200
+            return True
 
+        elif query_response['state'] == 'FAILED' and \
+                'Table not found' in query_response['state_change_reason'] \
+                and create_new_table_if_missing:
+            self.__create_new_table(branchable_table)
+            return self.put_partition(branchable_table, partition, create_new_table_if_missing=False)
         return False
+
+    def __create_new_table(self, branchable_table):
+        client = get_glue_client()
+        crawler_name = 'PublicDataLake_{}.{}'.format(branchable_table.db,
+                                                     branchable_table.name)
+        response = client.create_crawler(
+            Name=crawler_name,
+            Role='arn:aws:iam::838192392483:role/AWSGlueServiceRole-Dag-Published-Data-Lake-Read',
+            DatabaseName=branchable_table.db,
+            Targets={'S3Targets':
+                [{
+                    'Path': self.__table_location(branchable_table)
+                }]
+            },
+            TablePrefix=crawler_name
+        )
+        assert response['ResponseMetadata']['HTTPStatusCode'] == 200
+        response = client.start_crawler(
+            Name=crawler_name
+        )
+
+        @retry(tries=20, delay=5, logger=None)
+        def crawl_status():
+            execution_status_query_response = \
+                client.get_crawler(Name=crawler_name)
+            status = execution_status_query_response['Crawler']
+            state = status['State']
+            last_crawl_status = status['LastCrawl']['Status'] if 'LastCrawl' in status else None
+            assert state in ['READY']
+            return last_crawl_status
+
+        assert response['ResponseMetadata']['HTTPStatusCode'] == 200
+        assert crawl_status() == 'SUCCEEDED'
+        response = client.delete_crawler(Name=crawler_name)
+        assert response['ResponseMetadata']['HTTPStatusCode'] == 200
+        temp_table_name = crawler_name + self.name
+        table_def_response = client.get_table(
+            DatabaseName=branchable_table.db,
+            Name=temp_table_name
+        )
+        table_def = table_def_response['Table']
+        self_table_def = filter_out_dict(table_def, ['UpdateTime', 'CreatedBy', 'CreateTime'])
+        self_table_def['Name'] = self.__table_name(branchable_table)
+        response = client.create_table(DatabaseName=branchable_table.db,
+                                       TableInput=self_table_def)
+        assert response['ResponseMetadata']['HTTPStatusCode'] == 200
+        response = client.delete_table(
+            DatabaseName=branchable_table.db,
+            Name=temp_table_name
+        )
+        assert response['ResponseMetadata']['HTTPStatusCode'] == 200
 
     def fork_branch(self, new_branch_name, dbs=None):
         if dbs is None:
