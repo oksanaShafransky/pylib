@@ -154,6 +154,7 @@ class HiveProcessRunner(object):
         'io.seqfile.compression': 'BLOCK',
         'hive.hadoop.supports.splittable.combineinputformat': 'true',
         'hive.exec.max.dynamic.partitions': 100000,
+        'hive.exec.parallel': 'true',
         'hive.exec.max.dynamic.partitions.pernode': 100000,
         'hive.exec.scratchdir': '/tmp/hive-prod',
         'hive.vectorized.execution.enabled': 'true',
