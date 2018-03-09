@@ -4,12 +4,12 @@ from botocore import exceptions
 
 
 def get_glue_client():
-    client = boto3.client('glue')
+    client = boto3.client('glue', region_name='us-east-1')
     return client
 
 
 def get_athena_client():
-    client = boto3.client('athena')
+    client = boto3.client('athena', region_name='us-east-1')
     return client
 
 
