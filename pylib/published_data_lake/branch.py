@@ -1,4 +1,5 @@
 import boto3
+import logging
 from retry import retry
 from botocore import exceptions
 
@@ -16,6 +17,9 @@ def get_athena_client():
 def filter_out_dict(dictionary, keys):
     return {k: v for k, v in dictionary.items() if k not in keys}
 
+
+logger = logging.getLogger(name='pdl')
+logger.setLevel(logging.DEBUG)
 
 PUBLISHED_DATA_LAKE_DB_PREFIX = 'sw_published_'
 
@@ -91,6 +95,7 @@ class GlueBranch(object):
                                              .format(table=table,
                                                      location=self.__table_location(branchable_table),
                                                      partition_sql=partition_sql))
+        logger.debug('Put partition query response is {}'.format(query_response))
         if query_response['state'] == 'SUCCEEDED':
             return True
 
@@ -118,6 +123,7 @@ class GlueBranch(object):
                                                TableName=self.__table_name(branchable_table),
                                                PartitionValueList=[kv.split('=')[1] for kv in partition.split('/')],
                                                PartitionInput=partition_input)
+            logger.debug('Update partition query response is {}'.format(response))
             assert response['ResponseMetadata']['HTTPStatusCode'] == 200
             return True
 
@@ -143,6 +149,7 @@ class GlueBranch(object):
             },
             TablePrefix=crawler_name
         )
+        logger.debug('Create crawler response is {}'.format(response))
         assert response['ResponseMetadata']['HTTPStatusCode'] == 200
         response = client.start_crawler(
             Name=crawler_name
@@ -160,6 +167,7 @@ class GlueBranch(object):
 
         assert response['ResponseMetadata']['HTTPStatusCode'] == 200
         assert crawl_status() == 'SUCCEEDED'
+        logger.debug('Crawl status is {}'.format(response))
         response = client.delete_crawler(Name=crawler_name)
         assert response['ResponseMetadata']['HTTPStatusCode'] == 200
         temp_table_name = crawler_name + self.name
@@ -172,11 +180,13 @@ class GlueBranch(object):
         self_table_def['Name'] = self.__table_name(branchable_table)
         response = client.create_table(DatabaseName=branchable_table.db,
                                        TableInput=self_table_def)
+        logger.debug('Create table response is {}'.format(response))
         assert response['ResponseMetadata']['HTTPStatusCode'] == 200
         response = client.delete_table(
             DatabaseName=branchable_table.db,
             Name=temp_table_name
         )
+        logger.debug('Delete table response is {}'.format(response))
         assert response['ResponseMetadata']['HTTPStatusCode'] == 200
 
     def fork_branch(self, new_branch_name, dbs=None):
