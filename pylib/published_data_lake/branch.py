@@ -155,7 +155,7 @@ class GlueBranch(object):
             Name=crawler_name
         )
 
-        @retry(tries=20, delay=5, logger=None)
+        @retry(tries=60, delay=10, logger=None)
         def crawl_status():
             execution_status_query_response = \
                 client.get_crawler(Name=crawler_name)
