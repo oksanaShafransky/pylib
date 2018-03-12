@@ -6,6 +6,7 @@ import shutil
 import smtplib
 import urllib
 import uuid
+import hashlib
 from copy import copy
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -793,6 +794,18 @@ class ContextualizedTasksInfra(object):
 
         return TasksInfra.days_in_range(end_date, mode_type)
 
+    @staticmethod
+    def yarn_application_tag():
+        # We're using an hashed application tag when the full task_id
+        # exceeds 100 characters because yarn limits the tags length.
+        task_full_id = os.environ['TASK_ID']
+        if len(task_full_id <= 100):
+            yarn_application_tag = task_full_id
+        else:
+            m = hashlib.md5()
+            yarn_application_tag = m.update(task_full_id).hexdigest()
+        return yarn_application_tag
+
     # module is either 'mobile' or 'analytics'
     def run_spark(self,
                   main_class,
@@ -818,7 +831,7 @@ class ContextualizedTasksInfra(object):
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.tags=$TASK_ID"' \
+                  ' --conf "spark.yarn.tags={yarn_application_tag}"' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' --deploy-mode cluster' \
@@ -837,7 +850,8 @@ class ContextualizedTasksInfra(object):
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'main_class': main_class,
-                      'jar': jar
+                      'jar': jar,
+                      'yarn_application_tag': self.yarn_application_tag()
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
@@ -955,7 +969,7 @@ class ContextualizedTasksInfra(object):
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' --conf "spark.yarn.tags=$TASK_ID"' \
+                  ' --conf "spark.yarn.tags={yarn_application_tag}"' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
@@ -973,7 +987,8 @@ class ContextualizedTasksInfra(object):
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
-                      'main_py': main_py_file
+                      'main_py': main_py_file,
+                      'yarn_application_tag': self.yarn_application_tag()
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
