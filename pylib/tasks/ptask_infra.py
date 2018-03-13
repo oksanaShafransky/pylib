@@ -845,7 +845,7 @@ class ContextualizedTasksInfra(object):
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.tags={yarn_application_tags}"' \
+                  ' --conf "spark.yarn.tags=%(yarn_application_tags)"' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' --deploy-mode cluster' \
@@ -983,7 +983,7 @@ class ContextualizedTasksInfra(object):
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' --conf "spark.yarn.tags={yarn_application_tags}"' \
+                  ' --conf "spark.yarn.tags=%(yarn_application_tags)"' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
