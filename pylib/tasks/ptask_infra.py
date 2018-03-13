@@ -800,7 +800,7 @@ class ContextualizedTasksInfra(object):
         # We're using an hashed application tag when the full task_id
         # exceeds 100 characters because yarn limits the tags length.
         task_full_id = os.environ['TASK_ID']
-        if len(task_full_id <= 100):
+        if len(task_full_id) <= 100:
             yarn_application_tags = task_full_id
         else:
             m = hashlib.md5()
