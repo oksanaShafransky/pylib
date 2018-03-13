@@ -804,7 +804,8 @@ class ContextualizedTasksInfra(object):
             yarn_application_tags = task_full_id
         else:
             m = hashlib.md5()
-            hashed_task_full_id = m.update(task_full_id).hexdigest()
+            m.update(task_full_id)
+            hashed_task_full_id = m.hexdigest()
             yarn_application_tags = \
                 '{hashed_task_full_id},' \
                 'execution_user:{execution_user},' \
@@ -814,6 +815,7 @@ class ContextualizedTasksInfra(object):
                     hashed_task_full_id=hashed_task_full_id,
                     execution_user=self.execution_user,
                     dag_id=self.dag_id,
+                    task_id=self.task_id,
                     execution_dt=self.execution_dt
                 )
         return yarn_application_tags

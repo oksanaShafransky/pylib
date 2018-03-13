@@ -37,7 +37,8 @@ class ZombieKiller(object):
             raise ValueError("task_id cannot be empty")
 
         m = hashlib.md5()
-        hashed_id = m.update(task_id).hexdigest()
+        m.update(task_id)
+        hashed_id = m.hexdigest()
         task_tags = ','.join([hashed_id, task_id])
 
         logger.info('checking if jobs with Airflow unique identifier %s is running...' % task_tags)
