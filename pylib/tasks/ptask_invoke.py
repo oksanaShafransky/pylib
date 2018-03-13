@@ -1,6 +1,7 @@
 import datetime
 import os
 import sys
+import time
 
 # set default stream encoding to utf-8
 import codecs
@@ -124,8 +125,11 @@ class PtaskInvoker(Program):
                 'collection_name': self.collection.name,
                 'collection_path': self.collection.loaded_from
             })
+            start_time = time.time()
             self.execute()
-            print('\nFinished ptask "{0}"'.format(task_name))
+            end_time = time.time()
+            execution_time_delta = datetime.timedelta(seconds=(end_time - start_time))
+            print('\nFinished ptask "{0}". Total execution time: {1}'.format(task_name, str(execution_time_delta)))
         except (Failure, Exit, ParseError) as e:
             print('Received a possibly-skippable exception: {0!r}'.format(e))
             if isinstance(e, ParseError):

@@ -40,7 +40,7 @@ sudo pip install --no-dependencies --upgrade -i  https://artifactory.similarweb.
 %(bash_command)s"
     '''
 
-    def __init__(self, user='jupyter', execution_dir='/similargroup/production', gate='docker-a02.sg.internal:2375', repos='docker.similarweb.io:5000/bigdata', image='mrp'):
+    def __init__(self, user='jupyter', execution_dir='/similargroup/production', gate='docker-a02.sg.internal:2375', repos='artifactory.similarweb.io/bigdata', image='mrp'):
         self.user = user
         self.execution_dir = execution_dir
         self.docker_gate = gate
