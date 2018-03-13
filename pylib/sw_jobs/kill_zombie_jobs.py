@@ -1,5 +1,3 @@
-from sw_jobs.job_utils import hash_task_full_id
-
 __author__ = 'Amit'
 
 import argparse
@@ -10,6 +8,7 @@ import traceback
 import sys
 import logging
 import os
+from pylib.sw_jobs.job_utils import hash_task_full_id
 
 logging.basicConfig(level=logging.INFO,
                     stream=sys.stdout)
