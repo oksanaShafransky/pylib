@@ -1,4 +1,4 @@
-import hashlib
+from sw_jobs.job_utils import hash_task_full_id
 
 __author__ = 'Amit'
 
@@ -36,9 +36,7 @@ class ZombieKiller(object):
         if not task_id:
             raise ValueError("task_id cannot be empty")
 
-        m = hashlib.md5()
-        m.update(task_id)
-        hashed_id = m.hexdigest()
+        hashed_id = hash_task_full_id(task_id)
         task_tags = ','.join([hashed_id, task_id])
 
         logger.info('checking if jobs with Airflow unique identifier %s is running...' % task_tags)
