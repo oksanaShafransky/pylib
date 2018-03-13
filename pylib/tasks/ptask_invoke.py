@@ -28,7 +28,8 @@ class PtaskConfig(Config):
                                         'profile': False,
                                         'dry_run': False,
                                         'checks_only': False,
-                                        'execution_dir': '.'}
+                                        'execution_dir': '.',
+                                        'has_task_id': False}
         return global_defaults
 
 
