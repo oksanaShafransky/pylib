@@ -816,9 +816,11 @@ class ContextualizedTasksInfra(object):
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
+        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.tags=$TASK_ID"' \
+                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' --deploy-mode cluster' \
@@ -837,7 +839,8 @@ class ContextualizedTasksInfra(object):
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'main_class': main_class,
-                      'jar': jar
+                      'jar': jar,
+                      'yarn_application_tags': yarn_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
@@ -951,11 +954,13 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
+        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' --conf "spark.yarn.tags=$TASK_ID"' \
+                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
@@ -973,7 +978,8 @@ class ContextualizedTasksInfra(object):
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
-                      'main_py': main_py_file
+                      'main_py': main_py_file,
+                      'yarn_application_tags': yarn_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
