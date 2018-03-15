@@ -6,7 +6,7 @@ class GlueHiveBranch(Branch):
 
     def __init__(self, *args, **kwargs):
         super(GlueHiveBranch, self).__init__(*args, **kwargs)
-        self._glue_branch = GlueBranch.__init__(*args, **kwargs)
+        self._glue_branch = GlueBranch(*args, **kwargs)
 
     def list_branchable_tables(self, dbs):
         return self._glue_branch.list_branchable_tables(dbs)
