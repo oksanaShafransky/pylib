@@ -1,5 +1,6 @@
 from __future__ import print_function
-from pylib.published_data_lake.branch import GlueBranch, BranchableTable
+from pylib.published_data_lake.branch import Branch, BranchableTable
+from pylib.published_data_lake.glue_branch import GlueBranch
 import pylib.published_data_lake.branch
 # noinspection PyPackageRequirements
 import pytest
@@ -102,7 +103,7 @@ class TestTableUtils(object):
         monkeypatch.setattr(GlueBranch, 'list_branchable_tables',
                             lambda _, dbs: {dbs[0]: [branched_table]})
 
-        monkeypatch.setattr(pylib.published_data_lake.branch, 'get_glue_client', mock_get_client)
+        monkeypatch.setattr(pylib.published_data_lake.glue_branch, 'get_glue_client', mock_get_client)
 
         ans = glue_branch.fork_branch(forked_branch_name)
         assert ans
