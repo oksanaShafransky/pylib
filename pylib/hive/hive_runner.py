@@ -220,9 +220,11 @@ class HiveProcessRunner(object):
         params['hive.log.dir'] = log_dir
         params['hive.log.file'] = 'hive.log'
 
-        hive_cmd = ['hive', '-v']
+        hive_cmd = ['hive']
         if len(aux_jars) > 0:
             hive_cmd += ['--auxpath', ','.join(aux_jars)]
+            
+        hive_cmd += ['-v']
 
         hive_cmd += ['-e', hql]
         for param, val in params.items():
