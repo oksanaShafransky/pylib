@@ -13,6 +13,36 @@ def get_athena_client():
     return client
 
 
+def _athena_query(query):
+    athena_client = get_athena_client()
+    query_response = athena_client.start_query_execution(
+        QueryString=query,
+        ResultConfiguration={
+            'OutputLocation': 's3://sw-dag-published-v2/tmp/',
+            'EncryptionConfiguration': {
+                'EncryptionOption': 'SSE_S3'
+            }
+        }
+    )
+    query_id = query_response['QueryExecutionId']
+
+    @retry(tries=10, delay=0.5, logger=None)
+    def query_response_state():
+        execution_status_query_response = athena_client.get_query_execution(
+            QueryExecutionId=query_id)
+        status = execution_status_query_response['QueryExecution']['Status']
+        state = status['State']
+        state_change_reason = status['StateChangeReason'] if 'StateChangeReason' in status else None
+
+        assert state in ['SUCCEEDED', 'FAILED', 'CANCELLED']
+        return {'state': state,
+                'state_change_reason': state_change_reason,
+                'output_location': execution_status_query_response['QueryExecution']['ResultConfiguration']['OutputLocation']}
+
+    query_response_state = query_response_state()
+    return query_response_state
+
+
 class GlueBranch(Branch):
 
     def __init__(self, *args, **kwargs):
@@ -34,42 +64,14 @@ class GlueBranch(Branch):
             ans[db] = ans_db
         return ans
 
-    @staticmethod
-    def __athena_query(query):
-        athena_client = get_athena_client()
-        query_response = athena_client.start_query_execution(
-            QueryString=query,
-            ResultConfiguration={
-                'OutputLocation': 's3://sw-dag-published-v2/tmp/',
-                'EncryptionConfiguration': {
-                    'EncryptionOption': 'SSE_S3'
-                }
-            }
-        )
-        query_id = query_response['QueryExecutionId']
-
-        @retry(tries=10, delay=0.5, logger=None)
-        def query_response_state():
-            execution_status_query_response = athena_client.get_query_execution(
-                QueryExecutionId=query_id)
-            status = execution_status_query_response['QueryExecution']['Status']
-            state = status['State']
-            state_change_reason = status['StateChangeReason'] if 'StateChangeReason' in status else None
-
-            assert state in ['SUCCEEDED', 'FAILED', 'CANCELLED']
-            return {'state': state, 'state_change_reason': state_change_reason}
-
-        query_response_state = query_response_state()
-        return query_response_state
-
     def put_partition(self, branchable_table, partition, create_new_table_if_missing=True):
-        table = self.__fully_qualified_table_name(branchable_table)
+        table = self._fully_qualified_table_name(branchable_table)
         partition_sql = ', '.join(["{}='{}'".format(kv.split('=')[0], kv.split('=')[1])
                                    for kv in partition.split('/')])
-        query_response = self.__athena_query("ALTER TABLE {table} ADD PARTITION ({partition_sql}) "
+        query_response = _athena_query("ALTER TABLE {table} ADD PARTITION ({partition_sql}) "
                                              "location '{location}'"
                                              .format(table=table,
-                                                     location=self.__table_location(branchable_table),
+                                                     location=self._table_location(branchable_table),
                                                      partition_sql=partition_sql))
         logger.debug('Put partition query response is {}'.format(query_response))
         if query_response['state'] == 'SUCCEEDED':
@@ -78,25 +80,25 @@ class GlueBranch(Branch):
         elif query_response['state'] == 'FAILED' and \
                 'Partition already exists' in query_response['state_change_reason']:
             # query_response = \
-            #     self.__athena_query("ALTER TABLE {table} PARTITION ({partition_sql}) "
+            #     athena_query("ALTER TABLE {table} PARTITION ({partition_sql}) "
             #                         "set location '{location}';"
             #                         .format(table=table,
-            #                                 location=self.__table_location(branchable_table),
+            #                                 location=self._table_location(branchable_table),
             #                                 partition_sql=partition_sql))
             # if query_response['state'] == 'SUCCEEDED':
             #     return True
             client = get_glue_client()
             response = client.get_partition(
                 DatabaseName=branchable_table.db,
-                TableName=self.__table_name(branchable_table),
+                TableName=self._table_name(branchable_table),
                 PartitionValues=[kv.split('=')[1] for kv in partition.split('/')]
             )
             assert response['ResponseMetadata']['HTTPStatusCode'] == 200
             partition_input = response['Partition']
             partition_input = filter_out_dict(partition_input, ['CreationTime', 'TableName', 'DatabaseName'])
-            partition_input['StorageDescriptor']['Location'] = self.__table_location(branchable_table)
+            partition_input['StorageDescriptor']['Location'] = self._table_location(branchable_table)
             response = client.update_partition(DatabaseName=branchable_table.db,
-                                               TableName=self.__table_name(branchable_table),
+                                               TableName=self._table_name(branchable_table),
                                                PartitionValueList=[kv.split('=')[1] for kv in partition.split('/')],
                                                PartitionInput=partition_input)
             logger.debug('Update partition query response is {}'.format(response))
@@ -106,11 +108,11 @@ class GlueBranch(Branch):
         elif query_response['state'] == 'FAILED' and \
                 'Table not found' in query_response['state_change_reason'] \
                 and create_new_table_if_missing:
-            self.__create_new_table(branchable_table)
+            self._create_new_table(branchable_table)
             return self.put_partition(branchable_table, partition, create_new_table_if_missing=False)
         return False
 
-    def __create_new_table(self, branchable_table):
+    def _create_new_table(self, branchable_table):
         client = get_glue_client()
         crawler_name = 'PublicDataLake_{}.{}'.format(branchable_table.db,
                                                      branchable_table.name)
@@ -120,7 +122,7 @@ class GlueBranch(Branch):
             DatabaseName=branchable_table.db,
             Targets={'S3Targets':
                 [{
-                    'Path': self.__table_location(branchable_table)
+                    'Path': self._table_location(branchable_table)
                 }]
             },
             TablePrefix=crawler_name
@@ -153,7 +155,7 @@ class GlueBranch(Branch):
         )
         table_def = table_def_response['Table']
         self_table_def = filter_out_dict(table_def, ['UpdateTime', 'CreatedBy', 'CreateTime'])
-        self_table_def['Name'] = self.__table_name(branchable_table)
+        self_table_def['Name'] = self._table_name(branchable_table)
         response = client.create_table(DatabaseName=branchable_table.db,
                                        TableInput=self_table_def)
         logger.debug('Create table response is {}'.format(response))
@@ -180,18 +182,18 @@ class GlueBranch(Branch):
                 assert table_pull_succeeded
         return True
 
-    def __pull_table_from_branch(self, branchable_table, reference_branch):
+    def _pull_table_from_branch(self, branchable_table, reference_branch):
         client = get_glue_client()
-        reference_table_name = reference_branch.__table_name(branchable_table)
+        reference_table_name = reference_branch._table_name(branchable_table)
         table_def_response = client.get_table(
             DatabaseName=branchable_table.db,
             Name=reference_table_name
         )
         table_def = table_def_response['Table']
         self_table_def = filter_out_dict(table_def, ['UpdateTime', 'CreatedBy', 'CreateTime'])
-        self_table_name = self.__table_name(branchable_table)
+        self_table_name = self._table_name(branchable_table)
         self_table_def['Name'] = self_table_name
-        self_table_def['StorageDescriptor']['Location'] = self.__table_location(branchable_table)
+        self_table_def['StorageDescriptor']['Location'] = self._table_location(branchable_table)
         try:
             client.create_table(DatabaseName='{}'.format(branchable_table.db),
                                 TableInput=self_table_def)
@@ -225,18 +227,3 @@ class GlueBranch(Branch):
         assert databases_response['ResponseMetadata']['HTTPStatusCode'] == 200
         all_dbs = databases_response['DatabaseList']
         return [db['Name'] for db in all_dbs if PUBLISHED_DATA_LAKE_DB_PREFIX in db['Name']]
-
-    def __table_name(self, branchable_table):
-        return '{}__{}'.format(branchable_table.name, self.name)
-
-    def __fully_qualified_table_name(self, branchable_table):
-        return '{}.{}'.format(branchable_table.db,
-                              self.__table_name(branchable_table))
-
-    def __table_location(self, branchable_table):
-        return 's3://sw-dag-published-v2/{}/{}/{}'.format(db_without_prefix(branchable_table.db),
-                                                          branchable_table.name,
-                                                          self.name)
-
-    def partition_location(self, branchable_table, partition):
-        return '{}/{}'.format(self.__table_location(branchable_table), partition)

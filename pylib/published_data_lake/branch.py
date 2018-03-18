@@ -51,17 +51,17 @@ class Branch(object):
     def list_dbs():
         return
 
-    def __table_name(self, branchable_table):
+    def _table_name(self, branchable_table):
         return '{}__{}'.format(branchable_table.name, self.name)
 
-    def __fully_qualified_table_name(self, branchable_table):
+    def _fully_qualified_table_name(self, branchable_table):
         return '{}.{}'.format(branchable_table.db,
-                              self.__table_name(branchable_table))
+                              self._table_name(branchable_table))
 
-    def __table_location(self, branchable_table):
+    def _table_location(self, branchable_table):
         return 's3://sw-dag-published-v2/{}/{}/{}'.format(db_without_prefix(branchable_table.db),
                                                           branchable_table.name,
                                                           self.name)
 
     def partition_location(self, branchable_table, partition):
-        return '{}/{}'.format(self.__table_location(branchable_table), partition)
+        return '{}/{}'.format(self._table_location(branchable_table), partition)
