@@ -178,7 +178,7 @@ class GlueBranch(Branch):
         for db in branchable_tables:
             db_branchable_tables = branchable_tables[db]
             for branchable_table in db_branchable_tables:
-                table_pull_succeeded = self.__pull_table_from_branch(branchable_table, reference_branch)
+                table_pull_succeeded = self._pull_table_from_branch(branchable_table, reference_branch)
                 assert table_pull_succeeded
         return True
 

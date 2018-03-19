@@ -22,8 +22,7 @@ class TestTableUtils(object):
 
         actual_commands = []
 
-        # noinspection PyUnusedLocal
-        def mock_athena_query(mock_self, query):
+        def mock_athena_query(query):
             actual_commands.append(query)
             return {'state': 'SUCCEEDED', 'state_change_reason': None}
             #if 'ADD PARTITION' in query:
@@ -31,7 +30,7 @@ class TestTableUtils(object):
             #else:
             #    return {'state': 'SUCCEEDED', 'state_change_reason': None}
 
-        monkeypatch.setattr(GlueBranch, '_GlueBranch__athena_query', mock_athena_query)
+        monkeypatch.setattr(pylib.published_data_lake.glue_branch, '_athena_query', mock_athena_query)
         ans = glue_branch.put_partition(branched_table, 'year=18/month=10/day=25')
 
         assert "ALTER TABLE {db}.{table}__{branch} ADD PARTITION (year='18', month='10', day='25') location"\
