@@ -38,7 +38,7 @@ class HiveBranch(Branch):
             client.cursor()\
             .execute("ALTER TABLE {table} ADD PARTITION ({partition_sql}) location '{location}'"
                      .format(table=table,
-                             location=self._table_location(branchable_table),
+                             location=self.partition_location(branchable_table, partition),
                              partition_sql=partition_sql))
             return True
         except OperationalError as operr:
@@ -59,7 +59,7 @@ class HiveBranch(Branch):
             cursor.execute("ALTER TABLE {table} PARTITION ({partition_sql}) "
                            "set location '{location}'"
                            .format(table=self._table_name(branchable_table),
-                                   location=self._table_location(branchable_table),
+                                   location=self.partition_location(branchable_table, partition),
                                    partition_sql=partition_sql))
             return True
         return False
