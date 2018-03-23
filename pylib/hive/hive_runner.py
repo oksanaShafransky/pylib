@@ -154,6 +154,7 @@ class HiveProcessRunner(object):
         'io.seqfile.compression': 'BLOCK',
         'hive.hadoop.supports.splittable.combineinputformat': 'true',
         'hive.exec.max.dynamic.partitions': 100000,
+        'hive.exec.parallel': 'true',
         'hive.exec.max.dynamic.partitions.pernode': 100000,
         'hive.exec.scratchdir': '/tmp/hive-prod',
         'hive.vectorized.execution.enabled': 'true',
@@ -219,9 +220,11 @@ class HiveProcessRunner(object):
         params['hive.log.dir'] = log_dir
         params['hive.log.file'] = 'hive.log'
 
-        hive_cmd = ['hive', '-v']
+        hive_cmd = ['hive']
         if len(aux_jars) > 0:
             hive_cmd += ['--auxpath', ','.join(aux_jars)]
+            
+        hive_cmd += ['-v']
 
         hive_cmd += ['-e', hql]
         for param, val in params.items():

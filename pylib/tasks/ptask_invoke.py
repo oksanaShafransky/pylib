@@ -1,6 +1,7 @@
 import datetime
 import os
 import sys
+import time
 
 # set default stream encoding to utf-8
 import codecs
@@ -27,7 +28,8 @@ class PtaskConfig(Config):
                                         'profile': False,
                                         'dry_run': False,
                                         'checks_only': False,
-                                        'execution_dir': '.'}
+                                        'execution_dir': '.',
+                                        'has_task_id': False}
         return global_defaults
 
 
@@ -98,8 +100,10 @@ class PtaskInvoker(Program):
             sw_tasks['has_task_id'] = True
             sw_tasks['execution_user'] = os.environ['TASK_ID'].split('.')[0]
             sw_tasks['dag_id'] = os.environ['TASK_ID'].split('.')[1]
-            sw_tasks['task_id'] = os.environ['TASK_ID'].split('.')[2]
-            sw_tasks['execution_dt'] = os.environ['TASK_ID'].split('.')[3]
+            # The following is parsing trickery to allow task ids to contain dots
+            execution_dt = os.environ['TASK_ID'].split('.')[-1]
+            sw_tasks['execution_dt'] = execution_dt
+            sw_tasks['task_id'] = os.environ['TASK_ID'].split('.' , 2)[2].replace('.' + execution_dt, '')
         else:
             sw_tasks['has_task_id'] = False
 
@@ -124,8 +128,11 @@ class PtaskInvoker(Program):
                 'collection_name': self.collection.name,
                 'collection_path': self.collection.loaded_from
             })
+            start_time = time.time()
             self.execute()
-            print('\nFinished ptask "{0}"'.format(task_name))
+            end_time = time.time()
+            execution_time_delta = datetime.timedelta(seconds=(end_time - start_time))
+            print('\nFinished ptask "{0}". Total execution time: {1}'.format(task_name, str(execution_time_delta)))
         except (Failure, Exit, ParseError) as e:
             print('Received a possibly-skippable exception: {0!r}'.format(e))
             if isinstance(e, ParseError):

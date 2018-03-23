@@ -8,6 +8,7 @@ import traceback
 import sys
 import logging
 import os
+from pylib.sw_jobs.job_utils import hash_task_full_id
 
 logging.basicConfig(level=logging.INFO,
                     stream=sys.stdout)
@@ -16,7 +17,7 @@ logger = logging.getLogger(os.path.basename(__file__))
 valid_states = 'SUBMITTED,ACCEPTED,RUNNING'
 user = 'airflow'
 
-zombie_apps_template = 'http://%(server)s:%(port)d/ws/v1/cluster/apps?user=%(user)s&states=%(states)s&applicationTags=%(task_id)s'
+zombie_apps_template = 'http://%(server)s:%(port)d/ws/v1/cluster/apps?user=%(user)s&states=%(states)s&applicationTags=%(task_tags)s'
 kill_app_template = 'http://%(server)s:%(port)d/ws/v1/cluster/apps/%(app_id)s/state'
 
 
@@ -34,10 +35,13 @@ class ZombieKiller(object):
         if not task_id:
             raise ValueError("task_id cannot be empty")
 
-        logger.info('checking if jobs with Airflow unique identifier %s is running...' % task_id)
+        hashed_id = hash_task_full_id(task_id)
+        task_tags = ','.join([hashed_id, task_id])
+
+        logger.info('checking if jobs with Airflow unique identifier %s is running...' % task_tags)
 
         job_url = zombie_apps_template % {'server': self.server, 'port': self.port, 'user': user, 'states': valid_states,
-                                          'task_id': task_id}
+                                          'task_tags': task_tags}
         resp = json.load(urllib.urlopen(job_url))
         apps = resp['apps']
 
