@@ -14,39 +14,42 @@ class AthenaFetcher(object):
         }
 
     def fetch(self, *queries):
-        queries_left = list(queries)
-        open_requests = dict()
-        results = dict()
+        class QueryIndex:
+            def __init__(self, query):
+                self.query = query
+                self.status = 'NEW'
+                self.request = None
+                self.result = None
+
+        fetch_status = [QueryIndex(query) for query in queries]
+
+        def _by_status(queries, status):
+            return filter(lambda q: q.status == status, queries)
 
         def _iterate():
 
             # go over open requests, gather results of finished ones:
-            handled = list()
-            for request, query in open_requests.items():
-                query_info = self._conn.get_query_execution(QueryExecutionId=request)
-                if query_info['QueryExecution']['Status']['State'] == 'SUCCEEDED':
-                    results[query] = AthenaResultSet(self._conn.get_query_results(QueryExecutionId=request))
-                    handled.append(request)
-                    queries_left.remove(query)
+            for query_status in _by_status(fetch_status, 'RUNNING'):
+                query_info = self._conn.get_query_execution(QueryExecutionId=query_status.request)
+                updated_state = query_info['QueryExecution']['Status']['State']
+                if updated_state == 'SUCCEEDED':
+                    query_status.result = AthenaResultSet(self._conn.get_query_results(QueryExecutionId=query_status.request))
+                    query_status.status = 'SUCCEEDED'
+                elif updated_state == 'FAILED':
+                    query_status.result = None
+                    query_status.status = 'FAILED'
 
-            for cleared in handled:
-                open_requests.pop(cleared)
-
-            for query in queries_left:
-                if self._concurrent_reqs is not None and len(open_requests) > self._concurrent_reqs:
-                    break
-
-                if query not in results.keys():
-                    query_exec = self._conn.start_query_execution(
-                        QueryString=query, ResultConfiguration=self._res_config, QueryExecutionContext=self._context)
-                    open_requests[query_exec['QueryExecutionId']] = query
+            for new_query in _by_status(fetch_status, 'NEW')[len(_by_status(fetch_status, 'RUNNING')) : self._concurrent_reqs]:
+                query_exec = self._conn.start_query_execution(QueryString=new_query.query, ResultConfiguration=self._res_config, QueryExecutionContext=self._context)
+                new_query.request = query_exec['QueryExecutionId']
+                new_query.status = 'RUNNING'
 
         from time import sleep
-        while len(queries_left) > 0:
+        while any(q.status in ['NEW', 'RUNNING'] for q in fetch_status):
             sleep(10)
             _iterate()
 
-        return results
+        return {q.query: q.result for q in fetch_status}
 
 
 class AthenaResultSet(object):
