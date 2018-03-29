@@ -4,7 +4,7 @@ from pyhive.exc import OperationalError
 
 
 def get_hive_client():
-    return hive.Connection(host="10.110.41.22", port=10000)
+    return hive.Connection(host="10.10.25.91", port=10000)
 
 
 class HiveBranch(Branch):
