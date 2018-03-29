@@ -1088,12 +1088,14 @@ class ContextualizedTasksInfra(object):
             command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
 
-    def consolidate_parquet_dir(self, dir):
+    def consolidate_parquet_dir(self, dir, order_by=None):
         tmp_dir = "/tmp/crush/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + dir
         params = {'src': dir,
                   'dst': tmp_dir,
-                  'm': 1
+                  'm': 1,
+                  'ord': order_by
                   }
+
         ret_val = self.run_py_spark(
             app_name="Consolidate:" + dir,
             module='common',
