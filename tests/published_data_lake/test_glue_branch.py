@@ -16,7 +16,7 @@ class TestTableUtils(object):
 
     @pytest.fixture(scope="module")
     def branched_table(self):
-        return BranchableTable(name='metrica', db=TestTableUtils.db)
+        return BranchableTable(name='metrica', db=TestTableUtils.db, bucket='fake_bucket')
 
     def test_put_partition(self, monkeypatch, glue_branch, branched_table):
 
