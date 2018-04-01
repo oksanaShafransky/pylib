@@ -64,5 +64,5 @@ class Branch(object):
                                                                             branchable_table=branchable_table.name,
                                                                             branch=self.name)
 
-    def partition_location(self, branchable_table, partition):
-        return '{}/{}'.format(self._table_location(branchable_table), partition)
+    def partition_location(self, branchable_table, partition, fs='s3'):
+        return '{}/{}'.format(self._table_location(branchable_table), partition, fs=fs)
