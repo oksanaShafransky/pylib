@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pylib.published_data_lake.branch import Branch, BranchableTable
+from pylib.published_data_lake.branch import BranchableTable
 from pylib.published_data_lake.glue_branch import GlueBranch
 import pylib.published_data_lake.branch
 # noinspection PyPackageRequirements
