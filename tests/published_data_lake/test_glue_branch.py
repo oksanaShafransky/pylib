@@ -1,5 +1,5 @@
 from __future__ import print_function
-from pylib.published_data_lake.branch import Branch, BranchableTable
+from pylib.published_data_lake.branch import BranchableTable
 from pylib.published_data_lake.glue_branch import GlueBranch
 import pylib.published_data_lake.branch
 # noinspection PyPackageRequirements
@@ -16,7 +16,7 @@ class TestTableUtils(object):
 
     @pytest.fixture(scope="module")
     def branched_table(self):
-        return BranchableTable(name='metrica', db=TestTableUtils.db)
+        return BranchableTable(name='metrica', db=TestTableUtils.db, bucket='fake_bucket')
 
     def test_put_partition(self, monkeypatch, glue_branch, branched_table):
 

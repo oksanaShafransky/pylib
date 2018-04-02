@@ -58,9 +58,14 @@ class GlueBranch(Branch):
                 Expression='*__{}'.format(self.name)
             )
             assert response
+
+            def parse_bucket(path):
+                return path.split('//')[1].split('/')[0]
+
             for table_def in response['TableList']:
                 ans_db += [BranchableTable(db=db,
-                                           name=table_def['Name'].split('__{}'.format(self.name))[0])]
+                                           name=table_def['Name'].split('__{}'.format(self.name))[0],
+                                           bucket=parse_bucket(['StorageDescriptor']['Location']))]
             ans[db] = ans_db
         return ans
 

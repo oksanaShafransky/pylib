@@ -12,16 +12,15 @@ logger.setLevel(logging.DEBUG)
 PUBLISHED_DATA_LAKE_DB_PREFIX = 'sw_published_'
 
 
-def db_without_prefix(db):
-    return db.split(PUBLISHED_DATA_LAKE_DB_PREFIX)[1]
-
-
 class BranchableTable(object):
-    def __init__(self, db=None, name=None):
+    def __init__(self, db=None, name=None, bucket=None):
         assert db
+        assert db.startswith(PUBLISHED_DATA_LAKE_DB_PREFIX)
         assert name
+        assert bucket
         self.db = db
         self.name = name
+        self.bucket = bucket
 
 
 class Branch(object):
@@ -58,10 +57,12 @@ class Branch(object):
         return '{}.{}'.format(branchable_table.db,
                               self._table_name(branchable_table))
 
-    def _table_location(self, branchable_table):
-        return 's3://sw-dag-published-v2/{}/{}/{}'.format(db_without_prefix(branchable_table.db),
-                                                          branchable_table.name,
-                                                          self.name)
+    def _table_location(self, branchable_table, fs='s3'):
+        return '{fs}://{bucket}/{db}/{branchable_table}/{branch}'.format(fs=fs,
+                                                                            bucket=branchable_table.bucket,
+                                                                            db=branchable_table.db,
+                                                                            branchable_table=branchable_table.name,
+                                                                            branch=self.name)
 
-    def partition_location(self, branchable_table, partition):
-        return '{}/{}'.format(self._table_location(branchable_table), partition)
+    def partition_location(self, branchable_table, partition, fs='s3'):
+        return '{}/{}'.format(self._table_location(branchable_table, fs=fs), partition)

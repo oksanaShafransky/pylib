@@ -16,12 +16,24 @@ class HiveBranch(Branch):
         client = get_hive_client()
         ans = {}
         for db in dbs:
-            ans_db = []
+            branchable_tables_db = []
+            branch_tables_db = []
             cursor = client.cursor()
             cursor.execute("SHOW TABLES IN {db} LIKE '*__{branch}'".format(db=db, branch=self.name))
             for result in cursor.fetchall():
-                ans_db += [result[0]]
-            ans[db]=ans_db
+                branch_tables_db += [result[0]]
+            for branch_table_db in branch_tables_db:
+                cursor = client.cursor()
+                cursor.execute("SHOW CREATE TABLE {db}.{table}'".format(db=db, table=branch_table_db))
+                res = cursor.fetchall()
+                res_joined = ' '.join(map(lambda res: res[0], res))
+                res_joined_from_location = res_joined.split('LOCATION')[1]
+                res_joined_from_root_path = res_joined_from_location.split('//')[1]
+                bucket = res_joined_from_root_path.split('/')[0]
+                branch_tables_db += [BranchableTable(db=db,
+                                                     name=branch_table_db,
+                                                     bucket=bucket)]
+            ans[db] = branchable_tables_db
         return ans
 
     def put_partition(self, branchable_table, partition,
