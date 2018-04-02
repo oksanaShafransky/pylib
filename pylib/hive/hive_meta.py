@@ -30,8 +30,8 @@ def _sql_like(path):
 
 
 def _db_conn():
-    from pylib.tasks.ptask_infra import TasksInfra
-    kv = TasksInfra.kv()
+    from pylib.sw_config.bigdata_kv import get_kv
+    kv = get_kv()
 
     connection_string = kv.get(HIVE_METASTORE_CONN_STR_CONSUL_KEY) or HIVE_METASTORE_CONN_STR_DEFAULT
     database = kv.get(HIVE_METASTORE_DB_CONSUL_KEY) or HIVE_METASTORE_DB_DEFAULT

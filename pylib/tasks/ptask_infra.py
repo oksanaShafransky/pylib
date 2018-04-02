@@ -30,37 +30,11 @@ from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.common.string_utils import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
     create_client, directory_exists, copy_dir_from_path, calc_desired_partitions
-from pylib.sw_config.kv_factory import provider_from_config
-from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
+
 from pylib.hbase.hbase_utils import validate_records_per_region
 
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
-
-
-class KeyValueConfig(object):
-    _kv_prod_conf = """
-              [
-                {
-                     "class": "pylib.sw_config.consul.ConsulProxy",
-                     "server":"consul.service.production"
-                }
-              ]
-    """
-
-    _kv_stage_conf = """
-                  [
-                    {
-                         "class": "pylib.sw_config.consul.ConsulProxy",
-                         "server":"consul.service.staging"
-                    }
-                  ]
-        """
-
-    base_kv = {
-        'production': provider_from_config(_kv_prod_conf),
-        'staging': provider_from_config(_kv_stage_conf)
-    }
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
@@ -205,8 +179,8 @@ class TasksInfra(object):
 
     @staticmethod
     def kv(env='production', purpose='bigdata'):
-        basic_kv = KeyValueConfig.base_kv[env.lower()]
-        return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
+        from pylib.sw_config.bigdata_kv import get_kv
+        return get_kv(env, purpose)
 
     SMTP_SERVER = 'mta01.sg.internal'
 
