@@ -26,7 +26,7 @@ def _athena_query(query):
     )
     query_id = query_response['QueryExecutionId']
 
-    @retry(tries=10, delay=0.5, logger=None)
+    @retry(tries=300, delay=1, logger=None)
     def query_response_state():
         execution_status_query_response = athena_client.get_query_execution(
             QueryExecutionId=query_id)
