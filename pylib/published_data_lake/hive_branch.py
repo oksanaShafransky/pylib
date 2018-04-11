@@ -82,12 +82,11 @@ class HiveBranch(Branch):
         if use_glue_metastore_reference:
             import boto3
             from pylib.published_data_lake.glue_branch import _athena_query
-            result = _athena_query('SHOW CREATE TABLE {}'.format(self._fully_qualified_table_name(branchable_table)))
-            query_output_location = result['output_location']
-            query_output_bucket = query_output_location.replace('s3://','').split('/')[0]
-            query_output_path = query_output_location.replace('s3://','').split('/', 1)[1]
+            result = _athena_query('SHOW CREATE TABLE {}'.format(self._fully_qualified_table_name(branchable_table)),
+                                   's3://{}/tmp'.format(branchable_table.bucket))
+            query_output_path = result['output_location'].replace('s3://','').split('/', 1)[1]
             s3 = boto3.resource('s3')
-            obj = s3.Object(query_output_bucket, query_output_path)
+            obj = s3.Object(branchable_table.bucket, query_output_path)
             create_table_statement = obj.get()['Body'].read().decode('utf-8')
             create_table_statement_without_properties = create_table_statement.split('TBLPROPERTIES')[0]
             get_hive_client().cursor().execute("create DATABASE IF NOT EXISTS {}".format(branchable_table.db))
