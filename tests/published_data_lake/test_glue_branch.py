@@ -1,5 +1,6 @@
 from __future__ import print_function
-from pylib.published_data_lake.branch import GlueBranch, BranchableTable
+from pylib.published_data_lake.branch import BranchableTable
+from pylib.published_data_lake.glue_branch import GlueBranch
 import pylib.published_data_lake.branch
 # noinspection PyPackageRequirements
 import pytest
@@ -15,14 +16,13 @@ class TestTableUtils(object):
 
     @pytest.fixture(scope="module")
     def branched_table(self):
-        return BranchableTable(name='metrica', db=TestTableUtils.db)
+        return BranchableTable(name='metrica', db=TestTableUtils.db, bucket='fake_bucket')
 
     def test_put_partition(self, monkeypatch, glue_branch, branched_table):
 
         actual_commands = []
 
-        # noinspection PyUnusedLocal
-        def mock_athena_query(mock_self, query):
+        def mock_athena_query(query):
             actual_commands.append(query)
             return {'state': 'SUCCEEDED', 'state_change_reason': None}
             #if 'ADD PARTITION' in query:
@@ -30,7 +30,7 @@ class TestTableUtils(object):
             #else:
             #    return {'state': 'SUCCEEDED', 'state_change_reason': None}
 
-        monkeypatch.setattr(GlueBranch, '_GlueBranch__athena_query', mock_athena_query)
+        monkeypatch.setattr(pylib.published_data_lake.glue_branch, '_athena_query', mock_athena_query)
         ans = glue_branch.put_partition(branched_table, 'year=18/month=10/day=25')
 
         assert "ALTER TABLE {db}.{table}__{branch} ADD PARTITION (year='18', month='10', day='25') location"\
@@ -102,7 +102,7 @@ class TestTableUtils(object):
         monkeypatch.setattr(GlueBranch, 'list_branchable_tables',
                             lambda _, dbs: {dbs[0]: [branched_table]})
 
-        monkeypatch.setattr(pylib.published_data_lake.branch, 'get_glue_client', mock_get_client)
+        monkeypatch.setattr(pylib.published_data_lake.glue_branch, 'get_glue_client', mock_get_client)
 
         ans = glue_branch.fork_branch(forked_branch_name)
         assert ans

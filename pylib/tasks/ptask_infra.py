@@ -30,37 +30,11 @@ from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.common.string_utils import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
     create_client, directory_exists, copy_dir_from_path, calc_desired_partitions
-from pylib.sw_config.kv_factory import provider_from_config
-from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
+
 from pylib.hbase.hbase_utils import validate_records_per_region
 
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
-
-
-class KeyValueConfig(object):
-    _kv_prod_conf = """
-              [
-                {
-                     "class": "pylib.sw_config.consul.ConsulProxy",
-                     "server":"consul.service.production"
-                }
-              ]
-    """
-
-    _kv_stage_conf = """
-                  [
-                    {
-                         "class": "pylib.sw_config.consul.ConsulProxy",
-                         "server":"consul.service.staging"
-                    }
-                  ]
-        """
-
-    base_kv = {
-        'production': provider_from_config(_kv_prod_conf),
-        'staging': provider_from_config(_kv_stage_conf)
-    }
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
@@ -205,8 +179,8 @@ class TasksInfra(object):
 
     @staticmethod
     def kv(env='production', purpose='bigdata'):
-        basic_kv = KeyValueConfig.base_kv[env.lower()]
-        return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
+        from pylib.sw_config.bigdata_kv import get_kv
+        return get_kv(env, purpose)
 
     SMTP_SERVER = 'mta01.sg.internal'
 
@@ -816,9 +790,11 @@ class ContextualizedTasksInfra(object):
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
+        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.tags=$TASK_ID"' \
+                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' --deploy-mode cluster' \
@@ -837,7 +813,8 @@ class ContextualizedTasksInfra(object):
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'main_class': main_class,
-                      'jar': jar
+                      'jar': jar,
+                      'yarn_application_tags': yarn_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
@@ -951,11 +928,13 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
+        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' --conf "spark.yarn.tags=$TASK_ID"' \
+                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
@@ -973,7 +952,8 @@ class ContextualizedTasksInfra(object):
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
-                      'main_py': main_py_file
+                      'main_py': main_py_file,
+                      'yarn_application_tags': yarn_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
@@ -1082,12 +1062,14 @@ class ContextualizedTasksInfra(object):
             command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
 
-    def consolidate_parquet_dir(self, dir):
+    def consolidate_parquet_dir(self, dir, order_by=None):
         tmp_dir = "/tmp/crush/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + dir
         params = {'src': dir,
                   'dst': tmp_dir,
-                  'm': 1
+                  'm': 1,
+                  'ord': order_by
                   }
+
         ret_val = self.run_py_spark(
             app_name="Consolidate:" + dir,
             module='common',

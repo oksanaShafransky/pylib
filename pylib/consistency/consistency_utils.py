@@ -441,6 +441,14 @@ class ConsistencyTestInfra(object):
             )
             self.ti.assert_input_validity(model_paths, min_size_bytes=10, validate_marker=True)
 
+            total_result_path = ConsistencyTestInfra._gen_total_result_path(
+                base_dir=model_base_dir,
+                test_name=test_name,
+                test_date=model_date_parsed,
+                has_day_partition=has_day_partition
+            )
+            self.ti.assert_input_validity(total_result_path, min_size_bytes=10, validate_marker=True)
+
         command_params = ConsistencyTestInfra._get_consistency_test_command_params(
             test_name=test_name,
             data_date=self.ti.date,

@@ -1,4 +1,3 @@
-from boto import connect_s3
 from collections import namedtuple
 import subprocess
 

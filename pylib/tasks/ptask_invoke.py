@@ -28,7 +28,8 @@ class PtaskConfig(Config):
                                         'profile': False,
                                         'dry_run': False,
                                         'checks_only': False,
-                                        'execution_dir': '.'}
+                                        'execution_dir': '.',
+                                        'has_task_id': False}
         return global_defaults
 
 
@@ -99,8 +100,10 @@ class PtaskInvoker(Program):
             sw_tasks['has_task_id'] = True
             sw_tasks['execution_user'] = os.environ['TASK_ID'].split('.')[0]
             sw_tasks['dag_id'] = os.environ['TASK_ID'].split('.')[1]
-            sw_tasks['task_id'] = os.environ['TASK_ID'].split('.')[2]
-            sw_tasks['execution_dt'] = os.environ['TASK_ID'].split('.')[3]
+            # The following is parsing trickery to allow task ids to contain dots
+            execution_dt = os.environ['TASK_ID'].split('.')[-1]
+            sw_tasks['execution_dt'] = execution_dt
+            sw_tasks['task_id'] = os.environ['TASK_ID'].split('.' , 2)[2].replace('.' + execution_dt, '')
         else:
             sw_tasks['has_task_id'] = False
 
