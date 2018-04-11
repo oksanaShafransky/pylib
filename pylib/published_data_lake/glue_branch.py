@@ -124,7 +124,7 @@ class GlueBranch(Branch):
                                                      branchable_table.name)
         response = client.create_crawler(
             Name=crawler_name,
-            Role='arn:aws:iam::838192392483:role/AWSGlueServiceRole-Dag-Published-Data-Lake-Read',
+            Role='arn:aws:iam::838192392483:role/AWSGlueServiceRole-RootPublishedDataLakeReader',
             DatabaseName=branchable_table.db,
             Targets={'S3Targets':
                 [{
