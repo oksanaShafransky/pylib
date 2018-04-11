@@ -44,13 +44,13 @@ class HiveBranch(Branch):
         partition_already_exists=False
         table = self._fully_qualified_table_name(branchable_table)
         table_db = branchable_table.db
-        partition_sql = ', '.join(["{}='{}'".format(kv.split('=')[0], kv.split('=')[1])
+        # Note that the backticks are required for escaping keywords like 'date' -
+        # see https://issues.apache.org/jira/browse/HIVE-10294
+        partition_sql = ', '.join(["`{}`='{}'".format(kv.split('=')[0], kv.split('=')[1])
                                    for kv in partition.split('/')])
         try:
-            cursor = client.cursor()
-            # See https://issues.apache.org/jira/browse/HIVE-10294 - 'date' is among the reserved keywords
-            cursor.execute("set hive.support.sql11.reserved.keywords=false")
-            cursor.execute("ALTER TABLE {table} ADD PARTITION ({partition_sql}) location '{location}'"
+            client.cursor()\
+            .execute("ALTER TABLE {table} ADD PARTITION ({partition_sql}) location '{location}'"
                      .format(table=table,
                              location=self.partition_location(branchable_table, partition),
                              partition_sql=partition_sql))
@@ -70,8 +70,6 @@ class HiveBranch(Branch):
         if partition_already_exists:
             cursor = client.cursor()
             cursor.execute("USE {db}".format(db=table_db))
-            # See https://issues.apache.org/jira/browse/HIVE-10294 - 'date' is among the reserved keywords
-            cursor.execute("set hive.support.sql11.reserved.keywords=false")
             cursor.execute("ALTER TABLE {table} PARTITION ({partition_sql}) "
                            "set location '{location}'"
                            .format(table=self._table_name(branchable_table),
