@@ -13,12 +13,12 @@ def get_athena_client():
     return client
 
 
-def _athena_query(query):
+def _athena_query(query, output_path):
     athena_client = get_athena_client()
     query_response = athena_client.start_query_execution(
         QueryString=query,
         ResultConfiguration={
-            'OutputLocation': 's3://sw-dag-published-v2/tmp/',
+            'OutputLocation': output_path,
             'EncryptionConfiguration': {
                 'EncryptionOption': 'SSE_S3'
             }
@@ -77,7 +77,8 @@ class GlueBranch(Branch):
                                              "location '{location}'"
                                              .format(table=table,
                                                      location=self._table_location(branchable_table),
-                                                     partition_sql=partition_sql))
+                                                     partition_sql=partition_sql),
+                                       's3://{}/tmp'.format(branchable_table.bucket))
         logger.debug('Put partition query response is {}'.format(query_response))
         if query_response['state'] == 'SUCCEEDED':
             return True
@@ -123,7 +124,7 @@ class GlueBranch(Branch):
                                                      branchable_table.name)
         response = client.create_crawler(
             Name=crawler_name,
-            Role='arn:aws:iam::838192392483:role/AWSGlueServiceRole-Dag-Published-Data-Lake-Read',
+            Role='arn:aws:iam::838192392483:role/AWSGlueServiceRole-RootPublishedDataLakeReader',
             DatabaseName=branchable_table.db,
             Targets={'S3Targets':
                 [{

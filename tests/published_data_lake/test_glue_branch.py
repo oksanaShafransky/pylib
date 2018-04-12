@@ -22,7 +22,7 @@ class TestTableUtils(object):
 
         actual_commands = []
 
-        def mock_athena_query(query):
+        def mock_athena_query(query, output_path):
             actual_commands.append(query)
             return {'state': 'SUCCEEDED', 'state_change_reason': None}
             #if 'ADD PARTITION' in query:
