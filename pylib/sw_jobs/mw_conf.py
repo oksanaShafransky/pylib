@@ -1,8 +1,7 @@
 __author__ = 'Amit'
 
-import json
 from pycountry import countries
-from pylib.tasks.ptask_infra import TasksInfra
+from pylib.sw_config.bigdata_kv import get_kv
 
 
 # default_conf = {'pylib.sw_config.mock.DictProxy': {'services/mobile-web/env/main/countries': '840'}}
@@ -12,7 +11,7 @@ class MobileWebConfig(object):
 
     def __init__(self, mobile_web_env='main', kv_provider=None):
         self.root = 'services/mobile-web/env/%s' % mobile_web_env
-        self.conf = kv_provider or TasksInfra.kv()
+        self.conf = kv_provider or get_kv()
         self._countries = {}
 
     @property
