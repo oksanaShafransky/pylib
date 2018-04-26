@@ -35,6 +35,11 @@ def get_tables(db):
         curr.execute('show tables')
         return [item[0] for item in curr.fetch()]
 
+def get_create_statement(db, table_name):
+    with get_hive_connection().cursor() as curr:
+        curr.execute('show create table %s.%s' % (db, table_name))
+        return '\n'.join([r[0] for r in curr.fetch()])  + ';\n'
+
 
 def repair_table(table_name):
     with get_hive_connection().cursor() as curr:
