@@ -20,9 +20,7 @@ setup(
         'tld',
         'consulate==0.6.0',
         'urllib3==1.16',
-        'monthdelta',
-        'boto3==1.7.2',
-        'retry==0.9.2'
+        'monthdelta'
     ],
     setup_requires=[
         'pytest-runner',
