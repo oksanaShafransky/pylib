@@ -32,6 +32,11 @@ def validate_success(bucket, path):
     return len([f for f in bucket.list(_dirify(path) + '_SUCCESS')]) > 0
 
 
+def s3_files_exist(s3_conn, bucket_name, path):
+    bucket = s3_conn.get_bucket(bucket_name)
+    return len(list(bucket.list(prefix=_dirify(path)))) > 0
+
+
 def get_dates(bucket, path, is_ymd=True, check_success=False):
     sub_dirs = [ymd for ymd in sub_keys(bucket, path, levels=3) if ymd_pat.match(ymd)] \
         if is_ymd else \
