@@ -265,7 +265,7 @@
                                     <arg line="setup.py
                                         build
                                         sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
-                                        bdist_wheel --dist-dir ${project.basedir}/target/python-packages
+                                        bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                         bdist_egg --dist-dir ${project.basedir}/target/python-packages
                                     "/>
                                 </exec>
@@ -285,7 +285,7 @@
                                     <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
                                             build
                                             sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
-                                            bdist_wheel --dist-dir ${project.basedir}/target/python-packages
+                                            bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                             bdist_egg --dist-dir ${project.basedir}/target/python-packages
                                         "/>
                                 </exec>
