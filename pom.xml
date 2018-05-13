@@ -252,16 +252,16 @@
                         </configuration>
                     </execution>
                     <execution>
-                        <id>python-build</id>
-                        <phase>prepare-package</phase>
+                        <id>python-build-if-prod</id>
+                        <phase>package</phase>
                         <goals>
                             <goal>run</goal>
                         </goals>
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="build-python" unless="teamcity.exec">
-                                <exec executable="${build_python_path}python" osfamily="windows"
-                                      dir="${project.basedir}">
+                            <target name="build-python-prod" if="${production.deployment}">
+                                <exec executable="${build_python_path}python" dir="${project.basedir}">
+                                    if="${production.deployment}">
                                     <arg line="setup.py
                                         build
                                         sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
@@ -269,13 +269,25 @@
                                         bdist_egg --dist-dir ${project.basedir}/target/python-packages
                                     "/>
                                 </exec>
-                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}">
-                                    <arg line="setup.py
-                                        build
-                                        sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
-                                        bdist_wheel --dist-dir ${project.basedir}/target/python-packages
-                                        bdist_egg --dist-dir ${project.basedir}/target/python-packages
-                                    "/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>python-build-if-dev</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target name="build-python-dev" unless="${production.deployment}">
+                                <exec executable="${build_python_path}python" dir="${project.basedir}">
+                                    <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
+                                            build
+                                            sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
+                                            bdist_wheel --dist-dir ${project.basedir}/target/python-packages
+                                            bdist_egg --dist-dir ${project.basedir}/target/python-packages
+                                        "/>
                                 </exec>
                             </target>
                         </configuration>
@@ -310,10 +322,7 @@
                             <skip>${skip_local_python_install}</skip>
                             <exportAntProperties>true</exportAntProperties>
                             <target name="install-python" unless="teamcity.exec">
-                                <exec executable="${build_python_path}pip" osfamily="windows" dir="${project.basedir}">
-                                    <arg line="install --ignore-installed --editable ."/>
-                                </exec>
-                                <exec executable="${build_python_path}pip" osfamily="unix" dir="${project.basedir}">
+                                <exec executable="${build_python_path}pip" dir="${project.basedir}">
                                     <arg line="install --ignore-installed --editable ."/>
                                 </exec>
                             </target>
@@ -326,23 +335,13 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <failOnError>true</failOnError>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="deploy-python" unless="${production.deployment}">
-                                <exec executable="${build_python_path}python" osfamily="windows"
-                                      dir="${project.basedir}">
-                                    <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
-                                        sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
-                                        bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
-                                        bdist_egg --dist-dir ${project.basedir}/target/python-packages
-                                        upload -r sw-pypi-repo"/>
+                            <target name="deploy-python-dev" unless="${production.deployment}">
+                                <exec executable="${build_python_path}twine" osfamily="unix" dir="${project.basedir}">
+                                    <arg line="upload -r sw-pypi-repo ${project.basedir}/target/python-packages/*dev-${git_shortrevision}*"/>
                                 </exec>
-                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}">
-                                    <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
-                                        sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
-                                        bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
-                                        bdist_egg --dist-dir ${project.basedir}/target/python-packages
-                                        upload -r sw-pypi-repo"/>
+                                <exec executable="${build_python_path}\Scripts\twine" osfamily="windows" dir="${project.basedir}">
+                                    <arg line="upload -r sw-pypi-repo ${project.basedir}/target/python-packages/*dev-${git_shortrevision}*"/>
                                 </exec>
                             </target>
                         </configuration>
@@ -356,21 +355,9 @@
                         <configuration>
                             <failOnError>true</failOnError>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="deploy-python" if="${production.deployment}">
-                                <exec executable="${build_python_path}python" osfamily="windows"
-                                      dir="${project.basedir}">
-                                    <arg line="setup.py
-                                        sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
-                                        bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
-                                        bdist_egg --dist-dir ${project.basedir}/target/python-packages
-                                        upload -r sw-pypi-repo"/>
-                                </exec>
-                                <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}">
-                                    <arg line="setup.py
-                                        sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
-                                        bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
-                                        bdist_egg --dist-dir ${project.basedir}/target/python-packages
-                                        upload -r sw-pypi-repo"/>
+                            <target name="deploy-python-prod" if="${production.deployment}">
+                                <exec executable="${build_python_path}twine" dir="${project.basedir}">
+                                    <arg line="upload -r sw-pypi-repo ${project.basedir}/target/python-packages/* "/>
                                 </exec>
                             </target>
                         </configuration>
