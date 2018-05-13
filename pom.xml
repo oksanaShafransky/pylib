@@ -326,6 +326,7 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
+                            <failOnError>true</failOnError>
                             <exportAntProperties>true</exportAntProperties>
                             <target name="deploy-python" unless="${production.deployment}">
                                 <exec executable="${build_python_path}python" osfamily="windows"
@@ -353,6 +354,7 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
+                            <failOnError>true</failOnError>
                             <exportAntProperties>true</exportAntProperties>
                             <target name="deploy-python" if="${production.deployment}">
                                 <exec executable="${build_python_path}python" osfamily="windows"
