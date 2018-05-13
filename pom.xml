@@ -30,7 +30,7 @@
         </repository>
         <repository>
             <id>similar-bigdata</id>
-            <url>https://artifactory.similarweb.io/artifactory/list/similar-bigdata</url>
+            <url>https://maven-registry.similarweb.io/repository/similar-bigdata</url>
             <releases>
                 <enabled>true</enabled>
                 <updatePolicy>always</updatePolicy>
@@ -335,14 +335,14 @@
                                         sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                         bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                         bdist_egg --dist-dir ${project.basedir}/target/python-packages
-                                        upload -r artifactory"/>
+                                        upload -r sw-pypi-repo"/>
                                 </exec>
                                 <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}">
                                     <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
                                         sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                         bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                         bdist_egg --dist-dir ${project.basedir}/target/python-packages
-                                        upload -r artifactory"/>
+                                        upload -r sw-pypi-repo"/>
                                 </exec>
                             </target>
                         </configuration>
@@ -363,14 +363,14 @@
                                         sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                         bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                         bdist_egg --dist-dir ${project.basedir}/target/python-packages
-                                        upload -r artifactory"/>
+                                        upload -r sw-pypi-repo"/>
                                 </exec>
                                 <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}">
                                     <arg line="setup.py
                                         sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
                                         bdist_wheel --dist-dir ${project.basedir}/target/python-packages --plat-name linux-x86_64
                                         bdist_egg --dist-dir ${project.basedir}/target/python-packages
-                                        upload -r artifactory"/>
+                                        upload -r sw-pypi-repo"/>
                                 </exec>
                             </target>
                         </configuration>
