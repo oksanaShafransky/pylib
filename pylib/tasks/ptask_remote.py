@@ -36,7 +36,7 @@ run \
 sudo mkdir -p %(execution_dir)s && \
 sudo cp -r /tmp/dockexec/mapped_code/* %(execution_dir)s && \
 source /opt/anaconda/bin/activate mrp27 && \
-sudo pip install --no-dependencies --upgrade -i  https://artifactory.similarweb.io/api/pypi/similar-pypi/simple sw_pylib &&
+sudo pip install --no-dependencies --upgrade -i  https://pypi-registry.similarweb.io/repository/similar-pypi/simple sw_pylib &&
 %(bash_command)s"
     '''
 

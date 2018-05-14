@@ -916,7 +916,7 @@ class ContextualizedTasksInfra(object):
         additional_artifacts_paths = []
         for artifact in additional_artifacts:
             artifact_path = '/tmp/%s-%s.egg' % (str(uuid.uuid4()), artifact)
-            artifact_url = 'https://artifactory.similarweb.io/api/pypi/similar-pypi/packages/%(artifact)s/1.0.0/%(artifact)s-1.0.0-py2.7.egg' % \
+            artifact_url = 'https://pypi-registry.similarweb.io/repository/similar-pypi/packages/%(artifact)s/1.0.0/%(artifact)s-1.0.0-py2.7.egg' % \
                            {'artifact': artifact}
             opener = urllib.URLopener()
             opener.retrieve(artifact_url, artifact_path)
