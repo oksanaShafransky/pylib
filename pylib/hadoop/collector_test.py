@@ -74,8 +74,9 @@ def compare_collectors(daily_agg_dir, date, mailing_list=None, threshold=0.05):
             print "Error while inspecting %s: %s" % (col, str(e))
 
     # check if report is in fact empty
-    if report == '':
-        report = 'No Significant Changes'
-    print(report)
-    if mailing_list is not None:
-        __send_report(report, date, mailing_list)
+    if report != '':
+        print(report)
+        if mailing_list is not None:
+            __send_report(report, date, mailing_list)
+    else:
+        print('No significant changes detected')
