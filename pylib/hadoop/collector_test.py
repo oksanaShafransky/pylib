@@ -79,4 +79,4 @@ def compare_collectors(daily_agg_dir, date, mailing_list=None, threshold=0.05):
         if mailing_list is not None:
             __send_report(report, date, mailing_list)
     else:
-        print('No significant changes detected')
+        print('No significant changes detected ')
