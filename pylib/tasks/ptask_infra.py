@@ -1046,12 +1046,6 @@ class ContextualizedTasksInfra(object):
         # several sanity checks over the given path
         assert path is not None
         assert type(path) is str
-        p1 = re.compile('\/similargroup\/data/analytics\/.+')
-        p2 = re.compile('\/similargroup\/data/mobile-analytics\/.+')
-        p3 = re.compile('\/similargroup\/data/ios-analytics\/.+')
-        p4 = re.compile('\/user\/.+\/.+')
-        assert p1.match(path) is not None or p2.match(path) is not None or p3.match(path) is not None or p4.match(
-            path) is not None
 
         if io_format is not None:
             if codec is not None:
