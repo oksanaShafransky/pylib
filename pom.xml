@@ -340,7 +340,8 @@
                                 <exec executable="${build_python_path}twine" osfamily="unix" dir="${project.basedir}">
                                     <arg line="upload -r sw-pypi-repo ${project.basedir}/target/python-packages/*dev-${git_shortrevision}*"/>
                                 </exec>
-                                <exec executable="${build_python_path}\Scripts\twine" osfamily="windows" dir="${project.basedir}">
+                                <exec executable="${build_python_path}\Scripts\twine" osfamily="windows"
+                                      dir="${project.basedir}">
                                     <arg line="upload -r sw-pypi-repo ${project.basedir}/target/python-packages/*dev-${git_shortrevision}*"/>
                                 </exec>
                             </target>
@@ -353,9 +354,8 @@
                             <goal>run</goal>
                         </goals>
                         <configuration>
-                            <failOnError>true</failOnError>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="deploy-python-prod" if="${production.deployment}">
+                            <target name="deploy-python-prod" if="${production.deployment}" failonerror="true">
                                 <exec executable="${build_python_path}twine" dir="${project.basedir}">
                                     <arg line="upload -r sw-pypi-repo ${project.basedir}/target/python-packages/* "/>
                                 </exec>
