@@ -13,7 +13,7 @@ def get_my_container_id():
     return os.environ.get('HOSTNAME')
 
 
-def get_namenode_url_from_hdfs_site():
+def docker_image_full_name():
     docker_gate = get_my_docker_gate()
     if docker_gate is None:
         return None
