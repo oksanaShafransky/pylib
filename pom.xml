@@ -281,7 +281,7 @@
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
                             <target name="build-python-dev" unless="${production.deployment}">
-                                <exec executable="${build_python_path}python" dir="${project.basedir}">
+                                <exec executable="${build_python_path}python" dir="${project.basedir}" failonerror="true">
                                     <arg line="setup.py egg_info --tag-build .dev-${git_shortrevision}
                                             build
                                             sdist --dist-dir ${project.basedir}/target/python-packages --formats=zip
@@ -355,8 +355,8 @@
                         </goals>
                         <configuration>
                             <exportAntProperties>true</exportAntProperties>
-                            <target name="deploy-python-prod" if="${production.deployment}" failonerror="true">
-                                <exec executable="${build_python_path}twine" dir="${project.basedir}">
+                            <target name="deploy-python-prod" if="${production.deployment}">
+                                <exec executable="${build_python_path}twine" dir="${project.basedir}" failonerror="true">
                                     <arg line="upload -r sw-pypi-repo ${project.basedir}/target/python-packages/* "/>
                                 </exec>
                             </target>
