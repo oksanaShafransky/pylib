@@ -15,6 +15,7 @@ import datetime
 import six
 import sys
 import time
+import numpy as np
 
 # Adjust log level
 from pylib.common.date_utils import get_dates_range
@@ -32,6 +33,8 @@ from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delet
     create_client, directory_exists, copy_dir_from_path, calc_desired_partitions
 
 from pylib.hbase.hbase_utils import validate_records_per_region
+from pylib.aws.data_checks import is_s3_folder_big_enough, validate_success, get_s3_folder_size
+from pylib.aws.s3 import s3_connection
 
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
@@ -71,6 +74,10 @@ class TasksInfra(object):
             return '%s/country=%s' % (TasksInfra.year_month_day(date, zero_padding=zero_padding), country)
 
     @staticmethod
+    def country_year_month_day(date, country, zero_padding=True):
+        return 'country=%s/%s' % (country, TasksInfra.year_month_day(date, zero_padding=zero_padding))
+
+    @staticmethod
     def year_month(date, zero_padding=True):
         if date is None:
             raise AttributeError("date wasn't passed")
@@ -105,6 +112,18 @@ class TasksInfra(object):
             return 'year=%s/month=%s/day=%s' % (year_str, previous_day.month, previous_day.day)
 
     @staticmethod
+    def year_month_before_day(date, deltea=1,  zero_padding=True):
+        if date is None:
+            raise AttributeError("date wasn't passed")
+        previous_day = date - datetime.timedelta(days=deltea)
+        year_str = str(previous_day.year)[2:]
+        if zero_padding:
+            return 'year=%s/month=%s/day=%s' % (
+                year_str, str(previous_day.month).zfill(2), str(previous_day.day).zfill(2))
+        else:
+            return 'year=%s/month=%s/day=%s' % (year_str, previous_day.month, previous_day.day)
+
+    @staticmethod
     def year_month_next_day(date, zero_padding=True):
         if date is None:
             raise AttributeError("date wasn't passed")
@@ -118,6 +137,10 @@ class TasksInfra(object):
     @staticmethod
     def year_month_country(date, country, zero_padding=True):
         return '%s/country=%s' % (TasksInfra.year_month(date, zero_padding=zero_padding), country)
+
+    @staticmethod
+    def country_year_month(date, country, zero_padding=True):
+        return 'country=%s/%s' % (country, TasksInfra.year_month(date, zero_padding=zero_padding))
 
     @staticmethod
     def days_in_range(end_date, mode_type):
@@ -743,6 +766,18 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.year_month_country(self.__get_common_args()['date'], country,
                                              zero_padding=zero_padding)
 
+    def country_year_month_day(self, date=False, country, zero_padding=True):
+        if date==False:
+            date = self.__get_common_args()['date']
+        return TasksInfra.country_year_month_day(date, country,
+                                                 zero_padding=zero_padding)
+
+    def country_year_month(self, date=False, country, zero_padding=True):
+        if date==False:
+            date = self.__get_common_args()['date']
+        return TasksInfra.country_year_month(date, country,
+                                             zero_padding=zero_padding)
+
     def year_month(self, zero_padding=True):
         return TasksInfra.year_month(self.__get_common_args()['date'],
                                      zero_padding=zero_padding)
@@ -754,6 +789,10 @@ class ContextualizedTasksInfra(object):
     def year_month_previous_day(self, zero_padding=True):
         return TasksInfra.year_month_previous_day(self.__get_common_args()['date'],
                                                   zero_padding=zero_padding)
+
+    def year_month_before_day(self, delta=1, zero_padding=True):
+        return TasksInfra.year_month_before_day(self.__get_common_args()['date'], delta=delta,
+        zero_padding = zero_padding)
 
     def year_month_next_day(self, zero_padding=True):
         return TasksInfra.year_month_next_day(self.__get_common_args()['date'],
@@ -1103,6 +1142,40 @@ class ContextualizedTasksInfra(object):
         bash = 'hive -e "%s" 2>&1' % repair_statements
         self.run_bash(bash)
 
+    # ----------- S3 -----------
+    def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
+        s3_conn = s3_connection.get_s3_connection(profile=profile)
+        ans = True
+        min_size = min_size
+        if dynamic_min_size:
+            min_size = self.get_dynamic_min_dir_size(s3_conn, bucket_name, path)
+        if validate_marker:
+            ans = ans and validate_success(s3_conn=s3_conn, bucket_name=bucket_name, path=path)
+        ans = ans and is_s3_folder_big_enough(s3_conn=s3_conn, bucket_name=bucket_name, path=path, min_size=min_size)
+        assert ans is True, 'Input is not valid, given bucket is %s and path is %s' % (bucket_name, path)
+
+    def assert_s3_output_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
+        s3_conn = s3_connection.get_s3_connection(profile=profile)
+        ans = True
+        min_size = min_size
+        if dynamic_min_size:
+            min_size = self.get_dynamic_min_dir_size(s3_conn, bucket_name, path)
+        if validate_marker:
+            ans = ans and validate_success(s3_conn=s3_conn, bucket_name=bucket_name, path=path)
+        ans = ans and is_s3_folder_big_enough(s3_conn=s3_conn, bucket_name=bucket_name, path=path, min_size=min_size)
+        assert ans is True, 'Output is not valid, given bucket is %s and path is %s' % (bucket_name, path)
+
+    def get_dynamic_min_dir_size(self, s3_conn, bucket_name, path, min_std=3, time_delta=10):
+        path = path.split('year')[0] # removing the date suffix
+        sizes_list = []
+        for i in range(1, time_delta+1):
+            sizes_list.append(get_s3_folder_size(s3_conn=s3_conn, bucket_name=bucket_name, path=path + self.year_month_before_day(i)))
+            sizes_list = [a for a in sizes_list if a != 0]
+        if len(sizes_list)>0:
+            min_size = np.mean(sizes_list) - (min_std * np.std(sizes_list))
+        else:
+            min_size = 0
+        return min_size
     @property
     def base_dir(self):
         return self.__get_common_args()['base_dir']

@@ -2,7 +2,6 @@ import boto
 import re
 from datetime import datetime
 
-
 ym_pat = re.compile('.*year=\d{2}/month=\d{2}')
 ymd_pat = re.compile('.*year=\d{2}/month=\d{2}/day=\d{2}')
 
@@ -28,7 +27,8 @@ def sub_keys(bucket, path, levels=1, delim='/'):
     return ret
 
 
-def validate_success(bucket, path):
+def validate_success(s3_conn, bucket_name, path):
+    bucket = s3_conn.get_bucket(bucket_name)
     return len([f for f in bucket.list(_dirify(path) + '_SUCCESS')]) > 0
 
 
@@ -50,14 +50,33 @@ def get_dates(bucket, path, is_ymd=True, check_success=False):
     return [datetime.strptime(_dirify(sd)[len(_dirify(path)):], date_fmt) for sd in sub_dirs]
 
 
-if __name__ == '__main__':
+def get_s3_folder_size(s3_conn, bucket_name, path):
+    '''Given a s3 folder name, retrieve the size of
+    the sum of all files together. Returns the size in
+    gigabytes and the number of objects.'''
+    bucket = s3_conn.get_bucket(bucket_name)
+    total_bytes = 0
+    for key in bucket.list(prefix=_dirify(path)):
+        total_bytes += key.size
+    return total_bytes
 
+
+def is_s3_folder_big_enough(s3_conn, bucket_name, path, min_size=0):
+    '''Given a s3 folder name, retrieve True if the total of
+    the folder is bigger then the min_size.
+    Faster impelmantation than get_s3_folder_size'''
+    bucket = s3_conn.get_bucket(bucket_name)
+    total_bytes = 0
+    for key in bucket.list(prefix=_dirify(path)):
+        total_bytes += key.size
+        if total_bytes > min_size:
+            return True
+    return False
+
+
+if __name__ == '__main__':
     connector = boto.connect_s3()
     bucket = connector.get_bucket('similargroup-backup-retention')
 
     # example use
     print get_dates(bucket, 'mrp/similargroup/data/mobile-analytics/daily/parquet-visits', check_success=True)
-
-
-
-
