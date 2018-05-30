@@ -766,13 +766,13 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.year_month_country(self.__get_common_args()['date'], country,
                                              zero_padding=zero_padding)
 
-    def country_year_month_day(self, date=False, country, zero_padding=True):
+    def country_year_month_day(self, country, date=False, zero_padding=True):
         if date==False:
             date = self.__get_common_args()['date']
         return TasksInfra.country_year_month_day(date, country,
                                                  zero_padding=zero_padding)
 
-    def country_year_month(self, date=False, country, zero_padding=True):
+    def country_year_month(self, country, date=False, zero_padding=True):
         if date==False:
             date = self.__get_common_args()['date']
         return TasksInfra.country_year_month(date, country,
