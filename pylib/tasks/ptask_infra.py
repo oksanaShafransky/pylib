@@ -1145,23 +1145,25 @@ class ContextualizedTasksInfra(object):
     # ----------- S3 -----------
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
+        bucket = s3_conn.get_bucket(bucket_name)
         ans = True
         min_size = min_size
         if dynamic_min_size:
             min_size = self.get_dynamic_min_dir_size(s3_conn, bucket_name, path)
         if validate_marker:
-            ans = ans and validate_success(s3_conn=s3_conn, bucket_name=bucket_name, path=path)
+            ans = ans and validate_success(bucket=bucket, path=path)
         ans = ans and is_s3_folder_big_enough(s3_conn=s3_conn, bucket_name=bucket_name, path=path, min_size=min_size)
         assert ans is True, 'Input is not valid, given bucket is %s and path is %s' % (bucket_name, path)
 
     def assert_s3_output_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
+        bucket = s3_conn.get_bucket(bucket_name)
         ans = True
         min_size = min_size
         if dynamic_min_size:
             min_size = self.get_dynamic_min_dir_size(s3_conn, bucket_name, path)
         if validate_marker:
-            ans = ans and validate_success(s3_conn=s3_conn, bucket_name=bucket_name, path=path)
+            ans = ans and validate_success(bucket=bucket, path=path)
         ans = ans and is_s3_folder_big_enough(s3_conn=s3_conn, bucket_name=bucket_name, path=path, min_size=min_size)
         assert ans is True, 'Output is not valid, given bucket is %s and path is %s' % (bucket_name, path)
 

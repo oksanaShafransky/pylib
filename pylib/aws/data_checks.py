@@ -27,8 +27,7 @@ def sub_keys(bucket, path, levels=1, delim='/'):
     return ret
 
 
-def validate_success(s3_conn, bucket_name, path):
-    bucket = s3_conn.get_bucket(bucket_name)
+def validate_success(bucket, path):
     return len([f for f in bucket.list(_dirify(path) + '_SUCCESS')]) > 0
 
 
