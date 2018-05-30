@@ -20,7 +20,8 @@ setup(
         'tld',
         'consulate==0.6.0',
         'urllib3==1.16',
-        'monthdelta'
+        'monthdelta',
+        'numpy==1.12.0'
     ],
     setup_requires=[
         'pytest-runner',
