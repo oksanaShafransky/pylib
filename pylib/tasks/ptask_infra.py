@@ -1143,8 +1143,9 @@ class ContextualizedTasksInfra(object):
         self.run_bash(bash)
 
     # ----------- S3 -----------
-    def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
+    def assert_s3_input_validity(self, bucket_name, full_path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
+        bucket_name = bucket_name.replace("/", "")
         bucket = s3_conn.get_bucket(bucket_name)
         ans = True
         min_size = min_size
@@ -1157,6 +1158,7 @@ class ContextualizedTasksInfra(object):
 
     def assert_s3_output_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
+        bucket_name = bucket_name.replace("/", "")
         bucket = s3_conn.get_bucket(bucket_name)
         ans = True
         min_size = min_size
@@ -1178,6 +1180,7 @@ class ContextualizedTasksInfra(object):
         else:
             min_size = 0
         return min_size
+
     @property
     def base_dir(self):
         return self.__get_common_args()['base_dir']
