@@ -424,6 +424,8 @@ class ConsistencyTestInfra(object):
         :param named_spark_args: named spark args dictionary to override defaults
         :param spark_configs: spark configs dictionary to override defaults
         :param spark_queue: override queue (default is 'calculation')
+        :param benchmark_mode: specify whether this test is run from within model training (benchmark) or independently
+
         """
         countries_list = map(int, countries.split(','))
 
@@ -447,7 +449,8 @@ class ConsistencyTestInfra(object):
                 test_date=model_date_parsed,
                 has_day_partition=has_day_partition
             )
-            self.ti.assert_input_validity(total_result_path, min_size_bytes=10, validate_marker=True)
+            if not benchmark_mode:
+                self.ti.assert_input_validity(total_result_path, min_size_bytes=10, validate_marker=True)
 
         command_params = ConsistencyTestInfra._get_consistency_test_command_params(
             test_name=test_name,
