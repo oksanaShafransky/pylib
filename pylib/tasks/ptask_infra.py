@@ -159,16 +159,16 @@ class TasksInfra(object):
             yield start_date + datetime.timedelta(days=i)
 
     @staticmethod
-    def dates_range_paths(directory, mode, end_date, lookback=None):
+    def dates_range_paths(directory, mode, end_date, lookback=None, zero_padding=True):
         if mode == 'snapshot':
             dates_range = get_dates_range(end_date, lookback or 24, step_type='months')
-            return [(directory + TasksInfra.year_month(date), date) for date in dates_range]
+            return [(directory + TasksInfra.year_month(date, zero_padding=zero_padding), date) for date in dates_range]
         elif mode == 'window':
             dates_range = get_dates_range(end_date, lookback or 28)
-            return [(directory + TasksInfra.year_month_day(date), date) for date in dates_range]
+            return [(directory + TasksInfra.year_month_day(date, zero_padding=zero_padding), date) for date in dates_range]
         else:
             dates_range = get_dates_range(end_date, lookback or 150)
-            return [(directory + TasksInfra.year_month_day(date), date) for date in dates_range]
+            return [(directory + TasksInfra.year_month_day(date, zero_padding=zero_padding), date) for date in dates_range]
 
     EXEC_WRAPPERS = {
         'python': '"',
