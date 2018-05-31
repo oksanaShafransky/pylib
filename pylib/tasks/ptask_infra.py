@@ -112,10 +112,10 @@ class TasksInfra(object):
             return 'year=%s/month=%s/day=%s' % (year_str, previous_day.month, previous_day.day)
 
     @staticmethod
-    def year_month_before_day(date, deltea=1,  zero_padding=True):
+    def year_month_before_day(date, delta=1,  zero_padding=True):
         if date is None:
             raise AttributeError("date wasn't passed")
-        previous_day = date - datetime.timedelta(days=deltea)
+        previous_day = date - datetime.timedelta(days=delta)
         year_str = str(previous_day.year)[2:]
         if zero_padding:
             return 'year=%s/month=%s/day=%s' % (
@@ -1143,7 +1143,7 @@ class ContextualizedTasksInfra(object):
         self.run_bash(bash)
 
     # ----------- S3 -----------
-    def assert_s3_input_validity(self, bucket_name, full_path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
+    def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
         bucket_name = bucket_name.replace("/", "")
         bucket = s3_conn.get_bucket(bucket_name)
@@ -1174,12 +1174,12 @@ class ContextualizedTasksInfra(object):
         sizes_list = []
         for i in range(1, time_delta+1):
             sizes_list.append(get_s3_folder_size(s3_conn=s3_conn, bucket_name=bucket_name, path=path + self.year_month_before_day(i)))
-            sizes_list = [a for a in sizes_list if a != 0]
+        sizes_list = [a for a in sizes_list if a != 0]
         if len(sizes_list)>0:
             min_size = np.mean(sizes_list) - (min_std * np.std(sizes_list))
         else:
             min_size = 0
-        return min_size
+        return max(0,min_size)
 
     @property
     def base_dir(self):
