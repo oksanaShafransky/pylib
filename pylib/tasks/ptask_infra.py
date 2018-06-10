@@ -1095,7 +1095,7 @@ class ContextualizedTasksInfra(object):
             command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
 
-    def consolidate_parquet_dir(self, dir, order_by=None):
+    def consolidate_parquet_dir(self, dir, order_by=None, ignore_bad_input=False):
         tmp_dir = "/tmp/crush/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + dir
         params = {'src': dir,
                   'dst': tmp_dir,
@@ -1112,7 +1112,7 @@ class ContextualizedTasksInfra(object):
             main_py_file='scripts/utils/crush_parquet.py',
             queue='consolidation',
             command_params=params,
-            spark_configs={'spark.yarn.executor.memoryOverhead': '1024'},
+            spark_configs={'spark.yarn.executor.memoryOverhead': '1024', 'spark.sql.files.ignoreCorruptFiles': str(ignore_bad_input)},
             named_spark_args={'num-executors': '20', 'driver-memory': '2G', 'executor-memory': '2G'}
         )
         logging.info("Return value from spark-submit: %s" % ret_val)
