@@ -1112,7 +1112,7 @@ class ContextualizedTasksInfra(object):
             main_py_file='scripts/utils/crush_parquet.py',
             queue='consolidation',
             command_params=params,
-            spark_configs={'spark.yarn.executor.memoryOverhead': '1024', 'spark.sql.files.ignoreCorruptFiles': str(ignore_bad_input)},
+            spark_configs={'spark.yarn.executor.memoryOverhead': '1024', 'spark.sql.files.ignoreCorruptFiles': str(ignore_bad_input).lower()},
             named_spark_args={'num-executors': '20', 'driver-memory': '2G', 'executor-memory': '2G'}
         )
         logging.info("Return value from spark-submit: %s" % ret_val)
