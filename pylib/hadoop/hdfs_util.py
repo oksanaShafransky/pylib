@@ -225,6 +225,16 @@ def list_files(paths, hdfs_client=None):
             child['file_type'] == 'f']
 
 
+def list_files_with_size(paths, hdfs_client=None):
+    if not hdfs_client:
+        hdfs_client = create_client()
+    return {
+        child['path']: child['length']
+        for child in hdfs_client.ls([paths] if not isinstance(paths, list) else paths)
+        if child['file_type'] == 'f'
+    }
+
+
 def count_files(path, hdfs_client=None):
     if not hdfs_client:
         hdfs_client = create_client()
