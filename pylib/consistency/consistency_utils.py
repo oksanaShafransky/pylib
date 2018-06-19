@@ -510,7 +510,3 @@ class ConsistencyTestInfra(object):
         self.ti.assert_output_validity(model_result_paths, min_size_bytes=10, validate_marker=True)
         self.ti.assert_output_validity(total_result_path, min_size_bytes=100, validate_marker=True)
 
-        self.ti.consolidate_dir(path=result_paths, io_format='text', codec='gzip')
-        self.ti.consolidate_dir(path=model_result_paths, io_format='text', codec='gzip')
-        self.ti.consolidate_dir(path=total_result_path, io_format='text', codec='gzip')
-
