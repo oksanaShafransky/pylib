@@ -220,7 +220,12 @@ class ConsistencyTestInfra(object):
             cp_threshold,
             model_date,
             email_to,
-            benchmark_mode):
+            benchmark_mode,
+            std_cp,
+            avg_cp,
+            std_ss,
+            avg_ss
+    ):
 
         print('Running test %s with model %s' % (test_name, model_date))
 
@@ -242,7 +247,11 @@ class ConsistencyTestInfra(object):
             '-cp_threshold': cp_threshold,
             '-email_to': email_to,
             '-model_date': model_date,
-            '-benchmark_mode': benchmark_mode
+            '-benchmark_mode': benchmark_mode,
+            '-std_cp': std_cp,
+            '-avg_cp': avg_cp,
+            '-std_ss': std_ss,
+            '-avg_ss': avg_ss
         }
         return params
 
@@ -398,7 +407,12 @@ class ConsistencyTestInfra(object):
             named_spark_args=None,
             spark_configs=None,
             spark_queue='calculation',
-            benchmark_mode=False
+            benchmark_mode=False,
+            std_cp=0.036,
+            avg_cp=0.0586,
+            std_ss=0.05,
+            avg_ss=0.22,
+
     ):
         """
         :param test_name: unique test name - used for hdfs path generation and spark job name
@@ -425,6 +439,10 @@ class ConsistencyTestInfra(object):
         :param spark_configs: spark configs dictionary to override defaults
         :param spark_queue: override queue (default is 'calculation')
         :param benchmark_mode: specify whether this test is run from within model training (benchmark) or independently
+        :param std_cp: std of cp for country alarm
+        :param avg_cp: avg of cp for country alarm
+        :param std_ss: std of significant slope for country alarm
+        :param avg_ss: avg of significant slope for country alarm
 
         """
         countries_list = map(int, countries.split(','))
@@ -469,7 +487,11 @@ class ConsistencyTestInfra(object):
             cp_threshold=cp_threshold,
             model_date=model_date_parsed if model_date else None,
             email_to=email_to,
-            benchmark_mode=benchmark_mode
+            benchmark_mode=benchmark_mode,
+            std_cp=std_cp,
+            avg_cp=avg_cp,
+            std_ss=std_ss,
+            avg_ss=avg_ss
         )
 
         result_paths = ConsistencyTestInfra._gen_result_paths(
