@@ -6,7 +6,7 @@ import urllib
 import logging
 import re
 
-job_history_server = 'http://mrp-nn-a01.sg.internal'
+job_history_server = 'http://hdfs-namenode-mrp.service.production'
 job_history_port = 19888
 
 job_endpoint = '%(server)s:%(port)d/ws/v1/history/mapreduce/jobs/%(job_id)s'

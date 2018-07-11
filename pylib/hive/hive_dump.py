@@ -41,7 +41,12 @@ def dump_databases(db_list=None):
 
 
 if __name__ == '__main__':
-    dump_databases()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--databases', help='delimited list input', type=str)
+    args = parser.parse_args()
+
+    dbs = args.databases.split(',') if args.databases else None
+    print dump_databases(db_list=dbs)
 
 
 
