@@ -411,7 +411,7 @@ class ConsistencyTestInfra(object):
             std_cp=0.036,
             avg_cp=0.0586,
             std_ss=0.05,
-            avg_ss=0.22,
+            avg_ss=0.22
 
     ):
         """
