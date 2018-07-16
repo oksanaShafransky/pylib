@@ -607,7 +607,7 @@ class ContextualizedTasksInfra(object):
                 query = 'ADD FILE %s/%s; \n%s' % (cache_dir, target_name, query)
 
         HiveProcessRunner().run_query(query, hive_params, job_name=job_name, partitions=partitions, log_dir=log_dir,
-                                      is_dry_run=self.dry_run or self.checks_only, aux_jars=aux_jars)
+                                      is_dry_run=self.dry_run or self.checks_only, aux_jars=aux_jars, **extra_hive_conf)
         for mdir in managed_output_dirs:
             self.mark_success(mdir)
 
