@@ -49,5 +49,6 @@ setup(
             'ptask = pylib.tasks.ptask_invoke:main'
         ]
     },
+    data_files=[('/var/pylib_config', ['config/services_config.yaml'])],
     include_package_data=True
 )

@@ -2,11 +2,12 @@ import psycopg2
 import urlparse
 import re
 import logging
+from pylib.config.consul_services_config import config
 
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
 
-HIVE_METASTORE_CONN_STR_DEFAULT = 'postgresql://readonly:readonly@hive-postgres-mrp.service.production'
+HIVE_METASTORE_CONN_STR_DEFAULT = 'postgresql://readonly:readonly@hive-postgres-mrp' + config.services['production']
 HIVE_METASTORE_DB_DEFAULT = 'hive'
 HIVE_METASTORE_PORT_DEFAULT = 5432
 
