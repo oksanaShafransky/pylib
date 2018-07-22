@@ -5,12 +5,11 @@ import math
 import six
 import snakebite.client
 from snakebite.errors import FileNotFoundException
-from pylib.config.consul_services_config import config
 
 __author__ = 'Felix'
 
 MRP_HDFS_NAMENODE_PORT = 8020
-MRP_HDFS_NAMENODE_SERVER = config.services_full_name['active_name_node']
+MRP_HDFS_NAMENODE_SERVER = 'active.hdfs-namenode-mrp.service.production'
 
 logger = logging.getLogger(__name__)
 
