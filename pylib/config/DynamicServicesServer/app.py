@@ -4,7 +4,7 @@ from voluptuous import Required, All, Length, Schema, MultipleInvalid
 import yaml
 import collections
 import os
-from pylib.config.DynamicServicesServer.ServiceBuilder import ServiceBuilder
+from ServiceBuilder import ServiceBuilder
 
 __location__ = os.path.realpath(
     os.path.join(os.getcwd(), os.path.dirname(__file__)))
