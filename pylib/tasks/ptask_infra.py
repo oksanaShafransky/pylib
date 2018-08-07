@@ -1063,20 +1063,6 @@ class ContextualizedTasksInfra(object):
             additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
         return additional_configs
 
-    def read_s3_configuration(self, property_key, section='default'):
-        import boto
-        config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
-        return config.get(section, property_key)
-
-    def set_s3_keys(self, access=None, secret=None):
-        access_key = access or self.read_s3_configuration('access_key')
-        self.jvm_opts['fs.s3a.access.key'] = access_key
-        self.run_bash('aws configure set aws_access_key_id %s' % access_key)
-
-        secret_key = secret or self.read_s3_configuration('secret_key')
-        self.jvm_opts['fs.s3a.secret.key'] = secret_key
-        self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
-
     def set_hdfs_replication_factor(self, replication_factor):
         self.jvm_opts['dfs.replication'] = replication_factor
 
@@ -1143,7 +1129,23 @@ class ContextualizedTasksInfra(object):
         self.run_bash(bash)
 
     # ----------- S3 -----------
-    def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
+    DEFAULT_S3_PROFILE = 'research-safe'
+
+    def read_s3_configuration(self, property_key, section=DEFAULT_S3_PROFILE):
+        import boto
+        config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
+        return config.get(section, property_key)
+
+    def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE):
+        access_key = access or self.read_s3_configuration('access_key', section=section)
+        self.jvm_opts['fs.s3a.access.key'] = access_key
+        self.run_bash('aws configure set aws_access_key_id %s' % access_key)
+
+        secret_key = secret or self.read_s3_configuration('secret_key', section=section)
+        self.jvm_opts['fs.s3a.secret.key'] = secret_key
+        self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
+
+    def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
         bucket_name = bucket_name.replace("/", "")
         bucket = s3_conn.get_bucket(bucket_name)
@@ -1156,7 +1158,7 @@ class ContextualizedTasksInfra(object):
         ans = ans and is_s3_folder_big_enough(s3_conn=s3_conn, bucket_name=bucket_name, path=path, min_size=min_size)
         assert ans is True, 'Input is not valid, given bucket is %s and path is %s' % (bucket_name, path)
 
-    def assert_s3_output_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile='research-safe', dynamic_min_size=False):
+    def assert_s3_output_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
         bucket_name = bucket_name.replace("/", "")
         bucket = s3_conn.get_bucket(bucket_name)
