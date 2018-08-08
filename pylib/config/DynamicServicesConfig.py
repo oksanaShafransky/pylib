@@ -2,8 +2,7 @@ import requests
 
 
 class DynamicServicesConfig:
-    # TODO read port from anywhere?
-    def __init__(self, url='http://127.0.0.1:12203', path_in_url="/serviceResolution"):
+    def __init__(self, url='http://bigdata-snowflake-ds-aws-production.op-us-east-1.bigdata-grid.int.similarweb.io', path_in_url="/serviceResolution"):
         self.base_url = url
         self.path_in_url = path_in_url
 
