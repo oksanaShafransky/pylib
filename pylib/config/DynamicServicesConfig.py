@@ -18,7 +18,7 @@ class DynamicServicesConfig:
             if value is not None:
                 payload[var] = value
         r = requests.get(self.base_url + self.path_in_url, params=payload)
-        return r.text
+        return str(r.text)
 
 
 services_config = DynamicServicesConfig()
