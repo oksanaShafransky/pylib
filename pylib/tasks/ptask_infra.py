@@ -523,7 +523,7 @@ class ContextualizedTasksInfra(object):
 
     def assert_data_validity(self, data_artifact, check_type):
         self.log_lineage_hdfs(data_artifact.raw_path, check_type)  # TODO decide how to factor in the posibility data is found on S3
-        data_artifact.assert_validity()
+        data_artifact.assert_validity('%s check failed for path %s' % (check_type, data_artifact.raw_path))
 
     # ----------- HBASE -----------
     def hbase_table_full_name(self, name):

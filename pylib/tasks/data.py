@@ -43,8 +43,8 @@ class DataArtifact(object):
     def check_size(self):
         return self.actual_size(self.required_size) >= self.required_size
 
-    def assert_validity(self):
-        assert self.resolved_path is not None  # this combines size check with marker validation
+    def assert_validity(self, msg='No data'):
+        assert self.resolved_path is not None, msg  # this combines size check with marker validation
 
     @property
     def resolved_path(self):
