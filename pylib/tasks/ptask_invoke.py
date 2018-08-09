@@ -103,7 +103,7 @@ class PtaskInvoker(Program):
             # The following is parsing trickery to allow task ids to contain dots
             execution_dt = os.environ['TASK_ID'].split('.')[-1]
             sw_tasks['execution_dt'] = execution_dt
-            sw_tasks['task_id'] = os.environ['TASK_ID'].split('.' , 2)[2].replace('.' + execution_dt, '')
+            sw_tasks['task_id'] = os.environ['TASK_ID'].split('.', 2)[2].replace('.' + execution_dt, '')
         else:
             sw_tasks['has_task_id'] = False
 

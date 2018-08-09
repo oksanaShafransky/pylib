@@ -521,6 +521,10 @@ class ContextualizedTasksInfra(object):
                                                is_strict=is_strict) is True, \
             'Output is not valid, given value is %s' % directories
 
+    def assert_data_validity(self, data_artifact, check_type):
+        self.log_lineage_hdfs(data_artifact.raw_path, check_type)  # TODO decide how to factor in the posibility data is found on S3
+        data_artifact.assert_validity()
+
     # ----------- HBASE -----------
     def hbase_table_full_name(self, name):
         return self.table_prefix + name + self.table_suffix
@@ -1290,3 +1294,7 @@ class ContextualizedTasksInfra(object):
     @property
     def execution_dir(self):
         return self.__get_common_args()['execution_dir']
+
+    @property
+    def last_day_in_month(self):
+        return (self.date.replace(day=1) + datetime.timedelta(days=45)).replace(day=1) - datetime.timedelta(days=1)

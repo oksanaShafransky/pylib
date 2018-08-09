@@ -15,7 +15,7 @@ def _s3_path(hdfs_path, s3_bucket=DEFAULT_BACKUP_BUCKET, prefix=DEFAULT_PREFIX):
     return '%s/%s%s' % (s3_bucket, prefix or '', hdfs_path)
 
 
-class Path(object):
+class DataArtifact(object):
     def __init__(self, path, required_size=0, required_marker=True, bucket=DEFAULT_BACKUP_BUCKET, pref=DEFAULT_PREFIX):
         self.raw_path = path
         self.min_required_size = required_size
@@ -43,14 +43,17 @@ class Path(object):
     def check_size(self):
         return self.actual_size(self.required_size) >= self.required_size
 
+    def assert_validity(self):
+        assert self.resolved_path is not None  # this combines size check with marker validation
+
     @property
     def resolved_path(self):
         hdfs_size = self._hdfs_size()
-        if hdfs_size > self.min_required_size and exists_hdfs(os.path.join(self.raw_path, SUCCESS_MARKER)):
+        if hdfs_size > self.min_required_size and (not self.check_marker or exists_hdfs(os.path.join(self.raw_path, SUCCESS_MARKER))):
             return self.raw_path
         else:
             s3_size = self._s3_size()
-            if s3_size > self.min_required_size and exists_s3(os.path.join('s3://%s' % _s3_path(self.raw_path), SUCCESS_MARKER)):
+            if s3_size > self.min_required_size and (not self.check_marker or exists_s3(os.path.join('s3://%s' % _s3_path(self.raw_path), SUCCESS_MARKER))):
                 return 's3a://%s' % _s3_path(self.raw_path)
             else:
                 return None
