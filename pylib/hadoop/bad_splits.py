@@ -6,7 +6,7 @@ import urllib
 import logging
 import re
 
-job_history_server = 'http://hdfs-namenode-mrp.service.production'
+job_history_server = 'http://hive-server2-mrp.service.production'
 job_history_port = 19888
 
 job_endpoint = '%(server)s:%(port)d/ws/v1/history/mapreduce/jobs/%(job_id)s'
@@ -27,9 +27,12 @@ def get_relative_file(split):
 LOG_PORT = 4545
 log_url_re = re.compile(r"(.*/jobhistory/logs.*:)(\d+)(.*)")
 def fix_log_url(unchecked_log_url):
+    return unchecked_log_url
+    """
     log_match = re.split(log_url_re, unchecked_log_url)
     log_match[2] = str(LOG_PORT)   # replace with correct port
     return ''.join(log_match)
+    """
 
 
 def get_bad_splits(log_str):
