@@ -35,7 +35,6 @@ from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delet
 from pylib.hbase.hbase_utils import validate_records_per_region
 from pylib.aws.data_checks import is_s3_folder_big_enough, validate_success, get_s3_folder_size
 from pylib.aws.s3 import s3_connection
-from pylib.config.SnowflakeDynamicServicesConfig import snowflake_services_config
 
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
@@ -481,7 +480,7 @@ class ContextualizedTasksInfra(object):
 
     def get_redis_client(self):
         if self.redis is None:
-            self.redis = StrictRedis(host=snowflake_services_config.get_service_name(service_name='redis-bigdata'),
+            self.redis = StrictRedis(host='redis-bigdata.service.production',
                                      socket_timeout=15,
                                      socket_connect_timeout=15,
                                      retry_on_timeout=True)
