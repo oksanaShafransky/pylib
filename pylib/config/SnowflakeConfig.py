@@ -13,6 +13,7 @@ class SnowflakeConfig:
             self.def_env = os.environ['SNOWFLAKE_ENV']
         except Exception:
             print("ERROR: failed to read snowflake environment variable")
+            raise
 
     def get_service_name(self, env=None, service_name=None):
         if env is None:
