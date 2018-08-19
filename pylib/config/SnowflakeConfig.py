@@ -2,7 +2,7 @@ import requests
 import os
 
 
-class SnowflakeDynamicServicesConfig:
+class SnowflakeConfig:
     def_env = None
 
     def __init__(self, url='http://bigdata-snowflake-ds-aws-production.op-us-east-1.bigdata-grid.int.similarweb.io',
@@ -32,4 +32,3 @@ class SnowflakeDynamicServicesConfig:
         return str(r.text)
 
 
-snowflake_services_config = SnowflakeDynamicServicesConfig()
