@@ -28,6 +28,7 @@ class SnowflakeConfig:
         for var, value in service_args:
             if value is not None:
                 payload[var] = value
+        payload['platform'] = 'python'
         r = requests.get(self.base_url + self.path_in_url, params=payload)
         if r.status_code != 200:
             # We got error from snowflake server
