@@ -1,6 +1,7 @@
 import calendar
 import logging
 import os
+from glob import glob
 import re
 import shutil
 import smtplib
@@ -928,6 +929,7 @@ class ContextualizedTasksInfra(object):
                      named_spark_args=None,
                      packages=None,
                      py_files=None,
+                     py_modules=None,
                      spark_configs=None,
                      use_bigdata_defaults=False,
                      queue=None,
@@ -939,7 +941,6 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        module_dir = self.execution_dir + '/' + module
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
@@ -948,13 +949,17 @@ class ContextualizedTasksInfra(object):
         if determine_partitions_by_output:
             final_py_files.append(self.execution_dir + '/sw-spark-common/sw_spark-0.0.0.dev0-py2.7.egg')
 
+        py_modules = py_modules or []
         if use_bigdata_defaults:
-            python_named_module = module.replace("-", "_")
-            main_py_file = 'python/sw_%s/%s' % (python_named_module, main_py_file)
-            module_source_egg_path = '%(module_dir)s/sw_%(module)s-0.0.0.dev0-py2.7.egg' % {'module_dir': module_dir,
-                                                                                            'module': python_named_module}
-            if os.path.exists(module_source_egg_path):
-                final_py_files.append(module_source_egg_path)
+            py_modules.append(module)
+
+        for requested_module in py_modules:
+            module_dir = self.execution_dir + '/' + requested_module
+            egg_files = glob('%s/sw_*.egg' % module_dir)
+            if len(egg_files) != 1:
+                print('failed finding egg file for requested python module %s. skipping' % requested_module)
+            else:
+                final_py_files.append(egg_files[0])
 
         additional_artifacts_paths = []
         for artifact in additional_artifacts:
