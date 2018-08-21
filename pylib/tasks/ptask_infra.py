@@ -1303,7 +1303,3 @@ class ContextualizedTasksInfra(object):
     @property
     def execution_dir(self):
         return self.__get_common_args()['execution_dir']
-
-    @property
-    def last_day_in_month(self):
-        return (self.date.replace(day=1) + datetime.timedelta(days=45)).replace(day=1) - datetime.timedelta(days=1)

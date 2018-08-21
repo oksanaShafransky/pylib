@@ -27,21 +27,21 @@ class DataArtifact(object):
         if dir_exists_hdfs(self.raw_path):
             return size_on_hdfs(self.raw_path)
         else:
-            return 0
+            return None
 
     def _s3_size(self):
         return size_on_s3('s3://%s' % _s3_path(self.raw_path))
 
     @property
-    def actual_size(self, fallback_threshold=0):
+    def actual_size(self):
         hdfs_size = self._hdfs_size()
-        if hdfs_size > fallback_threshold:
+        if hdfs_size is not None:
             return hdfs_size
         else:
             return self._s3_size()
 
     def check_size(self):
-        return self.actual_size(self.required_size) >= self.required_size
+        return self.actual_size >= self.required_size
 
     def assert_validity(self, msg='No data'):
         assert self.resolved_path is not None, msg  # this combines size check with marker validation
@@ -49,7 +49,8 @@ class DataArtifact(object):
     @property
     def resolved_path(self):
         hdfs_size = self._hdfs_size()
-        if hdfs_size > self.min_required_size and (not self.check_marker or exists_hdfs(os.path.join(self.raw_path, SUCCESS_MARKER))):
+        if hdfs_size is not None and hdfs_size > self.min_required_size and \
+                (not self.check_marker or exists_hdfs(os.path.join(self.raw_path, SUCCESS_MARKER))):
             return self.raw_path
         else:
             s3_size = self._s3_size()
@@ -57,8 +58,3 @@ class DataArtifact(object):
                 return 's3a://%s' % _s3_path(self.raw_path)
             else:
                 return None
-
-
-if __name__ == '__main__':
-    pp = Path('/similargroup/data/stats-mobile/raw/year=17/month=01/day=01')
-    print pp.resolved_path
