@@ -1,6 +1,7 @@
 import calendar
 import logging
 import os
+from glob import glob
 import re
 import shutil
 import smtplib
@@ -503,19 +504,19 @@ class ContextualizedTasksInfra(object):
                 break
         return cnt
 
+    def report_lineage(self, direction, paths_sizes):
+        self.log_lineage_hdfs(paths_sizes.keys(), direction)
+
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
-        self.log_lineage_hdfs(directories, 'input')
+        self.report_lineage('input', directories)
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
                                                is_strict=is_strict) is True, \
             'Input is not valid, given value is %s' % directories
 
-    def assert_output_validity(self, directories,
-                               min_size_bytes=0,
-                               validate_marker=False,
-                               is_strict=False):
-        self.log_lineage_hdfs(directories, 'output')
+    def assert_output_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
+        self.report_lineage('output', directories)
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
@@ -925,6 +926,7 @@ class ContextualizedTasksInfra(object):
                      named_spark_args=None,
                      packages=None,
                      py_files=None,
+                     py_modules=None,
                      spark_configs=None,
                      use_bigdata_defaults=False,
                      queue=None,
@@ -936,22 +938,25 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        module_dir = self.execution_dir + '/' + module
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         final_py_files = py_files or []
 
-        if determine_partitions_by_output:
-            final_py_files.append(self.execution_dir + '/sw-spark-common/sw_spark-0.0.0.dev0-py2.7.egg')
-
+        py_modules = py_modules or []
         if use_bigdata_defaults:
-            python_named_module = module.replace("-", "_")
-            main_py_file = 'python/sw_%s/%s' % (python_named_module, main_py_file)
-            module_source_egg_path = '%(module_dir)s/sw_%(module)s-0.0.0.dev0-py2.7.egg' % {'module_dir': module_dir,
-                                                                                            'module': python_named_module}
-            if os.path.exists(module_source_egg_path):
-                final_py_files.append(module_source_egg_path)
+            py_modules.append(module)
+
+        if determine_partitions_by_output:
+            py_modules.append('sw-spark-common')
+
+        for requested_module in py_modules:
+            module_dir = self.execution_dir + '/' + requested_module
+            egg_files = glob('%s/sw_*.egg' % module_dir)
+            if len(egg_files) != 1:
+                print('failed finding egg file for requested python module %s. skipping' % requested_module)
+            else:
+                final_py_files.append(egg_files[0])
 
         additional_artifacts_paths = []
         for artifact in additional_artifacts:

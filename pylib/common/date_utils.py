@@ -39,3 +39,12 @@ def get_dates_list(start, end, step=relativedelta(days=1)):
         curr = start + delta
         delta = delta + step
     return dates_range
+
+
+def last_day_in_month(month_dt):
+    return (month_dt.replace(day=1) + relativedelta(days=45)).replace(day=1) - relativedelta(days=1)
+
+
+def get_days_in_month(month_dt):
+    last_day = last_day_in_month(month_dt)
+    return get_dates_range(last_day, last_day.day)
