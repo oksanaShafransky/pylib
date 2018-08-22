@@ -508,7 +508,7 @@ class ContextualizedTasksInfra(object):
         self.log_lineage_hdfs(paths_sizes.keys(), direction)
 
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
-        self.report_lineage('input', directories)
+        self.report_lineage('input', {directory: None for directory in directories})
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
@@ -516,7 +516,7 @@ class ContextualizedTasksInfra(object):
             'Input is not valid, given value is %s' % directories
 
     def assert_output_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
-        self.report_lineage('output', directories)
+        self.report_lineage('output', {directory: None for directory in directories})
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
