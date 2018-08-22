@@ -461,8 +461,6 @@ class ContextualizedTasksInfra(object):
             '%(execution_user)s.%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction)s:hdfs::%(directory)s'
 
         lineage_key = 'LINEAGE_%s' % datetime.date.today().strftime('%y-%m-%d')
-        if isinstance(directories, six.string_types):
-            directories = [directories]
 
         # Barak: this is not good we don't want to ignore lineage reporting
         try:
@@ -508,6 +506,9 @@ class ContextualizedTasksInfra(object):
         self.log_lineage_hdfs(paths_sizes.keys(), direction)
 
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
+        if isinstance(directories, six.string_types):
+            directories = [directories]
+
         self.report_lineage('input', {directory: None for directory in directories})
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
@@ -516,6 +517,9 @@ class ContextualizedTasksInfra(object):
             'Input is not valid, given value is %s' % directories
 
     def assert_output_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
+        if isinstance(directories, six.string_types):
+            directories = [directories]
+
         self.report_lineage('output', {directory: None for directory in directories})
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
@@ -943,6 +947,8 @@ class ContextualizedTasksInfra(object):
 
         final_py_files = py_files or []
 
+        module_dir = self.execution_dir + '/' + module
+
         py_modules = py_modules or []
         if use_bigdata_defaults:
             py_modules.append(module)
@@ -951,8 +957,8 @@ class ContextualizedTasksInfra(object):
             py_modules.append('sw-spark-common')
 
         for requested_module in py_modules:
-            module_dir = self.execution_dir + '/' + requested_module
-            egg_files = glob('%s/sw_*.egg' % module_dir)
+            req_mod_dir = self.execution_dir + '/' + requested_module
+            egg_files = glob('%s/sw_*.egg' % req_mod_dir)
             if len(egg_files) != 1:
                 print('failed finding egg file for requested python module %s. skipping' % requested_module)
             else:
