@@ -503,28 +503,24 @@ class ContextualizedTasksInfra(object):
                 break
         return cnt
 
+    def report_lineage(self, direction, paths_sizes):
+        self.log_lineage_hdfs(paths_sizes.keys(), direction)
+
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
-        self.log_lineage_hdfs(directories, 'input')
+        self.report_lineage('input', directories)
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
                                                is_strict=is_strict) is True, \
             'Input is not valid, given value is %s' % directories
 
-    def assert_output_validity(self, directories,
-                               min_size_bytes=0,
-                               validate_marker=False,
-                               is_strict=False):
-        self.log_lineage_hdfs(directories, 'output')
+    def assert_output_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
+        self.report_lineage('output', directories)
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
                                                is_strict=is_strict) is True, \
             'Output is not valid, given value is %s' % directories
-
-    def assert_data_validity(self, data_artifact, check_type):
-        self.log_lineage_hdfs(data_artifact.raw_path, check_type)  # TODO decide how to factor in the posibility data is found on S3
-        data_artifact.assert_validity('%s check failed for path %s' % (check_type, data_artifact.raw_path))
 
     # ----------- HBASE -----------
     def hbase_table_full_name(self, name):
@@ -946,12 +942,12 @@ class ContextualizedTasksInfra(object):
 
         final_py_files = py_files or []
 
-        if determine_partitions_by_output:
-            final_py_files.append(self.execution_dir + '/sw-spark-common/sw_spark-0.0.0.dev0-py2.7.egg')
-
         py_modules = py_modules or []
         if use_bigdata_defaults:
             py_modules.append(module)
+
+        if determine_partitions_by_output:
+            py_modules.append('sw-spark-common')
 
         for requested_module in py_modules:
             module_dir = self.execution_dir + '/' + requested_module
