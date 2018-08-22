@@ -834,7 +834,7 @@ class ContextualizedTasksInfra(object):
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
+                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s spark.yarn.appMasterEnv.SNOWFLAKE_ENV=mrp-aws"' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' --deploy-mode cluster' \
