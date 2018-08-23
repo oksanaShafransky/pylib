@@ -948,6 +948,7 @@ class ContextualizedTasksInfra(object):
         final_py_files = py_files or []
 
         module_dir = self.execution_dir + '/' + module
+        exec_py_file = 'python/sw_%s/%s' % (module.replace('-', '_'), main_py_file)
 
         py_modules = py_modules or []
         if use_bigdata_defaults:
@@ -1003,7 +1004,7 @@ class ContextualizedTasksInfra(object):
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
-                      'main_py': main_py_file,
+                      'main_py': exec_py_file,
                       'yarn_application_tags': yarn_tags
                   }
 
