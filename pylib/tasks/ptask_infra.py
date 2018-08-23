@@ -836,12 +836,9 @@ class ContextualizedTasksInfra(object):
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
-        snowflake_cur_env = os.environ['SNOWFLAKE_ENV']
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -857,7 +854,6 @@ class ContextualizedTasksInfra(object):
                       'queue': queue,
                       'app_name': app_name,
                       'add_opts': additional_configs,
-                      'snowflake_env': snowflake_cur_env,
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -952,7 +948,7 @@ class ContextualizedTasksInfra(object):
         final_py_files = py_files or []
 
         module_dir = self.execution_dir + '/' + module
-        exec_py_file = 'python/sw_%s/%s' % (module.replace('-', '_'), main_py_file)
+        exec_py_file = 'python/sw_%s/%s' % (module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
 
         py_modules = py_modules or []
         if use_bigdata_defaults:
@@ -965,7 +961,7 @@ class ContextualizedTasksInfra(object):
             req_mod_dir = self.execution_dir + '/' + requested_module
             egg_files = glob('%s/sw_*.egg' % req_mod_dir)
             if len(egg_files) != 1:
-                print('failed finding egg file for requested python module %s. skipping' % requested_module)
+                print('failed finding egg file for requested python module %s. skipping' % reuested_module)
             else:
                 final_py_files.append(egg_files[0])
 
@@ -986,14 +982,10 @@ class ContextualizedTasksInfra(object):
 
         yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
 
-        snowflake_cur_env = os.environ['SNOWFLAKE_ENV']
-
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
@@ -1006,7 +998,6 @@ class ContextualizedTasksInfra(object):
                       'app_name': app_name if app_name else os.path.basename(main_py_file),
                       'execution_dir': module_dir,
                       'queue': '--queue %s' % queue if queue else '',
-                      'snowflake_env': snowflake_cur_env,
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
