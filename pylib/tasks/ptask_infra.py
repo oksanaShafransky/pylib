@@ -959,11 +959,11 @@ class ContextualizedTasksInfra(object):
 
         for requested_module in py_modules:
             req_mod_dir = self.execution_dir + '/' + requested_module
-            egg_files = glob('%s/sw_*.egg' % req_mod_dir)
-            if len(egg_files) != 1:
-                print('failed finding egg file for requested python module %s. skipping' % reuested_module)
-            else:
-                final_py_files.append(egg_files[0])
+            egg_files = glob('%s/*.egg' % req_mod_dir)
+            final_py_files.extend(egg_files)
+            #todo change to assert
+            if len(egg_files) == 0:
+                print('failed finding egg file for requested python module %s. skipping' % requested_module)
 
         additional_artifacts_paths = []
         for artifact in additional_artifacts:
