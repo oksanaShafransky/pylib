@@ -9,8 +9,8 @@ import socket
 
 ip_addr = socket.gethostbyname(socket.gethostname())
 print('ip: ' + ip_addr)
-in_aws = ip_addr.startswith('10.10')
-job_history_server = 'http://hive-server2-mrp.service.production' if in_aws else 'http://hdfs-namenode-mrp.service.production'
+in_xlhost = ip_addr.startswith('10.0')
+job_history_server = 'http://hive-server2-mrp.service.production' if not in_xlhost else 'http://hdfs-namenode-mrp.service.production'
 job_history_port = 19888
 
 job_endpoint = '%(server)s:%(port)d/ws/v1/history/mapreduce/jobs/%(job_id)s'
@@ -31,7 +31,7 @@ def get_relative_file(split):
 LOG_PORT = 4545
 log_url_re = re.compile(r"(.*/jobhistory/logs.*:)(\d+)(.*)")
 def fix_log_url(unchecked_log_url):
-    if not in_aws:
+    if in_xlhost:
         log_match = re.split(log_url_re, unchecked_log_url)
         log_match[2] = str(LOG_PORT)   # replace with correct port
         return ''.join(log_match)
