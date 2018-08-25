@@ -8,6 +8,7 @@ import re
 import socket
 
 ip_addr = socket.gethostbyname(socket.gethostname())
+print('ip: ' + ip_addr)
 in_aws = ip_addr.startswith('10.10')
 job_history_server = 'http://hive-server2-mrp.service.production' if in_aws else 'http://hdfs-namenode-mrp.service.production'
 job_history_port = 19888
