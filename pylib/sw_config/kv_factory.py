@@ -2,7 +2,6 @@ import json
 from pydoc import locate
 
 from composite_kv import CompositeConfigurationProxy
-from airflow.models import Variable
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 
 
@@ -46,8 +45,7 @@ if __name__ == '__main__':
                   ]
     """
 
-    cur_consul = SnowflakeConfig().get_service_name(env=Variable.get(key='snowflake_env', default_var='mrp-test'),
-                                                    service_name='consul')
+    cur_consul = SnowflakeConfig().get_service_name(service_name='consul')
     conf = conf % {'consul_name': cur_consul}
 
     print provider_from_config(conf)
