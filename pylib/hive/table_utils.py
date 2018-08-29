@@ -53,6 +53,24 @@ def get_table_partitions(table_name):
                 [partition[0].split('/') for partition in curr.fetch()]]
 
 
+def get_partitions_hdfs_paths(path_template, table_name):
+    '''
+    Example /similargroup/data/x/year={year}/month={month}
+
+    :param path_template: Template path
+    :type path_template: str
+    :param table_name: name of hive table, including db
+    :type table_name: str
+    :return: list of paths
+    '''
+    hdfs_list = []
+    partitions = get_table_partitions(table_name)
+    for p in partitions:
+        hdfs_list.append(path_template.format(**p))
+
+    return hdfs_list
+
+
 def get_table_dates(table_name):
     return [datetime.strptime(
         '%02d-%02d-%02d' % (int(partition['year']) % 100,
