@@ -1,19 +1,34 @@
 import requests
 import os
+import traceback
+import json
 
 
 class SnowflakeConfig:
     def_env = None
 
     def __init__(self, url='http://bigdata-snowflake-ds-aws-production.op-us-east-1.bigdata-grid.int.similarweb.io',
-                 path_in_url="/serviceResolution"):
+                 path_in_url="/serviceResolution",
+                 client_error_path="/clientError"):
         self.base_url = url
         self.path_in_url = path_in_url
+        self.client_error_path = client_error_path
         try:
             self.def_env = os.environ['SNOWFLAKE_ENV']
         except Exception:
-            print("ERROR: failed to read snowflake environment variable")
+            err_msg = "ERROR: failed to read snowflake environment variable"
+            self.__alert_server_on_error(err_msg)
+            print(err_msg)
             raise
+
+    def __alert_server_on_error(self, error_msg):
+        payload = {}
+        payload['platform'] = 'Python'
+        payload['msg'] = error_msg
+        payload['stacktrace'] = traceback.format_exc()
+        headers = {'content-type': 'application/json'}
+        requests.post(self.base_url + self.client_error_path, data=json.dumps(payload),
+                      headers=headers)
 
     def get_service_name(self, env=None, service_name=None):
         if env is None:
