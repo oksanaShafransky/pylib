@@ -9,7 +9,7 @@ import socket
 
 ip_addr = socket.gethostbyname(socket.gethostname())
 print('ip: ' + ip_addr)
-in_xlhost = ip_addr.startswith('10.0')
+in_xlhost = not ip_addr.startswith('10.0')
 job_history_server = 'http://hive-server2-mrp.service.production' if not in_xlhost else 'http://hdfs-namenode-mrp.service.production'
 job_history_port = 19888
 
