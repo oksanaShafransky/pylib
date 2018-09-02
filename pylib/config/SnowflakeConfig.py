@@ -2,10 +2,14 @@ import requests
 import os
 import traceback
 import json
+import socket
+import copy
 
 
 class SnowflakeConfig:
     def_env = None
+    base_payload = {'platform': 'Python',
+                    'task_id': 'unknown'}
 
     def __init__(self, url='http://bigdata-snowflake-ds-aws-production.op-us-east-1.bigdata-grid.int.similarweb.io',
                  path_in_url="/serviceResolution",
@@ -13,6 +17,9 @@ class SnowflakeConfig:
         self.base_url = url
         self.path_in_url = path_in_url
         self.client_error_path = client_error_path
+        self.base_payload['hostname'] = socket.gethostname()
+        if os.environ.get('TASK_ID') is not None:
+            self.base_payload['task_id'] = os.environ.get('TASK_ID')
         try:
             self.def_env = os.environ['SNOWFLAKE_ENV']
         except Exception:
@@ -22,8 +29,7 @@ class SnowflakeConfig:
             raise
 
     def __alert_server_on_error(self, error_msg):
-        payload = {}
-        payload['platform'] = 'Python'
+        payload = copy.deepcopy(self.base_payload)
         payload['msg'] = error_msg
         payload['stacktrace'] = traceback.format_exc()
         headers = {'content-type': 'application/json'}
@@ -38,15 +44,15 @@ class SnowflakeConfig:
         # Must be first line in the function
         # Clean self from list
         service_args = [v for v in service_args if v[0] != 'self']
-        payload = {}
+        payload = copy.deepcopy(self.base_payload)
 
         for var, value in service_args:
             if value is not None:
                 payload[var] = value
-        payload['platform'] = 'python'
         r = requests.get(self.base_url + self.path_in_url, params=payload)
         if r.status_code != 200:
             # We got error from snowflake server
             raise Exception("SnowflakeError: " + r.content + " code: " + str(r.status_code))
 
         return str(r.text)
+
