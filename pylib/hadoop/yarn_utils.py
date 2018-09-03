@@ -1,7 +1,13 @@
 import json
 import urllib
+import socket
 
-RESOURCE_MANAGER_DEFAULT = 'http://active.yarn-rm-mrp.service.production:8088'
+ip_addr = socket.gethostbyname(socket.gethostname())
+in_xlhost = not ip_addr.startswith('10.0')
+job_history_server = 'http://hive-server2-mrp.service.production' if not in_xlhost else 'http://hdfs-namenode-mrp.service.production'
+
+
+RESOURCE_MANAGER_DEFAULT = 'http://active.yarn-rm-mrp.service.production:8088' if not in_xlhost else 'http://active.yarn-rm-mrp.service.production:8088'
 YARN_APP_ENDPOINT = '%(server)s/ws/v1/cluster/apps'
 MAPREDUCE_APP_JOBS_ENDPOINT = '%(track_url)s/ws/v1/mapreduce/jobs'
 

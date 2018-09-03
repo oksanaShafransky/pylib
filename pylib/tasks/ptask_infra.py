@@ -238,7 +238,7 @@ class TasksInfra(object):
         mail.quit()
 
     @staticmethod
-    def _replace_corrupt_files(corrupt_files, quarantine_dir):
+    def _replace_corrupt_files(corrupt_files, quarantine_dir, in_place=True):
         compression_suffixes = ['.bz2', '.gz', '.deflate', '.snappy']
 
         def consumer_re():
@@ -271,10 +271,11 @@ class TasksInfra(object):
             quarantine_path = '%s/%s' % (quarantine_dir, relative_name)
             quarantine_path = adjust_path(quarantine_path, corrupt_file)
             if subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, quarantine_path]) == 0:
-                subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
+                if in_place:
+                    subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
 
     @staticmethod
-    def handle_bad_input(mail_recipients=None, report_name=None):
+    def handle_bad_input(mail_recipients=None, report_name=None, in_place=True):
         """
         Mitigates bad input in the operation performed within this context.
         Currently only works if a MapReduce job(s) was run. Salvages the portion of the input which is fine
@@ -311,7 +312,7 @@ class TasksInfra(object):
         else:
             logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
             quarantine_dir = '/similargroup/corrupt-data/%s' % task_id
-            TasksInfra._replace_corrupt_files(files_to_treat, quarantine_dir)
+            TasksInfra._replace_corrupt_files(files_to_treat, quarantine_dir, in_place)
 
             # Report, if asked
             if mail_recipients is not None:
