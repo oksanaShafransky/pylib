@@ -238,7 +238,7 @@ class TasksInfra(object):
         mail.quit()
 
     @staticmethod
-    def _replace_corrupt_files(corrupt_files, quarantine_dir, in_place=True):
+    def _fix_corrupt_files(corrupt_files, quarantine_dir, remove_last_line=False):
         compression_suffixes = ['.bz2', '.gz', '.deflate', '.snappy']
 
         def consumer_re():
@@ -268,14 +268,19 @@ class TasksInfra(object):
             with open(local_file, 'w') as temp_writer:
                 subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
 
+            if remove_last_line:
+                nixed_local_file = local_file + "_rem"
+                with open(nixed_local_file, 'w') as temp_writer:
+                    subprocess.call(['head', '-n-1', local_file], stdout=temp_writer)
+                local_file = nixed_local_file
+
             quarantine_path = '%s/%s' % (quarantine_dir, relative_name)
             quarantine_path = adjust_path(quarantine_path, corrupt_file)
             if subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, quarantine_path]) == 0:
-                if in_place:
-                    subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
+                subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
 
     @staticmethod
-    def handle_bad_input(mail_recipients=None, report_name=None, in_place=True):
+    def handle_bad_input(mail_recipients=None, report_name=None, remove_last_line=False):
         """
         Mitigates bad input in the operation performed within this context.
         Currently only works if a MapReduce job(s) was run. Salvages the portion of the input which is fine
@@ -312,7 +317,7 @@ class TasksInfra(object):
         else:
             logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
             quarantine_dir = '/similargroup/corrupt-data/%s' % task_id
-            TasksInfra._replace_corrupt_files(files_to_treat, quarantine_dir, in_place)
+            TasksInfra._fix_corrupt_files(files_to_treat, quarantine_dir, remove_last_line)
 
             # Report, if asked
             if mail_recipients is not None:
@@ -341,7 +346,7 @@ All have been repaired. Original Corrupt Files are present on HDFS at %(eviction
             return
         else:
             logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
-            TasksInfra._replace_corrupt_files(files_to_treat, quarantine_dir)
+            TasksInfra._fix_corrupt_files(files_to_treat, quarantine_dir)
 
     @staticmethod
     def get_rserve_host():
