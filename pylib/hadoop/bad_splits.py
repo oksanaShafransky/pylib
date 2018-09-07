@@ -11,6 +11,9 @@ from pylib.config.SnowflakeConfig import SnowflakeConfig
 env_history_server = SnowflakeConfig().get_service_name(service_name='datacol-history-server')
 job_history_server = 'http://' + env_history_server
 job_history_port = 19888
+in_xlhost = False
+if "hdfs-namenode" in env_history_server: 
+     in_xlhost = True
 
 job_endpoint = '%(server)s:%(port)d/ws/v1/history/mapreduce/jobs/%(job_id)s'
 tasks_endpoint = '%(server)s:%(port)d/ws/v1/history/mapreduce/jobs/%(job_id)s/tasks'
