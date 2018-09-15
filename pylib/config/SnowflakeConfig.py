@@ -11,7 +11,8 @@ class SnowflakeConfig:
     base_payload = {'platform': 'Python',
                     'task_id': 'unknown'}
 
-    def __init__(self, url='http://bigdata-snowflake-ds-aws-production.op-us-east-1.bigdata-grid.int.similarweb.io',
+    def __init__(self, env=None,
+                 url='http://bigdata-snowflake-ds-aws-production.op-us-east-1.bigdata-grid.int.similarweb.io',
                  path_in_url="/serviceResolution",
                  client_error_path="/clientError"):
         self.base_url = url
@@ -21,7 +22,10 @@ class SnowflakeConfig:
         if os.environ.get('TASK_ID') is not None:
             self.base_payload['task_id'] = os.environ.get('TASK_ID')
         try:
-            self.def_env = os.environ['SNOWFLAKE_ENV']
+            if env is None:
+                self.def_env = os.environ['SNOWFLAKE_ENV']
+            else:
+                self.def_env = env
         except Exception:
             err_msg = "ERROR: failed to read snowflake environment variable"
             self.__alert_server_on_error(err_msg)
