@@ -4,6 +4,7 @@ import six
 import sys
 
 from dict_change_simulator import WithDelete, WithSet
+from pylib.config.SnowflakeConfig import SnowflakeConfig
 from window_config import SimilarWebWindowConfig
 
 __author__ = 'Felix'
@@ -27,6 +28,7 @@ def setup_simulation(kv_proxy, changes=None, deletes=None):
 
 def parse_modifications(args):
     sets, deletes = [], []
+    snowflake_env = None
 
     idx = 0
     while idx < len(args):
@@ -36,10 +38,13 @@ def parse_modifications(args):
         elif args[idx] == '-d':
             deletes += [args[idx + 1]]
             idx += 2
+        elif args[idx] == '-se':
+            snowflake_env = args[idx + 1]
+            idx += 2
         else:
             idx += 1  # unknown option
 
-    return sets, deletes
+    return sets, deletes, snowflake_env
 
 
 def check_config(settings_provider, base_kv, sets=None, deletes=None, health_level=HEALTHY):
@@ -66,17 +71,19 @@ def check_config(settings_provider, base_kv, sets=None, deletes=None, health_lev
 
 if __name__ == '__main__':
     # TODO add artifacts option and filter the ones provided by the config
-    sets, deletes = parse_modifications(sys.argv[1:])
+    sets, deletes, snowflake_env = parse_modifications(sys.argv[1:])
+
+    consul_host = SnowflakeConfig().get_service_name(env=snowflake_env, service_name='consul')
 
     from pylib.sw_config.kv_factory import provider_from_config
     test_conf = provider_from_config("""
         [
             {
                 "class": "pylib.sw_config.consul.ConsulProxy",
-                "server":"consul.service.production"
+                "server":"%s"
             }
         ]
-    """)
+    """ % consul_host)
 
     from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
     wrapped_kv = PrefixedConfigurationProxy(test_conf, ['web', 'production'])
