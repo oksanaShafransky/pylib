@@ -5,7 +5,7 @@ import math
 import six
 import snakebite.client
 from snakebite.errors import FileNotFoundException
-from pylib.config import SnowflakeConfig
+from pylib.config.SnowflakeConfig import SnowflakeConfig
 
 __author__ = 'Felix'
 
