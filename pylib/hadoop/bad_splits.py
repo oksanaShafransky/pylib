@@ -5,13 +5,15 @@ import json
 import urllib
 import logging
 import re
-import socket
+from pylib.config.SnowflakeConfig import SnowflakeConfig
 
-ip_addr = socket.gethostbyname(socket.gethostname())
-print('ip: ' + ip_addr)
-in_xlhost = ip_addr.startswith('10.0')
-job_history_server = 'http://hive-server2-mrp.service.production' if not in_xlhost else 'http://hdfs-namenode-mrp.service.production'
+
+env_history_server = SnowflakeConfig().get_service_name(service_name='datacol-history-server')
+job_history_server = 'http://' + env_history_server
 job_history_port = 19888
+in_xlhost = False
+if "hdfs-namenode" in env_history_server: 
+     in_xlhost = True
 
 job_endpoint = '%(server)s:%(port)d/ws/v1/history/mapreduce/jobs/%(job_id)s'
 tasks_endpoint = '%(server)s:%(port)d/ws/v1/history/mapreduce/jobs/%(job_id)s/tasks'

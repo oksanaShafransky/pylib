@@ -238,7 +238,7 @@ class TasksInfra(object):
         mail.quit()
 
     @staticmethod
-    def _replace_corrupt_files(corrupt_files, quarantine_dir):
+    def _fix_corrupt_files(corrupt_files, quarantine_dir, remove_last_line=False):
         compression_suffixes = ['.bz2', '.gz', '.deflate', '.snappy']
 
         def consumer_re():
@@ -268,13 +268,19 @@ class TasksInfra(object):
             with open(local_file, 'w') as temp_writer:
                 subprocess.call(['hadoop', 'fs', '-text', corrupt_file], stdout=temp_writer)
 
+            if remove_last_line:
+                nixed_local_file = local_file + "_rem"
+                with open(nixed_local_file, 'w') as temp_writer:
+                    subprocess.call(['head', '-n-1', local_file], stdout=temp_writer)
+                local_file = nixed_local_file
+
             quarantine_path = '%s/%s' % (quarantine_dir, relative_name)
             quarantine_path = adjust_path(quarantine_path, corrupt_file)
             if subprocess.call(['hadoop', 'fs', '-mv', corrupt_file, quarantine_path]) == 0:
                 subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
 
     @staticmethod
-    def handle_bad_input(mail_recipients=None, report_name=None):
+    def handle_bad_input(mail_recipients=None, report_name=None, remove_last_line=False):
         """
         Mitigates bad input in the operation performed within this context.
         Currently only works if a MapReduce job(s) was run. Salvages the portion of the input which is fine
@@ -311,7 +317,7 @@ class TasksInfra(object):
         else:
             logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
             quarantine_dir = '/similargroup/corrupt-data/%s' % task_id
-            TasksInfra._replace_corrupt_files(files_to_treat, quarantine_dir)
+            TasksInfra._fix_corrupt_files(files_to_treat, quarantine_dir, remove_last_line)
 
             # Report, if asked
             if mail_recipients is not None:
@@ -340,7 +346,7 @@ All have been repaired. Original Corrupt Files are present on HDFS at %(eviction
             return
         else:
             logging.info('Detected corrupt files: %s' % ' '.join(files_to_treat))
-            TasksInfra._replace_corrupt_files(files_to_treat, quarantine_dir)
+            TasksInfra._fix_corrupt_files(files_to_treat, quarantine_dir)
 
     @staticmethod
     def get_rserve_host():
@@ -836,9 +842,12 @@ class ContextualizedTasksInfra(object):
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
+                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -854,6 +863,7 @@ class ContextualizedTasksInfra(object):
                       'queue': queue,
                       'app_name': app_name,
                       'add_opts': additional_configs,
+                      'snowflake_env': snowflake_cur_env,
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -982,10 +992,14 @@ class ContextualizedTasksInfra(object):
 
         yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
 
+        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
+
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
+                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
@@ -998,6 +1012,7 @@ class ContextualizedTasksInfra(object):
                       'app_name': app_name if app_name else os.path.basename(main_py_file),
                       'execution_dir': module_dir,
                       'queue': '--queue %s' % queue if queue else '',
+                      'snowflake_env': snowflake_cur_env,
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',

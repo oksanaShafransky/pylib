@@ -1,6 +1,5 @@
 from pylib.sw_config.kv_factory import provider_from_config
 from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
-from pylib.config.SnowflakeConfig import SnowflakeConfig
 
 
 class KeyValueConfig(object):
@@ -8,12 +7,10 @@ class KeyValueConfig(object):
               [
                 {
                      "class": "pylib.sw_config.consul.ConsulProxy",
-                     "server":%{consul_name}s
+                     "server":"consul.service.production"
                 }
               ]
     """
-    cur_consul = SnowflakeConfig().get_service_name(service_name='consul')
-    _kv_prod_conf = _kv_prod_conf % {'consul_name': cur_consul}
 
     _kv_stage_conf = """
                   [

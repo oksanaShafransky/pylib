@@ -2,7 +2,6 @@ import json
 from pydoc import locate
 
 from composite_kv import CompositeConfigurationProxy
-from pylib.config.SnowflakeConfig import SnowflakeConfig
 
 
 def is_config(anything):
@@ -40,13 +39,10 @@ if __name__ == '__main__':
                   [
                     {
                          "class": "pylib.sw_config.consul.ConsulProxy",
-                         "server":%(consul_name)s
+                         "server":"consul.service.production"
                     }
                   ]
     """
-
-    cur_consul = SnowflakeConfig().get_service_name(service_name='consul')
-    conf = conf % {'consul_name': cur_consul}
 
     print provider_from_config(conf)
 
