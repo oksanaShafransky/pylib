@@ -5,11 +5,12 @@ import math
 import six
 import snakebite.client
 from snakebite.errors import FileNotFoundException
+from config import SnowflakeConfig
 
 __author__ = 'Felix'
 
 MRP_HDFS_NAMENODE_PORT = 8020
-MRP_HDFS_NAMENODE_SERVER = 'active.hdfs-namenode-mrp.service.production'
+MRP_HDFS_NAMENODE_SERVER = SnowflakeConfig().get_service_name(service_name='active.hdfs-namenode')
 
 logger = logging.getLogger(__name__)
 
