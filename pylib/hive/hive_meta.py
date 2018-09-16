@@ -6,7 +6,6 @@ import logging
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
 
-HIVE_METASTORE_CONN_STR_DEFAULT = 'postgresql://readonly:readonly@hive-postgres-mrp.service.production'
 HIVE_METASTORE_DB_DEFAULT = 'hive'
 HIVE_METASTORE_PORT_DEFAULT = 5432
 
@@ -33,7 +32,7 @@ def _db_conn():
     from pylib.sw_config.bigdata_kv import get_kv
     kv = get_kv()
 
-    connection_string = kv.get(HIVE_METASTORE_CONN_STR_CONSUL_KEY) or HIVE_METASTORE_CONN_STR_DEFAULT
+    connection_string = kv.get(HIVE_METASTORE_CONN_STR_CONSUL_KEY)
     database = kv.get(HIVE_METASTORE_DB_CONSUL_KEY) or HIVE_METASTORE_DB_DEFAULT
     port = kv.get(HIVE_METASTORE_PORT_CONSUL_KEY) or HIVE_METASTORE_PORT_DEFAULT
 
