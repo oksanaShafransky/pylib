@@ -1145,12 +1145,11 @@ class ContextualizedTasksInfra(object):
                 ret_val = False
         return ret_val
 
-    def write_to_hbase(self, key, table, col_family, col, value, log=True):
+    def write_to_hbase(self, key, table, col_family, col, value, log=True, snowflake_env=None):
         if log:
             print('writing %s to key %s column %s at table %s' % (value, key, '%s:%s' % (col_family, col), table))
         import happybase
-        HBASE = 'mrp'  # TODO: allow for inference based on config
-        srv = 'hbase-%s.service.production' % HBASE
+        srv = SnowflakeConfig().get_service_name(service_name="hbase")
         conn = happybase.Connection(srv)
         conn.table(table).put(key, {'%s:%s' % (col_family, col): value})
         conn.close()
