@@ -189,6 +189,7 @@ class ConsistencyTestInfra(object):
             app_name='Consistency Test For %s' % command_params['-test_name'],
             main_py_file='drivers/' + main_py_file,
             command_params=command_params,
+            packages=['com.databricks:spark-csv_2.10:1.5.0'],
             module='consistency',
             queue=queue,
             files=['/etc/hive/conf/hive-site.xml'],
@@ -438,7 +439,7 @@ class ConsistencyTestInfra(object):
         :param named_spark_args: named spark args dictionary to override defaults
         :param spark_configs: spark configs dictionary to override defaults
         :param spark_queue: override queue (default is 'calculation')
-        :param benchmark_mode: specify whether this test is run from within model training (benchmark) or independently
+        :param benchmark_mode: specify whether this test is run from within model training (benchmark==True) or independently
         :param std_cp: std of cp for country alarm
         :param avg_cp: avg of cp for country alarm
         :param std_ss: std of significant slope for country alarm
