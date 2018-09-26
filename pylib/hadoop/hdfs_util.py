@@ -151,7 +151,7 @@ def test_size(path, min_size_required=None, is_strict=False, with_replicas=False
                     return False
             return True
         else:
-            logger.info('it does not')
+            logger.info('it does not. It is actually ' + space_consumed)
             return False
     except FileNotFoundException:
         logger.info('it does not')
