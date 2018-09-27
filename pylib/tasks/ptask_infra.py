@@ -1249,7 +1249,8 @@ class ContextualizedTasksInfra(object):
             mode = self.__get_common_args()['mode']
             default_mode_types = {'snapshot': 'monthly',
                                   'window': 'last-28',
-                                  'daily': 'daily'}
+                                  'daily': 'daily',
+                                  'mutable': 'mutable'}
             if mode in default_mode_types:
                 return default_mode_types[mode]
         raise KeyError('unable to determine mode_type')
@@ -1269,6 +1270,8 @@ class ContextualizedTasksInfra(object):
             return '_%s' % self.date.strftime('%y_%m')
         elif self.mode == 'daily':
             return '_%s' % self.date.strftime('%y_%m_%d')
+        elif self.mode == 'mutable':
+            return ''
         else:
             return '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
 
