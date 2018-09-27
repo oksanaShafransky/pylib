@@ -38,6 +38,7 @@ def get_tables(db, env=None):
         curr.execute('show tables')
         return [item[0] for item in curr.fetch()]
 
+
 def get_create_statement(db, table_name, env=None):
     with get_hive_connection(env).cursor() as curr:
         curr.execute('show create table %s.%s' % (db, table_name))
