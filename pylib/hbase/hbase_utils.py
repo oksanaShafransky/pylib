@@ -1,11 +1,13 @@
 import happybase
 from socket import error as socket_error
+from pylib.config.SnowflakeConfig import SnowflakeConfig
 
 CONNECTION_STRING_TEMPLATE = '{0}.service.production'
 TIMEOUT_RETRIES = 5
 
 
-def get_hbase_table(table_name, cluster_name='hbase-mrp'):
+def get_hbase_table(table_name, cluster_name='hbase', env=None):
+    hbase_service = SnowflakeConfig(env).get_service_name()
     return happybase.Connection(CONNECTION_STRING_TEMPLATE.format(cluster_name), timeout=5*60*1000).table(table_name)
 
 
