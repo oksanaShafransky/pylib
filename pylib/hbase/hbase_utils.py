@@ -1,15 +1,17 @@
 import happybase
 from socket import error as socket_error
+from pylib.config.SnowflakeConfig import SnowflakeConfig
 
-CONNECTION_STRING_TEMPLATE = '{0}.service.production'
+
 TIMEOUT_RETRIES = 5
 
 
-def get_hbase_table(table_name, cluster_name='hbase-mrp'):
-    return happybase.Connection(CONNECTION_STRING_TEMPLATE.format(cluster_name), timeout=5*60*1000).table(table_name)
+def get_hbase_table(table_name, cluster_name=None):
+    cluster_name = cluster_name or SnowflakeConfig().get_service_name(service_name="hbase")
+    return happybase.Connection(cluster_name, timeout=5*60*1000).table(table_name)
 
 
-def validate_records_per_region(table_name, columns = None, minimum_regions_count = 1, rows_per_region = 1000, cluster_name = 'hbase-mrp'):
+def validate_records_per_region(table_name, columns = None, minimum_regions_count = 1, rows_per_region = 1000, cluster_name=None):
     print 'checking validity of hbase table: %s' % table_name
 
     tbl = get_hbase_table(table_name, cluster_name)
