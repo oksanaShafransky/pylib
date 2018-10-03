@@ -40,7 +40,7 @@ class SnowflakeConfig:
         requests.post(self.base_url + self.client_error_path, data=json.dumps(payload),
                       headers=headers)
 
-    def get_service_name(self, env=None, service_name=None):
+    def get_service_name(self, env=None, service_name=None, task_id=None):
         if env is None:
             env = self.def_env
         # Must be first line in the function

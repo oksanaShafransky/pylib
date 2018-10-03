@@ -1,4 +1,5 @@
 from common import temp_table_cmds, temp_hbase_table_cmds
+from pylib.config.SnowflakeConfig import SnowflakeConfig
 
 try:
     import pyhs2
@@ -16,44 +17,47 @@ def trim(s):
     return s.strip(' \t\r\n')
 
 
-HIVE_SERVER = 'hive-server2-mrp.service.production'
+def get_hive_server_name(env=None):
+    return SnowflakeConfig(env).get_service_name(service_name='hive-server2')
 
 
-def get_hive_connection():
-    return pyhs2.connect(HIVE_SERVER, authMechanism='PLAIN', user=getpass.getuser())
+def get_hive_connection(env=None):
+    hive_server = get_hive_server_name(env)
+    return pyhs2.connect(hive_server, authMechanism='PLAIN', user=getpass.getuser())
 
 
-def get_databases():
-    with get_hive_connection().cursor() as curr:
+def get_databases(env=None):
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('show databases')
         return [item[0] for item in curr.fetch()]
 
 
-def get_tables(db):
-    with get_hive_connection().cursor() as curr:
+def get_tables(db, env=None):
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('use %s' % db)
         curr.execute('show tables')
         return [item[0] for item in curr.fetch()]
 
-def get_create_statement(db, table_name):
-    with get_hive_connection().cursor() as curr:
+
+def get_create_statement(db, table_name, env=None):
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('show create table %s.%s' % (db, table_name))
         return '\n'.join([r[0] for r in curr.fetch()])  + ';\n'
 
 
-def repair_table(table_name):
-    with get_hive_connection().cursor() as curr:
+def repair_table(table_name, env=None):
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('msck repair table %s' % table_name)
 
 
-def get_table_partitions(table_name):
-    with get_hive_connection().cursor() as curr:
+def get_table_partitions(table_name, env=None):
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('show partitions %s' % table_name)
         return [dict([fld.split('=') for fld in part_def]) for part_def in
                 [partition[0].split('/') for partition in curr.fetch()]]
 
 
-def get_partitions_hdfs_paths(path_template, table_name):
+def get_partitions_hdfs_paths(path_template, table_name, env=None):
     '''
     Example /similargroup/data/x/year={year}/month={month}
 
@@ -64,71 +68,71 @@ def get_partitions_hdfs_paths(path_template, table_name):
     :return: list of paths
     '''
     hdfs_list = []
-    partitions = get_table_partitions(table_name)
+    partitions = get_table_partitions(table_name, env)
     for p in partitions:
         hdfs_list.append(path_template.format(**p))
 
     return hdfs_list
 
 
-def get_table_dates(table_name):
+def get_table_dates(table_name, env=None):
     return [datetime.strptime(
         '%02d-%02d-%02d' % (int(partition['year']) % 100,
                             int(partition['month']),
                             int(partition.get('day', 1))),
         '%y-%m-%d')
-        for partition in get_table_partitions(table_name)
+        for partition in get_table_partitions(table_name, env)
     ]
 
 
-def create_temp_table(original_table_name, cloned_table_name, location):
-    with get_hive_connection().cursor() as curr:
+def create_temp_table(original_table_name, cloned_table_name, location, env=None):
+    with get_hive_connection(env).cursor() as curr:
         curr.execute(
             'create external table %s like %s location \'%s\'' % (cloned_table_name, original_table_name, location))
 
 
-def get_table_info(table_name):
-    with get_hive_connection().cursor() as curr:
+def get_table_info(table_name, env=None):
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('desc formatted %s' % table_name)
         return list(curr.fetch())
 
 
-def is_external_table(table_name):
-    is_ext_info = [line for line in get_table_info(table_name) if trim(line[0]) == 'Table Type:'][0]
+def is_external_table(table_name, env=None):
+    is_ext_info = [line for line in get_table_info(table_name, env) if trim(line[0]) == 'Table Type:'][0]
     return trim(is_ext_info[1]).lower() == 'external_table'
 
 
-def get_table_create_time(table_name):
-    create_time_info = [line for line in get_table_info(table_name) if trim(line[0]) == 'CreateTime:'][0]
+def get_table_create_time(table_name, env=None):
+    create_time_info = [line for line in get_table_info(table_name, env) if trim(line[0]) == 'CreateTime:'][0]
     return parser.parse(create_time_info[1])
 
 
-def delete_table(table_name):
-    with get_hive_connection().cursor() as curr:
+def delete_table(table_name, env=None):
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('drop table %s' % table_name)
 
 
-def get_table_partition_info(table_name, partition):
+def get_table_partition_info(table_name, partition, env=None):
     partition_str = ', '.join(["%s='%s'" % (k, v) for k, v in partition.items()])
 
-    with get_hive_connection().cursor() as curr:
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('describe formatted %s partition (%s)' % (table_name, partition_str))
         return list(curr.fetch())
 
 
-def drop_partition(table_name, partition):
+def drop_partition(table_name, partition, env=None):
     partition_str = ', '.join(["%s='%s'" % (k, v) for k, v in partition.items()])
-    with get_hive_connection().cursor() as curr:
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('alter table %s drop if exists partition (%s)' % (table_name, partition_str))
 
 
-def drop_partition_str(table_name, partition_str):
-    with get_hive_connection().cursor() as curr:
+def drop_partition_str(table_name, partition_str, env=None):
+    with get_hive_connection(env).cursor() as curr:
         curr.execute('alter table %s drop if exists partition %s' % (table_name, partition_str))
 
 
-def _get_table_partition_path(table_name, partition):
-    partition_info = get_table_partition_info(table_name, partition)
+def _get_table_partition_path(table_name, partition, env=None):
+    partition_info = get_table_partition_info(table_name, partition, env)
     for info in partition_info:
         if str.startswith(info[0], 'Location'):
             path =  info[1]
@@ -172,7 +176,7 @@ def _get_lookback(rundate, lookback, lookback_interval):
     return date_range
 
 
-def get_table_partition_paths(rundate, table_name, mode, lookback, lookback_interval='daily'):
+def get_table_partition_paths(rundate, table_name, mode, lookback, lookback_interval='daily', env=None):
     '''
     Return a list of paths for a hive table's partitions.
 
@@ -190,7 +194,7 @@ def get_table_partition_paths(rundate, table_name, mode, lookback, lookback_inte
     '''
 
     date_range = _get_lookback(rundate, lookback, lookback_interval)
-    parts = get_table_partitions(table_name)
+    parts = get_table_partitions(table_name, env)
 
     # does the table mode include days
     days = False if mode == 'snapshot' else True
@@ -209,7 +213,7 @@ def get_table_partition_paths(rundate, table_name, mode, lookback, lookback_inte
             continue
 
         # get the path for each partition
-        partition_path = _get_table_partition_path(table_name, part_strings[day_str])
+        partition_path = _get_table_partition_path(table_name, part_strings[day_str], env)
         if partition_path is None:
             missing_partition_paths.append(day_str)
 
