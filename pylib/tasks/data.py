@@ -4,15 +4,11 @@ from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_
 import os
 
 DEFAULT_BACKUP_BUCKET = 'similargroup-backup-retention'
-DEFAULT_PREFIX = 'mrp'
+DEFAULT_PREFIX = '/mrp'
 SUCCESS_MARKER = '_SUCCESS'
 
 # TODO there is infra in s3/data_checks that solves some this, given a connection and bucket objects
 # it might be more efficient, but do we really want hold s3 constructs here? need to decide
-
-
-def _s3_path(hdfs_path, s3_bucket=DEFAULT_BACKUP_BUCKET, prefix=DEFAULT_PREFIX):
-    return '%s/%s%s' % (s3_bucket, prefix or '', hdfs_path)
 
 
 def human_size(raw_size):
@@ -40,8 +36,11 @@ class DataArtifact(object):
         else:
             return None
 
+    def _s3_path(self, hdfs_path):
+        return '%s%s%s' % (self.bucket, self.prefix or '', hdfs_path)
+
     def _s3_size(self):
-        return size_on_s3('s3://%s' % _s3_path(self.raw_path))
+        return size_on_s3('s3://%s' % self._s3_path(self.raw_path))
 
     @property
     def actual_size(self):
@@ -63,7 +62,7 @@ class DataArtifact(object):
                 check_marker_ok = False
         else:
             effective_size = self._s3_size()
-            if self.check_marker and not exists_s3(os.path.join('s3://%s' % _s3_path(self.raw_path), SUCCESS_MARKER)):
+            if self.check_marker and not exists_s3(os.path.join('s3://%s' % self._s3_path(self.raw_path), SUCCESS_MARKER)):
                 check_marker_ok = False
 
         for reporter in reporters:
@@ -91,6 +90,6 @@ class DataArtifact(object):
             s3_size = self._s3_size()
             if s3_size > 0:
             #if s3_size > self.min_required_size and (not self.check_marker or exists_s3(os.path.join('s3://%s' % _s3_path(self.raw_path), SUCCESS_MARKER))):
-                return 's3a://%s' % _s3_path(self.raw_path)
+                return 's3a://%s' % self._s3_path(self.raw_path)
             else:
                 return None
