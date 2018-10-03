@@ -946,7 +946,7 @@ class ContextualizedTasksInfra(object):
                      queue=None,
                      determine_partitions_by_output=False,
                      managed_output_dirs=None,
-                     additional_artifacts=[]
+                     additional_artifacts=None
                      ):
 
         # delete output on start
@@ -974,6 +974,9 @@ class ContextualizedTasksInfra(object):
             #todo change to assert
             if len(egg_files) == 0:
                 print('failed finding egg file for requested python module %s. skipping' % requested_module)
+
+        if additional_artifacts is None:
+            additional_artifacts = []
 
         additional_artifacts_paths = []
         for artifact in additional_artifacts:
