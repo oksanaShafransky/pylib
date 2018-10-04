@@ -203,9 +203,9 @@ class TasksInfra(object):
         return command
 
     @staticmethod
-    def kv(env='production', purpose='bigdata'):
+    def kv(env='production', purpose='bigdata', snowflake_env=None):
         from pylib.sw_config.bigdata_kv import get_kv
-        return get_kv(env, purpose)
+        return get_kv(env, purpose, snowflake_env)
 
     SMTP_SERVER = 'mta01.sg.internal'
 
