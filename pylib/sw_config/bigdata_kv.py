@@ -6,7 +6,7 @@ from pylib.config.SnowflakeConfig import SnowflakeConfig
 class KeyValueConfig(object):
     def __init__(self, snowflake_env):
         self._kv_prod_conf = [{'class': "pylib.sw_config.consul.ConsulProxy",
-                               'server': SnowflakeConfig(snowflake_env).get_service_name(service_name="consul")}]
+                               'server': "consul.service.production"}]
         self._kv_stage_conf = """
                       [
                         {
