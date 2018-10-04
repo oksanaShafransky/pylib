@@ -23,5 +23,5 @@ class KeyValueConfig(object):
 
 
 def get_kv(env='production', purpose='bigdata', snowflake_env=None):
-    basic_kv = KeyValueConfig(env).get_base_kv()[snowflake_env.lower()]
+    basic_kv = KeyValueConfig(env).get_base_kv()[env.lower()]
     return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
