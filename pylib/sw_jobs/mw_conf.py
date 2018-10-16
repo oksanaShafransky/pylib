@@ -9,9 +9,9 @@ from pylib.sw_config.bigdata_kv import get_kv
 
 class MobileWebConfig(object):
 
-    def __init__(self, mobile_web_env='main', kv_provider=None):
+    def __init__(self, mobile_web_env='main', kv_provider=None, snowflake_env=None):
         self.root = 'services/mobile-web/env/%s' % mobile_web_env
-        self.conf = kv_provider or get_kv()
+        self.conf = kv_provider or get_kv(snowflake_env=snowflake_env)
         self._countries = {}
 
     @property

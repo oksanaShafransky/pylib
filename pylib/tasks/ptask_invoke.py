@@ -13,8 +13,8 @@ from invoke.config import merge_dicts
 from invoke.exceptions import Failure, ParseError, Exit
 
 # TODO: should check cross validation?
-known_modes = ['snapshot', 'window', 'daily']
-known_mode_types = ['monthly', 'last-28', 'daily', 'last-7', 'last-1']
+known_modes = ['snapshot', 'window', 'daily', 'mutable']
+known_mode_types = ['monthly', 'last-28', 'daily', 'last-7', 'last-1', 'mutable']
 
 
 class PtaskConfig(Config):

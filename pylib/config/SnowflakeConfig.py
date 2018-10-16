@@ -1,9 +1,28 @@
 import requests
 import os
-import traceback
+import traceback, sys
 import json
 import socket
 import copy
+MRP = "mrp"
+MRP_AWS = "mrp-aws"
+
+
+# Printing full stack
+def full_stack():
+    try:
+        exc = sys.exc_info()[0]
+        stack = traceback.extract_stack()[:-1]  # last one would be full_stack()
+        if not exc is None:  # i.e. if an exception is present
+            del stack[-1]  # remove call of full_stack, the printed exception
+            # will contain the caught exception caller instead
+        trc = 'Traceback (most recent call last):\n'
+        stackstr = trc + ''.join(traceback.format_list(stack))
+        if not exc is None:
+            stackstr += '  ' + traceback.format_exc().lstrip(trc)
+        return stackstr
+    except Exception:
+        return "Failed to retrieve stacktrace"
 
 
 class SnowflakeConfig:
@@ -35,7 +54,7 @@ class SnowflakeConfig:
     def __alert_server_on_error(self, error_msg):
         payload = copy.deepcopy(self.base_payload)
         payload['msg'] = error_msg
-        payload['stacktrace'] = traceback.format_exc()
+        payload['stacktrace'] = full_stack()
         headers = {'content-type': 'application/json'}
         requests.post(self.base_url + self.client_error_path, data=json.dumps(payload),
                       headers=headers)
@@ -46,6 +65,9 @@ class SnowflakeConfig:
         # Must be first line in the function
         service_args = locals().items()
         # Must be first line in the function
+        # Don't make request to docker_image_name
+        if service_name == "docker_image_name" and (self.def_env == MRP or self.def_env == MRP_AWS):
+            return self.def_env
         # Clean self from list
         service_args = [v for v in service_args if v[0] != 'self']
         payload = copy.deepcopy(self.base_payload)
@@ -59,4 +81,3 @@ class SnowflakeConfig:
             raise Exception("SnowflakeError: " + r.content + " code: " + str(r.status_code))
 
         return str(r.text)
-

@@ -203,9 +203,9 @@ class TasksInfra(object):
         return command
 
     @staticmethod
-    def kv(env='production', purpose='bigdata'):
+    def kv(env='production', purpose='bigdata', snowflake_env=None):
         from pylib.sw_config.bigdata_kv import get_kv
-        return get_kv(env, purpose)
+        return get_kv(env, purpose, snowflake_env)
 
     SMTP_SERVER = 'mta01.sg.internal'
 
@@ -538,7 +538,7 @@ class ContextualizedTasksInfra(object):
         return self.table_prefix + name + self.table_suffix
 
     def assert_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
-                                 cluster_name='hbase-mrp'):
+                                 cluster_name=None):
         if self.dry_run:
             log_message = "Dry Run: would have checked that table '%s' has %d regions and %d keys per region" % (
                 table_name, minimum_regions_count, rows_per_region)
