@@ -1,3 +1,5 @@
+import logging
+
 from pylib.hadoop.hdfs_util import get_size as size_on_hdfs, file_exists as exists_hdfs, directory_exists as dir_exists_hdfs
 from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_s3
 
@@ -10,6 +12,7 @@ SUCCESS_MARKER = '_SUCCESS'
 # TODO there is infra in s3/data_checks that solves some this, given a connection and bucket objects
 # it might be more efficient, but do we really want hold s3 constructs here? need to decide
 
+logger = logging.getLogger('data_artifact')
 
 def _s3_path(hdfs_path, s3_bucket=DEFAULT_BACKUP_BUCKET, prefix=DEFAULT_PREFIX):
     return '%s/%s%s' % (s3_bucket, prefix or '', hdfs_path)
