@@ -51,7 +51,7 @@ class DataArtifact(object):
             return self._s3_size()
 
     def check_size(self):
-        return self.actual_size >= self.required_size
+        return self.actual_size >= self.min_required_size
 
     def _assert_data_validity(self, direction, max_size, *reporters):
         hdfs_size = self._hdfs_size()
