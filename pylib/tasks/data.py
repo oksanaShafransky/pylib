@@ -73,7 +73,7 @@ class DataArtifact(object):
             reporter.report_lineage('input', {self.raw_path: effective_size})
 
         assert effective_size >= self.min_required_size, '%s data is not valid at %s. size is %s, required %s' % (direction, self.raw_path, human_size(effective_size), human_size(self.min_required_size))
-        assert check_marker_ok, 'no success marker at %s' % self.resolved_path
+        assert check_marker_ok, 'no success marker at %s for raw_path %s' % (self.resolved_path, self.raw_path)
         if max_size is not None:
             assert effective_size >= self.min_required_size, 'requested threshold too small for %s data  at %s. size is %s, required %s' % (direction, self.resolved_path, human_size(effective_size), human_size(self.min_required_size))
 

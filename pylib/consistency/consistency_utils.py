@@ -31,7 +31,6 @@ class ConsistencyTestInfra(object):
             tsv_schema_table,
             data_column_threshold,
             reverse_dates,
-            entity_column,
             base_output_path,
             num_features,
             sig_noise_coeff,
@@ -53,7 +52,6 @@ class ConsistencyTestInfra(object):
             '-tsv_schema_table': tsv_schema_table,
             '-data_column_threshold': data_column_threshold,
             '-reverse_dates': reverse_dates,
-            '-entity_column': entity_column,
             '-base_output_path': base_output_path,
             '-num_features': num_features,
             '-sig_noise_coeff': sig_noise_coeff,
@@ -126,7 +124,6 @@ class ConsistencyTestInfra(object):
             total_results_path,
             benchmark_path,
             email_to,
-            entity_column,
             cp_threshold,
             std_cp,
             avg_cp,
@@ -141,7 +138,6 @@ class ConsistencyTestInfra(object):
             '-date': data_date,
             '-countries': ','.join(map(str, countries_list)),
             '-email_to': email_to,
-            '-entity_column': entity_column,
 
             '-base_model_path': base_model_path,
             '-model_for_test_base_path': model_for_test_base_path,
@@ -177,7 +173,6 @@ class ConsistencyTestInfra(object):
             tsv_schema_table=None,
             data_column_threshold=None,
             reverse_dates=None,
-            entity_column=None,
             cp_threshold=0.9,
             num_features=2,
             sig_noise_coeff=0.01,
@@ -205,8 +200,6 @@ class ConsistencyTestInfra(object):
         :param data_column_threshold: minimum threshold of values to use from data column (min visits or unique for example)
         :param reverse_dates: should data points be reversed, i.e test date against future data.
             default is False (test against past data)
-        :param entity_column: entity column in data is usually 'site' or 'app', if it is different, use this
-            argument to override
         :param num_features:
         :param cp_threshold:
         :param sig_noise_coeff: signal to noise coefficient
@@ -250,7 +243,6 @@ class ConsistencyTestInfra(object):
             tsv_schema_table=tsv_schema_table,
             data_column_threshold=data_column_threshold,
             reverse_dates=reverse_dates,
-            entity_column=entity_column,
             base_output_path=base_model_path,
             num_features=num_features,
             sig_noise_coeff=sig_noise_coeff,
@@ -297,7 +289,6 @@ class ConsistencyTestInfra(object):
             tsv_schema_table=tsv_schema_table,
             data_column_threshold=data_column_threshold,
             reverse_dates=reverse_dates,
-            entity_column=entity_column,
             cp_threshold=cp_threshold,
             named_spark_args=named_spark_args,
             spark_configs=spark_configs,
@@ -316,7 +307,6 @@ class ConsistencyTestInfra(object):
             tsv_schema_table=None,
             data_column_threshold=None,
             reverse_dates=None,
-            entity_column=None,
             cp_threshold=0.90,
             model_base_dir=None,
             email_to=None,
@@ -344,8 +334,6 @@ class ConsistencyTestInfra(object):
         :param data_column_threshold: minimum threshold of values to use from data column (min visits or unique for example)
         :param reverse_dates: should data points be reversed, i.e test date against future data.
             default is False (test against past data)
-        :param entity_column: entity column in data is usually 'site' or 'app', if it is different, use this
-            argument to override
         :param cp_threshold:
         :param model_base_dir: custom base dir from which model is taken
             (use calc_dir when training model to specify custom output dir)
@@ -440,7 +428,6 @@ class ConsistencyTestInfra(object):
             data_date=self.ti.date,
             countries_list=countries_list,
             email_to=email_to,
-            entity_column=entity_column,
             base_model_path=base_model_path,
             model_for_test_base_path=model_for_test_base_path,
             country_result_base_path=country_result_base_path,
