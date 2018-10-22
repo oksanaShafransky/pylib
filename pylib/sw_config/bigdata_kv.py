@@ -5,8 +5,15 @@ from pylib.config.SnowflakeConfig import SnowflakeConfig
 
 class KeyValueConfig(object):
     def __init__(self, snowflake_env):
+        consul_host = SnowflakeConfig(snowflake_env).get_service_name(service_name="consul-kv")
+        consul_token = SnowflakeConfig(snowflake_env).get_service_name(service_name="consul-kv.token")
+        if consul_token == 'no-token':
+            consul_token = None
+
+
         self._kv_prod_conf = [{'class': "pylib.sw_config.consul.ConsulProxy",
-                               'server': SnowflakeConfig(snowflake_env).get_service_name(service_name="consul")}]
+                               'server': consul_host,
+                               "token": consul_token}]
         self._kv_stage_conf = """
                       [
                         {

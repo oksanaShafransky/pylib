@@ -73,17 +73,21 @@ if __name__ == '__main__':
     # TODO add artifacts option and filter the ones provided by the config
     sets, deletes, snowflake_env = parse_modifications(sys.argv[1:])
 
-    consul_host = SnowflakeConfig().get_service_name(env=snowflake_env, service_name='consul')
+    consul_host = SnowflakeConfig().get_service_name(env=snowflake_env, service_name='consul-kv')
+    consul_token = SnowflakeConfig().get_service_name(env=snowflake_env, service_name='consul-kv.token')
+    if consul_token == 'no-token':
+        consul_token = None
 
     from pylib.sw_config.kv_factory import provider_from_config
     test_conf = provider_from_config("""
         [
             {
                 "class": "pylib.sw_config.consul.ConsulProxy",
-                "server":"%s"
+                "server":"%s",
+                "token":"%s"
             }
         ]
-    """ % consul_host)
+    """ % (consul_host, consul_token))
 
     from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
     wrapped_kv = PrefixedConfigurationProxy(test_conf, ['web', 'production'])

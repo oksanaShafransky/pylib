@@ -10,14 +10,23 @@ from pylib.config.SnowflakeConfig import SnowflakeConfig
 __author__ = 'Felix'
 
 MRP_HDFS_NAMENODE_PORT = 8020
-MRP_HDFS_NAMENODE_SERVER = SnowflakeConfig().get_service_name(service_name='active.hdfs-namenode')
+env_namenode_hostname = None
 
 logger = logging.getLogger(__name__)
 
+#read from snowflake only once to reduce number of calls to server (assumes sf env does not change during runtime)
+def namenode_from_env():
+    global env_namenode_hostname
+    if env_namenode_hostname is None:
+        env_namenode_hostname = SnowflakeConfig().get_service_name(service_name='active.hdfs-namenode')
+    return env_namenode_hostname
+
 
 # read config to rely on run environment
-def create_client(name_node=MRP_HDFS_NAMENODE_SERVER):
-    return snakebite.client.Client(name_node, MRP_HDFS_NAMENODE_PORT, use_trash=True)
+def create_client(name_node=None, port=None):
+    name_node = name_node or namenode_from_env()
+    port = port or MRP_HDFS_NAMENODE_PORT
+    return snakebite.client.Client(name_node, port, use_trash=True)
 
 
 def server_defaults(hdfs_client=None, force_reload=False):
