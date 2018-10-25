@@ -222,7 +222,7 @@ class ConsistencyTestInfra(object):
         self.ti.set_s3_keys()
 
         def resolve_path(p):
-            da = DataArtifact(p, required_marker=True)
+            da = DataArtifact(p, required_marker=False)
             da.assert_input_validity(self.ti)
             return da.resolved_path
 
@@ -359,7 +359,7 @@ class ConsistencyTestInfra(object):
         self.ti.set_s3_keys()
 
         def resolve_path(p):
-            da = DataArtifact(p, required_marker=True)
+            da = DataArtifact(p, required_marker=False)
             da.assert_input_validity(self.ti)
             return da.resolved_path
 
