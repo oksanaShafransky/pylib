@@ -88,7 +88,6 @@ class ConsistencyPaths(object):
             optional_country='/country=%s' % country if country else ''
         )
 
-
     @staticmethod
     def gen_all_output_paths(base_dir, name, test_date, date_type, countries):
         country_outputs = [
