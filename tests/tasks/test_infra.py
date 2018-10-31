@@ -5,9 +5,12 @@ import re
 import invoke
 import datetime
 
+import pylib
 import pytest
+from snakebite import client
 from redis import StrictRedis
 
+from pylib.tasks.data import DataArtifact
 from pylib.tasks.ptask_infra import TasksInfra, ContextualizedTasksInfra
 from pylib.tasks.ptask_invoke import PtaskConfig
 from pylib.hadoop import hdfs_util
@@ -148,7 +151,26 @@ class TestContextualizedTasksInfra(object):
         actual_command = actual_commands[0]
         assert re.match(expected_regexp, actual_command)
 
-    def test_determine_mr_output_partitions(self, monkeypatch):
+    def ignore_determine_mr_output_partitions(self, monkeypatch):
+        config = PtaskConfig()
+        ctx = invoke.context.Context(config)
+        c_infra = ContextualizedTasksInfra(ctx)
+        config['sw_common']['mode'] = "snapshot"
+        config['sw_common']['has_task_id'] = False
+        config['sw_common']['date'] = datetime.datetime(2017,10,1)
+        reducers_config_key = 'mapreduce.job.reduces'
+        command_params = {'a': 1, 'base_partition_output': "/similargroup/data/analytics/daily/estimation/temp-sqs-output/"}
+
+        def latest_success_size_for_path(path):
+            path = "/similargroup/data/analytics/daily/estimation/temp-sqs-output/year=18/month=09/day=01"
+            data_artifact = DataArtifact(path)
+            return path, data_artifact.actual_size
+        monkeypatch.setattr(c_infra, 'latest_success_size_for_path', latest_success_size_for_path)
+
+        command_params, jvm_opts = c_infra.determine_mr_output_partitions(command_params, determine_reduces_by_output=True, jvm_opts={})
+        assert command_params == {'a': 1} and (reducers_config_key in jvm_opts) and jvm_opts[reducers_config_key] == 26
+
+    def ignore_determine_mr_output_partitions_fallback_to_default(self):
         config = PtaskConfig()
         ctx = invoke.context.Context(config)
         c_infra = ContextualizedTasksInfra(ctx)
@@ -158,21 +180,10 @@ class TestContextualizedTasksInfra(object):
         reducers_config_key = 'mapreduce.job.reduces'
         command_params = {'a': 1, 'base_partition_output': "/tmp/test"}
 
-        def latest_success_path_and_date(path):
-            return "/tmp/test/year=17/month=12", "2017-12-01"
-        monkeypatch.setattr(c_infra, 'latest_success_path_and_date', latest_success_path_and_date)
-
-        def get_size(path):
-            return 1280
-        monkeypatch.setattr(hdfs_util, 'get_size', get_size)
-
-        def server_defaults(**kwargs):
-            return {'blockSize': 128}
-        monkeypatch.setattr(hdfs_util, 'server_defaults', server_defaults)
         command_params, jvm_opts = c_infra.determine_mr_output_partitions(command_params, determine_reduces_by_output=True, jvm_opts={})
-        assert command_params == {'a': 1} and (reducers_config_key in jvm_opts) and jvm_opts[reducers_config_key] == 10
+        assert command_params == {'a': 1} and (reducers_config_key in jvm_opts) and jvm_opts[reducers_config_key] == 200
 
-    def test_determine_spark_output_partitions(self, monkeypatch):
+    def ignore_determine_spark_output_partitions(self, monkeypatch):
         config = PtaskConfig()
         ctx = invoke.context.Context(config)
         c_infra = ContextualizedTasksInfra(ctx)
@@ -182,19 +193,16 @@ class TestContextualizedTasksInfra(object):
         partitions_config_key = 'spark.sw.appMasterEnv.numPartitions'
         command_params = {'a': 1, 'base_partition_output': "/tmp/test"}
 
-        def latest_success_path_and_date(path):
-            return "/tmp/test/year=17/month=12", "2017-12-01"
-        monkeypatch.setattr(c_infra, 'latest_success_path_and_date', latest_success_path_and_date)
+        def latest_success_size_for_path(path):
+            return "/tmp/test/year=17/month=12", 1
+        monkeypatch.setattr(c_infra, 'latest_success_size_for_path', latest_success_size_for_path)
 
         def get_size(path):
             return 1280
         monkeypatch.setattr(hdfs_util, 'get_size', get_size)
 
-        def server_defaults(**kwargs):
-            return {'blockSize': 128}
-        monkeypatch.setattr(hdfs_util, 'server_defaults', server_defaults)
         command_params, spark_configs = c_infra.determine_spark_output_partitions(command_params, determine_partitions_by_output=True, spark_configs={})
-        assert command_params == {'a': 1} and (partitions_config_key in spark_configs) and spark_configs[partitions_config_key] == 10
+        assert command_params == {'a': 1} and (partitions_config_key in spark_configs) and spark_configs[partitions_config_key] == 1
 
     def ignore_latest_daily_success_date(self):
         config = PtaskConfig()
@@ -204,8 +212,8 @@ class TestContextualizedTasksInfra(object):
         config['sw_common']['has_task_id'] = False
         config['sw_common']['date'] = datetime.datetime(2017,10,1)
         base_path = "/similargroup/data/mobile-analytics/window/mobile-web/predict/predkey=SiteCountryKey/"
-        path, date = c_infra.latest_success_path_and_date(base_path)
-        assert path == base_path + "year=17/month=10/day=01" and date == datetime.date(2017, 10, 1)
+        path, size = c_infra.latest_success_size_for_path(base_path)
+        assert path == base_path + "year=17/month=10/day=01" and size == 12
 
     def ignore_latest_monthly_success_date(self):
         config = PtaskConfig()
@@ -215,8 +223,8 @@ class TestContextualizedTasksInfra(object):
         config['sw_common']['has_task_id'] = False
         config['sw_common']['date'] = datetime.datetime(2017,10,1)
         base_path = "/similargroup/data/mobile-analytics/output/joined-learning-set/Hyx/"
-        path, date = c_infra.latest_success_path_and_date(base_path)
-        assert path == base_path + "year=17/month=10" and date == datetime.date(2017, 10, 1)
+        path, size = c_infra.latest_success_size_for_path(base_path)
+        assert path == base_path + "year=17/month=10" and size == 12
 
     def test_log_lineage(self, monkeypatch):
         self._disable_invoke_debug()
