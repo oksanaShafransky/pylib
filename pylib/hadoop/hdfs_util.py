@@ -35,10 +35,9 @@ def server_defaults(hdfs_client=None, force_reload=False):
     return hdfs_client.serverdefaults(force_reload)
 
 
-def calc_desired_partitions(dir_name):
+def calc_desired_partitions(path_size):
     dfs_blocksize = int(server_defaults()['blockSize'])
     print("HDFS Blocksize is %d" % dfs_blocksize)
-    path_size = get_size(dir_name)
     return int(math.ceil(float(path_size) / dfs_blocksize))
 
 

@@ -20,6 +20,7 @@ import numpy as np
 
 # Adjust log level
 from pylib.common.date_utils import get_dates_range
+from pylib.tasks.data import DataArtifact
 
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('requests').setLevel(logging.WARNING)
@@ -573,8 +574,8 @@ class ContextualizedTasksInfra(object):
 
             print('snapshot exists')
 
-    def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False, jvm_opts=None):
-        command_params, jvm_opts = self.determine_mr_output_partitions(command_params, determine_reduces_by_output, jvm_opts)
+    def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False, jvm_opts=None, default_num_reducers=200):
+        command_params, jvm_opts = self.determine_mr_output_partitions(command_params, determine_reduces_by_output, jvm_opts, default_num_reducers)
         return self.run_bash(
             self.__compose_hadoop_runner_command(
                 jar_path=jar_path,
@@ -644,21 +645,24 @@ class ContextualizedTasksInfra(object):
                           main_class='com.similargroup.mobile.main.MobileRunner',
                           jvm_opts=None,
                           determine_reduces_by_output=False,
+                          default_num_reducers=200,
                           rerun_root_queue=False):
         return self.run_hadoop(jar_path='mobile',
                                jar_name='mobile.jar',
                                main_class=main_class,
                                command_params=command_params,
                                determine_reduces_by_output=determine_reduces_by_output,
+                               default_num_reducers=default_num_reducers,
                                jvm_opts=jvm_opts)
 
-    def run_analytics_hadoop(self, command_params, main_class, determine_reduces_by_output=False, jvm_opts=None):
+    def run_analytics_hadoop(self, command_params, main_class, determine_reduces_by_output=False, default_num_reducers=200, jvm_opts=None):
         return self.run_hadoop(
             jar_path='analytics',
             jar_name='analytics.jar',
             main_class=main_class,
             command_params=command_params,
             determine_reduces_by_output=determine_reduces_by_output,
+            default_num_reducers=default_num_reducers,
             jvm_opts=jvm_opts)
 
     def run_bash(self, command):
@@ -690,11 +694,13 @@ class ContextualizedTasksInfra(object):
     def dates_range_paths(self, directory, lookback=None):
         return TasksInfra.dates_range_paths(directory, self.mode, self.date, lookback)
 
-    def latest_success_path_and_date(self, directory, lookback=None, min_size_bytes=None):
+    def latest_success_size_for_path(self, directory, lookback=None, min_size_bytes=None):
         for path, date in reversed(self.dates_range_paths(directory, lookback)):
-            if self.is_valid_input_exists(path, min_size_bytes=min_size_bytes or 1, validate_marker=True):
+            path_data_artifact = DataArtifact(path, required_size=min_size_bytes or 1)
+            check_size = path_data_artifact.check_size()
+            if check_size:
                 print("latest success date for %s is %s" % (directory, date))
-                return path, date
+                return path, path_data_artifact.actual_size
         print("No latest success date found for %s" % directory)
         return None, None
 
@@ -1043,15 +1049,15 @@ class ContextualizedTasksInfra(object):
         if self.dry_run:
             print("Avoiding partitions calculation, this is just a dry run! returning -1")
             return -1
-        path, date = self.latest_success_path_and_date(base_path)
-        if path is None:
+        path, size = self.latest_success_size_for_path(base_path)
+        if size is None:
             print("Couldn't find a past valid path for partitions calculation, avoiding calculation")
             return None
-        num_partitions = calc_desired_partitions(path)
+        num_partitions = calc_desired_partitions(size)
         print("Number of desired partitions for %s is %d" % (path, num_partitions))
         return num_partitions
 
-    def determine_mr_output_partitions(self, command_params, determine_reduces_by_output, jvm_opts):
+    def determine_mr_output_partitions(self, command_params, determine_reduces_by_output, jvm_opts, default_num_reducers=200):
         base_partition_output_key = 'base_partition_output'
         reducers_config_key = TasksInfra.get_mr_partitions_config_key()
 
@@ -1066,6 +1072,8 @@ class ContextualizedTasksInfra(object):
             desired_output_partitions = self.calc_desired_output_partitions(command_params[base_partition_output_key])
             if desired_output_partitions is not None:
                 jvm_opts[reducers_config_key] = desired_output_partitions
+            else:
+                jvm_opts[reducers_config_key] = default_num_reducers
             del command_params[base_partition_output_key]
         return command_params, jvm_opts
 
