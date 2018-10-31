@@ -1,3 +1,5 @@
+import logging
+
 from pylib.hadoop.hdfs_util import get_size as size_on_hdfs, file_exists as exists_hdfs, directory_exists as dir_exists_hdfs
 from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_s3
 
@@ -10,6 +12,7 @@ SUCCESS_MARKER = '_SUCCESS'
 # TODO there is infra in s3/data_checks that solves some this, given a connection and bucket objects
 # it might be more efficient, but do we really want hold s3 constructs here? need to decide
 
+logger = logging.getLogger('data_artifact')
 
 def human_size(raw_size):
     scale = 1024
@@ -70,7 +73,7 @@ class DataArtifact(object):
             reporter.report_lineage('input', {self.raw_path: effective_size})
 
         assert effective_size >= self.min_required_size, '%s data is not valid at %s. size is %s, required %s' % (direction, self.raw_path, human_size(effective_size), human_size(self.min_required_size))
-        assert check_marker_ok, 'no success marker at %s' % self.resolved_path
+        assert check_marker_ok, 'no success marker at %s for raw_path %s' % (self.resolved_path, self.raw_path)
         if max_size is not None:
             assert effective_size >= self.min_required_size, 'requested threshold too small for %s data  at %s. size is %s, required %s' % (direction, self.resolved_path, human_size(effective_size), human_size(self.min_required_size))
 

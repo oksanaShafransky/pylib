@@ -208,7 +208,11 @@ class TasksInfra(object):
         from pylib.sw_config.bigdata_kv import get_kv
         return get_kv(env, purpose, snowflake_env)
 
-    SMTP_SERVER = 'mta01.sg.internal'
+    SMTP_SERVER = 'email-smtp.us-east-1.amazonaws.com'
+    SMTP_PORT = 587
+    SMTP_USER = 'AKIAJTAT2USDRQ5Y5QHA'
+    SMTP_PASS = 'AubJwLhz8uhPfBF4/Kz7KI9HezfMMvi7hWuqurUZV5lr'
+
 
     @staticmethod
     def send_mail(mail_from, mail_to, mail_subject, content, format='plain', image_attachment=None):
@@ -234,9 +238,11 @@ class TasksInfra(object):
             img = MIMEImage(image_attachment)
             msg.attach(img)
 
-        mail = smtplib.SMTP(TasksInfra.SMTP_SERVER)
-        mail.sendmail(mail_from, mail_to, msg.as_string())
-        mail.quit()
+        server = smtplib.SMTP(host=TasksInfra.SMTP_SERVER, port=TasksInfra.SMTP_PORT)
+        server.starttls()
+        server.login(TasksInfra.SMTP_USER, TasksInfra.SMTP_PASS)
+        server.sendmail(mail_from, mail_to, msg.as_string())
+        server.quit()
 
     @staticmethod
     def _fix_corrupt_files(corrupt_files, quarantine_dir, remove_last_line=False):

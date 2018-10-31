@@ -1,6 +1,9 @@
 from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 import pylib.hive.common as common
+from pylib.consistency.consistency_types import ConsistencyOutputType
+from pylib.consistency.paths import ConsistencyPaths
+from pylib.tasks.data import DataArtifact
 
 
 class ConsistencyTestInfra(object):
@@ -18,112 +21,17 @@ class ConsistencyTestInfra(object):
         }
 
     @staticmethod
-    def _gen_model_paths(base_dir, test_name, model_date, has_day_partition, countries_list):
-        date_partition = common.get_date_partition_path(
-            year=model_date.year % 100,
-            month=model_date.month,
-            day=model_date.day if has_day_partition else None
-        )
-
-        def gen_path_for_country(country):
-            return '%(base_dir)s/consistency/model/%(name)s/%(date_part)s/country=%(country)s' % \
-                   {
-                       'base_dir': base_dir,
-                       'type': 'day' if has_day_partition else 'month',
-                       'name': test_name,
-                       'country': country,
-                       'date_part': date_partition
-                   }
-
-        return [gen_path_for_country(country) for country in countries_list]
-
-    @staticmethod
-    def _gen_result_paths(base_dir, test_name, path_type, test_date, has_day_partition, countries_list):
-        date_partition = common.get_date_partition_path(
-            year=test_date.year % 100,
-            month=test_date.month,
-            day=test_date.day if has_day_partition else None
-        )
-
-        def gen_path_for_country(country):
-            return '%(base_dir)s/consistency/output/%(name)s/type=%(path_type)s/%(date)s/country=%(country)s' % \
-                   {
-                       'base_dir': base_dir,
-                       'name': test_name,
-                       'path_type': path_type,
-                       'country': country,
-                       'date': date_partition
-                   }
-
-        return [gen_path_for_country(country) for country in countries_list]
-
-    @staticmethod
-    def _gen_total_result_path(base_dir, test_name, test_date, has_day_partition):
-        date_partition = common.get_date_partition_path(
-            year=test_date.year % 100,  # two-digits year
-            month=test_date.month,
-            day=test_date.day if has_day_partition else None
-        )
-        return '%(base_dir)s/consistency/output/%(name)s/type=total/%(date)s' % \
-               {
-                   'base_dir': base_dir,
-                   'name': test_name,
-                   'date': date_partition
-               }
-
-    @staticmethod
-    def _gen_input_dates(base_date, date_type='day', sample_count=5):
-        if date_type == 'month':
-            # take 5 month dates fro base_date backwards (day 1 is not actually used later)
-            return [date(
-                (base_date - relativedelta(months=x)).year,
-                (base_date - relativedelta(months=x)).month,
-                1
-            ) for x in range(0, sample_count)]
-        elif date_type == 'day_of_week':
-            # Take 5 day dates with week intervals
-            return [base_date - relativedelta(weeks=x) for x in range(0, sample_count)]
-        elif date_type == 'day':
-            # Take 3 day dates with day intervals
-            return [base_date - relativedelta(days=x) for x in range(0, sample_count)]
-        else:
-            return []
-
-    @staticmethod
-    def _gen_input_paths(base_dir, path, base_date, date_type):
-        input_dates = ConsistencyTestInfra._gen_input_dates(base_date, date_type)
-
-        def get_date_part(d):
-            return common.get_date_partition_path(
-                d.year % 100,  # two-digits year
-                d.month,
-                d.day if date_type is not 'month' else None
-            )
-
-        return ['%(base_dir)s/%(path)s/%(date_part)s' %
-                {
-                    'base_dir': base_dir,
-                    'path': path,
-                    'date_part': get_date_part(d)
-
-                } for d in input_dates]
-
-    @staticmethod
     def _get_model_training_command_params(
             test_name,
-            data_date,
-            source_db,
-            source_table,
+            input_paths,
             data_column,
-            has_day_partition,
             platform,
-            date_type,
+            data_date,
             countries,
-            output_path,
+            tsv_schema_table,
+            data_column_threshold,
             reverse_dates,
-            sites_visit_filter,
-            apps_rank_filter,
-            entity_column,
+            base_output_path,
             num_features,
             sig_noise_coeff,
             std_cp,
@@ -136,19 +44,15 @@ class ConsistencyTestInfra(object):
         # There's a '-' sign in the key because run_py_spark only ads one '-' and we need two
         params = {
             '-test_name': test_name,
-            '-date': data_date,
-            '-countries': countries,
-            '-source_db': source_db,
-            '-source_table': source_table,
+            '-input_paths': ','.join(input_paths),
             '-data_column': data_column,
             '-platform': platform,
-            '-date_type': date_type,
-            '-output_path': output_path,
+            '-date': data_date,
+            '-countries': countries,
+            '-tsv_schema_table': tsv_schema_table,
+            '-data_column_threshold': data_column_threshold,
             '-reverse_dates': reverse_dates,
-            '-apps_rank_filter': apps_rank_filter,
-            '-sites_visit_filter': sites_visit_filter,
-            '-has_day_partition': has_day_partition,
-            '-entity_column': entity_column,
+            '-base_output_path': base_output_path,
             '-num_features': num_features,
             '-sig_noise_coeff': sig_noise_coeff,
             '-std_cp': std_cp,
@@ -207,70 +111,68 @@ class ConsistencyTestInfra(object):
     def _get_consistency_test_command_params(
             test_name,
             data_date,
-            source_db,
-            source_table,
+            input_paths,
             data_column,
-            output_path,
-            model_base_dir,
-            has_day_partition,
-            countries_list,
             platform,
-            date_type,
+            countries_list,
             reverse_dates,
-            entity_column,
-            cp_threshold,
-            model_date,
+            tsv_schema_table,
+            data_column_threshold,
+            base_model_path,
+            model_for_test_base_path,
+            country_result_base_path,
+            total_results_path,
+            benchmark_path,
             email_to,
-            benchmark_mode,
+            cp_threshold,
             std_cp,
             avg_cp,
             std_ss,
-            avg_ss
+            avg_ss,
+            benchmark_mode
     ):
-
-        print('Running test %s with model %s' % (test_name, model_date))
 
         # There's a '-' sign in the key because run_py_spark only ads one '-' and we need two
         params = {
             '-test_name': test_name,
             '-date': data_date,
             '-countries': ','.join(map(str, countries_list)),
-            '-source_db': source_db,
-            '-source_table': source_table,
-            '-data_column': data_column,
-            '-output_path': output_path,
-            '-model_base_dir': model_base_dir,
-            '-platform': platform,
-            '-date_type': date_type,
-            '-reverse_dates': reverse_dates,
-            '-has_day_partition': has_day_partition,
-            '-entity_column': entity_column,
-            '-cp_threshold': cp_threshold,
             '-email_to': email_to,
-            '-model_date': model_date,
-            '-benchmark_mode': benchmark_mode,
+
+            '-base_model_path': base_model_path,
+            '-model_for_test_base_path': model_for_test_base_path,
+            '-country_result_base_path': country_result_base_path,
+            '-total_results_path': total_results_path,
+            '-benchmark_path': benchmark_path,
+
+            '-cp_threshold': cp_threshold,
             '-std_cp': std_cp,
             '-avg_cp': avg_cp,
             '-std_ss': std_ss,
-            '-avg_ss': avg_ss
+            '-avg_ss': avg_ss,
+
+            '-input_paths': ','.join(input_paths),
+            '-data_column': data_column,
+            '-platform': platform,
+            '-reverse_dates': reverse_dates,
+            '-tsv_schema_table': tsv_schema_table,
+            '-data_column_threshold': data_column_threshold,
+
+            '-benchmark_mode': benchmark_mode
         }
         return params
 
     def train_model(
             self,
             test_name,
-            source_db,
-            source_table,
-            data_column,
             input_path,
+            data_column,
             platform,
-            has_day_partition,
             date_type,
             countries,
+            tsv_schema_table=None,
+            data_column_threshold=None,
             reverse_dates=None,
-            sites_visit_filter=100000,
-            apps_rank_filter='0-2000',
-            entity_column=None,
             cp_threshold=0.9,
             num_features=2,
             sig_noise_coeff=0.01,
@@ -282,30 +184,24 @@ class ConsistencyTestInfra(object):
             tv_symm=1.0,
             named_spark_args=None,
             spark_configs=None,
-            spark_queue='calculation',
-            email_to=None
+            spark_queue='calculation'
     ):
         """
         :param test_name: unique test name - used for hdfs path generation and spark job name
-        :param source_db: hive db for data endpoint
-        :param source_table: hive table for data endpoint
+        :param input_path: path (without base_dir prefix) to source data
         :param data_column: column in hive table for data endpoint
-        :param input_path: path (without base_dir prefix) to source data. used for input assertion.
-            source_db and source_table should be on top of this path
         :param platform: specifies data platform, used for querying - web/apps
-        :param has_day_partition: bool - does source data has daily partition
         :param date_type: type date for data points - used for querying:
-            daily - consecutive daily endpoints
+            day - consecutive daily endpoints
             day_of_week - daily data in weekly intervals
-            monthly - monthly data
+            month - monthly data
         :param countries: comma separated  list of country codes
+        :param tsv_schema_table: full name of hive table define above the input path (in case the data is tsv and not parquet)
+        :param data_column_threshold: minimum threshold of values to use from data column (min visits or unique for example)
         :param reverse_dates: should data points be reversed, i.e test date against future data.
             default is False (test against past data)
-        :param sites_visit_filter: lower visits threshold websites filtering
-        :param apps_rank_filter: filter for apps rank. string format is a-b
-        :param entity_column: entity column in data is usually 'site' or 'app', if it is different, use this
-            argument to override
         :param num_features:
+        :param cp_threshold:
         :param sig_noise_coeff: signal to noise coefficient
         :param std_cp: std of cp for country alarm
         :param avg_cp: avg of cp for country alarm
@@ -317,29 +213,37 @@ class ConsistencyTestInfra(object):
         :param spark_configs: spark configs dictionary to override defaults
         :param spark_queue: override queue (default is 'calculation')
         """
-        input_paths = ConsistencyTestInfra._gen_input_paths(
+        input_paths = ConsistencyPaths.gen_input_paths(
             base_dir=self.ti.base_dir,
             path=input_path,
             base_date=self.ti.date,
             date_type=date_type
         )
-        self.ti.assert_input_validity(input_paths, validate_marker=True)
+        self.ti.set_s3_keys()
+
+        def resolve_path(p):
+            da = DataArtifact(p, required_marker=False)
+            da.assert_input_validity(self.ti)
+            return da.resolved_path
+
+        base_model_path = ConsistencyPaths.gen_base_model_path(
+            base_dir=self.ti.calc_dir,
+            name=test_name,
+            model_date=self.ti.date,
+            date_type=date_type
+        )
 
         command_params = ConsistencyTestInfra._get_model_training_command_params(
             test_name=test_name,
-            data_date=self.ti.date,
-            source_db=source_db,
-            source_table=source_table,
+            input_paths=map(resolve_path, input_paths),
             data_column=data_column,
-            has_day_partition=has_day_partition,
             platform=platform,
-            date_type=date_type,
+            data_date=self.ti.date,
             countries=countries,
-            output_path=self.ti.calc_dir,
+            tsv_schema_table=tsv_schema_table,
+            data_column_threshold=data_column_threshold,
             reverse_dates=reverse_dates,
-            sites_visit_filter=sites_visit_filter,
-            apps_rank_filter=apps_rank_filter,
-            entity_column=entity_column,
+            base_output_path=base_model_path,
             num_features=num_features,
             sig_noise_coeff=sig_noise_coeff,
             std_cp=std_cp,
@@ -347,16 +251,18 @@ class ConsistencyTestInfra(object):
             std_ss=std_ss,
             avg_ss=avg_ss,
             tv_gauss=tv_gauss,
-            tv_symm=tv_symm)
+            tv_symm=tv_symm
+        )
 
         countries_list = countries.split(',')
-        # output checks
-        model_paths = ConsistencyTestInfra._gen_model_paths(
+        # output checks and managed output dirs
+        model_paths = ConsistencyPaths.gen_all_model_paths(
             base_dir=self.ti.calc_dir,
-            test_name=test_name,
-            has_day_partition=has_day_partition,
+            name=test_name,
             model_date=self.ti.date,
-            countries_list=countries_list
+            countries=countries_list,
+            date_type=date_type
+
         )
 
         self.run_consistency_py_spark(
@@ -365,171 +271,202 @@ class ConsistencyTestInfra(object):
             output_dirs=model_paths,
             named_spark_args=named_spark_args,
             spark_configs=spark_configs,
-           queue=spark_queue
+            queue=spark_queue
         )
 
         self.ti.assert_output_validity(model_paths, min_size_bytes=10, validate_marker=True)
 
         # run benchmark test
-        self.test(test_name,
-                  source_db,
-                  source_table,
-                  data_column,
-                  has_day_partition,
-                  platform,
-                  date_type,
-                  countries,
-                  reverse_dates=reverse_dates,
-                  entity_column=entity_column,
-                  cp_threshold=cp_threshold,
-                  model_date=self.ti.date.strftime('%Y-%m-%d'),
-                  named_spark_args=named_spark_args,
-                  spark_configs=spark_configs,
-                  spark_queue=spark_queue,
-                  email_to=email_to,
-                  benchmark_mode=True)
+        self.test(
+            test_name=test_name,
+            input_path=input_path,
+            data_column=data_column,
+            platform=platform,
+            date_type=date_type,
+            countries=countries,
+            model_date=self.ti.date,
+            model_base_dir=self.ti.calc_dir,
+            tsv_schema_table=tsv_schema_table,
+            data_column_threshold=data_column_threshold,
+            reverse_dates=reverse_dates,
+            cp_threshold=cp_threshold,
+            named_spark_args=named_spark_args,
+            spark_configs=spark_configs,
+            spark_queue=spark_queue,
+            benchmark_mode=True)
 
     def test(
             self,
             test_name,
-            source_db,
-            source_table,
+            input_path,
             data_column,
-            has_day_partition,
             platform,
             date_type,
             countries,
+            model_date,
+            tsv_schema_table=None,
+            data_column_threshold=None,
             reverse_dates=None,
-            entity_column=None,
             cp_threshold=0.90,
             model_base_dir=None,
-            model_date=None,
             email_to=None,
-            named_spark_args=None,
-            spark_configs=None,
-            spark_queue='calculation',
-            benchmark_mode=False,
             std_cp=0.036,
             avg_cp=0.0586,
             std_ss=0.05,
-            avg_ss=0.22
-
+            avg_ss=0.22,
+            named_spark_args=None,
+            spark_configs=None,
+            spark_queue='calculation',
+            benchmark_mode=False
     ):
         """
         :param test_name: unique test name - used for hdfs path generation and spark job name
-        :param source_db: hive db for data endpoint
-        :param source_table: hive table for data endpoint
+        :param input_path: path (without base_dir prefix) to source data
         :param data_column: column in hive table for data endpoint
-        :param has_day_partition: bool - does source data has daily partition
         :param platform: specifies data platform, used for querying - web/apps
         :param date_type: type date for data points - used for querying:
-            daily - consecutive daily endpoints
+            day - consecutive daily endpoints
             day_of_week - daily data in weekly intervals
-            monthly - monthly data
+            month - monthly data
         :param countries: comma separated  list of country codes
+        :param model_date: date for specific model to use. datetime.date object.
+        :param tsv_schema_table: full name of hive table define above the input path (in case the data is tsv and not parquet)
+        :param data_column_threshold: minimum threshold of values to use from data column (min visits or unique for example)
         :param reverse_dates: should data points be reversed, i.e test date against future data.
             default is False (test against past data)
-        :param entity_column: entity column in data is usually 'site' or 'app', if it is different, use this
-            argument to override
         :param cp_threshold:
         :param model_base_dir: custom base dir from which model is taken
             (use calc_dir when training model to specify custom output dir)
-        :param model_date: date for specific model to use. format yyyy-mm-dd. If not specified active model is used
         :param email_to: email to send test report to
-        :param named_spark_args: named spark args dictionary to override defaults
-        :param spark_configs: spark configs dictionary to override defaults
-        :param spark_queue: override queue (default is 'calculation')
-        :param benchmark_mode: specify whether this test is run from within model training (benchmark==True) or independently
         :param std_cp: std of cp for country alarm
         :param avg_cp: avg of cp for country alarm
         :param std_ss: std of significant slope for country alarm
         :param avg_ss: avg of significant slope for country alarm
+        :param named_spark_args: named spark args dictionary to override defaults
+        :param spark_configs: spark configs dictionary to override defaults
+        :param spark_queue: override queue (default is 'calculation')
+        :param benchmark_mode: specify whether this test is run from within model training (benchmark==True) or independently
 
         """
         countries_list = map(int, countries.split(','))
 
-        # input checks for model only if specific model is requested
-        model_date_parsed = None
-        if model_date:
-            model_base_dir = model_base_dir if model_base_dir is not None else self.ti.base_dir
-            model_date_parsed = datetime.strptime(model_date, '%Y-%m-%d').date()
-            model_paths = ConsistencyTestInfra._gen_model_paths(
-                base_dir=model_base_dir,
-                test_name=test_name,
-                model_date=model_date_parsed,
-                has_day_partition=has_day_partition,
-                countries_list=countries_list
-            )
-            self.ti.assert_input_validity(model_paths, min_size_bytes=10, validate_marker=True)
+        input_paths = ConsistencyPaths.gen_input_paths(
+            base_dir=self.ti.base_dir,
+            path=input_path,
+            base_date=self.ti.date,
+            date_type=date_type
+        )
+        self.ti.set_s3_keys()
 
-            total_result_path = ConsistencyTestInfra._gen_total_result_path(
-                base_dir=model_base_dir,
-                test_name=test_name,
-                test_date=model_date_parsed,
-                has_day_partition=has_day_partition
-            )
-            if not benchmark_mode:
-                self.ti.assert_input_validity(total_result_path, min_size_bytes=10, validate_marker=True)
+        def resolve_path(p):
+            da = DataArtifact(p, required_marker=False)
+            da.assert_input_validity(self.ti)
+            return da.resolved_path
 
+        # The model to use in the test
+        model_base_dir = model_base_dir if model_base_dir is not None else self.ti.base_dir
+        model_paths = ConsistencyPaths.gen_all_model_paths(
+            base_dir=model_base_dir,
+            name=test_name,
+            model_date=model_date,
+            countries=countries_list,
+            date_type=date_type
+        )
+        base_model_path = ConsistencyPaths.gen_base_model_path(
+            model_base_dir, test_name, model_date, date_type)
+        for mp in model_paths:
+            mp_data_artifact = DataArtifact(mp, required_size=10, required_marker=True)
+            mp_data_artifact.assert_input_validity(self.ti)
+            base_model_path = ConsistencyPaths.extract_model_base_path_from_country_path(mp_data_artifact.resolved_path)
+
+        # the benchmark result to use in the test (for comparison)
+        benchmark_path = ConsistencyPaths.gen_model_benchmark_path(
+            base_dir=model_base_dir,
+            name=test_name,
+            model_date=model_date,
+            date_type=date_type
+        )
+        benchmark_path_data_artifact = DataArtifact(benchmark_path, required_size=10, required_marker=True)
+        if not benchmark_mode:
+            # this is a regular run, not a benchmark run so we need to read the current benchmark data and
+            # compare with current test result
+            benchmark_path_data_artifact.assert_input_validity(self.ti)
+
+        # path for the model copy to save inside the test output
+        model_for_test_base_path = ConsistencyPaths.gen_base_output_path(
+            base_dir=self.ti.calc_dir,
+            name=test_name,
+            test_date=self.ti.date,
+            path_type=ConsistencyOutputType.Model,
+            date_type=date_type
+        )
+
+        country_result_base_path = ConsistencyPaths.gen_base_output_path(
+            base_dir=self.ti.calc_dir,
+            name=test_name,
+            test_date=self.ti.date,
+            path_type=ConsistencyOutputType.Countries,
+            date_type=date_type
+        )
+
+        total_results_path = ConsistencyPaths.gen_output_path(
+            base_dir=self.ti.calc_dir,
+            name=test_name,
+            test_date=self.ti.date,
+            path_type=ConsistencyOutputType.Total,
+            date_type=date_type
+        )
+
+        # benchmark paths clarification:
+        # If this is not a benchmark mode run (meaning - a regular consistency test) then the benchmark data should be
+        # taken from the benchmark path (using data artifact) and output should be written to total_results_path.
+        # If this a is benchmark mode (meaning - run as part of the model) then there should be no benchmark data as
+        # input, and the total output should written to the benchmark folder
+        print('Running test %s with model %s' % (test_name, model_date))
         command_params = ConsistencyTestInfra._get_consistency_test_command_params(
             test_name=test_name,
             data_date=self.ti.date,
-            source_db=source_db,
-            source_table=source_table,
-            data_column=data_column,
-            has_day_partition=has_day_partition,
-            output_path=self.ti.calc_dir,
-            model_base_dir=model_base_dir,
-            platform=platform,
-            date_type=date_type,
             countries_list=countries_list,
-            reverse_dates=reverse_dates,
-            entity_column=entity_column,
-            cp_threshold=cp_threshold,
-            model_date=model_date_parsed if model_date else None,
             email_to=email_to,
-            benchmark_mode=benchmark_mode,
+            base_model_path=base_model_path,
+            model_for_test_base_path=model_for_test_base_path,
+            country_result_base_path=country_result_base_path,
+            total_results_path=total_results_path if not benchmark_mode else benchmark_path,
+            benchmark_path=benchmark_path_data_artifact.resolved_path if not benchmark_mode else None,
+            cp_threshold=cp_threshold,
             std_cp=std_cp,
             avg_cp=avg_cp,
             std_ss=std_ss,
-            avg_ss=avg_ss
+            avg_ss=avg_ss,
+            input_paths=map(resolve_path, input_paths),
+            data_column=data_column,
+            platform=platform,
+            reverse_dates=reverse_dates,
+            tsv_schema_table=tsv_schema_table,
+            data_column_threshold=data_column_threshold,
+            benchmark_mode=benchmark_mode,
         )
 
-        result_paths = ConsistencyTestInfra._gen_result_paths(
-            base_dir=self.ti.calc_dir,
-            test_name=test_name,
-            path_type='country',
-            test_date=self.ti.date,
-            countries_list=countries_list,
-            has_day_partition=has_day_partition
-        )
-        model_result_paths = ConsistencyTestInfra._gen_result_paths(
-            base_dir=self.ti.calc_dir,
-            test_name=test_name,
-            path_type='model',
-            test_date=self.ti.date,
-            countries_list=countries_list,
-            has_day_partition=has_day_partition
-        )
 
-        total_result_path = ConsistencyTestInfra._gen_total_result_path(
+        # list all outputs for output assert and managed output dirs
+        all_outputs = ConsistencyPaths.gen_all_output_paths(
             base_dir=self.ti.calc_dir,
-            test_name=test_name,
+            name=test_name,
             test_date=self.ti.date,
-            has_day_partition=has_day_partition
+            date_type=date_type,
+            countries=countries_list
         )
+        if benchmark_mode:
+            all_outputs = [benchmark_path]
 
         self.run_consistency_py_spark(
             main_py_file='consistency_test_driver.py',
             command_params=command_params,
-            output_dirs=result_paths + model_result_paths + [total_result_path],
+            output_dirs=all_outputs,
             named_spark_args=named_spark_args,
             spark_configs=spark_configs,
             queue=spark_queue
         )
 
         # output checks
-        self.ti.assert_output_validity(result_paths, min_size_bytes=100, validate_marker=True)
-        self.ti.assert_output_validity(model_result_paths, min_size_bytes=10, validate_marker=True)
-        self.ti.assert_output_validity(total_result_path, min_size_bytes=100, validate_marker=True)
-
+        self.ti.assert_output_validity(all_outputs, min_size_bytes=10, validate_marker=True)
