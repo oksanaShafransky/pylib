@@ -227,11 +227,14 @@ class TasksInfra(object):
         :param str image_attachment: Image as byte string. Is optional.
         """
 
+        if isinstance(mail_to, list):
+            mail_to = ','.join(mail_to)
+
         msg = MIMEMultipart()
         msg.attach(MIMEText(content, format))
 
         msg['From'] = mail_from
-        msg['To'] = ','.join(mail_to)
+        msg['To'] = mail_to
         msg['Subject'] = mail_subject
 
         if image_attachment:
