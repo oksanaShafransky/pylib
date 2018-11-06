@@ -1,6 +1,5 @@
 from pylib.consistency.consistency_types import ConsistencyDateType, ConsistencyOutputType
 
-from pylib.consistency.consistency_utils import ConsistencyTestInfra
 from collections import namedtuple
 from datetime import date
 import pytest
@@ -92,6 +91,8 @@ class TestInfra:
             ]
             input_paths = ConsistencyPaths.gen_input_paths('/base/dir', 'my/input/path', date(2018, 10, 10), ConsistencyDateType.Day)
 
+            assert len(input_paths) == len(expected_paths)
+            assert input_paths[0] == expected_paths[0]
             for ep in expected_paths:
                 assert ep in input_paths
 
@@ -105,6 +106,8 @@ class TestInfra:
             ]
             input_paths = ConsistencyPaths.gen_input_paths('/base/dir', 'my/input/path', date(2018, 10, 10), ConsistencyDateType.DayOfWeek)
 
+            assert len(input_paths) == len(expected_paths)
+            assert input_paths[0] == expected_paths[0]
             for ep in expected_paths:
                 assert ep in input_paths
 
@@ -118,6 +121,8 @@ class TestInfra:
             ]
             input_paths = ConsistencyPaths.gen_input_paths('/base/dir', 'my/input/path', date(2018, 10, 10), ConsistencyDateType.Month)
 
+            assert len(input_paths) == len(expected_paths)
+            assert input_paths[0] == expected_paths[0]
             for ep in expected_paths:
                 assert ep in input_paths
 
