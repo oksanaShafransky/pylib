@@ -1,6 +1,7 @@
 from datetime import date
 from dateutil.relativedelta import relativedelta
 
+from pylib.common.date_utils import get_dates_range
 from pylib.consistency.consistency_types import ConsistencyDateType, ConsistencyOutputType
 from pylib.hive.common import get_date_partition_path
 
@@ -105,18 +106,13 @@ class ConsistencyPaths(object):
     @staticmethod
     def _gen_input_dates(base_date, date_type=ConsistencyDateType.Day, sample_count=5):
         if date_type == ConsistencyDateType.Month:
-            # take 5 month dates fro base_date backwards (day 1 is not actually used later)
-            return [date(
-                (base_date - relativedelta(months=x)).year,
-                (base_date - relativedelta(months=x)).month,
-                1
-            ) for x in range(0, sample_count)]
+            return get_dates_range(base_date, sample_count, 'months')[::-1]
         elif date_type == ConsistencyDateType.DayOfWeek:
             # Take 5 day dates with week intervals
-            return [base_date - relativedelta(weeks=x) for x in range(0, sample_count)]
+            return get_dates_range(base_date, sample_count, 'weeks')[::-1]
         elif date_type == ConsistencyDateType.Day:
-            # Take 3 day dates with day intervals
-            return [base_date - relativedelta(days=x) for x in range(0, sample_count)]
+            # Take 5 day dates with day intervals
+            return get_dates_range(base_date, sample_count, 'days')[::-1]
         else:
             return []
 
