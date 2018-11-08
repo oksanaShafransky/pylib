@@ -1,7 +1,7 @@
 import boto3
 
 
-def get_s3_client(access_key, secret_key):
+def get_s3_client(access_key=None, secret_key=None):
     return boto3.client(
         's3',
         aws_access_key_id=access_key,
