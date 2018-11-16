@@ -331,7 +331,7 @@ class TasksInfra(object):
 
             # Report, if asked
             if mail_recipients is not None:
-                mail_from = 'Dr.File'
+                mail_from = 'dr.file@similarweb.com'
                 mail_to = [mail_recipients] if isinstance(mail_recipients, basestring) else mail_recipients
                 subject = 'Corrupt Files Report %s' % (report_name or task_id)
                 message = '''
