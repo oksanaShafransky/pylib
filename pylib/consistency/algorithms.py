@@ -39,4 +39,4 @@ def calc_regression(samples, min_threshold=1.8):
     # else:
     #     slope_assumed = 0.0
     # return float(np.sign(beta1) * res), float(slope_assumed * beta1[0, 0])
-    return res
+    return float(res)
