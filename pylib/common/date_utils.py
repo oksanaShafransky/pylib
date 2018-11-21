@@ -57,3 +57,15 @@ def get_days_in_month(month_dt):
 
 def first_day_of_last_month(dt):
     return last_day_of_prev_month(dt).replace(day=1)
+
+
+def generate_date_suffix(dt, suffix_format):
+    # We can add here what ever date component we can think of
+    date_components = {
+        'year': str(dt.year)[2:],
+        'month': str(dt.month).zfill(2),
+        'day': str(dt.day).zfill(2),
+        'full_date': str(dt)
+    }
+    return suffix_format % date_components
+
