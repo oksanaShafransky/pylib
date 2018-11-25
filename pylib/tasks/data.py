@@ -120,5 +120,3 @@ class DataArtifact(object):
             else:
                 return None
 
-
-RangedDataArtifact("/similar/data/mobile/osm/", date.today(), 10)
