@@ -30,40 +30,21 @@ def human_size(raw_size):
 
 
 class RangedDataArtifact(object):
-    DAYS_MODE = "days"
-    MONTHS_MODE = "months"
-    YEARS_MODE = "years"
 
-    def __init__(self, base_path, end_date, delta, mode="days", step_size=1, start_date=None, suffix_format=DEFAULT_SUFFIX_FORMAT,
-                 required_size=0, required_marker=True, bucket=DEFAULT_BACKUP_BUCKET, pref=DEFAULT_PREFIX):
-        self.base_path = base_path
-        self.end_date = end_date
-        self.start_date = start_date
-        self.delta = delta
-        self.mode = mode
-        self.step_size = step_size
+    def __init__(self, collection_path, dates, suffix_format=DEFAULT_SUFFIX_FORMAT, *args, **kwargs):
+        self.collection_path = collection_path
+        self.dates = dates
         self.suffix_format = suffix_format
-        self.min_required_size = required_size
-        self.check_marker = required_marker
-        self.bucket = bucket
-        self.prefix = pref
-        self._create_data_artifacts()
-
-    def _create_data_artifacts(self):
-        range_of_dates = get_dates_range(self.end_date, self.delta, self.mode) if self.start_date is None else \
-            get_dates_list(self.start_date, self.end_date, relativedelta(**{self.mode: self.delta}))
-        self.ranged_data_artifact = [DataArtifact(self.base_path + generate_date_suffix(d, self.suffix_format),
-                                                  self.min_required_size,
-                                                  self.check_marker,
-                                                  self.bucket,
-                                                  self.prefix)
-                                     for d in range_of_dates]
+        # Create list of dataartifacts
+        self.ranged_data_artifact = [DataArtifact(self.collection_path + generate_date_suffix(d, self.suffix_format),
+                                                  *args, **kwargs)
+                                     for d in self.dates]
 
     def assert_input_validity(self, *reporters):
         for da in self.ranged_data_artifact:
             da.assert_input_validity(*reporters)
 
-    def resolved_path_string(self):
+    def resolved_paths_string(self):
         return ",".join([da.resolved_path for da in self.ranged_data_artifact])
 
 
