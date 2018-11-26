@@ -44,8 +44,15 @@ class RangedDataArtifact(object):
         for da in self.ranged_data_artifact:
             da.assert_input_validity(*reporters)
 
-    def resolved_paths_string(self):
-        return ",".join([da.resolved_path for da in self.ranged_data_artifact])
+    def resolved_paths_string(self, item_delimiter=','):
+        return item_delimiter.join([da.resolved_path for da in self.ranged_data_artifact])
+
+    def resolved_paths_dates_string(self, date_format='%Y-%m-%d', item_delimiter=';', tuple_delimiter=','):
+        tuples = [
+            (self.ranged_data_artifact[i], self.dates[i].strftime(date_format))
+            for i in range(len(self.dates))
+        ]
+        return item_delimiter.join([tuple_delimiter.join(tup) for tup in tuples])
 
 
 class DataArtifact(object):
