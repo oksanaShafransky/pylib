@@ -30,5 +30,28 @@ class KeyValueConfig(object):
 
 
 def get_kv(env='production', purpose='bigdata', snowflake_env=None):
-    basic_kv = KeyValueConfig(snowflake_env).get_base_kv()[env.lower()]
-    return basic_kv if purpose is None else PrefixedConfigurationProxy(basic_kv, prefixes=[purpose])
+    consul_host = SnowflakeConfig(snowflake_env).get_service_name(service_name="consul-kv")
+    consul_token = SnowflakeConfig(snowflake_env).get_service_name(service_name="consul-kv.token")
+    if consul_token == 'no-token':
+        consul_token = None
+
+    basic_kv = provider_from_config({
+        'class': "pylib.sw_config.consul.ConsulProxy",
+        'server': consul_host,
+        "token": consul_token
+    })
+
+    # in case of bigdata/production we want to allow fallback to bigdata (since production keys may
+    # not have copied to "production" sub-folder)
+    if purpose == 'bigdata' and env == 'production':
+        prefixes = [purpose]
+        optional_get_prefixes = [env]
+    else:
+        prefixes = [purpose, env]
+        optional_get_prefixes = None
+
+    return basic_kv if purpose is None else PrefixedConfigurationProxy(
+        underlying_proxy=basic_kv,
+        prefixes=prefixes,
+        optional_get_prefixes=optional_get_prefixes
+    )
