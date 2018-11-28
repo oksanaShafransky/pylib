@@ -11,7 +11,7 @@ import os
 DEFAULT_BACKUP_BUCKET = 'similargroup-backup-retention'
 DEFAULT_PREFIX = '/mrp'
 SUCCESS_MARKER = '_SUCCESS'
-DEFAULT_SUFFIX_FORMAT =  '''/year=%(year)s/month=%(month)s/day=%(day)s'''
+DEFAULT_SUFFIX_FORMAT =  '''year=%(year)s/month=%(month)s/day=%(day)s'''
 
 # TODO there is infra in s3/data_checks that solves some this, given a connection and bucket objects
 # it might be more efficient, but do we really want hold s3 constructs here? need to decide
