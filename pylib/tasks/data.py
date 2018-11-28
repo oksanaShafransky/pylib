@@ -1,5 +1,6 @@
 import logging
 
+from pylib.common.date_utils import generate_date_suffix
 from pylib.hadoop.hdfs_util import get_size as size_on_hdfs, file_exists as exists_hdfs, directory_exists as dir_exists_hdfs
 from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_s3
 
@@ -8,6 +9,7 @@ import os
 DEFAULT_BACKUP_BUCKET = 'similargroup-backup-retention'
 DEFAULT_PREFIX = '/mrp'
 SUCCESS_MARKER = '_SUCCESS'
+DEFAULT_SUFFIX_FORMAT = '''year=%(year)s/month=%(month)s/day=%(day)s'''
 
 # TODO there is infra in s3/data_checks that solves some this, given a connection and bucket objects
 # it might be more efficient, but do we really want hold s3 constructs here? need to decide
@@ -23,6 +25,33 @@ def human_size(raw_size):
         curr_size, curr_idx = curr_size / scale, curr_idx + 1
 
     return curr_size, sizes[curr_idx]
+
+
+class RangedDataArtifact(object):
+
+    def __init__(self, collection_path, dates, suffix_format=DEFAULT_SUFFIX_FORMAT, *args, **kwargs):
+        self.collection_path = collection_path
+        self.dates = dates
+        self.suffix_format = suffix_format
+        # Create list of dataartifacts
+        self.ranged_data_artifact = [
+            DataArtifact(os.path.join(self.collection_path, generate_date_suffix(d, self.suffix_format)), *args, **kwargs)
+            for d in self.dates
+        ]
+
+    def assert_input_validity(self, *reporters):
+        for da in self.ranged_data_artifact:
+            da.assert_input_validity(*reporters)
+
+    def resolved_paths_string(self, item_delimiter=','):
+        return item_delimiter.join([da.resolved_path for da in self.ranged_data_artifact])
+
+    def resolved_paths_dates_string(self, date_format='%Y-%m-%d', item_delimiter=';', tuple_delimiter=','):
+        tuples = [
+            (self.ranged_data_artifact[i], self.dates[i].strftime(date_format))
+            for i in range(len(self.dates))
+        ]
+        return item_delimiter.join([tuple_delimiter.join(tup) for tup in tuples])
 
 
 class DataArtifact(object):
@@ -96,3 +125,4 @@ class DataArtifact(object):
                 return 's3a://%s' % self._s3_path(self.raw_path)
             else:
                 return None
+
