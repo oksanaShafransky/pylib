@@ -204,9 +204,9 @@ class TasksInfra(object):
         return command
 
     @staticmethod
-    def kv(env='production', purpose='bigdata', snowflake_env=None):
+    def kv(purpose='bigdata', snowflake_env=None):
         from pylib.sw_config.bigdata_kv import get_kv
-        return get_kv(env, purpose, snowflake_env)
+        return get_kv(purpose, snowflake_env)
 
     SMTP_SERVER = 'email-smtp.us-east-1.amazonaws.com'
     SMTP_PORT = 587
