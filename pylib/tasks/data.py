@@ -48,7 +48,7 @@ class RangedDataArtifact(object):
 
     def resolved_paths_dates_string(self, date_format='%Y-%m-%d', item_delimiter=';', tuple_delimiter=','):
         tuples = [
-            (self.ranged_data_artifact[i], self.dates[i].strftime(date_format))
+            (self.ranged_data_artifact[i].resolved_path, self.dates[i].strftime(date_format))
             for i in range(len(self.dates))
         ]
         return item_delimiter.join([tuple_delimiter.join(tup) for tup in tuples])
