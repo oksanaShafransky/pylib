@@ -57,7 +57,7 @@ class CompositeConfigurationProxy(KeyValueProxy):
 
 
 class PrefixedConfigurationProxy(KeyValueProxy):
-    def __init__(self, underlying_proxy, prefixes, optional_get_prefixes=None):
+    def __init__(self, underlying_proxy, prefixes):
         self.proxy = underlying_proxy
 
         # construct prefix
@@ -65,26 +65,10 @@ class PrefixedConfigurationProxy(KeyValueProxy):
         if len(self.prefix) > 0:
             self.prefix += '/'
 
-        # construct optional prefix (get will try to prepend this prefix first and if doesn't
-        # exist it falls back to regular prefix only)
-        if optional_get_prefixes is not None and len(optional_get_prefixes) > 0:
-            self.optional_get_prefix = '/'.join([pref for pref in optional_get_prefixes if pref is not None])
-            if len(self.optional_get_prefix) > 0:
-                self.optional_get_prefix += '/'
-        else:
-            self.optional_get_prefix = ''
-
-    def _resolve_key(self, key, prepend_optional_prefix=False):
-        if prepend_optional_prefix:
-            return '%s%s%s' % (self.prefix, self.optional_get_prefix, key)
-        else:
-            return '%s%s' % (self.prefix, key)
+    def _resolve_key(self, key):
+        return '%s%s' % (self.prefix, key)
 
     def get(self, key):
-        if len(self.optional_get_prefix) > 0:
-            v = self.proxy.get(self._resolve_key(key, True))
-            if v is not None:
-                return v
         return self.proxy.get(self._resolve_key(key))
 
     def set(self, key, value):

@@ -131,51 +131,6 @@ class TestPrefixedConfiguration(object):
         proxy = PrefixedConfigurationProxy(UnderlyingProxy(), ['prefix1', 'prefix2'])
         assert proxy.get(original_key)
 
-    def test_optional_prefix_exists(self):
-        original_key = 'key/full/path'
-
-        class UnderlyingProxy(object):
-            def get(self, key):
-                if key == original_key:
-                    return None
-                if key == 'prefix/%s' % original_key:
-                    return None
-                if key == 'prefix/optional_prefix/key/full/path':
-                    return 'optional_prefix'
-
-        proxy = PrefixedConfigurationProxy(UnderlyingProxy(), ['prefix'], ['optional_prefix'])
-        assert proxy.get(original_key) == 'optional_prefix'
-
-    def test_multiple_optional_prefix_exists(self):
-        original_key = 'key/full/path'
-
-        class UnderlyingProxy(object):
-            def get(self, key):
-                if key == original_key:
-                    return None
-                if key == 'prefix/%s' % original_key:
-                    return None
-                if key == 'prefix/optional_prefix1/optional_prefix2/key/full/path':
-                    return 'optional_prefix'
-
-        proxy = PrefixedConfigurationProxy(UnderlyingProxy(), ['prefix'], ['optional_prefix1', 'optional_prefix2'])
-        assert proxy.get(original_key) == 'optional_prefix'
-
-    def test_optional_prefix_does_not_exist(self):
-        original_key = 'key/full/path'
-
-        class UnderlyingProxy(object):
-            def get(self, key):
-                if key == original_key:
-                    return None
-                if key == 'prefix/%s' % original_key:
-                    return 'prefix'
-                if key == 'prefix/optional_prefix/key/full/path':
-                    return None
-
-        proxy = PrefixedConfigurationProxy(UnderlyingProxy(), ['prefix'], ['optional_prefix'])
-        assert proxy.get(original_key) == 'prefix'
-
 
 class TestGetKV(object):
 
@@ -267,3 +222,18 @@ class TestGetKV(object):
         kv = get_kv(purpose='test_purpose', snowflake_env='test_env')
         assert type(kv).__name__ == 'ConsulProxyMock'
 
+    def test_kv_ignore_prefix(self):
+        class SnowflakeConfigMock(object):
+            def __init__(self, env):
+                assert env == 'test_env'
+
+            def get_service_name(self, service_name):
+                return '{"server": "test_server", "prefix": "prefix1/prefix2"}'
+
+        import pylib.sw_config.consul
+        pylib.sw_config.consul.ConsulProxy = TestGetKV.ConsulProxyMock
+        import pylib.config.SnowflakeConfig
+        pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
+        from pylib.sw_config.bigdata_kv import get_kv
+        kv = get_kv(purpose='test_purpose', snowflake_env='test_env', append_prefix=False)
+        assert type(kv).__name__ == 'ConsulProxyMock'

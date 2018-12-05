@@ -21,6 +21,5 @@ def get_kv(purpose='bigdata', snowflake_env=None, append_prefix=True):
 
     return PrefixedConfigurationProxy(
         underlying_proxy=basic_kv,
-        prefixes=[consul_properties['prefix']],
-        optional_get_prefixes=consul_properties.get('optional_prefix')
+        prefixes=[consul_properties['prefix']]
     )
