@@ -236,6 +236,33 @@ def get_table_location(table):
     raise Exception('Cannot find the location for table %s \n stdout[%s] \n stderr[%s]' % (table, output, err))
 
 
+def extract_sub_partitions(base_partition, text):
+    partitions = []
+    for line in text.split("\n"):
+        if base_partition in line and line.index(base_partition) == 0:
+            partitions.append(line)
+
+    return partitions
+
+
+def get_table_sub_partitions(table, base_partition):
+    cmd = ['hive', '-e', '"show partitions %s;"' % table]
+    try:
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except OSError as e:
+        logger.warn("Unable to run 'hive'. This usually happens in dev scenario. Returning empty result")
+        return []
+    output, err = p.communicate()
+    partitions = []
+    if p.returncode == 0:
+        for line in output.split("\n"):
+            if base_partition in line and line.index(base_partition) == 0:
+                partitions.append(line)
+        if len(partitions) > 1:
+            return partitions
+    raise Exception('Cannot find the partitions for table %s \n stdout[%s] \n stderr[%s]' % (table, output, err))
+
+
 def hbase_table_name(table):
     cmd = ['hive', '-e', '"describe formatted %s;"' % table]
     output, err = subprocess.Popen(cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE).communicate()
