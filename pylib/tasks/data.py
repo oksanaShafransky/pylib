@@ -1,17 +1,15 @@
 import logging
 
-from pylib.common.date_utils import get_dates_range, generate_date_suffix, get_dates_list
+from pylib.common.date_utils import generate_date_suffix
 from pylib.hadoop.hdfs_util import get_size as size_on_hdfs, file_exists as exists_hdfs, directory_exists as dir_exists_hdfs
 from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_s3
-from datetime import date
-from dateutil.relativedelta import relativedelta
 
 import os
 
 DEFAULT_BACKUP_BUCKET = 'similargroup-backup-retention'
 DEFAULT_PREFIX = '/mrp'
 SUCCESS_MARKER = '_SUCCESS'
-DEFAULT_SUFFIX_FORMAT =  '''/year=%(year)s/month=%(month)s/day=%(day)s'''
+DEFAULT_SUFFIX_FORMAT = '''year=%(year)s/month=%(month)s/day=%(day)s'''
 
 # TODO there is infra in s3/data_checks that solves some this, given a connection and bucket objects
 # it might be more efficient, but do we really want hold s3 constructs here? need to decide
@@ -36,16 +34,24 @@ class RangedDataArtifact(object):
         self.dates = dates
         self.suffix_format = suffix_format
         # Create list of dataartifacts
-        self.ranged_data_artifact = [DataArtifact(self.collection_path + generate_date_suffix(d, self.suffix_format),
-                                                  *args, **kwargs)
-                                     for d in self.dates]
+        self.ranged_data_artifact = [
+            DataArtifact(os.path.join(self.collection_path, generate_date_suffix(d, self.suffix_format)), *args, **kwargs)
+            for d in self.dates
+        ]
 
     def assert_input_validity(self, *reporters):
         for da in self.ranged_data_artifact:
             da.assert_input_validity(*reporters)
 
-    def resolved_paths_string(self):
-        return ",".join([da.resolved_path for da in self.ranged_data_artifact])
+    def resolved_paths_string(self, item_delimiter=','):
+        return item_delimiter.join([da.resolved_path for da in self.ranged_data_artifact])
+
+    def resolved_paths_dates_string(self, date_format='%Y-%m-%d', item_delimiter=';', tuple_delimiter=','):
+        tuples = [
+            (self.ranged_data_artifact[i].resolved_path, self.dates[i].strftime(date_format))
+            for i in range(len(self.dates))
+        ]
+        return item_delimiter.join([tuple_delimiter.join(tup) for tup in tuples])
 
 
 class DataArtifact(object):
