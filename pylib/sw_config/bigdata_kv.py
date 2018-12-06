@@ -2,12 +2,20 @@ import json
 
 from pylib.sw_config.consul import ConsulProxy
 from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
+from pylib.sw_config.types import Purposes
+
+snowflake_keys = {
+    Purposes.BigData: 'bigdata-consul-kv',
+    Purposes.Ingest: 'ingest-consul-kv',
+    Purposes.WebProduction: 'web-production-consul-kv',
+    Purposes.WebStaging: 'web-staging-consul-kv',
+}
 
 
-def get_kv(purpose='bigdata', snowflake_env=None, append_prefix=True):
+def get_kv(purpose=Purposes.BigData, snowflake_env=None, append_prefix=True):
     # import snowflake config in function to allow mock in unit tests
     from pylib.config.SnowflakeConfig import SnowflakeConfig
-    consul_snowflake_key = purpose + '-consul-kv'
+    consul_snowflake_key = snowflake_keys[purpose]
     consul_properties_json = SnowflakeConfig(snowflake_env).get_service_name(service_name=consul_snowflake_key)
     consul_properties = json.loads(consul_properties_json)
 

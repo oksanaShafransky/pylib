@@ -1,6 +1,7 @@
 from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
 from pylib.sw_config.dict_change_simulator import DictProxy
 from pylib.sw_config.kv_tools import KeyValueTree, kv_to_tree, load_kv, kv_diff
+from pylib.sw_config.types import Purposes
 
 
 class TestTools(object):
@@ -152,7 +153,7 @@ class TestGetKV(object):
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
-        kv = get_kv(purpose='test_purpose', snowflake_env='test_env')
+        kv = get_kv(purpose=Purposes.BigData, snowflake_env='test_env')
         assert kv.server == 'test_server'
         assert kv.token == 'test_token'
 
@@ -169,7 +170,7 @@ class TestGetKV(object):
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
-        kv = get_kv(purpose='test_purpose', snowflake_env='test_env')
+        kv = get_kv(purpose=Purposes.BigData, snowflake_env='test_env')
         assert kv.server == 'test_server'
         assert kv.token is None
 
@@ -179,7 +180,7 @@ class TestGetKV(object):
                 assert env == 'test_env'
 
             def get_service_name(self, service_name):
-                assert service_name == 'test_purpose-consul-kv'
+                assert service_name == 'bigdata-consul-kv'
                 return '{"server": "test_server"}'
 
         import pylib.sw_config.consul
@@ -187,7 +188,7 @@ class TestGetKV(object):
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
-        kv = get_kv(purpose='test_purpose', snowflake_env='test_env')
+        kv = get_kv(purpose=Purposes.BigData, snowflake_env='test_env')
 
     def test_kv_with_prefix(self):
         class SnowflakeConfigMock(object):
@@ -202,7 +203,7 @@ class TestGetKV(object):
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
-        kv = get_kv(purpose='test_purpose', snowflake_env='test_env')
+        kv = get_kv(purpose=Purposes.BigData, snowflake_env='test_env')
         assert type(kv).__name__ == 'PrefixedConfigurationProxy'
         assert kv.prefix == 'prefix1/prefix2/'
 
@@ -219,7 +220,7 @@ class TestGetKV(object):
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
-        kv = get_kv(purpose='test_purpose', snowflake_env='test_env')
+        kv = get_kv(purpose=Purposes.BigData, snowflake_env='test_env')
         assert type(kv).__name__ == 'ConsulProxyMock'
 
     def test_kv_ignore_prefix(self):
@@ -235,5 +236,27 @@ class TestGetKV(object):
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
-        kv = get_kv(purpose='test_purpose', snowflake_env='test_env', append_prefix=False)
+        kv = get_kv(purpose=Purposes.BigData, snowflake_env='test_env', append_prefix=False)
         assert type(kv).__name__ == 'ConsulProxyMock'
+
+    def test_valid_purpose(self):
+        class SnowflakeConfigMock(object):
+            def __init__(self, env):
+                pass
+
+            def get_service_name(self, service_name):
+                return '{"server": "test_server", "prefix": "prefix1/prefix2"}'
+
+        import pylib.sw_config.consul
+        pylib.sw_config.consul.ConsulProxy = TestGetKV.ConsulProxyMock
+        import pylib.config.SnowflakeConfig
+        pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
+        from pylib.sw_config.bigdata_kv import get_kv
+        # assert that calling get)kv with invalid purpose yields exception
+        try:
+            kv = get_kv(purpose='invalid_purpose', snowflake_env='test_env')
+            assert False
+        except Exception:
+            assert True
+
+
