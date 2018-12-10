@@ -59,6 +59,7 @@ class PtaskInvoker(Program):
             Argument(names=('table_prefix', 'tp'), help="Table Prefix", optional=True, default=''),
             Argument(names=('profile', 'prf'), kind=bool,
                      help="Profile flag - run containers with yourkit profiler"),
+            Argument(names=('branch', 'br'), help="The logical data branch of this command", optional=True),
         ]
         return core_args + extra_args
 
@@ -95,6 +96,8 @@ class PtaskInvoker(Program):
             sw_tasks['dry_run'] = True
         if self.args.profile.value:
             sw_tasks['profile'] = True
+        if self.args.branch.value:
+            sw_tasks['branch'] = self.args.branch.value
 
         if 'TASK_ID' in os.environ:
             sw_tasks['has_task_id'] = True
