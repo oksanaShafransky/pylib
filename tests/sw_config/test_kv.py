@@ -80,6 +80,19 @@ class TestPrefixedConfiguration(object):
         proxy = PrefixedConfigurationProxy(UnderlyingProxy(), [])
         assert proxy.get(original_key)
 
+    def test_none_prefix(self):
+        original_key = 'key/full/path'
+
+        class UnderlyingProxy(object):
+            def get(self, key):
+                if key == original_key:
+                    return True
+                else:
+                    return None
+
+        proxy = PrefixedConfigurationProxy(UnderlyingProxy())
+        assert proxy.get(original_key)
+
     def test_prefix_not_found(self):
         original_key = 'key/full/path'
 
@@ -260,3 +273,19 @@ class TestGetKV(object):
             assert True
 
 
+class TestPurposes(object):
+    def test_web_production(self):
+        assert Purposes.get_web_purpose('production') == Purposes.WebProduction
+
+    def test_web_staging(self):
+        assert Purposes.get_web_purpose('staging') == Purposes.WebStaging
+
+    def test_case_insensitivity(self):
+        assert Purposes.get_web_purpose('PRODUCTION') == Purposes.WebProduction
+
+    def test_invalid_env(self):
+        try:
+            Purposes.get_web_purpose('invalid')
+            assert False
+        except:
+            assert True

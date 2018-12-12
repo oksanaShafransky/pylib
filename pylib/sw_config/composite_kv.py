@@ -57,11 +57,11 @@ class CompositeConfigurationProxy(KeyValueProxy):
 
 
 class PrefixedConfigurationProxy(KeyValueProxy):
-    def __init__(self, underlying_proxy, prefixes):
+    def __init__(self, underlying_proxy, prefixes=None):
         self.proxy = underlying_proxy
 
         # construct prefix
-        self.prefix = '/'.join([pref for pref in prefixes if pref is not None])
+        self.prefix = '' if prefixes is None else '/'.join([pref for pref in prefixes if pref is not None])
         if len(self.prefix) > 0:
             self.prefix += '/'
 
@@ -83,6 +83,7 @@ class PrefixedConfigurationProxy(KeyValueProxy):
     def items(self, prefix=None):
         return map(lambda key_val: (key_val[0].lstrip(self.prefix), key_val[1]),
                    self.proxy.items(prefix=self.prefix+(prefix or '')))
+
 
     def __str__(self):
         return '%s at branch %s' % (self.proxy, self.prefix)
