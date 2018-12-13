@@ -32,7 +32,7 @@ from redis import StrictRedis
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.common.string_utils import random_str
 from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
-    create_client, directory_exists, copy_dir_from_path, calc_desired_partitions
+    create_client, directory_exists, copy_dir_from_path, calc_desired_partitions, get_size
 
 from pylib.hbase.hbase_utils import validate_records_per_region
 from pylib.aws.data_checks import is_s3_folder_big_enough, validate_success, get_s3_folder_size
@@ -1167,7 +1167,9 @@ class ContextualizedTasksInfra(object):
         if ret_val:
             if directory_exists(tmp_dir) and not self.dry_run:
                 copy_dir_from_path(tmp_dir, dir)
-                self.assert_output_validity(tmp_dir)
+                self.assert_output_validity(dir)
+                assert get_size(tmp_dir) == get_size(dir)
+                delete_dir(tmp_dir)
             else:
                 ret_val = False
         return ret_val
