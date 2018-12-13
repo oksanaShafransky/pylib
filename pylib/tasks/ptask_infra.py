@@ -547,6 +547,12 @@ class ContextualizedTasksInfra(object):
     def hbase_table_full_name(self, name):
         return self.table_prefix + name + self.table_suffix
 
+    def hbase_table_normalized_name(self, name, add_branch_name_prefix=True):
+        if add_branch_name_prefix:
+            return self.branch + "_" + name + self.table_suffix
+        else:
+            return name + self.table_suffix
+
     def assert_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
                                  cluster_name=None):
         if self.dry_run:
@@ -1352,3 +1358,7 @@ class ContextualizedTasksInfra(object):
     @property
     def execution_dir(self):
         return self.__get_common_args()['execution_dir']
+
+    @property
+    def branch(self):
+        return self.__get_common_args()['branch']
