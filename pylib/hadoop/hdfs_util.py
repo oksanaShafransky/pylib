@@ -85,7 +85,7 @@ def copy_file(file_path, target_path):
     subprocess.call(cp_cmd.split(' '))
 
 
-def copy_file_ane_rename(full_source_path, full_target_path):
+def copy_file_and_rename(full_source_path, full_target_path):
     target_path = path.dirname(full_target_path)
     if not directory_exists(target_path):
         mkdir_cmd = 'hadoop fs -mkdir -p %s' % target_path
