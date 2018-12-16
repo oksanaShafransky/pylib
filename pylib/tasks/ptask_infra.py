@@ -1197,16 +1197,20 @@ class ContextualizedTasksInfra(object):
         config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
         return config.get(section, property_key)
 
-    def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE):
+    # Storing the credentials in env variables is probably the least secured option and is disabled by default.
+    # Please set set_env_variables only as a last resort.
+    def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
         access_key = access or self.read_s3_configuration('access_key', section=section)
         self.jvm_opts['fs.s3a.access.key'] = access_key
         self.run_bash('aws configure set aws_access_key_id %s' % access_key)
-        os.environ["AWS_ACCESS_KEY_ID"] = access_key
+        if set_env_variables:
+            os.environ["AWS_ACCESS_KEY_ID"] = access_key
 
         secret_key = secret or self.read_s3_configuration('secret_key', section=section)
         self.jvm_opts['fs.s3a.secret.key'] = secret_key
         self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
-        os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
+        if set_env_variables:
+            os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
 
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
