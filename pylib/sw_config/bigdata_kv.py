@@ -11,7 +11,6 @@ snowflake_keys = {
     Purposes.WebStaging: 'web-staging-consul-kv',
 }
 
-
 def get_kv(purpose=Purposes.BigData, snowflake_env=None, append_prefix=True):
     # import snowflake config in function to allow mock in unit tests
     from pylib.config.SnowflakeConfig import SnowflakeConfig

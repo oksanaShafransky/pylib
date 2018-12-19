@@ -41,6 +41,12 @@ def fix_log_url(unchecked_log_url):
         return unchecked_log_url
 
 
+corrupt_input_indicators = [
+    'Unexpected end of input stream',
+    'incorrect data check'
+]
+
+
 def get_bad_splits(log_str):
     splits = None
     bad_splits = []
@@ -50,7 +56,7 @@ def get_bad_splits(log_str):
             combined_input_qualifier = 'Paths:'
             splits = [get_relative_file(split) for split in splits_str[len(combined_input_qualifier):].split(',')] if \
                 splits_str.startswith(combined_input_qualifier) else [get_relative_file(splits_str)]
-        if 'Unexpected end of input stream' in line and splits is not None:
+        if any([msg in line for msg in corrupt_input_indicators]) and splits is not None:
             bad_splits += splits
 
     return bad_splits
@@ -82,7 +88,7 @@ def get_corrupt_input_files(job_id):
             continue
         attempts = (resp.get('taskAttempts', None) or {}).get('taskAttempt', [])
         for attempt in attempts:
-            if attempt['state'] == 'FAILED' and 'input stream' in attempt['diagnostics']:
+            if attempt['state'] == 'FAILED' and any([msg in attempt['diagnostics'] for msg in corrupt_input_indicators]):
                 logging.info('attempt failed due to input stream issues')
                 log_url = attempt_log_url % {'server': job_history_server, 'port': job_history_port,
                                              'node': attempt['nodeHttpAddress'].split(':')[0],

@@ -6,6 +6,7 @@ import six
 import snakebite.client
 from snakebite.errors import FileNotFoundException
 from pylib.config.SnowflakeConfig import SnowflakeConfig
+from os import path
 
 __author__ = 'Felix'
 
@@ -84,6 +85,18 @@ def copy_file(file_path, target_path):
     subprocess.call(cp_cmd.split(' '))
 
 
+def copy_file_and_rename(full_source_path, full_target_path):
+    target_path = path.dirname(full_target_path)
+    if not directory_exists(target_path):
+        mkdir_cmd = 'hadoop fs -mkdir -p %s' % target_path
+        subprocess.call(mkdir_cmd.split(' '))
+
+    cp_cmd = 'hadoop fs -cp %s %s' % (full_source_path, full_target_path)
+    subprocess.call(cp_cmd.split(' '))
+
+
+
+
 def append_to_file(file_path, string):
     printf_cmd = subprocess.Popen(('printf', string), stdout=subprocess.PIPE)
     append_cmd = 'hadoop fs -appendToFile - %s' % file_path
@@ -130,6 +143,7 @@ def move_dir(path, target, hdfs_client=None):
         hdfs_client = create_client()
 
     hdfs_client.rename([path], target).next()
+
 
 
 def get_size(path, with_replicas=False):
