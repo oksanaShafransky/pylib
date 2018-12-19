@@ -290,7 +290,20 @@ class TasksInfra(object):
                 subprocess.call(['hadoop', 'fs', '-put', local_file, hdfs_dir])
 
     @staticmethod
-    def handle_bad_input(mail_recipients=None, report_name=None, remove_last_line=False):
+    def get_last_yarn_application(task_id):
+        from pylib.hadoop.yarn_utils import get_applications
+        apps = get_applications(applicationTags=task_id)
+
+        def cmp_ts(app1, app2):
+            ts1, ts2 = app1['finishedTime'], app2['finishedTime']
+            return -1 if ts1 > ts2 else 0 if ts1 == ts2 else 1
+
+        last_app = sorted(apps, cmp=cmp_ts)[0]
+        return last_app
+
+
+    @staticmethod
+    def handle_bad_input(mail_recipients=None, report_name=None, remove_last_line=False, app_id=None):
         """
         Mitigates bad input in the operation performed within this context.
         Currently only works if a MapReduce job(s) was run. Salvages the portion of the input which is fine
@@ -305,20 +318,15 @@ class TasksInfra(object):
         from pylib.hadoop.yarn_utils import get_applications, get_app_jobs
         from pylib.hadoop.bad_splits import get_corrupt_input_files
 
+        files_to_treat = set()
+
         # remove following code, move method to ContexualizedTaskInfra, make method non static and use self.task_id
         # once we have no bash clients for it
         import os
         task_id = os.environ['TASK_ID']
+        app_to_check = app_id or TasksInfra.get_last_yarn_application(task_id)
 
-        files_to_treat = set()
-        apps = get_applications(applicationTags=task_id)
-
-        def cmp_ts(app1, app2):
-            ts1, ts2 = app1['finishedTime'], app2['finishedTime']
-            return -1 if ts1 > ts2 else 0 if ts1 == ts2 else 1
-
-        last_app = sorted(apps, cmp=cmp_ts)[0]
-        for job in get_app_jobs(last_app):
+        for job in get_app_jobs(app_to_check):
             files_to_treat.update(get_corrupt_input_files(job['job_id']))
 
         if len(files_to_treat) == 0:
@@ -1199,16 +1207,20 @@ class ContextualizedTasksInfra(object):
         config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
         return config.get(section, property_key)
 
-    def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE):
+    # Storing the credentials in env variables is probably the least secured option and is disabled by default.
+    # Please set set_env_variables only as a last resort.
+    def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
         access_key = access or self.read_s3_configuration('access_key', section=section)
         self.jvm_opts['fs.s3a.access.key'] = access_key
         self.run_bash('aws configure set aws_access_key_id %s' % access_key)
-        os.environ["AWS_ACCESS_KEY_ID"] = access_key
+        if set_env_variables:
+            os.environ["AWS_ACCESS_KEY_ID"] = access_key
 
         secret_key = secret or self.read_s3_configuration('secret_key', section=section)
         self.jvm_opts['fs.s3a.secret.key'] = secret_key
         self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
-        os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
+        if set_env_variables:
+            os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
 
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)

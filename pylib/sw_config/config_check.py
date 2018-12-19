@@ -73,8 +73,8 @@ if __name__ == '__main__':
     # TODO add artifacts option and filter the ones provided by the config
     sets, deletes, snowflake_env = parse_modifications(sys.argv[1:])
 
-    consul_host = SnowflakeConfig().get_service_name(env=snowflake_env, service_name='consul-kv')
-    consul_token = SnowflakeConfig().get_service_name(env=snowflake_env, service_name='consul-kv.token')
+    consul_host = SnowflakeConfig(snowflake_env).get_service_name(service_name='consul-kv')
+    consul_token = SnowflakeConfig(snowflake_env).get_service_name(service_name='consul-kv.token')
     if consul_token == 'no-token':
         consul_token = None
 
