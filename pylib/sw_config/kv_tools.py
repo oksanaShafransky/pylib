@@ -27,14 +27,28 @@ class KeyValueTree(object):
             self._entries += 1
         curr_node['_value'] = value
 
+    def get_value(self, key):
+        key_parts = key.split('/')
+        curr_node = self.root
+        for kp in key_parts:
+            next_node = curr_node.get(kp, None)
+            if next_node is None:
+                return None
+
+            curr_node = curr_node[kp]
+
+        return curr_node.get('_value')
+
+
     @staticmethod
     def _iter_node(paths, node):
-        if '_value' in node:
-            yield '/'.join(paths), node['_value']
-        else:
-            for sub_node, sub_tree in node.iteritems():
-                for k1, v1 in KeyValueTree._iter_node(paths + [sub_node], sub_tree):
-                    yield k1, v1
+        for sub_node, sub_tree in node.iteritems():
+            if sub_node == '_value':
+                yield '/'.join(paths), node['_value']
+                continue
+
+            for k1, v1 in KeyValueTree._iter_node(paths + [sub_node], sub_tree):
+                yield k1, v1
 
     def __iter__(self):
         return self._iter_node([], self.root)
