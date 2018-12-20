@@ -1144,12 +1144,7 @@ class ContextualizedTasksInfra(object):
             command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
 
-    def consolidate_parquet_dir(self, dir, order_by=None, ignore_bad_input=False, spark_configs=None,
-                                delete_empty_files=False):
-        if delete_empty_files:
-            from pylib.hadoop.hdfs_util import delete_empty_files
-            delete_empty_files(dir, 4)
-
+    def consolidate_parquet_dir(self, dir, order_by=None, ignore_bad_input=False, spark_configs=None):
         tmp_dir = "/tmp/crush/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + dir
         params = {'src': dir,
                   'dst': tmp_dir,
