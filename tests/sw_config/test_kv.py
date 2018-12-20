@@ -1,6 +1,8 @@
+import json
+
 from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
 from pylib.sw_config.dict_change_simulator import DictProxy
-from pylib.sw_config.kv_tools import KeyValueTree, kv_to_tree, load_kv, kv_diff
+from pylib.sw_config.kv_tools import kv_to_tree, load_kv, kv_diff, KeyValueTree
 from pylib.sw_config.types import Purposes
 
 
@@ -289,3 +291,67 @@ class TestPurposes(object):
             assert False
         except:
             assert True
+
+
+class TestKeyValueTree(object):
+    def test_get_value(self):
+        kvt = KeyValueTree()
+        kvt.add_kv('folder1/folder2/key1', 'v')
+        assert kvt.get_value('folder1/folder2/key1') == 'v'
+        assert kvt.get_value('folder1/non/existing') is None
+
+    def test_len(self):
+        kvt = KeyValueTree()
+        kvt.add_kv('folder1/folder2/key1', 'v')
+        kvt.add_kv('folder1/folder2/key2', 'v')
+        kvt.add_kv('folder1/folder3/key2', 'v')
+        kvt.add_kv('folder1/key3', 'v')
+        assert len(kvt) == 4
+
+    def test_iteration(self):
+        kvt = KeyValueTree()
+        kvt.add_kv('folder1/folder2/key1', 'v')
+        kvt.add_kv('folder1/folder2/key2', 'v')
+        kvt.add_kv('folder1/folder3/key2', 'v')
+        kvt.add_kv('folder1/key3', 'v')
+
+        count = 0
+        for kv in kvt:
+            count += 1
+
+        assert count == 4
+
+    def test_leaf_branch(self):
+        kvt = KeyValueTree()
+        kvt.add_kv('folder1/leaf_folder', 'v1')
+        kvt.add_kv('folder1/leaf_folder/key', 'v2')
+
+        assert kvt.get_value('folder1/leaf_folder') == 'v1'
+        assert kvt.get_value('folder1/leaf_folder/key') == 'v2'
+
+    def test_leaf_branch2(self):
+        kvt = KeyValueTree()
+        kvt.add_kv('folder1/leaf_folder/key', 'v2')
+        kvt.add_kv('folder1/leaf_folder', 'v1')
+
+        assert kvt.get_value('folder1/leaf_folder') == 'v1'
+        assert kvt.get_value('folder1/leaf_folder/key') == 'v2'
+
+    def test_init_from_json(self):
+        kvt = KeyValueTree()
+        kvt.add_kv('p1/p2', 'v1')
+        kvt.add_kv('p1/p2/p3', 'v2')
+        kvt.add_kv('p1/p2/p3/p4', 'v3')
+        kvt.add_kv('p4/p5/p6', 'v4')
+        kvt.add_kv('p4/p5/p7', 'v5')
+
+        j = json.dumps(kvt.root)
+
+        kvt2 = KeyValueTree(j)
+        assert len(kvt2) == 5
+        assert kvt2.get_value('p1/p2') == 'v1'
+        assert kvt2.get_value('p1/p2/p3') == 'v2'
+        assert kvt2.get_value('p1/p2/p3/p4') == 'v3'
+        assert kvt2.get_value('p4/p5/p6') == 'v4'
+        assert kvt2.get_value('p4/p5/p7') == 'v5'
+        assert kvt2.get_value('non/existing') is None
