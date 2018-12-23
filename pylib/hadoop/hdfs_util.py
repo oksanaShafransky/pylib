@@ -258,6 +258,11 @@ def list_files_with_size(paths, hdfs_client=None):
     }
 
 
+def delete_empty_files(paths, min_file_size=0, hdfs_client=None):
+    files = list_files_with_size(paths, hdfs_client)
+    empty_files = {k: v for k, v in files.iteritems() if v <= min_file_size}.keys()
+    delete_files(empty_files)
+
 def count_files(path, hdfs_client=None):
     if not hdfs_client:
         hdfs_client = create_client()
