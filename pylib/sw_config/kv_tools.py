@@ -77,6 +77,10 @@ def kv_to_tree(kv, branch=None):
 
     ret = KeyValueTree()
     for key, value in kv.items(prefix=branch):
+        # Skip folders
+        if (key == '' or key[-1:] == '/') and value is None:
+            continue
+
         ret.add_kv(key, value)
 
     return ret

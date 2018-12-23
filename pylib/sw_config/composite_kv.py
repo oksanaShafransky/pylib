@@ -81,7 +81,7 @@ class PrefixedConfigurationProxy(KeyValueProxy):
         return self.proxy.sub_keys(self._resolve_key(key))
 
     def items(self, prefix=None):
-        return map(lambda key_val: (key_val[0].lstrip(self.prefix), key_val[1]),
+        return map(lambda key_val: (key_val[0].replace(self.prefix, '', 1), key_val[1]),
                    self.proxy.items(prefix=self.prefix+(prefix or '')))
 
 
