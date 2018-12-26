@@ -43,7 +43,8 @@ def fix_log_url(unchecked_log_url):
 
 corrupt_input_indicators = [
     'Unexpected end of input stream',
-    'incorrect data check'
+    'incorrect data check',
+    'invalid code lengths set'
 ]
 
 
