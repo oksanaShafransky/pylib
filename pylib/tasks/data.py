@@ -107,6 +107,7 @@ class DataArtifact(object):
         assert check_marker_ok, 'no success marker at %s for raw_path %s' % (self.resolved_path, self.raw_path)
         if max_size is not None:
             assert effective_size >= self.min_required_size, 'requested threshold too small for %s data  at %s. size is %s, required %s' % (direction, self.resolved_path, human_size(effective_size), human_size(self.min_required_size))
+        logger.info('check passed')
 
     def assert_input_validity(self, *reporters):
         self._assert_data_validity('input', None, *reporters)
