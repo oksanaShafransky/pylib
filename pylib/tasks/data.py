@@ -89,10 +89,12 @@ class DataArtifact(object):
         hdfs_size = self._hdfs_size()
         check_marker_ok = True
         if hdfs_size is not None:
+            logger.info('Checking that dir %s on hdfs is larger than %d...' % (self.raw_path, self.min_required_size))
             effective_size = hdfs_size
             if self.check_marker and not exists_hdfs(os.path.join(self.raw_path, SUCCESS_MARKER)):
                 check_marker_ok = False
         else:
+            logger.info('Checking that dir %s on s3 is larger than %d...' % (self._s3_path(self.raw_path), self.min_required_size))
             effective_size = self._s3_size()
             if self.check_marker and not exists_s3(os.path.join('s3://%s' % self._s3_path(self.raw_path), SUCCESS_MARKER)):
                 check_marker_ok = False
