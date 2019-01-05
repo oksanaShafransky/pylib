@@ -20,6 +20,33 @@ def get_application_by_id(app_id, rm=RESOURCE_MANAGER_DEFAULT):
     return json.load(urllib.urlopen(request_url))
 
 
+def get_application_by_params(params):
+    request_url = '%s?%s' % (
+        YARN_APP_ENDPOINT % {'server': RESOURCE_MANAGER_DEFAULT},
+        '&'.join(['%s=%s' % (str(k), str(v)) for (k, v) in params.items()])
+    )
+    return json.load(urllib.urlopen(request_url))
+
+
+def get_applications_by_tag(app_tag):
+    return get_application_by_params({'applicationTags': app_tag})
+
+
+def get_applications_by_user_and_time(user, start_time, end_time=None):
+    def dt_to_ts(dt):
+        import time
+        tt = dt.timetuple()
+        return int(time.mktime(tt)) * 1000  # transform to ms
+
+    params = dict()
+    params['user'] = user
+    params['startedTimeBegin'] = dt_to_ts(start_time)
+    if end_time is not None:
+        params['finishedTimeEnd'] = dt_to_ts(end_time)
+
+    return get_application_by_params(params)
+
+
 def get_app_jobs(application_or_app_id):
     application = application_or_app_id if isinstance(application_or_app_id, dict) \
                                         else get_application_by_id(application_or_app_id)['app']
@@ -39,5 +66,7 @@ def get_app_jobs(application_or_app_id):
         job_title = content.title.string.strip()
         # wrapping in dict and list to partially comply with json response
         return [{'job_id': re.search('MapReduce Job (job(_[0-9]+)+)', job_title).group(1)}]
+
+
 
 

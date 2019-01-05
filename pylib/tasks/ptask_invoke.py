@@ -12,6 +12,9 @@ from invoke import ctask
 from invoke.config import merge_dicts
 from invoke.exceptions import Failure, ParseError, Exit
 
+from pylib.hadoop.yarn_utils import get_applications_by_tag, get_applications_by_user_and_time
+from pylib.tasks.resource_use import collect_resources
+
 # TODO: should check cross validation?
 known_modes = ['snapshot', 'window', 'daily', 'mutable']
 known_mode_types = ['monthly', 'last-28', 'daily', 'last-7', 'last-1', 'mutable']
@@ -131,10 +134,23 @@ class PtaskInvoker(Program):
                 'collection_name': self.collection.name,
                 'collection_path': self.collection.loaded_from
             })
+
             start_time = time.time()
             self.execute()
             end_time = time.time()
             execution_time_delta = datetime.timedelta(seconds=(end_time - start_time))
+            if 'TASK_ID' in os.environ:
+                launched_apps = get_applications_by_tag(task_name)
+            else:
+                import getpass
+                user = getpass.getuser()
+                launched_apps = get_applications_by_user_and_time(user, start_time, end_time)
+
+            total_resources = sum([collect_resources(app) for app in launched_apps])
+            print('total cluster resources used: %s' % str(total_resources))
+            #  TODO add $ price to log line
+            #  TODO log to DB for further monitoring
+
             print('\nFinished ptask "{0}". Total execution time: {1}'.format(task_name, str(execution_time_delta)))
         except (Failure, Exit, ParseError) as e:
             print('Received a possibly-skippable exception: {0!r}'.format(e))
