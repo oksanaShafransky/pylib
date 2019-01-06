@@ -2,7 +2,7 @@ import json
 import urllib
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 
-RESOURCE_MANAGER_DEFAULT = 'http://%s:8088' % SnowflakeConfig().get_service_name(service_name='active.yarn-rm-mrp')
+RESOURCE_MANAGER_DEFAULT = 'http://%s:8088' % SnowflakeConfig().get_service_name(service_name='active.yarn-rm')
 YARN_APP_ENDPOINT = '%(server)s/ws/v1/cluster/apps'
 MAPREDUCE_APP_JOBS_ENDPOINT = '%(track_url)s/ws/v1/mapreduce/jobs'
 
