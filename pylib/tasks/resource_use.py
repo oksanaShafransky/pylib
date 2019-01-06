@@ -11,7 +11,7 @@ class UsedResources(object):
 
     @property
     def cost(self):
-        dollar_price = max(self.gb_hours * GB_HR_ON_DEMAND_PRICE, self.core_hours * CORE_HR_ON_DEMAND_PRICE)
+        dollar_price = max(self.gb_hours * GB_HR_ON_DEMAND_PRICE, self.core_hours * CORE_HR_ON_DEMAND_PRICE) * BID_FRACTION
         return '%.3f$' % dollar_price
 
     def __add__(self, other):
