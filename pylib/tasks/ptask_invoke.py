@@ -120,6 +120,24 @@ class PtaskInvoker(Program):
     def __parse_date(date_str):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
+    @staticmethod
+    def store_resources_used(task_name, sql_conn, resources):
+        task_fields = task_name.split('.')
+        dag_id, task_id, execution_id = task_fields[1:4]
+        execution_date = execution_id.split('_')[0]
+        run_date = datetime.datetime.now().strftime('%Y-%m-%d')
+        exists = sql_conn.execute("SELECT attempts, gb_hours, core_hours FROM task_resource_usage WHERE tag='%s'" % task_name)
+        if exists > 0:
+            current = list(sql_conn)[0]
+            curr_attempts, curr_mem, curr_cores = current
+            updated_attempts, updated_mem, updated_cores = int(curr_attempts) + 1, float(curr_mem) + resources.gb_hours, float(curr_cores) + resources.core_hours
+            sql_conn.execute("UPDATE task_resource_usage SET attempts=%d, gb_hours=%.2f, core_hours=%.2f WHERE tag='%s'" % (updated_attempts, updated_mem, updated_cores, task_name))
+        else:
+            sql_conn.execute("""
+            INSERT INTO task_resource_usage (tag, dag_id, task_id, execution_date, run_date, attempts, gb_hours, core_hours) 
+            VALUES ('%s', '%s', '%s', '%s', '%s', 1, %.2f, %.2f)
+            """ % (task_name, dag_id, task_id, execution_date, run_date, resources.gb_hours, resources.core_hours))
+
     def run(self, argv=None, **kwargs):
         try:
             self._parse(argv)
@@ -137,10 +155,18 @@ class PtaskInvoker(Program):
 
             start_time = time.time()
             self.execute()
+
+        except (Failure, Exit, ParseError) as e:
+            print('Received a possibly-skippable exception: {0!r}'.format(e))
+            if isinstance(e, ParseError):
+                sys.stderr.write("{0}\n".format(e))
+            sys.exit(1)
+
+        finally:
             end_time = time.time()
             execution_time_delta = datetime.timedelta(seconds=(end_time - start_time))
             if 'TASK_ID' in os.environ:
-                launched_apps = get_applications_by_tag(task_name)
+                launched_apps = get_applications_by_tag(task_name, start_time=int(start_time) * 1000)
             else:
                 import getpass
                 user = getpass.getuser()
@@ -149,15 +175,14 @@ class PtaskInvoker(Program):
             total_resources = aggregate_resources(launched_apps)
             print('\nTotal cluster resources used: %s' % str(total_resources))
             print('Estimated cost: %s. (This is a rough estimation as it depends on machine types)' % total_resources.cost)
-            #  TODO log to DB for further monitoring
+            if 'TASK_ID' in os.environ:
+                import MySQLdb
+                # TODO retrieve connection string from snowflake
+                with MySQLdb.connect(host='rds-bigdata-bigsize-aws.cdfb0cyk3r8s.us-east-1.rds.amazonaws.com',
+                                     user='bigsize', passwd='zaiTh3Rai0be', db='bigsize') as sql_conn:
+                    self.store_resources_used(task_name, sql_conn, total_resources)
 
             print('\nFinished ptask "{0}". Total execution time: {1}'.format(task_name, str(execution_time_delta)))
-        except (Failure, Exit, ParseError) as e:
-            print('Received a possibly-skippable exception: {0!r}'.format(e))
-            if isinstance(e, ParseError):
-                sys.stderr.write("{0}\n".format(e))
-            sys.exit(1)
-
 
 def main():
     import logging

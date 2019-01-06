@@ -33,8 +33,15 @@ def get_application_by_params(params):
         return []
 
 
-def get_applications_by_tag(app_tag):
-    return get_application_by_params({'applicationTags': app_tag})
+def get_applications_by_tag(app_tag, start_time=None, end_time=None):
+    params = dict()
+    params['applicationTags'] = app_tag
+    if start_time is not None:
+        params['startedTimeBegin'] = start_time
+    if end_time is not None:
+        params['finishedTimeEnd'] = end_time
+
+    return get_application_by_params(params)
 
 
 def get_applications_by_user_and_time(user, start_time, end_time=None):
