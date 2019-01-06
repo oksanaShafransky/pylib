@@ -27,10 +27,10 @@ def get_application_by_params(params):
     )
     
     resp = json.load(urllib.urlopen(request_url))
-    if resp is None or 'apps' not in resp or 'app' not in resp['apps']:
-        return []
+    if resp is not None and 'apps' in resp and 'app' in resp['apps']:
+       return resp['apps']['app'] 
     else:
-        return resp['apps']['app']
+        return []
 
 
 def get_applications_by_tag(app_tag):
