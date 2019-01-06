@@ -25,7 +25,12 @@ def get_application_by_params(params):
         YARN_APP_ENDPOINT % {'server': RESOURCE_MANAGER_DEFAULT},
         '&'.join(['%s=%s' % (str(k), str(v)) for (k, v) in params.items()])
     )
-    return json.load(urllib.urlopen(request_url))['apps']['app']
+    
+    resp = json.load(urllib.urlopen(request_url))
+    if resp is None or 'apps' not in resp or 'app' not in resp['apps']:
+        return []
+    else:
+        return resp['apps']['app']
 
 
 def get_applications_by_tag(app_tag):
