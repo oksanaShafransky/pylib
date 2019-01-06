@@ -147,8 +147,8 @@ class PtaskInvoker(Program):
                 launched_apps = get_applications_by_user_and_time(user, int(start_time) * 1000, int(end_time) * 1000)
 
             total_resources = aggregate_resources(launched_apps)
-            print('\ntotal cluster resources used: %s' % str(total_resources))
-            #  TODO add $ price to log line
+            print('\nTotal cluster resources used: %s' % str(total_resources))
+            print('Estimated cost: %s. (This is a rough estimation as it depends on machine types)' % total_resources.cost)
             #  TODO log to DB for further monitoring
 
             print('\nFinished ptask "{0}". Total execution time: {1}'.format(task_name, str(execution_time_delta)))
