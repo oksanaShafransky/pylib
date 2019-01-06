@@ -27,7 +27,7 @@ def get_application_by_params(params):
     )
     
     resp = json.load(urllib.urlopen(request_url))
-    if resp is not None and 'apps' in resp and 'app' in resp['apps']:
+    if resp is not None and 'apps' in resp and resp['apps'] is not None and 'app' in resp['apps']:
        return resp['apps']['app'] 
     else:
         return []
