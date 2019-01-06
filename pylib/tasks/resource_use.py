@@ -15,3 +15,11 @@ def collect_resources(application_stats):
         gb_hrs=application_stats.get('memorySeconds', 0.1) / (1000.0 * 60 * 60),  # transform from MBSeconds
         core_hrs=application_stats.get('vcoreSeconds', 0.1) / (60.0 * 60)  # transform from CoreSeconds
     )
+
+
+def aggregate_resources(applications):
+    ret = UsedResources()
+    for app in applications:
+        ret += collect_resources(app)
+
+    return ret

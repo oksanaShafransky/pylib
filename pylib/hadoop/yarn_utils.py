@@ -25,7 +25,7 @@ def get_application_by_params(params):
         YARN_APP_ENDPOINT % {'server': RESOURCE_MANAGER_DEFAULT},
         '&'.join(['%s=%s' % (str(k), str(v)) for (k, v) in params.items()])
     )
-    return json.load(urllib.urlopen(request_url))
+    return json.load(urllib.urlopen(request_url))['apps']['app']
 
 
 def get_applications_by_tag(app_tag):
@@ -33,16 +33,12 @@ def get_applications_by_tag(app_tag):
 
 
 def get_applications_by_user_and_time(user, start_time, end_time=None):
-    def dt_to_ts(dt):
-        import time
-        tt = dt.timetuple()
-        return int(time.mktime(tt)) * 1000  # transform to ms
 
     params = dict()
     params['user'] = user
-    params['startedTimeBegin'] = dt_to_ts(start_time)
+    params['startedTimeBegin'] = start_time
     if end_time is not None:
-        params['finishedTimeEnd'] = dt_to_ts(end_time)
+        params['finishedTimeEnd'] = end_time
 
     return get_application_by_params(params)
 

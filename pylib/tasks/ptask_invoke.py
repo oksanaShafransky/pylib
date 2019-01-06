@@ -13,7 +13,7 @@ from invoke.config import merge_dicts
 from invoke.exceptions import Failure, ParseError, Exit
 
 from pylib.hadoop.yarn_utils import get_applications_by_tag, get_applications_by_user_and_time
-from pylib.tasks.resource_use import collect_resources
+from pylib.tasks.resource_use import aggregate_resources
 
 # TODO: should check cross validation?
 known_modes = ['snapshot', 'window', 'daily', 'mutable']
@@ -144,10 +144,10 @@ class PtaskInvoker(Program):
             else:
                 import getpass
                 user = getpass.getuser()
-                launched_apps = get_applications_by_user_and_time(user, start_time, end_time)
+                launched_apps = get_applications_by_user_and_time(user, int(start_time) * 1000, int(end_time) * 1000)
 
-            total_resources = sum([collect_resources(app) for app in launched_apps])
-            print('total cluster resources used: %s' % str(total_resources))
+            total_resources = aggregate_resources(launched_apps)
+            print('\ntotal cluster resources used: %s' % str(total_resources))
             #  TODO add $ price to log line
             #  TODO log to DB for further monitoring
 
