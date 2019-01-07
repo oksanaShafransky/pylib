@@ -1,4 +1,7 @@
 
+from datetime import datetime
+import MySQLdb
+
 BID_FRACTION = 0.4
 GB_HR_ON_DEMAND_PRICE = 0.004927
 CORE_HR_ON_DEMAND_PRICE = 0.00821
@@ -34,3 +37,25 @@ def aggregate_resources(applications):
         ret += collect_resources(app)
 
     return ret
+
+
+def store_resources_used(task_name, resources):
+    task_fields = task_name.split('.')
+    dag_id, task_id, execution_id = task_fields[1:4]
+    execution_date = execution_id.split('_')[0]
+    run_date = datetime.now().strftime('%Y-%m-%d')
+    # TODO retrieve connection string from snowflake
+    with MySQLdb.connect(host='rds-bigdata-bigsize-aws.cdfb0cyk3r8s.us-east-1.rds.amazonaws.com',
+                         user='bigsize', passwd='zaiTh3Rai0be', db='bigsize') as sql_conn:
+        exists = sql_conn.execute("SELECT attempts, gb_hours, core_hours FROM task_resource_usage WHERE tag='%s'" % task_name)
+        if exists > 0:
+            current = list(sql_conn)[0]
+            curr_attempts, curr_mem, curr_cores = current
+            updated_attempts, updated_mem, updated_cores = int(curr_attempts) + 1, float(curr_mem) + resources.gb_hours, float(curr_cores) + resources.core_hours
+            sql_conn.execute("UPDATE task_resource_usage SET attempts=%d, gb_hours=%.2f, core_hours=%.2f WHERE tag='%s'" % (updated_attempts, updated_mem, updated_cores, task_name))
+        else:
+            sql_conn.execute("""
+                INSERT INTO task_resource_usage (tag, dag_id, task_id, execution_date, run_date, attempts, gb_hours, core_hours) 
+                VALUES ('%s', '%s', '%s', '%s', '%s', 1, %.2f, %.2f)
+                """ % (task_name, dag_id, task_id, execution_date, run_date, resources.gb_hours, resources.core_hours))
+

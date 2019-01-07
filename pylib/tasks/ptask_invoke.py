@@ -13,7 +13,7 @@ from invoke.config import merge_dicts
 from invoke.exceptions import Failure, ParseError, Exit
 
 from pylib.hadoop.yarn_utils import get_applications_by_tag, get_applications_by_user_and_time
-from pylib.tasks.resource_use import aggregate_resources
+from pylib.tasks.resource_use import aggregate_resources, store_resources_used
 
 # TODO: should check cross validation?
 known_modes = ['snapshot', 'window', 'daily', 'mutable']
@@ -120,24 +120,6 @@ class PtaskInvoker(Program):
     def __parse_date(date_str):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
-    @staticmethod
-    def store_resources_used(task_name, sql_conn, resources):
-        task_fields = task_name.split('.')
-        dag_id, task_id, execution_id = task_fields[1:4]
-        execution_date = execution_id.split('_')[0]
-        run_date = datetime.datetime.now().strftime('%Y-%m-%d')
-        exists = sql_conn.execute("SELECT attempts, gb_hours, core_hours FROM task_resource_usage WHERE tag='%s'" % task_name)
-        if exists > 0:
-            current = list(sql_conn)[0]
-            curr_attempts, curr_mem, curr_cores = current
-            updated_attempts, updated_mem, updated_cores = int(curr_attempts) + 1, float(curr_mem) + resources.gb_hours, float(curr_cores) + resources.core_hours
-            sql_conn.execute("UPDATE task_resource_usage SET attempts=%d, gb_hours=%.2f, core_hours=%.2f WHERE tag='%s'" % (updated_attempts, updated_mem, updated_cores, task_name))
-        else:
-            sql_conn.execute("""
-            INSERT INTO task_resource_usage (tag, dag_id, task_id, execution_date, run_date, attempts, gb_hours, core_hours) 
-            VALUES ('%s', '%s', '%s', '%s', '%s', 1, %.2f, %.2f)
-            """ % (task_name, dag_id, task_id, execution_date, run_date, resources.gb_hours, resources.core_hours))
-
     def run(self, argv=None, **kwargs):
         try:
             self._parse(argv)
@@ -176,13 +158,10 @@ class PtaskInvoker(Program):
             print('\nTotal cluster resources used: %s' % str(total_resources))
             print('Estimated cost: %s. (This is a rough estimation as it depends on machine types)' % total_resources.cost)
             if 'TASK_ID' in os.environ:
-                import MySQLdb
-                # TODO retrieve connection string from snowflake
-                with MySQLdb.connect(host='rds-bigdata-bigsize-aws.cdfb0cyk3r8s.us-east-1.rds.amazonaws.com',
-                                     user='bigsize', passwd='zaiTh3Rai0be', db='bigsize') as sql_conn:
-                    self.store_resources_used(task_name, sql_conn, total_resources)
+                store_resources_used(task_name, total_resources)
 
             print('\nFinished ptask "{0}". Total execution time: {1}'.format(task_name, str(execution_time_delta)))
+
 
 def main():
     import logging
