@@ -1,6 +1,5 @@
 
 from datetime import datetime
-import MySQLdb
 
 BID_FRACTION = 0.4
 GB_HR_ON_DEMAND_PRICE = 0.004927
@@ -40,6 +39,7 @@ def aggregate_resources(applications):
 
 
 def store_resources_used(task_name, resources):
+    import MySQLdb
     task_fields = task_name.split('.')
     dag_id, task_id, execution_id = task_fields[1:4]
     execution_date = execution_id.split('_')[0]
