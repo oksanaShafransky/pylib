@@ -12,6 +12,7 @@ __author__ = 'Felix'
 
 MRP_HDFS_NAMENODE_PORT = 8020
 env_namenode_hostname = None
+BYTES_TO_TB_FACTOR = 1e-12
 
 logger = logging.getLogger(__name__)
 
@@ -146,13 +147,14 @@ def move_dir(path, target, hdfs_client=None):
 
 
 
-def get_size(path, with_replicas=False):
+def get_size(path, with_replicas=False, hdfs_client=None):
     """
     :param path: path to size
     :param with_replicas: whether to consider physical space consumed by all replication or just the canonical size
     :return: size in bytes
     """
-    hdfs_client = create_client()
+    if hdfs_client is None:
+        hdfs_client = create_client()
     return hdfs_client.count([path]).next()['spaceConsumed' if with_replicas else 'length']
 
 
@@ -261,7 +263,8 @@ def list_files_with_size(paths, hdfs_client=None):
 def delete_empty_files(paths, min_file_size=0, hdfs_client=None):
     files = list_files_with_size(paths, hdfs_client)
     empty_files = {k: v for k, v in files.iteritems() if v <= min_file_size}.keys()
-    delete_files(empty_files)
+    if empty_files:
+        delete_files(empty_files)
 
 def count_files(path, hdfs_client=None):
     if not hdfs_client:

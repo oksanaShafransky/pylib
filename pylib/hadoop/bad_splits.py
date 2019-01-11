@@ -45,7 +45,8 @@ corrupt_input_indicators = [
     'Unexpected end of input stream',
     'incorrect data check',
     'invalid code lengths set',
-    'too many length or distance symbols'
+    'too many length or distance symbols',
+    'invalid stored block lengths'
 ]
 
 

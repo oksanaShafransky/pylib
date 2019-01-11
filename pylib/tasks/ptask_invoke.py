@@ -13,7 +13,7 @@ from invoke.config import merge_dicts
 from invoke.exceptions import Failure, ParseError, Exit
 
 from pylib.hadoop.yarn_utils import get_applications_by_tag, get_applications_by_user_and_time
-from pylib.tasks.resource_use import aggregate_resources
+from pylib.tasks.resource_use import aggregate_resources, store_resources_used
 
 # TODO: should check cross validation?
 known_modes = ['snapshot', 'window', 'daily', 'mutable']
@@ -137,26 +137,30 @@ class PtaskInvoker(Program):
 
             start_time = time.time()
             self.execute()
+
+        except (Failure, Exit, ParseError) as e:
+            print('Received a possibly-skippable exception: {0!r}'.format(e))
+            if isinstance(e, ParseError):
+                sys.stderr.write("{0}\n".format(e))
+            sys.exit(1)
+
+        finally:
             end_time = time.time()
             execution_time_delta = datetime.timedelta(seconds=(end_time - start_time))
             if 'TASK_ID' in os.environ:
-                launched_apps = get_applications_by_tag(task_name)
+                launched_apps = get_applications_by_tag(task_name, start_time=int(start_time) * 1000)
             else:
                 import getpass
                 user = getpass.getuser()
                 launched_apps = get_applications_by_user_and_time(user, int(start_time) * 1000, int(end_time) * 1000)
 
             total_resources = aggregate_resources(launched_apps)
-            print('\ntotal cluster resources used: %s' % str(total_resources))
-            #  TODO add $ price to log line
-            #  TODO log to DB for further monitoring
+            print('\nTotal cluster resources used: %s' % str(total_resources))
+            print('Estimated cost: %s. (This is a rough estimation as it depends on machine types)' % total_resources.cost)
+            if 'TASK_ID' in os.environ:
+                store_resources_used(task_name, total_resources)
 
             print('\nFinished ptask "{0}". Total execution time: {1}'.format(task_name, str(execution_time_delta)))
-        except (Failure, Exit, ParseError) as e:
-            print('Received a possibly-skippable exception: {0!r}'.format(e))
-            if isinstance(e, ParseError):
-                sys.stderr.write("{0}\n".format(e))
-            sys.exit(1)
 
 
 def main():

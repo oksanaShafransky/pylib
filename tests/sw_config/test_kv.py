@@ -7,7 +7,6 @@ from pylib.sw_config.types import Purposes
 
 
 class TestTools(object):
-
     def test_list(self):
         example_dict = {
             '/a': 12, '/b': 6, '/c': 19
@@ -68,7 +67,6 @@ class TestTools(object):
 
 
 class TestPrefixedConfiguration(object):
-
     def test_no_prefix(self):
         original_key = 'key/full/path'
 
@@ -149,7 +147,6 @@ class TestPrefixedConfiguration(object):
 
 
 class TestGetKV(object):
-
     class ConsulProxyMock(object):
         def __init__(self, server, token):
             self.server = server
@@ -355,3 +352,17 @@ class TestKeyValueTree(object):
         assert kvt2.get_value('p4/p5/p6') == 'v4'
         assert kvt2.get_value('p4/p5/p7') == 'v5'
         assert kvt2.get_value('non/existing') is None
+
+    def test_ignore_folder_and_empty(self):
+        class MockKv(object):
+            def items(self, prefix):
+                return [
+                    (u'', None),
+                    (u'production/', None),
+                    (u'production/last_update/internal_do_not_watch/redis', u'aa')
+                ]
+
+        tree = kv_to_tree(MockKv())
+        assert len(tree) == 1
+
+

@@ -2,7 +2,7 @@ import json
 import urllib
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 
-RESOURCE_MANAGER_DEFAULT = 'http://%s:8088' % SnowflakeConfig().get_service_name(service_name='active.yarn-rm-mrp')
+RESOURCE_MANAGER_DEFAULT = 'http://%s:8088' % SnowflakeConfig().get_service_name(service_name='active.yarn-rm')
 YARN_APP_ENDPOINT = '%(server)s/ws/v1/cluster/apps'
 MAPREDUCE_APP_JOBS_ENDPOINT = '%(track_url)s/ws/v1/mapreduce/jobs'
 
@@ -25,11 +25,23 @@ def get_application_by_params(params):
         YARN_APP_ENDPOINT % {'server': RESOURCE_MANAGER_DEFAULT},
         '&'.join(['%s=%s' % (str(k), str(v)) for (k, v) in params.items()])
     )
-    return json.load(urllib.urlopen(request_url))['apps']['app']
+    
+    resp = json.load(urllib.urlopen(request_url))
+    if resp is not None and 'apps' in resp and resp['apps'] is not None and 'app' in resp['apps']:
+       return resp['apps']['app'] 
+    else:
+        return []
 
 
-def get_applications_by_tag(app_tag):
-    return get_application_by_params({'applicationTags': app_tag})
+def get_applications_by_tag(app_tag, start_time=None, end_time=None):
+    params = dict()
+    params['applicationTags'] = app_tag
+    if start_time is not None:
+        params['startedTimeBegin'] = start_time
+    if end_time is not None:
+        params['finishedTimeEnd'] = end_time
+
+    return get_application_by_params(params)
 
 
 def get_applications_by_user_and_time(user, start_time, end_time=None):
