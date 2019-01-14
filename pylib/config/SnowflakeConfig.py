@@ -65,9 +65,6 @@ class SnowflakeConfig:
         # Must be first line in the function
         service_args = locals().items()
         # Must be first line in the function
-        # Don't make request to docker_image_name
-        if service_name == "docker_image_name" and (self.def_env == MRP or self.def_env == MRP_AWS):
-            return self.def_env
         # Clean self from list
         service_args = [v for v in service_args if v[0] != 'self']
         payload = copy.deepcopy(self.base_payload)
