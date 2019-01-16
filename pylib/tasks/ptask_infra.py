@@ -611,6 +611,8 @@ class ContextualizedTasksInfra(object):
         elif isinstance(managed_output_dirs, basestring):
             managed_output_dirs = [managed_output_dirs]
 
+        extra_hive_conf.update(self.jvm_opts)
+
         if self.rerun:
             hive_params = hive_params.as_rerun()
         if self.should_profile:
