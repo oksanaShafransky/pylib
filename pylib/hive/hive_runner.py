@@ -2,6 +2,7 @@ import re
 from datetime import datetime
 from dateutil import parser
 import subprocess
+import os
 from copy import copy
 
 import common
@@ -131,6 +132,9 @@ class HiveParamBuilder(object):
             'mapreduce.task.io.sort.mb': max(self.map_task_memory / 10, 256),
             'hive.merge.mapredfiles': 'true' if self.consolidate else 'false'
         }
+
+        if 'TASK_ID' in os.environ:
+            ret['sw.airflow.task.id'] = os.environ['TASK_ID']
 
         if len(self.child_opts['map']) > 0:
             ret['mapreduce.map.java.opts'] = ' '.join(self.child_opts['map'])
