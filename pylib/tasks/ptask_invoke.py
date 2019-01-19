@@ -156,7 +156,7 @@ class PtaskInvoker(Program):
 
             total_resources = aggregate_resources(launched_apps)
             print('\nTotal cluster resources used: %s' % str(total_resources))
-            print('Estimated cost: %s. (This is a rough estimation as it depends on machine types)' % total_resources.cost)
+            print('Estimated cost: %s. (This is an estimation, but it is quite accurate now)' % total_resources.cost)
             if 'TASK_ID' in os.environ:
                 store_resources_used(task_name, total_resources)
 
