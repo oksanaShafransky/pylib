@@ -1,9 +1,8 @@
 
 from datetime import datetime
 
-BID_FRACTION = 0.4
-GB_HR_ON_DEMAND_PRICE = 0.004927
-CORE_HR_ON_DEMAND_PRICE = 0.00821
+GB_HR_PRICE = 0.013
+CORE_HR_PRICE = 0.035
 
 
 class UsedResources(object):
@@ -13,7 +12,7 @@ class UsedResources(object):
 
     @property
     def cost(self):
-        dollar_price = max(self.gb_hours * GB_HR_ON_DEMAND_PRICE, self.core_hours * CORE_HR_ON_DEMAND_PRICE) * BID_FRACTION
+        dollar_price = max(self.gb_hours * GB_HR_PRICE, self.core_hours * CORE_HR_PRICE)
         return '%.3f$' % dollar_price
 
     def __add__(self, other):
