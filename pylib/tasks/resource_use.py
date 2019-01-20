@@ -11,9 +11,12 @@ class UsedResources(object):
         self.core_hours = core_hrs
 
     @property
+    def dollar_price(self):
+        return max(self.gb_hours * GB_HR_PRICE, self.core_hours * CORE_HR_PRICE)
+
+    @property
     def cost(self):
-        dollar_price = max(self.gb_hours * GB_HR_PRICE, self.core_hours * CORE_HR_PRICE)
-        return '%.3f$' % dollar_price
+        return '%.3f$' % self.dollar_price
 
     def __add__(self, other):
         return UsedResources(self.gb_hours + other.gb_hours, self.core_hours + other.core_hours)
@@ -37,7 +40,7 @@ def aggregate_resources(applications):
     return ret
 
 
-def store_resources_used(task_name, resources):
+def store_resources_used(task_name, resources, start_time, end_time):
     import MySQLdb
     task_fields = task_name.split('.')
     dag_id, task_id, execution_id = task_fields[1:4]
@@ -54,7 +57,10 @@ def store_resources_used(task_name, resources):
             sql_conn.execute("UPDATE task_resource_usage SET attempts=%d, gb_hours=%.2f, core_hours=%.2f WHERE tag='%s'" % (updated_attempts, updated_mem, updated_cores, task_name))
         else:
             sql_conn.execute("""
-                INSERT INTO task_resource_usage (tag, dag_id, task_id, execution_date, run_date, attempts, gb_hours, core_hours) 
-                VALUES ('%s', '%s', '%s', '%s', '%s', 1, %.2f, %.2f)
-                """ % (task_name, dag_id, task_id, execution_date, run_date, resources.gb_hours, resources.core_hours))
+                INSERT INTO task_resource_usage (tag, dag_id, task_id, execution_date, run_date, attempts, gb_hours, core_hours, start_time, end_time, estimation_cost) 
+                VALUES ('%s', '%s', '%s', '%s', '%s', 1, %.2f, %.2f, '%s', '%s', %.3f)
+                """ % (task_name, dag_id, task_id, execution_date, run_date,
+                       resources.gb_hours, resources.core_hours,
+                       start_time.strftime('%H:%M:%S'), end_time.strftime('%H:%M:%S'), resources.dollar_price)
+                )
 
