@@ -57,7 +57,7 @@ def store_resources_used(task_name, resources, start_time, end_time):
             sql_conn.execute("UPDATE task_resource_usage SET attempts=%d, gb_hours=%.2f, core_hours=%.2f WHERE tag='%s'" % (updated_attempts, updated_mem, updated_cores, task_name))
         else:
             sql_conn.execute("""
-                INSERT INTO task_resource_usage (tag, dag_id, task_id, execution_date, run_date, attempts, gb_hours, core_hours, start_time, end_time, estimation_cost) 
+                INSERT INTO task_resource_usage (tag, dag_id, task_id, execution_date, run_date, attempts, gb_hours, core_hours, start_time, end_time, estimated_cost) 
                 VALUES ('%s', '%s', '%s', '%s', '%s', 1, %.2f, %.2f, '%s', '%s', %.3f)
                 """ % (task_name, dag_id, task_id, execution_date, run_date,
                        resources.gb_hours, resources.core_hours,
