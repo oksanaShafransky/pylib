@@ -40,7 +40,7 @@ def aggregate_resources(applications):
     return ret
 
 
-def store_resources_used(task_name, resources, start_time, end_time):
+def store_resources_used(task_name, resources, start_time=None, end_time=None):
     import MySQLdb
     task_fields = task_name.split('.')
     dag_id, task_id, execution_id = task_fields[1:4]
@@ -61,6 +61,8 @@ def store_resources_used(task_name, resources, start_time, end_time):
                 VALUES ('%s', '%s', '%s', '%s', '%s', 1, %.2f, %.2f, '%s', '%s', %.3f)
                 """ % (task_name, dag_id, task_id, execution_date, run_date,
                        resources.gb_hours, resources.core_hours,
-                       start_time.strftime('%H:%M:%S'), end_time.strftime('%H:%M:%S'), resources.dollar_price)
+                       start_time.strftime('%H:%M:%S') if start_time is not None else '00:00:00',
+                       end_time.strftime('%H:%M:%S') if end_time is not None else '00:00:00',
+                       resources.dollar_price)
                 )
 
