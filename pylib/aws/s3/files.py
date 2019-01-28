@@ -28,6 +28,9 @@ class S3WriterWrapper:
         self._flush()
 
 
+builtin_open = open
+
+
 def open(s3_url, mode='r'):
     s3_conn = boto.connect_s3()
     bucketname, filename = parse_s3_url(s3_url)
@@ -64,7 +67,7 @@ def robust_open(path, modifiers):
         else:
             raise AttributeError('unsupported open mode: %s' % modifiers)
     else:
-        return open(path, mode=modifiers)
+        return builtin_open(path, mode=modifiers)
 
 
 def list_s3_path(bucket, path):
