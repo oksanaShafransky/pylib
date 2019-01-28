@@ -1,6 +1,8 @@
 import boto
 from StringIO import StringIO
 
+import os
+
 from pylib.aws.s3 import parse_s3_url
 
 
@@ -63,3 +65,19 @@ def robust_open(path, modifiers):
             raise AttributeError('unsupported open mode: %s' % modifiers)
     else:
         return open(path, mode=modifiers)
+
+
+def list_s3_path(bucket, path):
+        return [p.name for p in bucket.list(prefix=path, delimiter='/') if
+                '$' not in p.name and
+                p.name != path]
+
+
+def robust_ls(path):
+    if path.startswith('s3:'):
+        s3_conn = boto.connect_s3()
+        bucketname, folder = parse_s3_url(path)
+        bucket = s3_conn.get_bucket(bucketname)
+        return list_s3_path(bucket, folder)
+    else:
+        return os.listdir(path)
