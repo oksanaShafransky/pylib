@@ -87,4 +87,4 @@ def robust_ls(path):
         children = list_s3_path(bucket, folder)
     else:
         children = os.listdir(path)
-    return [path + children ]
+    return [path + c for c in  children]
