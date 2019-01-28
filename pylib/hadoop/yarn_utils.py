@@ -15,6 +15,19 @@ def get_applications(rm=RESOURCE_MANAGER_DEFAULT, **options):
     return json.load(urllib.urlopen(request_url))['apps']['app']
 
 
+def get_all_yarn_apps(rm=RESOURCE_MANAGER_DEFAULT, options=None):
+    request_url = YARN_APP_ENDPOINT % {'server': rm}
+    if options is not None:
+        request_url += '?%s' % options
+
+    resp = json.load(urllib.urlopen(request_url))
+    if resp is None or 'apps' not in resp or 'app' not in resp['apps']:
+        return []
+    else:
+        return resp['apps']['app']
+
+
+
 def get_application_by_id(app_id, rm=RESOURCE_MANAGER_DEFAULT):
     request_url = '%s/%s' % (YARN_APP_ENDPOINT % {'server': rm}, str(app_id))
     return json.load(urllib.urlopen(request_url))

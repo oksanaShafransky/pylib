@@ -42,3 +42,24 @@ def open(s3_url, mode='r'):
         return S3WriterWrapper(s3_file, s3_file.get_contents_as_string())
     else:
         raise AttributeError('unsupported open mode: %s' % mode)
+
+
+def robust_open(path, modifiers):
+    if path.startswith('s3:'):
+        s3_conn = boto.connect_s3()
+        bucketname, filename = parse_s3_url(path)
+        bucket = s3_conn.get_bucket(bucketname)
+        s3_file = bucket.get_key(filename)
+        if s3_file is None:
+            s3_file = bucket.new_key(filename)
+
+        if modifiers == 'r':
+            return s3_file
+        elif modifiers == 'w':
+            return S3WriterWrapper(s3_file)
+        elif modifiers == 'a':
+            return S3WriterWrapper(s3_file, s3_file.get_contents_as_string())
+        else:
+            raise AttributeError('unsupported open mode: %s' % modifiers)
+    else:
+        return open(path, mode=modifiers)
