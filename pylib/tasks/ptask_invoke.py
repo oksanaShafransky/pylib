@@ -122,6 +122,7 @@ class PtaskInvoker(Program):
 
     def run(self, argv=None, **kwargs):
         try:
+            start_time = time.time()
             self._parse(argv)
             # Restrict a run to one task at a time
             assert len(self.tasks) == 1
@@ -135,7 +136,6 @@ class PtaskInvoker(Program):
                 'collection_path': self.collection.loaded_from
             })
 
-            start_time = time.time()
             self.execute()
 
         except (Failure, Exit, ParseError) as e:
