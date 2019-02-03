@@ -1222,7 +1222,7 @@ class ContextualizedTasksInfra(object):
         self.jvm_opts['fs.s3a.secret.key'] = secret_key
         self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
         if set_env_variables:
-            os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
+                os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
 
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
