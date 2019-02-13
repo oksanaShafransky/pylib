@@ -716,6 +716,7 @@ class ContextualizedTasksInfra(object):
     def latest_success_size_for_path(self, directory, lookback=None, min_size_bytes=None):
         self.set_s3_keys()
         for path, date in reversed(self.dates_range_paths(directory, lookback)):
+            print("RefiTheKing: " + path)
             path_data_artifact = DataArtifact(path, required_size=min_size_bytes or 1)
             check_size = path_data_artifact.check_size()
             if check_size:
