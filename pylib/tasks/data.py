@@ -78,7 +78,8 @@ class DataArtifact(object):
         return '%s%s%s' % (bucket, prefix or '', self.raw_path)
 
     def _resolve_s3_size(self):
-        return size_on_s3('s3://%s' % self._resolve_s3_path_by_size())
+        path = self._resolve_s3_path_by_size()
+        return size_on_s3('s3://%s' % path) if path else 0
 
     def _resolve_s3_path_by_size(self):
         def paths_by_buckets():
