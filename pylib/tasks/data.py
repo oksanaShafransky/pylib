@@ -144,4 +144,5 @@ class DataArtifact(object):
         if hdfs_size is not None:
             return self.raw_path
         else:
-            return self._resolve_s3_path_by_size()
+            path = self._resolve_s3_path_by_size()
+            return None if not path else "s3a://%s" % path
