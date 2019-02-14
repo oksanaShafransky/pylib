@@ -78,3 +78,9 @@ class SnowflakeConfig:
             raise Exception("SnowflakeError: " + r.content + " code: " + str(r.status_code))
 
         return str(r.text)
+
+    def get_sql_connection(self, env=None, service_name=None, task_id=None):
+        sql_config = json.loads(self.get_service_name(env, service_name, task_id))
+        import MySQLdb
+        return MySQLdb.connect(host=sql_config['server'], user=sql_config['user'], passwd=sql_config['password'],
+                               db=sql_config.get('db', None))
