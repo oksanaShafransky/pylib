@@ -41,14 +41,13 @@ def aggregate_resources(applications):
 
 
 def store_resources_used(task_name, resources, start_time=None, end_time=None):
-    import MySQLdb
+    from pylib.config.SnowflakeConfig import SnowflakeConfig
     task_fields = task_name.split('.')
     dag_id, task_id, execution_id = task_fields[1:4]
     execution_date = execution_id.split('_')[0]
     run_date = datetime.now().strftime('%Y-%m-%d')
     # TODO retrieve connection string from snowflake
-    with MySQLdb.connect(host='rds-bigdata-bigsize-aws.cdfb0cyk3r8s.us-east-1.rds.amazonaws.com',
-                         user='bigsize', passwd='zaiTh3Rai0be', db='bigsize') as sql_conn:
+    with SnowflakeConfig.get_sql_connection(service_name='bigsize-db') as sql_conn:
         exists = sql_conn.execute("SELECT attempts, gb_hours, core_hours FROM task_resource_usage WHERE tag='%s'" % task_name)
         if exists > 0:
             current = list(sql_conn)[0]
