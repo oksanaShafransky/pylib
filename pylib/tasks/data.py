@@ -120,6 +120,7 @@ class DataArtifact(object):
                 check_marker_ok = False
         else:
             effective_s3_path = self._resolve_s3_path_by_size()
+            assert effective_s3_path is not None, 'dir %s not found in hdfs or in s3' % self.raw_path
             logger.info('Checking that dir %s on s3 is larger than %d...' % (effective_s3_path, self.min_required_size))
             effective_size = size_on_s3('s3://%s' % effective_s3_path)
             if self.check_marker and not exists_s3(os.path.join('s3://%s' % effective_s3_path, SUCCESS_MARKER)):
