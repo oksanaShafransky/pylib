@@ -13,7 +13,7 @@ def get_applications(rm=RESOURCE_MANAGER_DEFAULT, **options):
         request_url += '?%s' % '&'.join(['%s=%s' % (str(param), str(param_val)) for (param, param_val) in options.items()])
 
     resp = json.load(urllib.urlopen(request_url))
-    if resp is None or 'apps' not in resp or 'app' not in resp['apps']:
+    if resp is None or 'apps' not in resp or 'app' not in resp['apps'] or resp['apps']['app'] is None:
         return []
     else:
         return resp['apps']['app']
@@ -25,7 +25,7 @@ def get_all_yarn_apps(rm=RESOURCE_MANAGER_DEFAULT, options=None):
         request_url += '?%s' % options
 
     resp = json.load(urllib.urlopen(request_url))
-    if resp is None or 'apps' not in resp or 'app' not in resp['apps']:
+    if resp is None or 'apps' not in resp or 'app' not in resp['apps'] or resp['apps']['app'] is None:
         return []
     else:
         return resp['apps']['app']
