@@ -1,8 +1,8 @@
 
 from datetime import datetime
 
-GB_HR_PRICE = 0.013
-CORE_HR_PRICE = 0.035
+GB_HR_PRICE = 0.00256
+CORE_HR_PRICE = 0.02
 
 
 class UsedResources(object):
