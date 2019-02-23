@@ -1,8 +1,8 @@
 
 from datetime import datetime
 
-GB_HR_PRICE = 0.00256
-CORE_HR_PRICE = 0.02
+GB_HR_PRICE = 0.013
+CORE_HR_PRICE = 0.035
 
 
 class UsedResources(object):
@@ -47,7 +47,7 @@ def store_resources_used(task_name, resources, start_time=None, end_time=None):
     execution_date = execution_id.split('_')[0]
     run_date = datetime.now().strftime('%Y-%m-%d')
     # TODO retrieve connection string from snowflake
-    with SnowflakeConfig().get_sql_connection(service_name='bigsize-db') as sql_conn:
+    with SnowflakeConfig.get_sql_connection(service_name='bigsize') as sql_conn:
         exists = sql_conn.execute("SELECT attempts, gb_hours, core_hours FROM task_resource_usage WHERE tag='%s'" % task_name)
         if exists > 0:
             current = list(sql_conn)[0]
