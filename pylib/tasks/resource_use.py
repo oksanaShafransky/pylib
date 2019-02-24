@@ -1,8 +1,20 @@
 
 from datetime import datetime
+from pylib.sw_config.bigdata_kv import get_kv, Purposes
+from pylib.config.SnowflakeConfig import SnowflakeConfig
 
-GB_HR_PRICE = 0.013
-CORE_HR_PRICE = 0.035
+kv = get_kv(purpose=Purposes.BigData, snowflake_env=SnowflakeConfig().def_env)
+
+DEFAULT_GB_HR_PRICE = 0.013
+DEFAULT_CORE_HR_PRICE = 0.035
+
+
+def gb_hour_price():
+    return float(kv.get_or_default('resource_cost/gb_hours', DEFAULT_GB_HR_PRICE))
+
+
+def core_hour_price():
+    return float(kv.get_or_default('resource_cost/core_hours', DEFAULT_CORE_HR_PRICE))
 
 
 class UsedResources(object):
@@ -12,7 +24,7 @@ class UsedResources(object):
 
     @property
     def dollar_price(self):
-        return max(self.gb_hours * GB_HR_PRICE, self.core_hours * CORE_HR_PRICE)
+        return max(self.gb_hours * gb_hour_price(), self.core_hours * core_hour_price())
 
     @property
     def cost(self):
