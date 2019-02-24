@@ -5,6 +5,17 @@ from pylib.sw_config.dict_change_simulator import DictProxy
 from pylib.sw_config.kv_tools import kv_to_tree, load_kv, kv_diff, KeyValueTree
 from pylib.sw_config.types import Purposes
 
+import pylib.sw_config.consul
+
+
+class ConsulProxyMock(object):
+    def __init__(self, server, token):
+        self.server = server
+        self.token = token
+
+
+pylib.sw_config.consul.ConsulProxy = ConsulProxyMock
+
 
 class TestTools(object):
     def test_list(self):
@@ -147,11 +158,6 @@ class TestPrefixedConfiguration(object):
 
 
 class TestGetKV(object):
-    class ConsulProxyMock(object):
-        def __init__(self, server, token):
-            self.server = server
-            self.token = token
-
     def test_kv_with_token(self):
         class SnowflakeConfigMock(object):
             def __init__(self, env):
@@ -160,8 +166,6 @@ class TestGetKV(object):
             def get_service_name(self, service_name):
                 return '{"server": "test_server", "token": "test_token"}'
 
-        import pylib.sw_config.consul
-        pylib.sw_config.consul.ConsulProxy = TestGetKV.ConsulProxyMock
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
@@ -177,8 +181,6 @@ class TestGetKV(object):
             def get_service_name(self, service_name):
                 return '{"server": "test_server"}'
 
-        import pylib.sw_config.consul
-        pylib.sw_config.consul.ConsulProxy = TestGetKV.ConsulProxyMock
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
@@ -195,8 +197,6 @@ class TestGetKV(object):
                 assert service_name == 'bigdata-consul-kv'
                 return '{"server": "test_server"}'
 
-        import pylib.sw_config.consul
-        pylib.sw_config.consul.ConsulProxy = TestGetKV.ConsulProxyMock
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
@@ -210,8 +210,6 @@ class TestGetKV(object):
             def get_service_name(self, service_name):
                 return '{"server": "test_server", "prefix": "prefix1/prefix2"}'
 
-        import pylib.sw_config.consul
-        pylib.sw_config.consul.ConsulProxy = TestGetKV.ConsulProxyMock
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
@@ -227,8 +225,6 @@ class TestGetKV(object):
             def get_service_name(self, service_name):
                 return '{"server": "test_server"}'
 
-        import pylib.sw_config.consul
-        pylib.sw_config.consul.ConsulProxy = TestGetKV.ConsulProxyMock
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
@@ -243,8 +239,6 @@ class TestGetKV(object):
             def get_service_name(self, service_name):
                 return '{"server": "test_server", "prefix": "prefix1/prefix2"}'
 
-        import pylib.sw_config.consul
-        pylib.sw_config.consul.ConsulProxy = TestGetKV.ConsulProxyMock
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
@@ -259,8 +253,6 @@ class TestGetKV(object):
             def get_service_name(self, service_name):
                 return '{"server": "test_server", "prefix": "prefix1/prefix2"}'
 
-        import pylib.sw_config.consul
-        pylib.sw_config.consul.ConsulProxy = TestGetKV.ConsulProxyMock
         import pylib.config.SnowflakeConfig
         pylib.config.SnowflakeConfig.SnowflakeConfig = SnowflakeConfigMock
         from pylib.sw_config.bigdata_kv import get_kv
@@ -364,5 +356,3 @@ class TestKeyValueTree(object):
 
         tree = kv_to_tree(MockKv())
         assert len(tree) == 1
-
-
