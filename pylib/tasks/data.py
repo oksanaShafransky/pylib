@@ -82,7 +82,7 @@ class DataArtifact(object):
         else:
             return None
 
-    def _s3_path(self, bucket, prefix):
+    def _s3_path(self, bucket, prefix=None):
         return '%s%s%s' % (bucket, prefix or '', self.raw_path)
 
     def _resolve_s3_size(self):
