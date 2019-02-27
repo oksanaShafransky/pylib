@@ -158,7 +158,7 @@ class PtaskInvoker(Program):
             total_resources = aggregate_resources(launched_apps)
             print('\nTotal cluster resources used: %s' % str(total_resources))
             print('Estimated cost: %s. (This is an estimation, but it is quite accurate now)' % total_resources.cost)
-            if 'TASK_ID' in os.environ:
+            if 'TASK_ID' in os.environ and task_name is not None:
                 store_resources_used(task_name, total_resources, datetime.datetime.fromtimestamp(start_time), datetime.datetime.fromtimestamp(end_time))
 
             print('\nFinished ptask "{0}". Total execution time: {1}'.format(task_name, str(execution_time_delta)))
