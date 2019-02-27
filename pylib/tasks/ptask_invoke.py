@@ -121,8 +121,9 @@ class PtaskInvoker(Program):
         return datetime.datetime.strptime(date_str, "%Y-%m-%d").date()
 
     def run(self, argv=None, **kwargs):
+        start_time = time.time()
+        task_name = None
         try:
-            start_time = time.time()
             self._parse(argv)
             # Restrict a run to one task at a time
             assert len(self.tasks) == 1
@@ -147,7 +148,7 @@ class PtaskInvoker(Program):
         finally:
             end_time = time.time()
             execution_time_delta = datetime.timedelta(seconds=(end_time - start_time))
-            if 'TASK_ID' in os.environ:
+            if 'TASK_ID' in os.environ and task_name is not None:
                 launched_apps = get_applications_by_tag(task_name, start_time=int(start_time) * 1000)
             else:
                 import getpass
