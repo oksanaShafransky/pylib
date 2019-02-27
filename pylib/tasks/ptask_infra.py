@@ -591,6 +591,21 @@ class ContextualizedTasksInfra(object):
 
             print('snapshot exists')
 
+    def run_distcp(self, source, target, mappers=20, overwrite=True):
+        job_name_property = " -D'mapreduce.job.name=distcp {source} {target}'".format(source=source, target=target)
+        jvm_opts = TasksInfra.add_jvm_options(job_name_property, self.jvm_opts)
+        distcp_opts = "-m {mappers} ".format(mappers=mappers)
+        if overwrite:
+            distcp_opts += "-overwrite -delete "
+
+        cmd = 'hadoop distcp {jvm_opts} {distcp_opts} {source_path} {target_path}'.format(
+            jvm_opts=jvm_opts,
+            distcp_opts=distcp_opts,
+            source_path=source,
+            target_path=target
+        )
+        self.run_bash(cmd)
+
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False, jvm_opts=None, default_num_reducers=200):
         command_params, jvm_opts = self.determine_mr_output_partitions(command_params, determine_reduces_by_output, jvm_opts, default_num_reducers)
         return self.run_bash(
