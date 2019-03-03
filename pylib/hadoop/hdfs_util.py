@@ -124,6 +124,7 @@ def delete_dir(path, hdfs_client=None):
     # saftey valve in case someone tries to delete '/similargroup' by mistake
     assert path.count('/') > 4, "can't delete programmatically folders this close to root. are you sure you intended to delete %s" % path
 
+    print("Deleting: " + path)
     if hdfs_client is None:
         hdfs_client = create_client()
     try:
