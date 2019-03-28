@@ -25,6 +25,17 @@ def full_stack():
         return "Failed to retrieve stacktrace"
 
 
+class ConnectionWrapper:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def __enter__(self):
+        return self._conn.cursor()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._conn.close()
+
+
 class SnowflakeConfig:
     def_env = None
     base_payload = {'platform': 'Python',
@@ -81,6 +92,5 @@ class SnowflakeConfig:
 
     def get_sql_connection(self, env=None, service_name=None, task_id=None):
         sql_config = json.loads(self.get_service_name(env, service_name, task_id))
-        import MySQLdb
-        return MySQLdb.connect(host=sql_config['server'], user=sql_config['user'], passwd=sql_config['password'],
-                               db=sql_config.get('db', None))
+        from mysql.connector import connection
+        return ConnectionWrapper(connection.MySQLConnection(host=sql_config['server'], user=sql_config['user'], passwd=sql_config['password'], database=sql_config.get('db', None)))
