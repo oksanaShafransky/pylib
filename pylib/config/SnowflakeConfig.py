@@ -92,5 +92,9 @@ class SnowflakeConfig:
 
     def get_sql_connection(self, env=None, service_name=None, task_id=None):
         sql_config = json.loads(self.get_service_name(env, service_name, task_id))
-        from mysql.connector import connection
-        return ConnectionWrapper(connection.MySQLConnection(host=sql_config['server'], user=sql_config['user'], passwd=sql_config['password'], database=sql_config.get('db', None)))
+        #from mysql.connector import connection
+        #return ConnectionWrapper(connection.MySQLConnection(host=sql_config['server'], user=sql_config['user'], passwd=sql_config['password'], database=sql_config.get('db', None)))
+        import MySQLdb
+        return MySQLdb.connect(host=sql_config['server'], user=sql_config['user'], passwd=sql_config['password'],
+                               db=sql_config.get('db', None))
+
