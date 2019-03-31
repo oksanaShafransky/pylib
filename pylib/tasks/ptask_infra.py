@@ -1327,7 +1327,12 @@ class ContextualizedTasksInfra(object):
 
     @property
     def table_prefix(self):
-        return self.__get_common_args().get('table_prefix', '')
+        table_prefix_raw = self.__get_common_args().get('table_prefix', '')
+        # Non-empty prefix is enforced to end with an underscore
+        if table_prefix_raw and table_prefix_raw[-1] != '_':
+            return '%s_' % table_prefix_raw
+        else:
+            return table_prefix_raw
 
     @property
     def rerun(self):
