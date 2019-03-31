@@ -557,7 +557,7 @@ class ContextualizedTasksInfra(object):
 
     def hbase_table_normalized_name(self, name, add_branch_name_prefix=True):
         # Legacy convention should be preserved for now in the production branch
-        if add_branch_name_prefix and branch != 'dzhdam2':
+        if add_branch_name_prefix and self.branch != 'dzhdam2':
             return self.branch + "_" + name + self.table_suffix
         else:
             return name + self.table_suffix
