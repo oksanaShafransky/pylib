@@ -879,7 +879,7 @@ class ContextualizedTasksInfra(object):
         yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
-        command = 'cd %(jar_path)s;spark-submit' \
+        command = 'cd %(jar_path)s;spark2-submit' \
                   ' --queue %(queue)s' \
                   ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
