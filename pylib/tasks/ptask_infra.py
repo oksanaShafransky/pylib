@@ -556,7 +556,8 @@ class ContextualizedTasksInfra(object):
         return self.table_prefix + name + self.table_suffix
 
     def hbase_table_normalized_name(self, name, add_branch_name_prefix=True):
-        if add_branch_name_prefix:
+        # Legacy convention should be preserved for now in the production branch
+        if add_branch_name_prefix and self.branch != 'dzhdam2':
             return self.branch + "_" + name + self.table_suffix
         else:
             return name + self.table_suffix
@@ -1341,7 +1342,12 @@ class ContextualizedTasksInfra(object):
 
     @property
     def table_prefix(self):
-        return self.__get_common_args().get('table_prefix', '')
+        table_prefix_raw = self.__get_common_args().get('table_prefix', '')
+        # Non-empty prefix is enforced to end with an underscore
+        if table_prefix_raw and table_prefix_raw[-1] != '_':
+            return '%s_' % table_prefix_raw
+        else:
+            return table_prefix_raw
 
     @property
     def rerun(self):

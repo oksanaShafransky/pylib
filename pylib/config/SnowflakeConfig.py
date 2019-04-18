@@ -4,6 +4,8 @@ import traceback, sys
 import json
 import socket
 import copy
+import getpass
+
 MRP = "mrp"
 MRP_AWS = "mrp-aws"
 
@@ -25,6 +27,17 @@ def full_stack():
         return "Failed to retrieve stacktrace"
 
 
+class ConnectionWrapper:
+    def __init__(self, conn):
+        self._conn = conn
+
+    def __enter__(self):
+        return self._conn.cursor()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._conn.close()
+
+
 class SnowflakeConfig:
     def_env = None
     base_payload = {'platform': 'Python',
@@ -38,6 +51,7 @@ class SnowflakeConfig:
         self.path_in_url = path_in_url
         self.client_error_path = client_error_path
         self.base_payload['hostname'] = socket.gethostname()
+        self.base_payload['user'] = getpass.getuser()
         if os.environ.get('TASK_ID') is not None:
             self.base_payload['task_id'] = os.environ.get('TASK_ID')
         try:
@@ -81,6 +95,8 @@ class SnowflakeConfig:
 
     def get_sql_connection(self, env=None, service_name=None, task_id=None):
         sql_config = json.loads(self.get_service_name(env, service_name, task_id))
+        #from mysql.connector import connection
+        #return ConnectionWrapper(connection.MySQLConnection(host=sql_config['server'], user=sql_config['user'], passwd=sql_config['password'], database=sql_config.get('db', None)))
         import MySQLdb
         return MySQLdb.connect(host=sql_config['server'], user=sql_config['user'], passwd=sql_config['password'],
                                db=sql_config.get('db', None))
