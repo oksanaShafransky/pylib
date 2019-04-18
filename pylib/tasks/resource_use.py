@@ -9,12 +9,16 @@ DEFAULT_GB_HR_PRICE = 0.013
 DEFAULT_CORE_HR_PRICE = 0.035
 
 
+# The extra safety layer in the following 2 functions looks weird, but kv may return a legitimate None value if failing
+
 def gb_hour_price():
-    return float(kv.get_or_default('resource_cost/gb_hours', DEFAULT_GB_HR_PRICE))
+    kv_gb_hour_price = kv.get_or_default('resource_cost/gb_hours', DEFAULT_GB_HR_PRICE)
+    return float(kv_gb_hour_price) if kv_gb_hour_price is not None else DEFAULT_GB_HR_PRICE
 
 
 def core_hour_price():
-    return float(kv.get_or_default('resource_cost/core_hours', DEFAULT_CORE_HR_PRICE))
+    kv_core_hour_price = kv.get_or_default('resource_cost/core_hours', DEFAULT_CORE_HR_PRICE)
+    return float(kv_core_hour_price) if kv_core_hour_price is not None else DEFAULT_CORE_HR_PRICE
 
 
 class UsedResources(object):
