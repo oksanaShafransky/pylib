@@ -852,6 +852,66 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.days_in_range(end_date, mode_type)
 
     # module is either 'mobile' or 'analytics'
+    def run_spark2(self,
+                  main_class,
+                  module,
+                  queue,
+                  app_name,
+                  command_params,
+                  jars_from_lib=None,
+                  files=None,
+                  spark_configs=None,
+                  named_spark_args=None,
+                  determine_partitions_by_output=None,
+                  packages=None,
+                  managed_output_dirs=None):
+        jar = './%s.jar' % module
+        jar_path = '%s/%s' % (self.execution_dir, module)
+
+        # delete output on start
+        self.clear_output_dirs(managed_output_dirs)
+
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params,
+                                                                               determine_partitions_by_output,
+                                                                               spark_configs)
+        additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
+
+        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
+
+        command = 'cd %(jar_path)s;spark-submit' \
+                  ' --queue %(queue)s' \
+                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
+                  ' --name "%(app_name)s"' \
+                  ' --master yarn-cluster' \
+                  ' --deploy-mode cluster' \
+                  ' %(add_opts)s ' \
+                  ' --jars %(jars)s' \
+                  ' --files "%(files)s"' \
+                  '%(extra_pkg_cmd)s' \
+                  ' --class %(main_class)s' \
+                  ' %(jar)s ' % \
+                  {
+                      'jar_path': jar_path,
+                      'queue': queue,
+                      'app_name': app_name,
+                      'add_opts': additional_configs,
+                      'snowflake_env': snowflake_cur_env,
+                      'jars': self.get_jars_list(jar_path, jars_from_lib),
+                      'files': ','.join(files or []),
+                      'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'main_class': main_class,
+                      'jar': jar,
+                      'yarn_application_tags': yarn_tags
+                  }
+
+        command = TasksInfra.add_command_params(command, command_params,
+                                                value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
+        return self.run_bash(command).ok
+
+    # module is either 'mobile' or 'analytics'
     def run_spark(self,
                   main_class,
                   module,
