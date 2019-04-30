@@ -597,7 +597,10 @@ class ContextualizedTasksInfra(object):
         jvm_opts = TasksInfra.add_jvm_options(job_name_property, self.jvm_opts)
         distcp_opts = "-m {mappers} ".format(mappers=mappers)
         if overwrite:
-            distcp_opts += "-overwrite -delete "
+            if self.dry_run:
+                print("Dry run: would have deleted " + target)
+            else:
+                delete_dir(path=target)
 
         cmd = 'hadoop distcp {jvm_opts} {distcp_opts} {source_path} {target_path}'.format(
             jvm_opts=jvm_opts,
