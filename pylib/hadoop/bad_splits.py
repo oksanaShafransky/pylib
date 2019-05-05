@@ -47,7 +47,8 @@ corrupt_input_indicators = [
     'invalid code lengths set',
     'too many length or distance symbols',
     'invalid stored block lengths',
-    'invalid block type'
+    'invalid block type',
+    'invalid distance code'
 ]
 
 
