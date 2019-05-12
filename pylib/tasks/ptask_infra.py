@@ -1043,6 +1043,109 @@ class ContextualizedTasksInfra(object):
         jars = ','.join(map(lambda x: module_dir + '/lib/' + x, selected_jars))
         return jars
 
+    def run_py_spark2(self,
+                     main_py_file,
+                     app_name=None,
+                     command_params=None,
+                     files=None,
+                     include_main_jar=True,
+                     jars_from_lib=None,
+                     module='mobile',
+                     named_spark_args=None,
+                     packages=None,
+                     py_files=None,
+                     py_modules=None,
+                     spark_configs=None,
+                     use_bigdata_defaults=False,
+                     queue=None,
+                     determine_partitions_by_output=False,
+                     managed_output_dirs=None,
+                     additional_artifacts=None
+                     ):
+
+        # delete output on start
+        self.clear_output_dirs(managed_output_dirs)
+
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
+        additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
+
+        final_py_files = py_files or []
+
+        module_dir = self.execution_dir + '/' + module
+        exec_py_file = 'python/sw_%s/%s' % (module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
+
+        py_modules = py_modules or []
+        if use_bigdata_defaults:
+            py_modules.append(module)
+
+        ##if determine_partitions_by_output:
+        ##    py_modules.append('sw-spark-common')
+
+        for requested_module in py_modules:
+            req_mod_dir = self.execution_dir + '/' + requested_module
+            egg_files = glob('%s/*.egg' % req_mod_dir)
+            final_py_files.extend(egg_files)
+            #todo change to assert
+            if len(egg_files) == 0:
+                print('failed finding egg file for requested python module %s. skipping' % requested_module)
+
+        if additional_artifacts is None:
+            additional_artifacts = []
+
+        additional_artifacts_paths = []
+        for artifact in additional_artifacts:
+            artifact_path = '/tmp/%s-%s.egg' % (str(uuid.uuid4()), artifact)
+            artifact_url = 'https://pypi-registry.similarweb.io/repository/similar-pypi/packages/%(artifact)s/1.0.0/%(artifact)s-1.0.0-py2.7.egg' % \
+                           {'artifact': artifact}
+            opener = urllib.URLopener()
+            opener.retrieve(artifact_url, artifact_path)
+            final_py_files.append(artifact_path)
+            additional_artifacts_paths.append(artifact_path)
+
+        if len(final_py_files) == 0:
+            py_files_cmd = ' '
+        else:
+            py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
+
+        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+
+        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
+
+        command = 'spark2-submit' \
+                  ' --name "%(app_name)s"' \
+                  ' --master yarn-cluster' \
+                  ' %(queue)s' \
+                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
+                  ' --deploy-mode cluster' \
+                  ' --jars "%(jars)s"' \
+                  ' --files "%(files)s"' \
+                  '%(extra_pkg_cmd)s' \
+                  ' %(py_files_cmd)s' \
+                  ' %(spark-confs)s' \
+                  ' "%(execution_dir)s/%(main_py)s"' \
+                  % {
+                      'app_name': app_name if app_name else os.path.basename(main_py_file),
+                      'execution_dir': module_dir,
+                      'queue': '--queue %s' % queue if queue else '',
+                      'snowflake_env': snowflake_cur_env,
+                      'files': ','.join(files or []),
+                      'py_files_cmd': py_files_cmd,
+                      'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'spark-confs': additional_configs,
+                      'jars': self.get_jars_list(module_dir, jars_from_lib) + (
+                              ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
+                      'main_py': exec_py_file,
+                      'yarn_application_tags': yarn_tags
+                  }
+
+        command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
+        res = self.run_bash(command).ok
+        for artifact_path in additional_artifacts_paths:
+            os.remove(artifact_path)
+        return res
+
     def run_py_spark(self,
                      main_py_file,
                      app_name=None,
