@@ -1567,4 +1567,4 @@ class ContextualizedTasksInfra(object):
 
     @property
     def branch(self):
-        return self.__get_common_args()['branch']
+        return self.__get_common_args().get('branch')
