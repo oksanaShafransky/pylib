@@ -10,7 +10,7 @@ from itertools import ifilter
 import os
 
 SUCCESS_MARKER = '_SUCCESS'
-DEFAULT_SUFFIX_FORMAT = '''year=%(year)s/month=%(month)s/day=%(day)s'''
+DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
 # TODO there is infra in s3/data_checks that solves some this, given a connection and bucket objects
 # it might be more efficient, but do we really want hold s3 constructs here? need to decide
@@ -42,7 +42,7 @@ class RangedDataArtifact(object):
         self.suffix_format = suffix_format
         # Create list of dataartifacts
         self.ranged_data_artifact = [
-            DataArtifact(os.path.join(self.collection_path, generate_date_suffix(d, self.suffix_format)), *args, **kwargs)
+            DataArtifact(os.path.join(self.collection_path, d.strftime(self.suffix_format)), *args, **kwargs)
             for d in self.dates
         ]
 
