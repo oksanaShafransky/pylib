@@ -1,7 +1,6 @@
 import logging
 import json
 
-from pylib.common.date_utils import generate_date_suffix
 from pylib.hadoop.hdfs_util import get_size as size_on_hdfs, file_exists as exists_hdfs, directory_exists as dir_exists_hdfs
 from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_s3
 from pylib.config.SnowflakeConfig import SnowflakeConfig
