@@ -147,10 +147,12 @@ class DataArtifact(object):
     def assert_output_validity(self, is_strict=False, *reporters):
         self._assert_data_validity('outupt', self.min_required_size * DataArtifact.STRICT_SIZE_THRESHOLD if is_strict else None, *reporters)
 
+    def is_local(self):
+        return dir_exists_hdfs(self.raw_path)
+
     @property
     def resolved_path(self):
-        hdfs_size = self._hdfs_size()
-        if hdfs_size is not None:
+        if self.is_local():
             return self.raw_path
         else:
             path = self._resolve_s3_path_by_size()
