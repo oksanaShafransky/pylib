@@ -109,7 +109,7 @@ class DataArtifact(object):
     def check_size(self):
         return self.actual_size >= self.min_required_size
 
-    def _assert_data_validity(self, direction, max_size, *reporters):
+    def _is_data_valid(self, direction, max_size, *reporters):
         hdfs_size = self._hdfs_size()
         check_marker_ok = True
         if hdfs_size is not None:
@@ -119,7 +119,10 @@ class DataArtifact(object):
                 check_marker_ok = False
         else:
             effective_s3_path = self._resolve_s3_path_by_size()
-            assert effective_s3_path is not None, 'dir %s not found in hdfs or in s3' % self.raw_path
+            if effective_s3_path is None:
+                logger.error('dir %s not found in hdfs or in s3' % self.raw_path)
+                return False
+
             logger.info('Checking that dir %s on s3 is larger than %d...' % (effective_s3_path, self.min_required_size))
             effective_size = size_on_s3('s3://%s' % effective_s3_path)
             if self.check_marker and not exists_s3(os.path.join('s3://%s' % effective_s3_path, SUCCESS_MARKER)):
@@ -130,19 +133,35 @@ class DataArtifact(object):
             reporter.report_lineage('input', {self.raw_path: effective_size})
 
         resolved_path = self.resolved_path
-        assert effective_size >= self.min_required_size, \
-            '%s data is not valid at %s. size is %s, required %s' % (direction, resolved_path, human_size(effective_size), human_size(self.min_required_size))
-        assert check_marker_ok, 'no success marker was found at path %s' % resolved_path
+        if not effective_size >= self.min_required_size:
+            logger.error('%s data is not valid at %s. size is %s, required %s' % (direction, resolved_path, human_size(effective_size), human_size(self.min_required_size)))
+            return False
+
+        if not check_marker_ok:
+            logger.error('no success marker was found at path %s' % resolved_path)
+            return False
 
         if max_size is not None:
-            assert effective_size >= self.min_required_size, \
-                'requested threshold too small for %s data  at %s. size is %s, required %s' % (direction, resolved_path, human_size(effective_size), human_size(self.min_required_size))
+            if not effective_size >= self.min_required_size:
+                logger.error('requested threshold too small for %s data  at %s. size is %s, required %s' % (direction, resolved_path, human_size(effective_size), human_size(self.min_required_size)))
+                return False
+
         logger.info('Data validity checks passed for path %s' % resolved_path)
+        return True
+
+    def _assert_data_validity(self, direction, max_size, *reporters):
+        assert self._is_data_valid(direction, max_size, *reporters)
+
+    def is_input_valid(self, *reporters):
+        return self._is_data_valid('input', None, *reporters)
 
     def assert_input_validity(self, *reporters):
         self._assert_data_validity('input', None, *reporters)
 
     STRICT_SIZE_THRESHOLD = 30
+
+    def is_output_valid(self, is_strict=False, *reporters):
+        return self._is_data_valid('outupt', self.min_required_size * DataArtifact.STRICT_SIZE_THRESHOLD if is_strict else None, *reporters)
 
     def assert_output_validity(self, is_strict=False, *reporters):
         self._assert_data_validity('outupt', self.min_required_size * DataArtifact.STRICT_SIZE_THRESHOLD if is_strict else None, *reporters)
