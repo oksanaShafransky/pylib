@@ -17,10 +17,12 @@ import six
 import sys
 import time
 import numpy as np
+from dateutil.relativedelta import relativedelta
 
 # Adjust log level
 from pylib.common.date_utils import get_dates_range
 from pylib.tasks.data import DataArtifact
+
 
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('requests').setLevel(logging.WARNING)
@@ -91,16 +93,20 @@ class TasksInfra(object):
             return 'year=%s/month=%s' % (year_str, date.month)
 
     @staticmethod
-    def year_previous_month(date, zero_padding=True):
+    def year_months_before(date, months_before, zero_padding=True):
         if date is None:
             raise AttributeError("date wasn't passed")
-        last_month = date.month - 1 if date.month > 1 else 12
-        year = date.year if date.month > 1 else date.year - 1
-        year_str = str(year)[2:]
+        actual_month = date - relativedelta(months=months_before)
+        year_str = str(actual_month.year)[2:]
         if zero_padding:
-            return 'year=%s/month=%s' % (year_str, str(last_month).zfill(2))
+            return 'year=%s/month=%s' % (year_str, str(actual_month.month).zfill(2))
         else:
-            return 'year=%s/month=%s' % (year_str, last_month)
+            return 'year=%s/month=%s' % (year_str, actual_month.month)
+
+
+    @staticmethod
+    def year_previous_month(date,  zero_padding=True):
+        return TasksInfra.year_months_before(date, 1, zero_padding)
 
     @staticmethod
     def year_month_previous_day(date, zero_padding=True):
@@ -851,6 +857,10 @@ class ContextualizedTasksInfra(object):
     def year_previous_month(self, zero_padding=True):
         return TasksInfra.year_previous_month(self.__get_common_args()['date'],
                                               zero_padding=zero_padding)
+
+    def year_months_before(self, months_before, zero_padding=True):
+        return TasksInfra.year_months_before(self.__get_common_args()['date'],
+                                             months_before=months_before, zero_padding=zero_padding)
 
     def year_month_previous_day(self, zero_padding=True):
         return TasksInfra.year_month_previous_day(self.__get_common_args()['date'],

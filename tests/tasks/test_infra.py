@@ -356,6 +356,38 @@ class TestContextualizedTasksInfra(object):
             ymd = TasksInfra.year_month_previous_day(d, zero_padding=False)
             assert ymd == 'year=16/month=12/day=31'
 
+    class TestYearPreviousMonth(object):
+        def test_regular_month(self):
+            d = datetime.date(2019, 5, 1)
+            ym = TasksInfra.year_previous_month(d)
+            assert ym == 'year=19/month=04'
+
+        def test_january(self):
+            d = datetime.date(2019, 1, 1)
+            ym = TasksInfra.year_previous_month(d)
+            assert ym == 'year=18/month=12'
+
+        def test_regular_month_no_padding(self):
+            d = datetime.date(2019, 5, 1)
+            ym = TasksInfra.year_previous_month(d, False)
+            assert ym == 'year=19/month=4'
+
+    class TestYearMonthsBefore(object):
+        def test_regular_month(self):
+            d = datetime.date(2019, 5, 1)
+            ym = TasksInfra.year_months_before(d, 4)
+            assert ym == 'year=19/month=01'
+
+        def test_year_transition(self):
+            d = datetime.date(2019, 5, 1)
+            ym = TasksInfra.year_months_before(d, 10)
+            assert ym == 'year=18/month=07'
+
+        def test_regular_month_no_padding(self):
+            d = datetime.date(2019, 5, 1)
+            ym = TasksInfra.year_months_before(d, 4, False)
+            assert ym == 'year=19/month=1'
+
     class TestYearMonthNextDay(object):
 
         def test_regular_day(self):
