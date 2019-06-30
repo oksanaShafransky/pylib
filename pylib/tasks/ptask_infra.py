@@ -882,6 +882,10 @@ class ContextualizedTasksInfra(object):
 
         return TasksInfra.days_in_range(end_date, mode_type)
 
+    def get_sw_repos(self):
+        # Similarweb default repositories
+        return ["https://nexus.similarweb.io/repository/similar-bigdata/"]
+
     # module is either 'mobile' or 'analytics'
     def run_spark2(self,
                   main_class,
@@ -895,7 +899,8 @@ class ContextualizedTasksInfra(object):
                   named_spark_args=None,
                   determine_partitions_by_output=None,
                   packages=None,
-                  managed_output_dirs=None):
+                  managed_output_dirs=None,
+                  repositories=None):
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
 
@@ -933,6 +938,7 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'extra_repo_cmd': ' --repositories %s' % ','.join((repositories if repositories is not None else []) + self.get_sw_repos()),
                       'main_class': main_class,
                       'jar': jar,
                       'yarn_application_tags': yarn_tags
