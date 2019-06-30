@@ -1070,6 +1070,7 @@ class ContextualizedTasksInfra(object):
                      module='mobile',
                      named_spark_args=None,
                      packages=None,
+                     repositories=None,
                      py_files=None,
                      py_modules=None,
                      spark_configs=None,
@@ -1139,6 +1140,7 @@ class ContextualizedTasksInfra(object):
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
                   '%(extra_pkg_cmd)s' \
+                  '%(extra_repo_cmd)s' \
                   ' %(py_files_cmd)s' \
                   ' %(spark-confs)s' \
                   ' "%(execution_dir)s/%(main_py)s"' \
@@ -1150,6 +1152,7 @@ class ContextualizedTasksInfra(object):
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'extra_repo_cmd': ' --repositories %s' % ','.join((repositories if repositories is not None else []) + self.get_sw_repos()),
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
