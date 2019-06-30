@@ -927,6 +927,7 @@ class ContextualizedTasksInfra(object):
                   ' --jars %(jars)s' \
                   ' --files "%(files)s"' \
                   '%(extra_pkg_cmd)s' \
+                  '%(extra_repo_cmd)s' \
                   ' --class %(main_class)s' \
                   ' %(jar)s ' % \
                   {
