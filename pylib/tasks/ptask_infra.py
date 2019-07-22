@@ -1351,7 +1351,7 @@ class ContextualizedTasksInfra(object):
             command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
 
-    def consolidate_parquet_dir(self, dir, order_by=None, ignore_bad_input=False, spark_configs=None):
+    def consolidate_parquet_dir(self, dir, order_by=None, ignore_bad_input=False, spark_configs=None, output_dir=None):
         tmp_dir = "/tmp/crush/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + dir
         params = {'src': dir,
                   'dst': tmp_dir,
@@ -1381,9 +1381,10 @@ class ContextualizedTasksInfra(object):
         logging.info("Return value from spark-submit: %s" % ret_val)
         if ret_val:
             if directory_exists(tmp_dir) and not self.dry_run:
-                copy_dir_from_path(tmp_dir, dir)
-                self.assert_output_validity(dir)
-                assert get_size(tmp_dir) == get_size(dir)
+                final_output_dir = output_dir or dir
+                copy_dir_from_path(tmp_dir, final_output_dir)
+                self.assert_output_validity(final_output_dir)
+                assert get_size(tmp_dir) == get_size(final_output_dir)
                 delete_dir(tmp_dir)
             else:
                 ret_val = False
