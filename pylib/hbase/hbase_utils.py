@@ -1,4 +1,6 @@
 import happybase
+import Hbase_thrift
+
 from socket import error as socket_error
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 
@@ -32,7 +34,7 @@ def validate_records_per_region(table_name, columns = None, minimum_regions_coun
             except StopIteration:
                 print "to few keys in region: %s\n starting key: %s\n (%d < %d)" % (region['name'], start_key, row_num, rows_per_region)
                 return False
-            except socket_error:
+            except Hbase_thrift.IOError as e:
                 timeout_retry += 1
                 if timeout_retry < TIMEOUT_RETRIES:
                     print 'socket timeout in region %s, row:%d. reloading table (retry %d)' % (region['name'], row_num, timeout_retry)
