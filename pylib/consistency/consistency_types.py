@@ -8,6 +8,7 @@ class ConsistencyDateType:
 class ConsistencyPlatform:
     Web = 'web'
     WebSource = 'web_source'
+    WebSourceId = 'web_source_id'
     Apps = 'apps'
 
 

@@ -882,6 +882,10 @@ class ContextualizedTasksInfra(object):
 
         return TasksInfra.days_in_range(end_date, mode_type)
 
+    def get_sw_repos(self):
+        # Similarweb default repositories
+        return ["https://nexus.similarweb.io/repository/similar-bigdata/"]
+
     # module is either 'mobile' or 'analytics'
     def run_spark2(self,
                   main_class,
@@ -895,7 +899,8 @@ class ContextualizedTasksInfra(object):
                   named_spark_args=None,
                   determine_partitions_by_output=None,
                   packages=None,
-                  managed_output_dirs=None):
+                  managed_output_dirs=None,
+                  repositories=None):
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
 
@@ -922,6 +927,7 @@ class ContextualizedTasksInfra(object):
                   ' --jars %(jars)s' \
                   ' --files "%(files)s"' \
                   '%(extra_pkg_cmd)s' \
+                  '%(extra_repo_cmd)s' \
                   ' --class %(main_class)s' \
                   ' %(jar)s ' % \
                   {
@@ -933,6 +939,7 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'extra_repo_cmd': ' --repositories %s' % ','.join((repositories if repositories is not None else []) + self.get_sw_repos()),
                       'main_class': main_class,
                       'jar': jar,
                       'yarn_application_tags': yarn_tags
@@ -1063,6 +1070,7 @@ class ContextualizedTasksInfra(object):
                      module='mobile',
                      named_spark_args=None,
                      packages=None,
+                     repositories=None,
                      py_files=None,
                      py_modules=None,
                      spark_configs=None,
@@ -1132,6 +1140,7 @@ class ContextualizedTasksInfra(object):
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
                   '%(extra_pkg_cmd)s' \
+                  '%(extra_repo_cmd)s' \
                   ' %(py_files_cmd)s' \
                   ' %(spark-confs)s' \
                   ' "%(execution_dir)s/%(main_py)s"' \
@@ -1143,6 +1152,7 @@ class ContextualizedTasksInfra(object):
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
+                      'extra_repo_cmd': ' --repositories %s' % ','.join((repositories if repositories is not None else []) + self.get_sw_repos()),
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
@@ -1341,7 +1351,7 @@ class ContextualizedTasksInfra(object):
             command = self.__compose_infra_command('execute ConsolidateDir %s' % path)
         self.run_bash(command)
 
-    def consolidate_parquet_dir(self, dir, order_by=None, ignore_bad_input=False, spark_configs=None):
+    def consolidate_parquet_dir(self, dir, order_by=None, ignore_bad_input=False, spark_configs=None, output_dir=None):
         tmp_dir = "/tmp/crush/" + datetime.datetime.now().strftime('%Y%m%d%H%M%S') + dir
         params = {'src': dir,
                   'dst': tmp_dir,
@@ -1371,9 +1381,10 @@ class ContextualizedTasksInfra(object):
         logging.info("Return value from spark-submit: %s" % ret_val)
         if ret_val:
             if directory_exists(tmp_dir) and not self.dry_run:
-                copy_dir_from_path(tmp_dir, dir)
-                self.assert_output_validity(dir)
-                assert get_size(tmp_dir) == get_size(dir)
+                final_output_dir = output_dir or dir
+                copy_dir_from_path(tmp_dir, final_output_dir)
+                self.assert_output_validity(final_output_dir)
+                assert get_size(tmp_dir) == get_size(final_output_dir)
                 delete_dir(tmp_dir)
             else:
                 ret_val = False

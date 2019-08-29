@@ -161,10 +161,10 @@ class DataArtifact(object):
     STRICT_SIZE_THRESHOLD = 30
 
     def is_output_valid(self, is_strict=False, *reporters):
-        return self._is_data_valid('outupt', self.min_required_size * DataArtifact.STRICT_SIZE_THRESHOLD if is_strict else None, *reporters)
+        return self._is_data_valid('output', self.min_required_size * DataArtifact.STRICT_SIZE_THRESHOLD if is_strict else None, *reporters)
 
     def assert_output_validity(self, is_strict=False, *reporters):
-        self._assert_data_validity('outupt', self.min_required_size * DataArtifact.STRICT_SIZE_THRESHOLD if is_strict else None, *reporters)
+        self._assert_data_validity('output', self.min_required_size * DataArtifact.STRICT_SIZE_THRESHOLD if is_strict else None, *reporters)
 
     def is_local(self):
         return dir_exists_hdfs(self.raw_path)
