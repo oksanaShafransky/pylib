@@ -3,7 +3,7 @@ class Purposes(object):
     WebProduction = 'web-production'
     WebStaging = 'web-staging'
     Ingest = 'ingest'
-    Local = 'local'
+    WebLocal = 'local'
 
     @staticmethod
     def get_web_purpose(env):
