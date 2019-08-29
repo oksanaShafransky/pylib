@@ -9,6 +9,7 @@ snowflake_keys = {
     Purposes.Ingest: 'ingest-consul-kv',
     Purposes.WebProduction: 'web-production-consul-kv',
     Purposes.WebStaging: 'web-staging-consul-kv',
+    Purposes.WebLocal: 'web-local-consul-kv',
 }
 
 def get_kv(purpose=Purposes.BigData, snowflake_env=None, append_prefix=True):
