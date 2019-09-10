@@ -27,7 +27,7 @@ class SimilarWebWindowConfig(object):
         top_apps = Intersect(app_ranks, scraping)
 
         apps_window = Artifact(proxy, 'services/current-mobile-apps-dates/window', required_value='true')
-        apps = Intersect(apps_window)
+        apps = Intersect(apps_window, scraping)
 
         google_scrape = Artifact(proxy, 'services/google_keywords/data-available')
         google_keywords = Intersect(google_scrape)
