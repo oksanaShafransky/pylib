@@ -4,6 +4,7 @@ class Purposes(object):
     WebStaging = 'web-staging'
     Ingest = 'ingest'
     WebLocal = 'local'
+    Scraping = 'scraping'
 
     @staticmethod
     def get_web_purpose(env):
