@@ -744,11 +744,13 @@ class ContextualizedTasksInfra(object):
     def latest_success_size_for_path(self, directory, lookback=None, min_size_bytes=None, sub_dir=""):
         self.set_s3_keys()
         for path, date in reversed(self.dates_range_paths(directory, lookback)):
-            path_data_artifact = DataArtifact(path + sub_dir, required_size=min_size_bytes or 1)
+            final_path = path + sub_dir
+            print("Try to find latest success in: " + final_path)
+            path_data_artifact = DataArtifact(final_path, required_size=min_size_bytes or 1)
             check_size = path_data_artifact.check_size()
             if check_size:
                 print("latest success date for %s is %s" % (directory, date))
-                return path, path_data_artifact.actual_size
+                return final_path, path_data_artifact.actual_size
         print("No latest success date found for %s" % directory)
         return None, None
 
