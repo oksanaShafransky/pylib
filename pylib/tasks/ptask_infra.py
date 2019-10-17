@@ -400,6 +400,7 @@ class ContextualizedTasksInfra(object):
         self.ctx = ctx
         self.redis = None
         self.jvm_opts = {}
+        self.spark_configs = {}
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -1324,6 +1325,8 @@ class ContextualizedTasksInfra(object):
 
     def build_spark_additional_configs(self, named_spark_args, spark_configs):
         additional_configs = ''
+        for key, value in self.spark_configs.items():
+            additional_configs += ' --conf %s=%s' % (key, value)
         if spark_configs:
             for key, value in spark_configs.items():
                 additional_configs += ' --conf %s=%s' % (key, value)
@@ -1422,12 +1425,14 @@ class ContextualizedTasksInfra(object):
     def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
         access_key = access or self.read_s3_configuration('access_key', section=section)
         self.jvm_opts['fs.s3a.access.key'] = access_key
+        self.spark_configs['spark.hadoop.fs.s3a.access.key'] = access_key
         self.run_bash('aws configure set aws_access_key_id %s' % access_key)
         if set_env_variables:
             os.environ["AWS_ACCESS_KEY_ID"] = access_key
 
         secret_key = secret or self.read_s3_configuration('secret_key', section=section)
         self.jvm_opts['fs.s3a.secret.key'] = secret_key
+        self.spark_configs['spark.hadoop.fs.s3a.secret.key'] = secret_key
         self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
         if set_env_variables:
                 os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
