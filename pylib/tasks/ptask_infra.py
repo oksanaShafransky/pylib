@@ -400,7 +400,7 @@ class ContextualizedTasksInfra(object):
         self.ctx = ctx
         self.redis = None
         self.jvm_opts = {}
-        self.spark_configs = {}
+        self.hadoop_configs = {}
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -430,6 +430,7 @@ class ContextualizedTasksInfra(object):
 
         curr_jvm_opts = copy(self.jvm_opts)
         curr_jvm_opts.update(override_jvm_opts)
+        curr_jvm_opts.update(self.hadoop_configs)
         command = TasksInfra.add_jvm_options(command, curr_jvm_opts)
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
         if rerun_root_queue:
@@ -604,7 +605,9 @@ class ContextualizedTasksInfra(object):
 
     def run_distcp(self, source, target, mappers=20, overwrite=True):
         job_name_property = " -D'mapreduce.job.name=distcp {source} {target}'".format(source=source, target=target)
-        jvm_opts = TasksInfra.add_jvm_options(job_name_property, self.jvm_opts)
+        curr_jvm_opts = copy(self.jvm_opts)
+        curr_jvm_opts.update(self.hadoop_configs)
+        jvm_opts = TasksInfra.add_jvm_options(job_name_property, curr_jvm_opts)
         distcp_opts = "-m {mappers} ".format(mappers=mappers)
         if overwrite:
             if self.dry_run:
@@ -641,6 +644,7 @@ class ContextualizedTasksInfra(object):
             managed_output_dirs = [managed_output_dirs]
 
         extra_hive_conf.update(self.jvm_opts)
+        extra_hive_conf.update(self.hadoop_configs)
 
         if self.rerun:
             hive_params = hive_params.as_rerun()
@@ -1325,8 +1329,8 @@ class ContextualizedTasksInfra(object):
 
     def build_spark_additional_configs(self, named_spark_args, spark_configs):
         additional_configs = ''
-        for key, value in self.spark_configs.items():
-            additional_configs += ' --conf %s=%s' % (key, value)
+        for key, value in self.hadoop_configs.items():
+            additional_configs += ' --conf spark.hadoop.%s=%s' % (key, value)
         if spark_configs:
             for key, value in spark_configs.items():
                 additional_configs += ' --conf %s=%s' % (key, value)
@@ -1424,15 +1428,13 @@ class ContextualizedTasksInfra(object):
     # Please set set_env_variables only as a last resort.
     def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
         access_key = access or self.read_s3_configuration('access_key', section=section)
-        self.jvm_opts['fs.s3a.access.key'] = access_key
-        self.spark_configs['spark.hadoop.fs.s3a.access.key'] = access_key
+        self.hadoop_configs['fs.s3a.access.key'] = access_key
         self.run_bash('aws configure set aws_access_key_id %s' % access_key)
         if set_env_variables:
             os.environ["AWS_ACCESS_KEY_ID"] = access_key
 
         secret_key = secret or self.read_s3_configuration('secret_key', section=section)
-        self.jvm_opts['fs.s3a.secret.key'] = secret_key
-        self.spark_configs['spark.hadoop.fs.s3a.secret.key'] = secret_key
+        self.hadoop_configs['fs.s3a.secret.key'] = secret_key
         self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
         if set_env_variables:
                 os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
