@@ -306,7 +306,7 @@
                                     <arg line="setup.py pytest"/>
                                 </exec>
                                 <exec executable="${build_python_path}python" osfamily="unix" dir="${project.basedir}"
-                                      failonerror="false">
+                                      failonerror="true">
                                     <arg line="setup.py pytest"/>
                                 </exec>
                             </target>
