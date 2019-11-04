@@ -39,7 +39,6 @@ setup(
         'cryptography==1.8.2',
         'redis==2.10.5',
         'invoke==0.12.2',
-        'python-dateutil',
         'boto3==1.7.2',
         'retry==0.9.2'
     ],
