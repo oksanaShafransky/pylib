@@ -9,7 +9,15 @@ class AppsPathResolver(object):
     apps_paths = {
         'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 1e9, 'marker': True, 'path_type': "daily"},
         'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=1009", 'size': 2e9, 'marker': True, 'path_type': "daily"},
-        'grouping_1009_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1009", 'size': 5e9, 'marker': True, 'path_type': "daily"}
+        'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 8e10, 'marker': True, 'path_type': "daily"},
+        'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 2e9, 'marker': True,
+                                         'path_type': "daily"},
+        'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 1e9, 'marker': True,
+                                         'path_type': "daily"},
+        'grouping_1009_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1009", 'size': 5e9, 'marker': True,
+                                         'path_type': "daily"},
+
+        'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 2e11, 'marker': True, 'path_type': "daily"}
     }
 
     class AppPath(object):
@@ -36,6 +44,8 @@ class AppsPathResolver(object):
         def get_base_path(self):
             return self.full_base_path
 
+        def get_full_path(self):
+            return path.join(self.get_base_path(), self.__get_date_suffix_by_type())
 
     def __get_base_dir(self, in_or_out):
         return self.ti.base_dir if in_or_out == "in" else self.ti.calc_dir
@@ -50,9 +60,20 @@ class AppsPathResolver(object):
     def get_app_country_source_agg(self, in_or_out):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['app_country_source_agg'])
 
+    def get_grouping_1001_report_parquet(self, in_or_out):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1001_report_parquet'])
+
+    def get_grouping_1003_report_parquet(self, in_or_out):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1003_report_parquet'])
+
+    def get_grouping_1005_report_parquet(self, in_or_out):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1005_report_parquet'])
+
     def get_grouping_1009_report_parquet(self, in_or_out):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1009_report_parquet'])
 
+    def get_grouping_1010_report_parquet(self, in_or_out):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1010_report_parquet'])
 
 
 
