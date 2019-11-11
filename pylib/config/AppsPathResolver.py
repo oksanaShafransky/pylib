@@ -1,4 +1,4 @@
-import path
+from os import path
 from pylib.tasks.data import DataArtifact, RangedDataArtifact
 
 
