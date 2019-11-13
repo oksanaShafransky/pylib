@@ -822,6 +822,8 @@ class ContextualizedTasksInfra(object):
         else:
             mark_success(directory)
 
+
+    # --- path partitions ----
     def full_partition_path(self):
         return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'],
                                               self.__get_common_args()['date'])
@@ -878,6 +880,7 @@ class ContextualizedTasksInfra(object):
 
     ym = year_month
 
+    # --- dates ----
     def days_in_range(self):
         end_date = self.__get_common_args()['date']
         mode_type = self.__get_common_args()['mode_type']
@@ -1507,6 +1510,10 @@ class ContextualizedTasksInfra(object):
             if mode in default_mode_types:
                 return default_mode_types[mode]
         raise KeyError('unable to determine mode_type')
+
+    @property
+    def interval_delta(self):
+        return relativedelta(months=1) if self.mode == 'snapshot' else relativedelta(days=1)
 
     @property
     def date_suffix(self):
