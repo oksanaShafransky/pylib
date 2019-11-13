@@ -832,9 +832,9 @@ class ContextualizedTasksInfra(object):
         mt = mode_type or self.mode_type
         dt = date or self.date
         if mt == 'snapshot':
-            return self.year_month_day(dt, zero_padding)
+            return TasksInfra.year_month(dt, zero_padding)
         else:
-            return self.year_month_day(dt, zero_padding)
+            return TasksInfra.year_month_day(dt, zero_padding)
 
     def year_month_day(self, date=None, zero_padding=True):
         return TasksInfra.year_month_day(self.__get_common_args()['date'] if date is None else date,
