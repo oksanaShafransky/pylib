@@ -828,6 +828,14 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'],
                                               self.__get_common_args()['date'])
 
+    def get_date_suffix(self, date=None, mode_type=None, zero_padding=True):
+        mt = mode_type or self.mode_type
+        dt = date or self.date
+        if mt == 'snapshot':
+            return self.year_month_day(dt, zero_padding)
+        else:
+            return self.year_month_day(dt, zero_padding)
+
     def year_month_day(self, date=None, zero_padding=True):
         return TasksInfra.year_month_day(self.__get_common_args()['date'] if date is None else date,
                                          zero_padding=zero_padding)
