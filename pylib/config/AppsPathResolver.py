@@ -59,6 +59,9 @@ class AppsPathResolver(object):
         def get_full_path(self):
             return path.join(self.get_base_path(), self.__get_date_suffix_by_type())
 
+        def assert_output_validity(self):
+            return self.ti.assert_output_validity(self.get_full_path(), min_size_bytes=self.required_size, validate_marker=self.required_marker)
+
     def __get_base_dir(self, in_or_out):
         return self.ti.base_dir if in_or_out == "in" else self.ti.calc_dir
 
