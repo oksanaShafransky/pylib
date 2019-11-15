@@ -10,19 +10,19 @@ class AppsPathResolver(object):
         'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 1e9,
                                    'marker': True, 'path_type': "daily"},
 
-        'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=1001", 'size': 7e10,
+        'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 7e10,
                            'marker': True, 'path_type': "daily"},
 
-        'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=1003", 'size': 2e9,
+        'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 2e9,
                            'marker': True, 'path_type': "daily"},
 
-        'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=1005", 'size': 9e8,
+        'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 9e8,
                            'marker': True, 'path_type': "daily"},
 
-        'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=1009", 'size': 2e9,
+        'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1009", 'size': 2e9,
                            'marker': True, 'path_type': "daily"},
 
-        'extractor_1010': {'main_path': "daily/extractors/extracted-metric-data/rtype=1010", 'size': 9e8,
+        'extractor_1010': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1010", 'size': 9e8,
                            'marker': True, 'path_type': "daily"},
 
         'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 8e10, 'marker': True,
