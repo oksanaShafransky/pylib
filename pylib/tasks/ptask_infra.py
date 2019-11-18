@@ -862,8 +862,8 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.country_year_month(date, country,
                                              zero_padding=zero_padding)
 
-    def year_month(self, zero_padding=True):
-        return TasksInfra.year_month(self.__get_common_args()['date'],
+    def year_month(self, zero_padding=True, date=None):
+        return TasksInfra.year_month(self.__get_common_args()['date'] if date is None else date,
                                      zero_padding=zero_padding)
 
     def year_previous_month(self, zero_padding=True):
