@@ -887,7 +887,7 @@ class ContextualizedTasksInfra(object):
                                               zero_padding=zero_padding)
 
     def date_suffix_by_mode(self, date=None):
-        return self.year_month(date) if self.mode == 'snapshot' else self.year_month_day(date)
+        return self.year_month(date=date) if self.mode == 'snapshot' else self.year_month_day(date=date)
 
     ym = year_month
 
