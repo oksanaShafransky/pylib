@@ -886,6 +886,9 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.year_month_next_day(self.__get_common_args()['date'],
                                               zero_padding=zero_padding)
 
+    def date_suffix_by_mode(self, date=None):
+        return self.year_month(date) if self.mode == 'snapshot' else self.year_month_day(date)
+
     ym = year_month
 
     # --- dates ----
