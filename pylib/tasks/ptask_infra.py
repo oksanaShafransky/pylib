@@ -1485,6 +1485,7 @@ class ContextualizedTasksInfra(object):
         return max(0,min_size)
 
     def print_job_input_dict(self, dict):
+        print("Job input params: ")
         for key, value in dict.items():
             print("-%s %s" % (key, value))
 
