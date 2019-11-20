@@ -1484,6 +1484,10 @@ class ContextualizedTasksInfra(object):
             min_size = 0
         return max(0,min_size)
 
+    def print_job_input_dict(self, dict):
+        for key, value in dict.items():
+            print("-%s %s" % (key, value))
+
     @property
     def base_dir(self):
         return self.__get_common_args()['base_dir']
