@@ -909,21 +909,27 @@ class ContextualizedTasksInfra(object):
 
     # module is either 'mobile' or 'analytics'
     def run_spark2(self,
-                  main_class,
-                  module,
-                  queue,
-                  app_name,
-                  command_params,
-                  jars_from_lib=None,
-                  files=None,
-                  spark_configs=None,
-                  named_spark_args=None,
-                  determine_partitions_by_output=None,
-                  packages=None,
-                  managed_output_dirs=None,
-                  repositories=None):
+                   main_class,
+                   module,
+                   queue,
+                   app_name,
+                   command_params,
+                   jars_from_lib=None,
+                   files=None,
+                   spark_configs=None,
+                   named_spark_args=None,
+                   determine_partitions_by_output=None,
+                   packages=None,
+                   managed_output_dirs=None,
+                   repositories=None,
+                   java_opts=" -Xms16m"):
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
+
+        spark_submit_opts = os.getenv("SPARK_SUBMIT_OPTS")
+        if not spark_submit_opts:
+            spark_submit_opts = ""
+        os.environ["SPARK_SUBMIT_OPTS"] = spark_submit_opts + " " + java_opts
 
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
