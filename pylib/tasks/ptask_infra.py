@@ -867,8 +867,8 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.country_year_month(date, country,
                                              zero_padding=zero_padding)
 
-    def year_month(self, zero_padding=True):
-        return TasksInfra.year_month(self.__get_common_args()['date'],
+    def year_month(self, zero_padding=True, date=None):
+        return TasksInfra.year_month(self.__get_common_args()['date'] if date is None else date,
                                      zero_padding=zero_padding)
 
     def year_previous_month(self, zero_padding=True):
@@ -890,6 +890,9 @@ class ContextualizedTasksInfra(object):
     def year_month_next_day(self, zero_padding=True):
         return TasksInfra.year_month_next_day(self.__get_common_args()['date'],
                                               zero_padding=zero_padding)
+
+    def date_suffix_by_mode(self, date=None):
+        return self.year_month(date=date) if self.mode == 'snapshot' else self.year_month_day(date=date)
 
     ym = year_month
 
@@ -1485,6 +1488,11 @@ class ContextualizedTasksInfra(object):
         else:
             min_size = 0
         return max(0,min_size)
+
+    def print_job_input_dict(self, dict):
+        print("Job input params: ")
+        for key, value in dict.items():
+            print("-%s %s" % (key, value))
 
     @property
     def base_dir(self):
