@@ -212,7 +212,7 @@ class TestContextualizedTasksInfra(object):
         config['sw_common']['has_task_id'] = False
         config['sw_common']['date'] = datetime.datetime(2017,10,1)
         base_path = "/similargroup/data/mobile-analytics/window/mobile-web/predict/predkey=SiteCountryKey/"
-        path, size = c_infra.latest_success_size_for_path(base_path)
+        path, size, success_date = c_infra.latest_success_size_for_path(base_path)
         assert path == base_path + "year=17/month=10/day=01" and size == 12
 
     def ignore_latest_monthly_success_date(self):
@@ -223,7 +223,7 @@ class TestContextualizedTasksInfra(object):
         config['sw_common']['has_task_id'] = False
         config['sw_common']['date'] = datetime.datetime(2017,10,1)
         base_path = "/similargroup/data/mobile-analytics/output/joined-learning-set/Hyx/"
-        path, size = c_infra.latest_success_size_for_path(base_path)
+        path, size, success_date = c_infra.latest_success_size_for_path(base_path)
         assert path == base_path + "year=17/month=10" and size == 12
 
     def test_log_lineage(self, monkeypatch):
