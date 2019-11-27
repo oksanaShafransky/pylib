@@ -54,7 +54,26 @@ class AppsPathResolver(object):
                                         'path_type': "daily"},
 
         'agg_app_country_source_joined_key': {'main_path': "daily/aggregations/aggKey=AppCountrySourceJoinedKey", 'size': 8e9, 'marker': True,
-                                         'path_type': "daily"}
+                                         'path_type': "daily"},
+
+        'pre_estimate_app_country': {'main_path': "daily/pre-estimate/app-engagement/estkey=AppCountryKey",
+                                     'size': 4e8, 'marker': True,
+                                     'path_type': "daily"},
+        'pre_estimate_1009_app_country': {'main_path': "daily/pre-estimate/app-engagement/estkey=AppCountry1009Key",
+                                          'size': 4e8, 'marker': True,
+                                          'path_type': "daily"},
+
+        'time_series_estimation': {'main_path': "daily/time-series-weighted-predict",
+                                     'size': 9e8, 'marker': True,
+                                     'path_type': "daily"},
+
+        'apps_for_analyze_decision': {'main_path': "daily/osm/apps_for_analyze_decision",
+                                   'size': 1e7, 'marker': True,
+                                   'path_type': "daily"},
+
+        'app_engagement_estimation': {'main_path': "daily/estimate/app-engagement/estkey=AppCountryKey",
+                                      'size': 100, 'marker': True,
+                                      'path_type': "daily"}#TODO fix size
     }
 
     class AppPath(object):
@@ -93,6 +112,10 @@ class AppsPathResolver(object):
     def __get_android_apps_analytics_base(self, in_or_out):
         base_dir = self.__get_base_dir(in_or_out)
         return path.join(base_dir, "android-apps-analytics")
+
+    def __get_mobile_analytics_base(self, in_or_out):
+        base_dir = self.__get_base_dir(in_or_out)
+        return path.join(base_dir, "mobile-analytics")
 
     def __create_app_path_object(self, base_dir, path_details):
         return AppsPathResolver.AppPath(self.ti, base_dir, path_details['main_path'], path_details['size'], path_details['marker'], path_details['path_type'])
@@ -144,6 +167,21 @@ class AppsPathResolver(object):
 
     def agg_app_country_source_joined_key(self, in_or_out):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['agg_app_country_source_joined_key'])
+
+    def get_pre_estimate_app_country(self, in_or_out):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['pre_estimate_app_country'])
+
+    def get_pre_estimate_1009_app_country(self, in_or_out):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['pre_estimate_1009_app_country'])
+
+    def get_time_series_estimation(self, in_or_out):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['time_series_estimation'])
+
+    def get_apps_for_analyze_decision(self, in_or_out):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out), AppsPathResolver.apps_paths['apps_for_analyze_decision'])
+
+    def get_app_engagement_estimation(self, in_or_out):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['app_engagement_estimation'])
 
 
 
