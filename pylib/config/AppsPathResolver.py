@@ -57,21 +57,25 @@ class AppsPathResolver(object):
         'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 2e11, 'marker': True,
                                          'path_type': "daily"},
 
-        'agg_app_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=AppCountrySource1009Key", 'size': 1e9, 'marker': True,
-                                         'path_type': "daily"},
+        'agg_app_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=AppCountrySource1009Key",
+                                            'size': 1e9, 'marker': True,
+                                            'path_type': "daily"},
 
-        'agg_app_country_source_key': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 1e9, 'marker': True,
-                                         'path_type': "daily"},
+        'agg_app_country_source_key': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 1e9,
+                                       'marker': True,
+                                       'path_type': "daily"},
 
-        'agg_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=CountrySource1009Key", 'size': 3e5, 'marker': True,
-                                         'path_type': "daily"},
-
-        'agg_country_source_key': {'main_path': "daily/aggregations/aggKey=CountrySourceKey", 'size': 3e5,
+        'agg_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=CountrySource1009Key", 'size': 3e5,
                                         'marker': True,
                                         'path_type': "daily"},
 
-        'agg_app_country_source_joined_key': {'main_path': "daily/aggregations/aggKey=AppCountrySourceJoinedKey", 'size': 8e9, 'marker': True,
-                                         'path_type': "daily"},
+        'agg_country_source_key': {'main_path': "daily/aggregations/aggKey=CountrySourceKey", 'size': 3e5,
+                                   'marker': True,
+                                   'path_type': "daily"},
+
+        'agg_app_country_source_joined_key': {'main_path': "daily/aggregations/aggKey=AppCountrySourceJoinedKey",
+                                              'size': 8e9, 'marker': True,
+                                              'path_type': "daily"},
 
         'pre_estimate_app_country': {'main_path': "daily/pre-estimate/app-engagement/estkey=AppCountryKey",
                                      'size': 4e8, 'marker': True,
@@ -81,16 +85,36 @@ class AppsPathResolver(object):
                                           'path_type': "daily"},
 
         'time_series_estimation': {'main_path': "daily/time-series-weighted-predict",
-                                     'size': 9e8, 'marker': True,
-                                     'path_type': "daily"},
-
-        'apps_for_analyze_decision': {'main_path': "daily/osm/apps_for_analyze_decision",
-                                   'size': 1e7, 'marker': True,
+                                   'size': 9e8, 'marker': True,
                                    'path_type': "daily"},
 
+        'apps_for_analyze_decision': {'main_path': "daily/osm/apps_for_analyze_decision",
+                                      'size': 1e7, 'marker': True,
+                                      'path_type': "daily"},
+
         'app_engagement_estimation': {'main_path': "daily/estimate/app-engagement/estkey=AppCountryKey",
-                                      'size': 100, 'marker': True,
-                                      'path_type': "daily"}#TODO fix size
+                                      'size': 6e8, 'marker': True,
+                                      'path_type': "daily"},
+
+        'real_numbers_adjustments_by_new_users': {
+            'main_path': "monthly/android-real-numbers-v2/by-new-users/adjustments",
+            'size': 100, 'marker': True,
+            'path_type': "monthly"},
+
+        'real_numbers_adjustments_by_active_users': {
+            'main_path': "monthly/android-real-numbers-v2/by-active-users/adjustments",
+            'size': 100, 'marker': True,
+            'path_type': "monthly"},
+
+        'app_downloads_alph': {
+            'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey",
+            'size': 1e8, 'marker': True,
+            'path_type': "daily"},
+
+        'app_engagement_realnumbers': {
+            'main_path': "daily/estimate/app-engagement-realnumbers/estkey=AppCountryKey",
+            'size': 100, 'marker': True, #TODO change size
+            'path_type': "daily"}
     }
 
     class AppPath(object):
@@ -200,5 +224,18 @@ class AppsPathResolver(object):
 
     def get_app_engagement_estimation(self, in_or_out, path_prefix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['app_engagement_estimation'])
+
+    def get_real_numbers_adjustments_by_new_users(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['real_numbers_adjustments_by_new_users'])
+
+    def get_real_numbers_adjustments_by_active_users(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['real_numbers_adjustments_by_active_users'])
+
+    def get_app_downloads_alph(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['app_downloads_alph'])
+
+    def get_app_engagement_realnumbers(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['app_engagement_realnumbers'])
+
 
 
