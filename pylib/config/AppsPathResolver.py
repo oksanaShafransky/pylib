@@ -123,81 +123,82 @@ class AppsPathResolver(object):
         def assert_output_validity(self):
             return self.ti.assert_output_validity(self.get_full_path(), min_size_bytes=self.required_size, validate_marker=self.required_marker)
 
-    def __get_base_dir(self, in_or_out):
-        return self.ti.base_dir if in_or_out == "in" else self.ti.calc_dir
+    def __get_base_dir(self, in_or_out, path_prefix):
+        base_dir = self.ti.base_dir if in_or_out == "in" else self.ti.calc_dir
+        return base_dir if not path_prefix else path_join(path_prefix, base_dir)
 
-    def __get_android_apps_analytics_base(self, in_or_out):
-        base_dir = self.__get_base_dir(in_or_out)
+    def __get_android_apps_analytics_base(self, in_or_out, path_prefix):
+        base_dir = self.__get_base_dir(in_or_out, path_prefix)
         return path_join(base_dir, "android-apps-analytics")
 
-    def __get_mobile_analytics_base(self, in_or_out):
-        base_dir = self.__get_base_dir(in_or_out)
+    def __get_mobile_analytics_base(self, in_or_out, path_prefix):
+        base_dir = self.__get_base_dir(in_or_out, path_prefix)
         return path_join(base_dir, "mobile-analytics")
 
     def __create_app_path_object(self, base_dir, path_details):
         return AppsPathResolver.AppPath(self.ti, base_dir, path_details['main_path'], path_details['size'], path_details['marker'], path_details['path_type'])
 
-    def get_app_country_source_agg(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['app_country_source_agg'])
+    def get_app_country_source_agg(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['app_country_source_agg'])
 
-    def get_extractor_1001(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['extractor_1001'])
+    def get_extractor_1001(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['extractor_1001'])
 
-    def get_extractor_1003(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['extractor_1003'])
+    def get_extractor_1003(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['extractor_1003'])
 
-    def get_extractor_1005(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['extractor_1005'])
+    def get_extractor_1005(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['extractor_1005'])
 
-    def get_extractor_1009(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['extractor_1009'])
+    def get_extractor_1009(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['extractor_1009'])
 
-    def get_extractor_1010(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['extractor_1010'])
+    def get_extractor_1010(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['extractor_1010'])
 
-    def get_grouping_1001_report_parquet(self, in_or_out):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1001_report_parquet'])
+    def get_grouping_1001_report_parquet(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix), AppsPathResolver.apps_paths['grouping_1001_report_parquet'])
 
-    def get_grouping_1003_report_parquet(self, in_or_out):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1003_report_parquet'])
+    def get_grouping_1003_report_parquet(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix), AppsPathResolver.apps_paths['grouping_1003_report_parquet'])
 
-    def get_grouping_1005_report_parquet(self, in_or_out):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1005_report_parquet'])
+    def get_grouping_1005_report_parquet(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix), AppsPathResolver.apps_paths['grouping_1005_report_parquet'])
 
-    def get_grouping_1009_report_parquet(self, in_or_out):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1009_report_parquet'])
+    def get_grouping_1009_report_parquet(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix), AppsPathResolver.apps_paths['grouping_1009_report_parquet'])
 
-    def get_grouping_1010_report_parquet(self, in_or_out):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out), AppsPathResolver.apps_paths['grouping_1010_report_parquet'])
+    def get_grouping_1010_report_parquet(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix), AppsPathResolver.apps_paths['grouping_1010_report_parquet'])
 
-    def get_agg_app_country_source_1009_key(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['agg_app_country_source_1009_key'])
+    def get_agg_app_country_source_1009_key(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['agg_app_country_source_1009_key'])
 
-    def get_agg_app_country_source_key(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['agg_app_country_source_key'])
+    def get_agg_app_country_source_key(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['agg_app_country_source_key'])
 
-    def get_agg_country_source_1009_key(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['agg_country_source_1009_key'])
+    def get_agg_country_source_1009_key(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['agg_country_source_1009_key'])
 
-    def get_agg_country_source_key(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['agg_country_source_key'])
+    def get_agg_country_source_key(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['agg_country_source_key'])
 
-    def agg_app_country_source_joined_key(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['agg_app_country_source_joined_key'])
+    def agg_app_country_source_joined_key(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['agg_app_country_source_joined_key'])
 
-    def get_pre_estimate_app_country(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['pre_estimate_app_country'])
+    def get_pre_estimate_app_country(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['pre_estimate_app_country'])
 
-    def get_pre_estimate_1009_app_country(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['pre_estimate_1009_app_country'])
+    def get_pre_estimate_1009_app_country(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['pre_estimate_1009_app_country'])
 
-    def get_time_series_estimation(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['time_series_estimation'])
+    def get_time_series_estimation(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['time_series_estimation'])
 
-    def get_apps_for_analyze_decision(self, in_or_out):
-        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out), AppsPathResolver.apps_paths['apps_for_analyze_decision'])
+    def get_apps_for_analyze_decision(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['apps_for_analyze_decision'])
 
-    def get_app_engagement_estimation(self, in_or_out):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['app_engagement_estimation'])
+    def get_app_engagement_estimation(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix), AppsPathResolver.apps_paths['app_engagement_estimation'])
 
 
