@@ -1,5 +1,22 @@
-from os import path
 from pylib.tasks.data import DataArtifact, RangedDataArtifact
+
+
+def path_join(path, *paths):
+    if path[0] != '/':
+        path = '/' + path
+    if len(path) < 2:
+        raise Exception("Path Component is to short.")
+    full_path = path
+    for path in paths:
+        fixed_path = path
+        if path[0] != "/":
+            fixed_path = "/" + fixed_path
+        if path[-1] == "/":
+            fixed_path = fixed_path[:-1]
+        if len(fixed_path) < 2:
+            raise Exception("Path has to start with /")
+        full_path += fixed_path
+    return full_path
 
 
 class AppsPathResolver(object):
@@ -81,7 +98,7 @@ class AppsPathResolver(object):
             self.ti = ti
             self.base_dir = base_dir
             self.main_path = main_path
-            self.full_base_path = path.join(self.base_dir, self.main_path)
+            self.full_base_path = path_join(self.base_dir, self.main_path)
             self.required_size = required_size
             self.required_marker = required_marker
             self.path_type = path_type
@@ -94,14 +111,14 @@ class AppsPathResolver(object):
 
         def get_data_artifact(self, date_suffix=None):
             date_suffix = date_suffix if date_suffix else self.__get_date_suffix_by_type()
-            return DataArtifact(path.join(self.full_base_path, date_suffix), required_size=self.required_size, required_marker=self.required_marker)
+            return DataArtifact(path_join(self.full_base_path, date_suffix), required_size=self.required_size, required_marker=self.required_marker)
 
         #Rerurn base path without date_suffix
         def get_base_path(self):
             return self.full_base_path
 
         def get_full_path(self):
-            return path.join(self.get_base_path(), self.__get_date_suffix_by_type())
+            return path_join(self.get_base_path(), self.__get_date_suffix_by_type())
 
         def assert_output_validity(self):
             return self.ti.assert_output_validity(self.get_full_path(), min_size_bytes=self.required_size, validate_marker=self.required_marker)
@@ -111,11 +128,11 @@ class AppsPathResolver(object):
 
     def __get_android_apps_analytics_base(self, in_or_out):
         base_dir = self.__get_base_dir(in_or_out)
-        return path.join(base_dir, "android-apps-analytics")
+        return path_join(base_dir, "android-apps-analytics")
 
     def __get_mobile_analytics_base(self, in_or_out):
         base_dir = self.__get_base_dir(in_or_out)
-        return path.join(base_dir, "mobile-analytics")
+        return path_join(base_dir, "mobile-analytics")
 
     def __create_app_path_object(self, base_dir, path_details):
         return AppsPathResolver.AppPath(self.ti, base_dir, path_details['main_path'], path_details['size'], path_details['marker'], path_details['path_type'])
@@ -182,19 +199,5 @@ class AppsPathResolver(object):
 
     def get_app_engagement_estimation(self, in_or_out):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out), AppsPathResolver.apps_paths['app_engagement_estimation'])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
