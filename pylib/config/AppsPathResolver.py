@@ -130,6 +130,8 @@ class AppsPathResolver(object):
         def __get_date_suffix_by_type(self):
             if self.path_type == "daily":
                 return self.ti.year_month_day()
+            elif self.path_type == "monthly":
+                return self.ti.year_month()
             else:
                 raise Exception("AppsPathResolver: unknown path type.")
 
