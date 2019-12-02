@@ -746,17 +746,23 @@ class ContextualizedTasksInfra(object):
     def dates_range_paths(self, directory, lookback=None):
         return TasksInfra.dates_range_paths(directory, self.mode, self.date, lookback)
 
-    def latest_success_size_for_path(self, directory, lookback=None, min_size_bytes=None, sub_dir=""):
-        for path, date in reversed(self.dates_range_paths(directory, lookback)):
-            final_path = path + sub_dir
-            print("Try to find latest success in: " + final_path)
-            path_data_artifact = DataArtifact(final_path, required_size=min_size_bytes or 1)
-            check_size = path_data_artifact.check_size()
-            if check_size:
-                print("latest success date for %s is %s" % (directory, date))
-                return final_path, path_data_artifact.actual_size
+    def latest_success_size_for_path(self, directory, mode=None, lookback=None, min_size_bytes=None, sub_dir=""):
+
+        self.set_s3_keys()
+
+        mode = self.mode if mode is None else mode
+        print("mode: " + mode)
+        for path, date in reversed(TasksInfra.dates_range_paths(directory, mode, self.date, lookback)):
+                final_path = path + sub_dir
+                print("Try to find latest success in: " + final_path)
+                path_data_artifact = DataArtifact(final_path, required_size=min_size_bytes or 1)
+                check_size = path_data_artifact.check_size()
+                if check_size:
+                    print("latest success date for %s is %s" % (directory, date))
+                    return final_path, path_data_artifact.actual_size, date
         print("No latest success date found for %s" % directory)
-        return None, None
+        return None, None, None
+
 
     def latest_daily_success_date(self, directory, month_lookback, date=None):
         """
@@ -826,9 +832,19 @@ class ContextualizedTasksInfra(object):
         else:
             mark_success(directory)
 
+
+    # --- path partitions ----
     def full_partition_path(self):
         return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'],
                                               self.__get_common_args()['date'])
+
+    def get_date_suffix(self, date=None, mode=None, zero_padding=True):
+        m = mode or self.mode
+        dt = date or self.date
+        if m == 'snapshot':
+            return TasksInfra.year_month(dt, zero_padding)
+        else:
+            return TasksInfra.year_month_day(dt, zero_padding)
 
     def year_month_day(self, date=None, zero_padding=True):
         return TasksInfra.year_month_day(self.__get_common_args()['date'] if date is None else date,
@@ -856,8 +872,8 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.country_year_month(date, country,
                                              zero_padding=zero_padding)
 
-    def year_month(self, zero_padding=True):
-        return TasksInfra.year_month(self.__get_common_args()['date'],
+    def year_month(self, zero_padding=True, date=None):
+        return TasksInfra.year_month(self.__get_common_args()['date'] if date is None else date,
                                      zero_padding=zero_padding)
 
     def year_previous_month(self, zero_padding=True):
@@ -880,8 +896,12 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.year_month_next_day(self.__get_common_args()['date'],
                                               zero_padding=zero_padding)
 
+    def date_suffix_by_mode(self, date=None):
+        return self.year_month(date=date) if self.mode == 'snapshot' else self.year_month_day(date=date)
+
     ym = year_month
 
+    # --- dates ----
     def days_in_range(self):
         end_date = self.__get_common_args()['date']
         mode_type = self.__get_common_args()['mode_type']
@@ -894,21 +914,27 @@ class ContextualizedTasksInfra(object):
 
     # module is either 'mobile' or 'analytics'
     def run_spark2(self,
-                  main_class,
-                  module,
-                  queue,
-                  app_name,
-                  command_params,
-                  jars_from_lib=None,
-                  files=None,
-                  spark_configs=None,
-                  named_spark_args=None,
-                  determine_partitions_by_output=None,
-                  packages=None,
-                  managed_output_dirs=None,
-                  repositories=None):
+                   main_class,
+                   module,
+                   queue,
+                   app_name,
+                   command_params,
+                   jars_from_lib=None,
+                   files=None,
+                   spark_configs=None,
+                   named_spark_args=None,
+                   determine_partitions_by_output=None,
+                   packages=None,
+                   managed_output_dirs=None,
+                   repositories=None,
+                   java_opts=" -Xms16m"):
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
+
+        spark_submit_opts = os.getenv("SPARK_SUBMIT_OPTS")
+        if not spark_submit_opts:
+            spark_submit_opts = ""
+        os.environ["SPARK_SUBMIT_OPTS"] = spark_submit_opts + " " + java_opts
 
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
@@ -1280,7 +1306,7 @@ class ContextualizedTasksInfra(object):
         if self.dry_run:
             print("Avoiding partitions calculation, this is just a dry run! returning -1")
             return -1
-        path, size = self.latest_success_size_for_path(base_path)
+        path, size, success_date = self.latest_success_size_for_path(base_path)
         if size is None:
             print("Couldn't find a past valid path for partitions calculation, avoiding calculation")
             return None
@@ -1476,6 +1502,11 @@ class ContextualizedTasksInfra(object):
             min_size = 0
         return max(0,min_size)
 
+    def print_job_input_dict(self, dict):
+        print("Job input params: ")
+        for key, value in dict.items():
+            print("-%s %s" % (key, value))
+
     @property
     def base_dir(self):
         return self.__get_common_args()['base_dir']
@@ -1513,6 +1544,10 @@ class ContextualizedTasksInfra(object):
             if mode in default_mode_types:
                 return default_mode_types[mode]
         raise KeyError('unable to determine mode_type')
+
+    @property
+    def interval_delta(self):
+        return relativedelta(months=1) if self.mode == 'snapshot' else relativedelta(days=1)
 
     @property
     def date_suffix(self):
