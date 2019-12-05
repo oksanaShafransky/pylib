@@ -20,7 +20,7 @@ def parse_field(arr, start_idx, data_type):
     elif data_type == 'int':
         return 4, unpack('>i', arr[start_idx:start_idx + 4])[0]
     elif data_type == 'short':
-        return 4, unpack('>h', arr[start_idx:start_idx + 2])[0]
+        return 2, unpack('>h', arr[start_idx:start_idx + 2])[0]
     elif data_type == 'long':
         return 8, unpack('>q', arr[start_idx:start_idx + 8])[0]
     elif data_type == 'float':
