@@ -741,13 +741,14 @@ class ContextualizedTasksInfra(object):
     def dates_range_paths(self, directory, lookback=None):
         return TasksInfra.dates_range_paths(directory, self.mode, self.date, lookback)
 
-    def latest_success_size_for_path(self, directory, mode=None, lookback=None, min_size_bytes=None, sub_dir=""):
+    def latest_success_size_for_path(self, directory, mode=None, start_date=None, lookback=None, min_size_bytes=None, sub_dir=""):
 
         self.set_s3_keys()
 
         mode = self.mode if mode is None else mode
+        start_date = self.date if start_date is None else start_date
         print("mode: " + mode)
-        for path, date in reversed(TasksInfra.dates_range_paths(directory, mode, self.date, lookback)):
+        for path, date in reversed(TasksInfra.dates_range_paths(directory, mode, start_date, lookback)):
                 final_path = path + sub_dir
                 print("Try to find latest success in: " + final_path)
                 path_data_artifact = DataArtifact(final_path, required_size=min_size_bytes or 1)
