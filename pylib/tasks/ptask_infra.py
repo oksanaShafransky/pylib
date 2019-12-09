@@ -760,7 +760,7 @@ class ContextualizedTasksInfra(object):
                 check_size = path_data_artifact.check_size()
                 if check_size:
                     print("latest success date for %s is %s" % (directory, date))
-                    return final_path, path_data_artifact.actual_size, date
+                    return path_data_artifact.resolved_path, path_data_artifact.actual_size, date
         print("No latest success date found for %s" % directory)
         return None, None, None
 
