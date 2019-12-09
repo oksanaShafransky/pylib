@@ -112,7 +112,7 @@ class AppsPathResolver(object):
             'path_type': "daily"},
 
         'app_engagement_realnumbers': {
-            'main_path': "daily/estimate/app-engagement-realnumbers/estkey=AppCountryKey",
+            'main_path': "daily/estimate/app-engagement-realnumbers-tsv/estkey=AppCountryKey",
             'size': 100, 'marker': True, #TODO change size
             'path_type': "daily"}
     }
