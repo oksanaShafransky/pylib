@@ -42,7 +42,7 @@ class AppsPathResolver(object):
         'extractor_1010': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1010", 'size': 9e8,
                            'marker': True, 'path_type': "daily"},
 
-        'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 8e10, 'marker': True,
+        'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 7e10, 'marker': True,
                                          'path_type': "daily"},
 
         'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 2e9, 'marker': True,
