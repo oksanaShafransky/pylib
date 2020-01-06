@@ -1,5 +1,7 @@
 from pylib.tasks.data import DataArtifact, RangedDataArtifact
-
+GB = 1024**3
+MB = 1024**2
+KB = 1024
 
 def path_join(path, *paths):
     if path[0] != '/':
@@ -20,100 +22,101 @@ def path_join(path, *paths):
 
 
 class AppsPathResolver(object):
+
     def __init__(self, ti):
         self.ti = ti
 
     apps_paths = {
-        'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 1e9,
+        'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9*GB,
                                    'marker': True, 'path_type': "daily"},
 
-        'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 7e10,
+        'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 65*GB,
                            'marker': True, 'path_type': "daily"},
 
-        'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 2e9,
+        'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 1.8*GB,
                            'marker': True, 'path_type': "daily"},
 
-        'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 9e8,
+        'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 850*MB,
                            'marker': True, 'path_type': "daily"},
 
-        'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1009", 'size': 2e9,
+        'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1009", 'size': 1.8*GB,
                            'marker': True, 'path_type': "daily"},
 
-        'extractor_1010': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1010", 'size': 9e8,
+        'extractor_1010': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1010", 'size': 850*MB,
                            'marker': True, 'path_type': "daily"},
 
-        'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 7e10, 'marker': True,
+        'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 65*GB, 'marker': True,
                                          'path_type': "daily"},
 
-        'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 2e9, 'marker': True,
+        'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 1.8*GB, 'marker': True,
                                          'path_type': "daily"},
 
-        'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 1e9, 'marker': True,
+        'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 950*MB, 'marker': True,
                                          'path_type': "daily"},
 
-        'grouping_1009_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1009", 'size': 5e9, 'marker': True,
+        'grouping_1009_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1009", 'size': 4.6*GB, 'marker': True,
                                          'path_type': "daily"},
 
-        'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 2e11, 'marker': True,
+        'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 186*GB, 'marker': True,
                                          'path_type': "daily"},
 
         'agg_app_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=AppCountrySource1009Key",
-                                            'size': 1e9, 'marker': True,
+                                            'size': 950*MB, 'marker': True,
                                             'path_type': "daily"},
 
-        'agg_app_country_source_key': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 1e9,
+        'agg_app_country_source_key': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 950*MB,
                                        'marker': True,
                                        'path_type': "daily"},
 
-        'agg_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=CountrySource1009Key", 'size': 3e5,
+        'agg_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=CountrySource1009Key", 'size': 400*KB,
                                         'marker': True,
                                         'path_type': "daily"},
 
-        'agg_country_source_key': {'main_path': "daily/aggregations/aggKey=CountrySourceKey", 'size': 3e5,
+        'agg_country_source_key': {'main_path': "daily/aggregations/aggKey=CountrySourceKey", 'size': 400*KB,
                                    'marker': True,
                                    'path_type': "daily"},
 
         'agg_app_country_source_joined_key': {'main_path': "daily/aggregations/aggKey=AppCountrySourceJoinedKey",
-                                              'size': 8e9, 'marker': True,
+                                              'size': 7.4*GB, 'marker': True,
                                               'path_type': "daily"},
 
         'pre_estimate_app_country': {'main_path': "daily/pre-estimate/app-engagement/estkey=AppCountryKey",
-                                     'size': 4e8, 'marker': True,
+                                     'size': 380*MB, 'marker': True,
                                      'path_type': "daily"},
         'pre_estimate_1009_app_country': {'main_path': "daily/pre-estimate/app-engagement/estkey=AppCountry1009Key",
-                                          'size': 4e8, 'marker': True,
+                                          'size': 380*MB, 'marker': True,
                                           'path_type': "daily"},
 
         'time_series_estimation': {'main_path': "daily/time-series-weighted-predict",
-                                   'size': 9e8, 'marker': True,
+                                   'size': 850*MB, 'marker': True,
                                    'path_type': "daily"},
 
         'apps_for_analyze_decision': {'main_path': "daily/osm/apps_for_analyze_decision",
-                                      'size': 1e7, 'marker': True,
+                                      'size': 9.5*MB, 'marker': True,
                                       'path_type': "daily"},
 
         'app_engagement_estimation': {'main_path': "daily/estimate/app-engagement/estkey=AppCountryKey",
-                                      'size': 6e8, 'marker': True,
+                                      'size': 570*MB, 'marker': True,
                                       'path_type': "daily"},
 
         'real_numbers_adjustments_by_new_users': {
             'main_path': "monthly/android-real-numbers-v2/by-new-users/adjustments",
-            'size': 100, 'marker': True,
+            'size': 1*KB, 'marker': True,
             'path_type': "monthly"},
 
         'real_numbers_adjustments_by_active_users': {
             'main_path': "monthly/android-real-numbers-v2/by-active-users/adjustments",
-            'size': 100, 'marker': True,
+            'size': 1*KB, 'marker': True,
             'path_type': "monthly"},
 
         'app_downloads_alph': {
             'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey",
-            'size': 1e8, 'marker': True,
+            'size': 95*MB, 'marker': True,
             'path_type': "daily"},
 
         'app_engagement_realnumbers': {
             'main_path': "daily/estimate/app-engagement-realnumbers-tsv/estkey=AppCountryKey",
-            'size': 100, 'marker': True, #TODO change size
+            'size': 1*KB, 'marker': True, #TODO change size
             'path_type': "daily"}
     }
 
