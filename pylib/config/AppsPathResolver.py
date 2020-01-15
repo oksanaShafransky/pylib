@@ -66,7 +66,13 @@ class AppsPathResolver(object):
         self.ti = ti
         self.apps_paths = {
             # Daily
+            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 52 * GB,
+                              'marker': True, 'path_type': "daily"},
+
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
+                                       'marker': True, 'path_type': "daily"},
+
+            'app_country_source_day_hour_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceDayHourKey", 'size': 1 * GB,
                                        'marker': True, 'path_type': "daily"},
 
             'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 65 * GB,
@@ -191,6 +197,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_country_source_agg'])
 
+    def get_app_country_source_day_hour_agg(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['app_country_source_day_hour_agg'])
+
     def get_extractor_1001(self, in_or_out, path_prefix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1001'])
@@ -286,3 +296,8 @@ class AppsPathResolver(object):
     def get_app_engagement_realnumbers(self, in_or_out, path_prefix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_engagement_realnumbers'])
+
+    def get_apps_datapool(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['apps_datapool'])
+
