@@ -70,10 +70,6 @@ class AppsPathResolver(object):
     def __init__(self, ti):
         self.ti = ti
         self.apps_paths = {
-            # Scraping
-            'apps_info': {'main_path': "mobile/app-info", 'size': 9 * GB,
-                          'marker': True, 'path_type': "daily"},
-
             # Daily
             'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 52 * GB,
                               'marker': True, 'path_type': "daily"},
