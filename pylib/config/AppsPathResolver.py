@@ -71,6 +71,9 @@ class AppsPathResolver(object):
         self.ti = ti
         self.apps_paths = {
             # Daily
+            'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 200 * MB,
+                              'marker': True, 'path_type': "daily"},
+
             'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 52 * GB,
                               'marker': True, 'path_type': "daily"},
 
@@ -307,3 +310,7 @@ class AppsPathResolver(object):
     def get_apps_datapool(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['apps_datapool'], path_suffix)
+
+    def get_usage_patterns_estimate(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_estimate'], path_suffix)
