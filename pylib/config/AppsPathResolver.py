@@ -72,8 +72,6 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
-            'app_country_source_day_hour_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceDayHourKey", 'size': 1 * GB,
-                                       'marker': True, 'path_type': "daily"},
 
             'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 65 * GB,
                                'marker': True, 'path_type': "daily"},
@@ -109,6 +107,10 @@ class AppsPathResolver(object):
             'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 186 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
+
+            'agg_app_country_source_day_hour': {'main_path': "daily/aggregations/aggKey=AppCountrySourceDayHourKey",
+                                                'size': 1 * GB,
+                                                'marker': True, 'path_type': "daily"},
 
             'agg_app_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=AppCountrySource1009Key",
                                                 'size': 950 * MB, 'marker': True,
@@ -197,10 +199,6 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_country_source_agg'])
 
-    def get_app_country_source_day_hour_agg(self, in_or_out, path_prefix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['app_country_source_day_hour_agg'])
-
     def get_extractor_1001(self, in_or_out, path_prefix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1001'])
@@ -257,6 +255,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['agg_country_source_key'])
 
+    def get_agg_app_country_source_day_hour(self, in_or_out, path_prefix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['agg_app_country_source_day_hour'])
+
     def agg_app_country_source_joined_key(self, in_or_out, path_prefix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['agg_app_country_source_joined_key'])
@@ -300,4 +302,3 @@ class AppsPathResolver(object):
     def get_apps_datapool(self, in_or_out, path_prefix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['apps_datapool'])
-
