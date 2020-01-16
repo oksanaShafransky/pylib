@@ -177,8 +177,8 @@ class AppsPathResolver(object):
 
             'app_engagement_realnumbers': {
                 'main_path': "daily/estimate/app-engagement-realnumbers-tsv/estkey=AppCountryKey",
-                'size': 1 * KB, 'marker': True,  # TODO change size
-                'path_type': "snapshot/window"},
+                'size': 1.5 * GB, 'marker': True,
+                'path_type': "daily"},
             # Snapshot/Window
             'app_scores': {
                 'main_path': "%(mode)s/app-scores" % {'mode': self.ti.mode},
