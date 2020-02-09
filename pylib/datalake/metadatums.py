@@ -51,7 +51,6 @@ class MetadatumsClient(object):
         ret = client.publish(TopicArn=self.sns_topic, Message=json.dumps(message))
         print("posted new partition to sns (message id: {message_id})".format(message_id=ret['MessageId']))
 
-        #TODO wait for the partition to apear in metadatums
 
     def post_hbase_partition(self, table_name, branch, partition, table_full_name, skip_sns=False):
         """
@@ -68,8 +67,6 @@ class MetadatumsClient(object):
         else:
             assert self.sns_topic is not None, "sns topic not set"
             self.post_hbase_partition_sns(table_name, branch, partition, table_full_name)
-
-
 
 
 
