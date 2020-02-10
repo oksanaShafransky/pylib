@@ -6,7 +6,13 @@ from retry import retry
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 class MetadatumsClient(object):
 
-    #TODO document with examples 'arn:aws:sns:us-east-1:838192392483:production-metadatums'
+    """
+    create a metadatums client
+
+    Args:
+        metadatums_host: rest host for metadatums (example: metadatums-production.op-us-east-1.web-grid.int.similarweb.io)
+        sns_topic: topic for posting new partitions. - required only when performing "write" operations. (example: arn:aws:sns:us-east-1:838192392483:production-metadatums)
+    """
     def __init__(self, metadatums_host, sns_topic=None):
         self.metadatums_host = metadatums_host
         self.sns_topic = sns_topic
@@ -25,17 +31,16 @@ class MetadatumsClient(object):
             table_name=table_name
         )
 
-        res = requests.post(
-            request_url,
-            json={
-                'branch': branch,
-                'partition': partition,
-                'metadatum': {'table': table_full_name}
-            }
-        )
+        request_data = {
+            'branch': branch,
+            'partition': partition,
+            'metadatum': {'table': table_full_name}
+        }
+        print('posting to: {request_url}. payload: {request_data}'.format(request_url=request_url, request_data=request_data))
+        res = requests.post(request_url, json=request_data)
 
         print('Metadatums service response: {}'.format(res.text))
-        assert res.ok, "metadatums post request failed" #TODO print locals
+        assert res.ok, "metadatums post request failed.\nmetadatums servics {requst_url}"
 
     def post_hbase_partition_sns(self, table_name, branch, partition, table_full_name):
         client = boto3.client('sns')
@@ -61,6 +66,8 @@ class MetadatumsClient(object):
             branch: base branch - inheriting branches will be updated automatically (example: 0c04f38)
             partition: the collection's partition - represents the date (example: top_lists_last-28_19_07_14)
             table_full_name: The ectual table name in hbase (example: "0c04f38_top_lists_last-28_19_07_14)
+            skip_sns: default is False. if set to true, will post directly to metadatums service, bypassing the sns topic.
+            posting through sns is important when deploying production partitions. skip this step only if you know what you are doing
         """
         if skip_sns:
             self.post_hbase_partition_rest(table_name, branch, partition, table_full_name)
