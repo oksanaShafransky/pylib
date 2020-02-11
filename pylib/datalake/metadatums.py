@@ -39,8 +39,8 @@ class MetadatumsClient(object):
         print('posting to: {request_url}. payload: {request_data}'.format(request_url=request_url, request_data=request_data))
         res = requests.post(request_url, json=request_data)
 
-        print('Metadatums service response: {}'.format(res.text))
-        assert res.ok, "metadatums post request failed.\nmetadatums servics {requst_url}"
+        print('Metadatums service response:\n{}'.format(res.text))
+        res.raise_for_status()
 
     def post_hbase_partition_sns(self, table_name, branch, partition, table_full_name):
         client = boto3.client('sns')
