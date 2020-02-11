@@ -6,14 +6,15 @@ from retry import retry
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 class MetadatumsClient(object):
 
-    """
-    create a metadatums client
 
-    Args:
-        metadatums_host: rest host for metadatums (example: metadatums-production.op-us-east-1.web-grid.int.similarweb.io)
-        sns_topic: topic for posting new partitions. - required only when performing "write" operations. (example: arn:aws:sns:us-east-1:838192392483:production-metadatums)
-    """
     def __init__(self, metadatums_host, sns_topic=None):
+        """
+        create a metadatums client
+
+        Args:
+            metadatums_host: rest host for metadatums (example: metadatums-production.op-us-east-1.web-grid.int.similarweb.io)
+            sns_topic: topic for posting new partitions. - required only when performing "write" operations. (example: arn:aws:sns:us-east-1:838192392483:production-metadatums)
+        """
         self.metadatums_host = metadatums_host
         self.sns_topic = sns_topic
 
@@ -24,6 +25,46 @@ class MetadatumsClient(object):
             metadatums_host=sc.get_service_name(service_name='metadatums'),
             sns_topic=sc.get_service_name(service_name='metadatums-sns-topic')
         )
+
+    def get_hbase_table_name(self, table_name, branch, partition):
+        """
+        get the physical hbase tbale name for a given entry in metadatums
+
+        Args:
+            table_name: collection name in hbase (example: top_lists)
+            branch: branchstack branch (example: 0c04f38)
+            partition: the collection's partition - represents the date (example: top_lists_last-28_19_07_14)
+        """
+        request_url = 'http://{metadatums_host}/query'.format(
+            metadatums_host=self.metadatums_host
+        )
+
+        request_data = {
+            'query': {
+                'collection_type': 'hbase',
+                'branch': branch,
+                'collection_id': table_name,
+                'partition': partition
+            }
+        }
+        res = requests.get(request_url, json=request_data)
+        res.raise_for_status()
+
+        # filter out collection_id and branch because the backend does not do it yet
+        partitions = res.json()['partitions']['hbase']
+        selected_partitions = filter(
+            lambda p: p['branch'] == branch and
+                      p['collection_id'] == table_name and
+                      p['partition'] == partition,
+            partitions
+        )
+
+        # should be only one
+        assert len(selected_partitions) != 0, "metadatum not found for query: {query}".format(query=request_data)
+        assert len(selected_partitions) == 1, "duplicate metadatums found for query: {query}. results: {partitions}".format(
+            query=request_data, partitions=selected_partitions)
+
+        return selected_partitions[0]['metadatum']['table']
 
     def post_hbase_partition_rest(self, table_name, branch, partition, table_full_name):
         request_url = 'http://{metadatums_host}/collections/hbase/{table_name}/partitions'.format(
