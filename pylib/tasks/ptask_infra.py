@@ -604,24 +604,34 @@ class ContextualizedTasksInfra(object):
             print('snapshot exists')
 
     def run_distcp(self, source, target, mappers=20, overwrite=True):
+        if overwrite:
+            # delete dir - support both hdfs and s3
+            cmd = 'hadoop fs {jvm_opts} -rm -r -f {target_path}'.format(
+                jvm_opts=TasksInfra.add_jvm_options("", self.hadoop_configs),
+                target_path=target)
+
+            if self.dry_run:
+                print("Would have deleted %s" % target)
+            else:
+                print("Deleteing %s" % target)
+                self.run_bash(cmd)
+
         job_name_property = " -D'mapreduce.job.name=distcp {source} {target}'".format(source=source, target=target)
         curr_jvm_opts = copy(self.jvm_opts)
         curr_jvm_opts.update(self.hadoop_configs)
         jvm_opts = TasksInfra.add_jvm_options(job_name_property, curr_jvm_opts)
-        distcp_opts = "-m {mappers} ".format(mappers=mappers)
-        if overwrite:
-            if self.dry_run:
-                print("Dry run: would have deleted " + target)
-            else:
-                delete_dir(path=target)
-
+        distcp_opts = "-m {mappers}".format(mappers=mappers)
         cmd = 'hadoop distcp {jvm_opts} {distcp_opts} {source_path} {target_path}'.format(
             jvm_opts=jvm_opts,
             distcp_opts=distcp_opts,
             source_path=source,
             target_path=target
         )
-        self.run_bash(cmd)
+
+        if self.dry_run:
+            print("Would have run the following command: " + cmd)
+        else:
+            self.run_bash(cmd)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False, jvm_opts=None, default_num_reducers=200):
         command_params, jvm_opts = self.determine_mr_output_partitions(command_params, determine_reduces_by_output, jvm_opts, default_num_reducers)
