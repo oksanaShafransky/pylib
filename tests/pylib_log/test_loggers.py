@@ -54,4 +54,11 @@ class TestLog(object):
         # since previous messages where written to hte log during test, cant assume they will be 1,2,3. x,x+1,x+2 works
         assert is_num_seq(counts, 3)
 
+    def test_py4j_log_level(self, handler, monkeypatch):
+        logger = logging.getLogger('py4j')
+        monkeypatch.setattr(sys.stdout, 'write', handler.tell)
+        logger.info('py4j - you have been notified') # should be ignored because py4j log level is expected to be warn+
+        logger.warning('py4j - you have been warned')
+
+        assert len(set(handler.messages)) == 1  # there is some duplication of messages, so transforming to a set
 
