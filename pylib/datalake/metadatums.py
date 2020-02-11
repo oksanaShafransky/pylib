@@ -26,7 +26,7 @@ class MetadatumsClient(object):
         )
 
     def post_hbase_partition_rest(self, table_name, branch, partition, table_full_name):
-        request_url = '{metadatums_host}/collections/hbase/{table_name}/partitions'.format(
+        request_url = 'http://{metadatums_host}/collections/hbase/{table_name}/partitions'.format(
             metadatums_host=self.metadatums_host,
             table_name=table_name
         )
