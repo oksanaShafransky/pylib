@@ -1,9 +1,12 @@
 import requests
 import json
 import boto3
-from retry import retry
+import time
 
 from pylib.config.SnowflakeConfig import SnowflakeConfig
+
+
+METADATUMS_UPDATE_WAIT_TIME = 120 #time in seconds to wait for metadatums update to tke place
 
 class MetadatumsClient(object):
     def __init__(self, metadatums_host, sns_topic=None):
@@ -117,6 +120,15 @@ class MetadatumsClient(object):
             assert self.sns_topic is not None, "sns topic not set"
             self.post_hbase_partition_sns(table_name, branch, partition, table_full_name)
 
+        # wait for the partition to appear in metadatums
+        current_res = None
+        wait_start_time = time.time()
+        while current_res != table_full_name:
+            assert time.time() - wait_start_time < METADATUMS_UPDATE_WAIT_TIME, "timeout while waiting for metadatums to update"
+            time.sleep(10)
+            current_res = self.get_hbase_table_name(table_name, branch, partition)
+            print("waiting for the partition to appear in metadatums. (current respons: {})".format(current_res))
 
+        print("update complete")
 
 
