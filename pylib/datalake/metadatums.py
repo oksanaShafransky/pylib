@@ -4,9 +4,8 @@ import boto3
 from retry import retry
 
 from pylib.config.SnowflakeConfig import SnowflakeConfig
+
 class MetadatumsClient(object):
-
-
     def __init__(self, metadatums_host, sns_topic=None):
         """
         create a metadatums client
@@ -34,6 +33,8 @@ class MetadatumsClient(object):
             table_name: collection name in hbase (example: top_lists)
             branch: branchstack branch (example: 0c04f38)
             partition: the collection's partition - represents the date (example: top_lists_last-28_19_07_14)
+
+            :returns hbase table name. None if the requested metadateum does not exist
         """
         request_url = 'http://{metadatums_host}/query'.format(
             metadatums_host=self.metadatums_host
@@ -59,12 +60,13 @@ class MetadatumsClient(object):
             partitions
         )
 
-        # should be only one
-        assert len(selected_partitions) != 0, "metadatum not found for query: {query}".format(query=request_data)
-        assert len(selected_partitions) == 1, "duplicate metadatums found for query: {query}. results: {partitions}".format(
-            query=request_data, partitions=selected_partitions)
-
-        return selected_partitions[0]['metadatum']['table']
+        if len(selected_partitions) == 0:
+            return None
+        else:
+            # should be only one
+            assert len(selected_partitions) == 1, "duplicate metadatums found for query: {query}. results: {partitions}".format(
+                query=request_data, partitions=selected_partitions)
+            return selected_partitions[0]['metadatum']['table']
 
     def post_hbase_partition_rest(self, table_name, branch, partition, table_full_name):
         request_url = 'http://{metadatums_host}/collections/hbase/{table_name}/partitions'.format(
@@ -96,7 +98,6 @@ class MetadatumsClient(object):
 
         ret = client.publish(TopicArn=self.sns_topic, Message=json.dumps(message))
         print("posted new partition to sns (message id: {message_id})".format(message_id=ret['MessageId']))
-
 
     def post_hbase_partition(self, table_name, branch, partition, table_full_name, skip_sns=False):
         """
