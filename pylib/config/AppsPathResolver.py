@@ -72,7 +72,7 @@ class AppsPathResolver(object):
         self.apps_paths = {
             # Daily
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 400 * MB,
-                              'marker': True, 'path_type': "daily"},
+                                        'marker': True, 'path_type': "daily"},
 
             'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 52 * GB,
                               'marker': True, 'path_type': "daily"},
@@ -114,6 +114,13 @@ class AppsPathResolver(object):
             'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 186 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
+
+            'agg_app_country_delta_key': {'main_path': "daily/aggregations/aggKey=AppCountryDeltaKey",
+                                          'size': 800 * MB,  # TODO update.
+                                          'marker': True, 'path_type': "daily"},
+            'agg_country_delta_key': {'main_path': "daily/aggregations/aggKey=CountryDeltaKey",
+                                      'size': 1 * MB,  # TODO update.
+                                      'marker': True, 'path_type': "daily"},
 
             'agg_app_country_source_day_hour': {'main_path': "daily/aggregations/aggKey=AppCountrySourceDayHourKey",
                                                 'size': 120 * MB,
@@ -246,6 +253,14 @@ class AppsPathResolver(object):
     def get_grouping_1010_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1010_report_parquet'], path_suffix)
+
+    def get_agg_app_country_delta_key(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['agg_app_country_delta_key'], path_suffix)
+
+    def get_agg_country_delta_key(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['agg_country_delta_key'], path_suffix)
 
     def get_agg_app_country_source_1009_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
