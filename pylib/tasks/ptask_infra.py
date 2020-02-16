@@ -617,7 +617,9 @@ class ContextualizedTasksInfra(object):
 
     def run_distcp(self, source, target, mappers=20, overwrite=True):
         if overwrite:
-            # delete dir - support both hdfs and s3
+            # Delete dir - support both hdfs and s3.
+            # This command will use trash on hdfs (as opposed to running distcp -overwrite)
+
             self.delete_dir_common_fs(target)
 
         job_name_property = " -D'mapreduce.job.name=distcp {source} {target}'".format(source=source, target=target)
@@ -632,10 +634,7 @@ class ContextualizedTasksInfra(object):
             target_path=target
         )
 
-        if self.dry_run:
-            print("Would have run the following command: " + cmd)
-        else:
-            self.run_bash(cmd)
+        self.run_bash(cmd)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False, jvm_opts=None, default_num_reducers=200):
         command_params, jvm_opts = self.determine_mr_output_partitions(command_params, determine_reduces_by_output, jvm_opts, default_num_reducers)
