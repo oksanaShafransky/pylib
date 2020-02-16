@@ -88,7 +88,7 @@ class MetadatumsClient(object):
         print('Metadatums service response:\n{}'.format(res.text))
         res.raise_for_status()
 
-    def _post_hbase_partition_sns(self, table_name, branch, partition, table_full_name):
+    def _publish_hbase_partition_sns(self, table_name, branch, partition, table_full_name):
         client = boto3.client('sns')
 
         message = {
@@ -98,11 +98,10 @@ class MetadatumsClient(object):
             "partition": partition,
             "metadatums": {"table": table_full_name}
         }
-
         ret = client.publish(TopicArn=self.sns_topic, Message=json.dumps(message))
         print("posted new partition to sns (message id: {message_id})".format(message_id=ret['MessageId']))
 
-    def post_hbase_partition(self, table_name, branch, partition, table_full_name, skip_sns=False):
+    def publish_hbase_partition(self, table_name, branch, partition, table_full_name, skip_sns=False):
         """
         adds a metadatums record for hbase table
 
@@ -118,7 +117,7 @@ class MetadatumsClient(object):
             self._post_hbase_partition_rest(table_name, branch, partition, table_full_name)
         else:
             assert self.sns_topic is not None, "sns topic not set"
-            self._post_hbase_partition_sns(table_name, branch, partition, table_full_name)
+            self._publish_hbase_partition_sns(table_name, branch, partition, table_full_name)
 
         # wait for the partition to appear in metadatums
         current_res = None
