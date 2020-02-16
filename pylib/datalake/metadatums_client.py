@@ -71,7 +71,7 @@ class MetadatumsClient(object):
                 query=request_data, partitions=selected_partitions)
             return selected_partitions[0]['metadatum']['table']
 
-    def post_hbase_partition_rest(self, table_name, branch, partition, table_full_name):
+    def _post_hbase_partition_rest(self, table_name, branch, partition, table_full_name):
         request_url = 'http://{metadatums_host}/collections/hbase/{table_name}/partitions'.format(
             metadatums_host=self.metadatums_host,
             table_name=table_name
@@ -88,7 +88,7 @@ class MetadatumsClient(object):
         print('Metadatums service response:\n{}'.format(res.text))
         res.raise_for_status()
 
-    def post_hbase_partition_sns(self, table_name, branch, partition, table_full_name):
+    def _post_hbase_partition_sns(self, table_name, branch, partition, table_full_name):
         client = boto3.client('sns')
 
         message = {
@@ -115,10 +115,10 @@ class MetadatumsClient(object):
             posting through sns is important when deploying production partitions. skip this step only if you know what you are doing
         """
         if skip_sns:
-            self.post_hbase_partition_rest(table_name, branch, partition, table_full_name)
+            self._post_hbase_partition_rest(table_name, branch, partition, table_full_name)
         else:
             assert self.sns_topic is not None, "sns topic not set"
-            self.post_hbase_partition_sns(table_name, branch, partition, table_full_name)
+            self._post_hbase_partition_sns(table_name, branch, partition, table_full_name)
 
         # wait for the partition to appear in metadatums
         current_res = None
