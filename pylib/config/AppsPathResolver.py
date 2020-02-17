@@ -119,7 +119,7 @@ class AppsPathResolver(object):
                                           'size': 800 * MB,  # TODO update.
                                           'marker': True, 'path_type': "daily"},
             'agg_country_delta_key': {'main_path': "daily/aggregations/aggKey=CountryDeltaKey",
-                                      'size': 1 * MB,  # TODO update.
+                                      'size': 120 * KB,  # TODO update.
                                       'marker': True, 'path_type': "daily"},
 
             'agg_app_country_source_day_hour': {'main_path': "daily/aggregations/aggKey=AppCountrySourceDayHourKey",
