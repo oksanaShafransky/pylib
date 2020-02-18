@@ -130,4 +130,23 @@ class MetadatumsClient(object):
 
         print("update complete")
 
+    def delete_hbase_partition(self, table_name, branch, partition):
+        """
+        get the physical hbase tbale name for a given entry in metadatums
 
+        Args:
+            table_name: collection name in hbase (example: top_lists)
+            branch: branchstack branch (example: 0c04f38)
+            partition: the collection's partition - represents the date (example: top_lists_last-28_19_07_14)
+        """
+        res = requests.delete(
+            url='http://{}/collections/hbase/{}/partitions'.format(self.metadatums_host, table_name),
+            data=json.dumps({
+                'branch': branch,
+                'partition': partition
+            }),
+            headers={'Content-Type': 'application/json'}
+        )
+
+        res.raise_for_status()
+        print('Deleted table: {}, partition: {}, branch: {}'.format(table_name, partition, branch))
