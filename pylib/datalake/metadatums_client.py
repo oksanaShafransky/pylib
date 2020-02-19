@@ -9,7 +9,7 @@ from pylib.config.SnowflakeConfig import SnowflakeConfig
 METADATUMS_UPDATE_WAIT_TIME = 120 #time in seconds to wait for metadatums update to tke place
 
 class MetadatumsClient(object):
-    def __init__(self, metadatums_host, sns_topic=None):
+    def __init__(self, metadatums_host, sns_topic=None, sns_region=None):
         """
         create a metadatums client
 
@@ -19,13 +19,16 @@ class MetadatumsClient(object):
         """
         self.metadatums_host = metadatums_host
         self.sns_topic = sns_topic
+        self.sns_client = boto3.client('sns', region_name=sns_region)
 
     @staticmethod
     def from_snowflake(env=None):
         sc = SnowflakeConfig(env)
+        config = json.loads(sc.get_service_name(service_name='metadatums'))
         return MetadatumsClient(
-            metadatums_host=sc.get_service_name(service_name='metadatums'),
-            sns_topic=sc.get_service_name(service_name='metadatums-sns-topic')
+            metadatums_host=config.get('host'),
+            sns_topic=config.get('sns_topic'),
+            sns_region=config.get('sns_region')
         )
 
     def get_hbase_table_name(self, table_name, branch, partition):
@@ -97,7 +100,7 @@ class MetadatumsClient(object):
             "partition": partition,
             "metadatums": {"table": table_full_name}
         }
-        ret = boto3.client('sns').publish(TopicArn=self.sns_topic, Message=json.dumps(message))
+        ret = self.sns_client.publish(TopicArn=self.sns_topic, Message=json.dumps(message))
         print("posted new partition to sns (message id: {message_id})".format(message_id=ret['MessageId']))
 
     def publish_hbase_partition(self, table_name, branch, partition, table_full_name, skip_sns=False):
@@ -153,7 +156,7 @@ class MetadatumsClient(object):
             "branch": branch,
             "partition": partition
         }
-        ret = boto3.client('sns').publish(TopicArn=self.sns_topic, Message=json.dumps(message))
+        ret = self.sns_client.publish(TopicArn=self.sns_topic, Message=json.dumps(message))
         print("deleted partition via sns (message id: {message_id})".format(message_id=ret['MessageId']))
 
     def delete_hbase_partition(self, table_name, branch, partition, skip_sns=False):
