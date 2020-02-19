@@ -103,7 +103,7 @@ class MetadatumsClient(object):
         ret = self.sns_client.publish(TopicArn=self.sns_topic, Message=json.dumps(message))
         print("posted new partition to sns (message id: {message_id})".format(message_id=ret['MessageId']))
 
-    def publish_hbase_partition(self, table_name, branch, partition, table_full_name, skip_sns=False):
+    def publish_hbase_partition(self, table_name, branch, partition, table_full_name, skip_sns=True):
         """
         adds a metadatums record for hbase table
 
@@ -159,7 +159,7 @@ class MetadatumsClient(object):
         ret = self.sns_client.publish(TopicArn=self.sns_topic, Message=json.dumps(message))
         print("deleted partition via sns (message id: {message_id})".format(message_id=ret['MessageId']))
 
-    def delete_hbase_partition(self, table_name, branch, partition, skip_sns=False):
+    def delete_hbase_partition(self, table_name, branch, partition, skip_sns=True):
         """
         deletes a metadatums record for hbase table
 
