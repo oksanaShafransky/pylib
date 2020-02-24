@@ -24,7 +24,7 @@ class MetadatumsClient(object):
     @staticmethod
     def from_snowflake(env=None):
         sc = SnowflakeConfig(env)
-        config = json.loads(sc.get_service_name(service_name='metadatums'))
+        config = json.loads(sc.get_service_name(service_name='metadatums_new'))
         return MetadatumsClient(
             metadatums_host=config.get('host'),
             sns_topic=config.get('sns_topic'),
