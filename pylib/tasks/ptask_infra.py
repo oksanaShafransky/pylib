@@ -470,7 +470,7 @@ class ContextualizedTasksInfra(object):
                 if not (self.dry_run or self.checks_only):
                     self.delete_dir_common_fs(dir)
                 else:
-                    sys.stdout.write("Dry Run: would delete output folder: %s" % dir)
+                    sys.stdout.write("Dry Run: would delete output folder: %s\n" % dir)
 
     def is_valid_input_exists(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
