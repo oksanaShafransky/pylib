@@ -1468,7 +1468,9 @@ class ContextualizedTasksInfra(object):
     def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
         access_key = access or self.read_s3_configuration('access_key', section=section)
         self.hadoop_configs['fs.s3a.access.key'] = access_key
-        self.run_bash('aws configure set aws_access_key_id %s' % access_key)
+        command = 'aws configure set aws_access_key_id %s' % access_key
+        print("Setting aws access key: %s" % access_key)
+        self.ctx.run(command)
         if set_env_variables:
             os.environ["AWS_ACCESS_KEY_ID"] = access_key
 
