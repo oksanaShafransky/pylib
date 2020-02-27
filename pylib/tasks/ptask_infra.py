@@ -1468,17 +1468,19 @@ class ContextualizedTasksInfra(object):
     def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
         access_key = access or self.read_s3_configuration('access_key', section=section)
         self.hadoop_configs['fs.s3a.access.key'] = access_key
-        command = 'aws configure set aws_access_key_id %s' % access_key
+        command_access_key = 'aws configure set aws_access_key_id %s' % access_key
         print("Setting aws access key: %s" % access_key)
-        self.ctx.run(command)
+        self.ctx.run(command_access_key)
         if set_env_variables:
             os.environ["AWS_ACCESS_KEY_ID"] = access_key
 
         secret_key = secret or self.read_s3_configuration('secret_key', section=section)
         self.hadoop_configs['fs.s3a.secret.key'] = secret_key
-        self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
+        command_secret_key = 'aws configure set aws_secret_access_key %s' % secret_key
+        print("Setting aws secret key: %s" % secret_key)
+        self.ctx.run(command_secret_key)
         if set_env_variables:
-                os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
+            os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
 
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
