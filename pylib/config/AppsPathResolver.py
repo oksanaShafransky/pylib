@@ -77,6 +77,9 @@ class AppsPathResolver(object):
             'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 52 * GB,
                               'marker': True, 'path_type': "daily"},
 
+            'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey", 'size': 10 * MB,
+                              'marker': True, 'path_type': "daily"}, # TODO Fix
+
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
@@ -329,3 +332,7 @@ class AppsPathResolver(object):
     def get_usage_patterns_estimate(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_estimate'], path_suffix)
+
+    def get_downloads_alpha_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['downloads_alpha_estimation'], path_suffix)
