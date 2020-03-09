@@ -1135,7 +1135,7 @@ class ContextualizedTasksInfra(object):
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         if python_env is not None:
-            additional_configs = self._set_python_env(python_env, additional_configs)
+            additional_configs += self._set_python_env(python_env)
 
         final_py_files = py_files or []
 
@@ -1244,7 +1244,7 @@ class ContextualizedTasksInfra(object):
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         if python_env is not None:
-            additional_configs = self._set_python_env(python_env, additional_configs)
+            additional_configs += self._set_python_env(python_env)
 
         final_py_files = py_files or []
 
@@ -1390,12 +1390,13 @@ class ContextualizedTasksInfra(object):
         return additional_configs
 
     @staticmethod
-    def _set_python_env(python_env, additional_configs, env_path='s3a://similargroup-research/deploy/envs'):
-        additional_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
-        additional_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
-        additional_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
-        additional_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip/#{}"'.format(env_path, python_env, python_env, python_env)
-        return additional_configs
+    def _set_python_env(python_env, env_path='s3a://similargroup-research/deploy/envs'):
+        spark_configs = ''
+        spark_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        spark_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        spark_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip/#{}"'.format(env_path, python_env, python_env, python_env)
+        return spark_configs
 
     def set_hdfs_replication_factor(self, replication_factor):
         self.jvm_opts['dfs.replication'] = replication_factor
