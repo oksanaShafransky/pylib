@@ -1124,7 +1124,8 @@ class ContextualizedTasksInfra(object):
                      queue=None,
                      determine_partitions_by_output=False,
                      managed_output_dirs=None,
-                     additional_artifacts=None
+                     additional_artifacts=None,
+                     python_env=None
                      ):
 
         # delete output on start
@@ -1132,6 +1133,9 @@ class ContextualizedTasksInfra(object):
 
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
+
+        if python_env is not None:
+            additional_configs = self._set_python_env(python_env, additional_configs)
 
         final_py_files = py_files or []
 
@@ -1229,7 +1233,8 @@ class ContextualizedTasksInfra(object):
                      queue=None,
                      determine_partitions_by_output=False,
                      managed_output_dirs=None,
-                     additional_artifacts=None
+                     additional_artifacts=None,
+                     python_env=None
                      ):
 
         # delete output on start
@@ -1237,6 +1242,9 @@ class ContextualizedTasksInfra(object):
 
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
+
+        if python_env is not None:
+            additional_configs = self._set_python_env(python_env, additional_configs)
 
         final_py_files = py_files or []
 
@@ -1379,6 +1387,14 @@ class ContextualizedTasksInfra(object):
         if self.should_profile:
             additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
             additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
+        return additional_configs
+
+    @staticmethod
+    def _set_python_env(python_env, additional_configs, env_path='s3a://similargroup-research/deploy/envs'):
+        additional_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        additional_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        additional_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        additional_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip/#{}"'.format(env_path, python_env, python_env, python_env)
         return additional_configs
 
     def set_hdfs_replication_factor(self, replication_factor):
