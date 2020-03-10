@@ -193,7 +193,12 @@ class AppsPathResolver(object):
             'app_scores': {
                 'main_path': "%(mode)s/app-scores" % {'mode': self.ti.mode},
                 'size': 900 * MB, 'marker': True,  # Size close for both window ,and snapshot
-                'path_type': "daily"}
+                'path_type': "daily"},
+
+            #NSM TO OSM
+            'preprocessed_1010': {'main_path': "daily/osm/preprocessed-1010",
+                                         'size': 90 * GB, 'marker': True,
+                                         'path_type': "daily"}
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -336,3 +341,8 @@ class AppsPathResolver(object):
     def get_downloads_alpha_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_alpha_estimation'], path_suffix)
+
+    def get_preprocessed_1010(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['preprocessed_1010'], path_suffix)
+
