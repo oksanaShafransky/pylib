@@ -198,7 +198,15 @@ class AppsPathResolver(object):
             #NSM TO OSM
             'preprocessed_1010': {'main_path': "daily/osm/preprocessed-1010",
                                          'size': 90 * GB, 'marker': True,
-                                         'path_type': "daily"}
+                                         'path_type': "daily"},
+
+            'osm_ip_model': {'main_path': "monthly/osm-ip-model",
+                                  'size': 400 * MB, 'marker': True,
+                                  'path_type': "monthly"},
+
+            'domain_resolved_1010': {'main_path': "daily/osm/domain-resolved-1010",
+                             'size': 90 * GB, 'marker': True,
+                             'path_type': "daily"}
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -345,4 +353,14 @@ class AppsPathResolver(object):
     def get_preprocessed_1010(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['preprocessed_1010'], path_suffix)
+
+    def get_osm_ip_model(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['osm_ip_model'], path_suffix)
+
+    def get_domain_resolved_1010(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['domain_resolved_1010'], path_suffix)
+
+
 
