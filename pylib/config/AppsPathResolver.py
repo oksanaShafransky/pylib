@@ -117,6 +117,9 @@ class AppsPathResolver(object):
             'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 186 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
+            'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 1.5 * GB,
+                                             'marker': True,
+                                             'path_type': "daily"},
 
             'agg_app_country_delta_key': {'main_path': "daily/aggregations/aggKey=AppCountryDeltaKey",
                                           'size': 600 * MB,
@@ -269,6 +272,10 @@ class AppsPathResolver(object):
     def get_grouping_1010_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1010_report_parquet'], path_suffix)
+
+    def get_grouping_1015_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['grouping_1015_report_parquet'], path_suffix)
 
     def get_agg_app_country_delta_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
