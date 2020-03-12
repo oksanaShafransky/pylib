@@ -33,7 +33,8 @@ from redis import StrictRedis
 
 from pylib.hive.hive_runner import HiveProcessRunner, HiveParamBuilder
 from pylib.common.string_utils import random_str
-from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, delete_dir, get_file, file_exists, \
+from pylib.hadoop import hdfs_util
+from pylib.hadoop.hdfs_util import test_size, check_success, mark_success, get_file, file_exists, \
     create_client, directory_exists, copy_dir_from_path, calc_desired_partitions, get_size
 
 from pylib.hbase.hbase_utils import validate_records_per_region
@@ -467,9 +468,9 @@ class ContextualizedTasksInfra(object):
             assert isinstance(output_dirs, list), "Output dirs need to be passed in a list."
             for dir in output_dirs:
                 if not (self.dry_run or self.checks_only):
-                    delete_dir(dir)
+                    self.delete_dir_common_fs(dir)
                 else:
-                    sys.stdout.write("Dry Run: would deleted output folder: %s" % dir)
+                    sys.stdout.write("Dry Run: would delete output folder: %s\n" % dir)
 
     def is_valid_input_exists(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'input')
@@ -603,24 +604,36 @@ class ContextualizedTasksInfra(object):
 
             print('snapshot exists')
 
+    def delete_dir_common_fs(self, path):
+        cmd = 'hadoop fs {jvm_opts} -rm -r -f {target_path}'.format(
+            jvm_opts=TasksInfra.add_jvm_options("", self.hadoop_configs),
+            target_path=path)
+
+        if self.dry_run:
+            print("Would have deleted %s" % path)
+        else:
+            print("Deleteing %s" % path)
+            self.run_bash(cmd)
+
     def run_distcp(self, source, target, mappers=20, overwrite=True):
+        if overwrite:
+            # Delete dir - support both hdfs and s3.
+            # This command will use trash on hdfs (as opposed to running distcp -overwrite)
+
+            self.delete_dir_common_fs(target)
+
         job_name_property = " -D'mapreduce.job.name=distcp {source} {target}'".format(source=source, target=target)
         curr_jvm_opts = copy(self.jvm_opts)
         curr_jvm_opts.update(self.hadoop_configs)
         jvm_opts = TasksInfra.add_jvm_options(job_name_property, curr_jvm_opts)
-        distcp_opts = "-m {mappers} ".format(mappers=mappers)
-        if overwrite:
-            if self.dry_run:
-                print("Dry run: would have deleted " + target)
-            else:
-                delete_dir(path=target)
-
+        distcp_opts = "-m {mappers}".format(mappers=mappers)
         cmd = 'hadoop distcp {jvm_opts} {distcp_opts} {source_path} {target_path}'.format(
             jvm_opts=jvm_opts,
             distcp_opts=distcp_opts,
             source_path=source,
             target_path=target
         )
+
         self.run_bash(cmd)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False, jvm_opts=None, default_num_reducers=200):
@@ -1111,7 +1124,8 @@ class ContextualizedTasksInfra(object):
                      queue=None,
                      determine_partitions_by_output=False,
                      managed_output_dirs=None,
-                     additional_artifacts=None
+                     additional_artifacts=None,
+                     python_env=None
                      ):
 
         # delete output on start
@@ -1119,6 +1133,9 @@ class ContextualizedTasksInfra(object):
 
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
+
+        if python_env is not None:
+            additional_configs += self._set_python_env(python_env)
 
         final_py_files = py_files or []
 
@@ -1216,7 +1233,8 @@ class ContextualizedTasksInfra(object):
                      queue=None,
                      determine_partitions_by_output=False,
                      managed_output_dirs=None,
-                     additional_artifacts=None
+                     additional_artifacts=None,
+                     python_env=None
                      ):
 
         # delete output on start
@@ -1224,6 +1242,9 @@ class ContextualizedTasksInfra(object):
 
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
+
+        if python_env is not None:
+            additional_configs += self._set_python_env(python_env)
 
         final_py_files = py_files or []
 
@@ -1368,6 +1389,15 @@ class ContextualizedTasksInfra(object):
             additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
         return additional_configs
 
+    @staticmethod
+    def _set_python_env(python_env, env_path='s3a://similargroup-research/deploy/envs'):
+        spark_configs = ''
+        spark_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        spark_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        spark_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip/#{}"'.format(env_path, python_env, python_env, python_env)
+        return spark_configs
+
     def set_hdfs_replication_factor(self, replication_factor):
         self.jvm_opts['dfs.replication'] = replication_factor
 
@@ -1420,7 +1450,7 @@ class ContextualizedTasksInfra(object):
                 copy_dir_from_path(tmp_dir, final_output_dir)
                 self.assert_output_validity(final_output_dir)
                 assert get_size(tmp_dir) == get_size(final_output_dir)
-                delete_dir(tmp_dir)
+                hdfs_util.delete_dir(tmp_dir)
             else:
                 ret_val = False
         return ret_val
@@ -1455,15 +1485,19 @@ class ContextualizedTasksInfra(object):
     def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
         access_key = access or self.read_s3_configuration('access_key', section=section)
         self.hadoop_configs['fs.s3a.access.key'] = access_key
-        self.run_bash('aws configure set aws_access_key_id %s' % access_key)
+        command_access_key = 'aws configure set aws_access_key_id %s' % access_key
+        print("Setting aws access key: %s" % access_key)
+        self.ctx.run(command_access_key)
         if set_env_variables:
             os.environ["AWS_ACCESS_KEY_ID"] = access_key
 
         secret_key = secret or self.read_s3_configuration('secret_key', section=section)
         self.hadoop_configs['fs.s3a.secret.key'] = secret_key
-        self.run_bash('aws configure set aws_secret_access_key %s' % secret_key)
+        command_secret_key = 'aws configure set aws_secret_access_key %s' % secret_key
+        print("Setting aws secret key: %s" % secret_key)
+        self.ctx.run(command_secret_key)
         if set_env_variables:
-                os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
+            os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
 
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
