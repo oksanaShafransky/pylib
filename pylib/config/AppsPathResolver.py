@@ -206,6 +206,10 @@ class AppsPathResolver(object):
                                          'size': 90 * GB, 'marker': True,
                                          'path_type': "daily"},
 
+            'preprocessed_1015': {'main_path': "daily/osm/preprocessed-1015",
+                                  'size': 1 * KB, 'marker': True,
+                                  'path_type': "daily"}, #TODO fix
+
             'osm_ip_model': {'main_path': "monthly/osm-ip-model",
                                   'size': 400 * MB, 'marker': True,
                                   'path_type': "monthly"},
@@ -371,6 +375,10 @@ class AppsPathResolver(object):
     def get_preprocessed_1010(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['preprocessed_1010'], path_suffix)
+
+    def get_preprocessed_1015(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['preprocessed_1015'], path_suffix)
 
     def get_osm_ip_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
