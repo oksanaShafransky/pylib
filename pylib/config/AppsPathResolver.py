@@ -228,8 +228,12 @@ class AppsPathResolver(object):
                                      'path_type': "daily"},
 
             'domain_fg': {'main_path': "daily/osm/domain-fg",
-                             'size': 1 * MB * GB, 'marker': True,
-                             'path_type': "daily"}# TODO fix
+                             'size': 1 * MB, 'marker': True,
+                             'path_type': "daily"},# TODO fix
+
+            'osm_features': {'main_path': "daily/osm/features",
+                          'size': 1 * MB, 'marker': True,
+                          'path_type': "daily"}  # TODO fix
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -408,6 +412,10 @@ class AppsPathResolver(object):
     def get_domain_fg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['domain_fg'], path_suffix)
+
+    def get_osm_features(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['osm_features'], path_suffix)
 
 
 
