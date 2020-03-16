@@ -186,6 +186,11 @@ class AppsPathResolver(object):
                 'size': 1 * KB, 'marker': True,
                 'path_type': "monthly"},
 
+            'system_apps': {
+                'main_path': "daily/system-apps",
+                'size': 150 * KB, 'marker': True,
+                'path_type': "daily"},
+
             'app_downloads_alph': {
                 'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey",
                 'size': 95 * MB, 'marker': True,
@@ -220,7 +225,11 @@ class AppsPathResolver(object):
 
             'base_dataset': {'main_path': "daily/osm/base-dataset",
                                      'size': 10 * MB * GB, 'marker': True,
-                                     'path_type': "daily"}
+                                     'path_type': "daily"},
+
+            'domain_fg': {'main_path': "daily/osm/domain-fg",
+                             'size': 1 * MB * GB, 'marker': True,
+                             'path_type': "daily"}# TODO fix
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -352,6 +361,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['real_numbers_adjustments_by_active_users'], path_suffix)
 
+    def get_system_apps(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['system_apps'], path_suffix)
+
     def get_app_downloads_alph(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_downloads_alph'], path_suffix)
@@ -391,6 +404,11 @@ class AppsPathResolver(object):
     def get_base_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['base_dataset'], path_suffix)
+
+    def get_domain_fg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['domain_fg'], path_suffix)
+
 
 
 
