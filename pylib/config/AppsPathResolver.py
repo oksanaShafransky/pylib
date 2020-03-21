@@ -233,6 +233,14 @@ class AppsPathResolver(object):
 
             'osm_features': {'main_path': "daily/osm/features",
                           'size': 1 * MB, 'marker': True,
+                          'path_type': "daily"},  # TODO fix
+
+            'nsm_model': {'main_path': "daily/osm/nsm_model",
+              'size': 1 * KB, 'marker': False,
+              'path_type': "daily"},  # TODO fix
+
+            'nsm_to_osm_predictions': {'main_path': "daily/osm/predictions",
+                          'size': 1 * KB, 'marker': True,
                           'path_type': "daily"}  # TODO fix
         }
 
@@ -416,6 +424,14 @@ class AppsPathResolver(object):
     def get_osm_features(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['osm_features'], path_suffix)
+
+    def get_nsm_model(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['nsm_model'], path_suffix)
+
+    def get_nsm_to_osm_predictions(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['nsm_to_osm_predictions'], path_suffix)
 
 
 
