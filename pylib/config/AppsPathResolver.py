@@ -245,7 +245,11 @@ class AppsPathResolver(object):
 
             'nsm_test_dataset': {'main_path': "daily/osm/test_dataset",
                                        'size': 1 * KB, 'marker': True,
-                                       'path_type': "daily"}  # TODO fix
+                                       'path_type': "daily"},  # TODO fix
+
+            'osm_predictions_not_fixed': {'main_path': "daily/osm/predictions_not_fixed",
+                                       'size': 1 * KB, 'marker': True,
+                                       'path_type': "daily"},  # TODO fix
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -440,6 +444,12 @@ class AppsPathResolver(object):
     def get_nsm_test_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['nsm_test_dataset'], path_suffix)
+
+    #Temp
+    def get_osm_predictions_not_fixed(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['osm_predictions_not_fixed'], path_suffix)
+
 
 
 
