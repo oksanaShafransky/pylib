@@ -74,7 +74,7 @@ class AppsPathResolver(object):
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 400 * MB,
                                         'marker': True, 'path_type': "daily"},
 
-            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 52 * GB,
+            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 45 * GB,
                               'marker': True, 'path_type': "daily"},
 
             'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey", 'size': 10 * MB,
