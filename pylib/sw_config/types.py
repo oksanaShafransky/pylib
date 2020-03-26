@@ -5,6 +5,7 @@ class Purposes(object):
     Ingest = 'ingest'
     WebLocal = 'local'
     Scraping = 'scraping'
+    DI = 'di'
 
     @staticmethod
     def get_web_purpose(env):
