@@ -132,7 +132,7 @@ class AppsPathResolver(object):
                                       'marker': True, 'path_type': "daily"},
 
             'agg_app_country_source_day_hour': {'main_path': "daily/aggregations/aggKey=AppCountrySourceDayHourKey",
-                                                'size': 100 * MB,
+                                                'size': 50 * MB,
                                                 'marker': True, 'path_type': "daily"},
 
             'agg_app_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=AppCountrySource1009Key",
