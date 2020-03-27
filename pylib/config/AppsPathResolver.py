@@ -71,7 +71,7 @@ class AppsPathResolver(object):
         self.ti = ti
         self.apps_paths = {
             # Daily
-            'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 400 * MB,
+            'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 200 * MB,
                                         'marker': True, 'path_type': "daily"},
 
             'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 45 * GB,
