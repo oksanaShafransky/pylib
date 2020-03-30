@@ -92,6 +92,9 @@ class AppsPathResolver(object):
             'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 850 * MB,
                                'marker': True, 'path_type': "daily"},
 
+            'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 0 * MB,
+                               'marker': True, 'path_type': "daily"}, # TODO decide about size
+
             'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1009", 'size': 100 * MB,
                                'marker': True, 'path_type': "daily"},
 
@@ -110,6 +113,10 @@ class AppsPathResolver(object):
                                              'path_type': "daily"},
 
             'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 950 * MB,
+                                             'marker': True,
+                                             'path_type': "daily"},
+
+            'grouping_1008_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1008", 'size': 200 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
@@ -285,6 +292,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1005'], path_suffix)
 
+    def get_extractor_1008(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_1008'], path_suffix)
+
     def get_extractor_1009(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1009'], path_suffix)
@@ -308,6 +319,10 @@ class AppsPathResolver(object):
     def get_grouping_1005_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1005_report_parquet'], path_suffix)
+
+    def get_grouping_1008_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['grouping_1008_report_parquet'], path_suffix)
 
     def get_grouping_1009_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
