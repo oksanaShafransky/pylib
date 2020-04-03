@@ -6,6 +6,7 @@ class Purposes(object):
     WebLocal = 'local'
     Scraping = 'scraping'
     DI = 'di'
+    DataFactory = 'df'
 
     @staticmethod
     def get_web_purpose(env):
