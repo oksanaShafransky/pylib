@@ -92,8 +92,8 @@ class AppsPathResolver(object):
             'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 850 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 0 * MB,
-                               'marker': True, 'path_type': "daily"}, # TODO decide about size
+            'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 50 * MB,
+                               'marker': True, 'path_type': "daily"},
 
             'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1009", 'size': 100 * MB,
                                'marker': True, 'path_type': "daily"},
@@ -231,7 +231,7 @@ class AppsPathResolver(object):
                              'path_type': "daily"},
 
             'base_dataset': {'main_path': "daily/osm/base-dataset",
-                                     'size': 8 * MB, 'marker': True,
+                                     'size': 6 * MB, 'marker': True,
                                      'path_type': "daily"},
 
             'domain_fg': {'main_path': "daily/osm/domain-fg",
