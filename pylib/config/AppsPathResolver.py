@@ -508,10 +508,13 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_to_osm_predictions'], path_suffix)
 
-
     def get_nsm_test_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['nsm_test_dataset'], path_suffix)
+
+    def get_usage_test_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_test_dataset'], path_suffix)
 
     #Temp
     def get_osm_predictions_not_fixed(self, in_or_out, path_prefix=None, path_suffix=None):
