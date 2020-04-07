@@ -74,7 +74,7 @@ class AppsPathResolver(object):
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 200 * MB,
                                         'marker': True, 'path_type': "daily"},
 
-            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 39 * GB,
+            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 32 * GB,
                               'marker': True, 'path_type': "daily"},
 
             'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey", 'size': 10 * MB,
@@ -89,11 +89,11 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 500 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 850 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 400 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 0 * MB,
-                               'marker': True, 'path_type': "daily"}, # TODO decide about size
+            'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 50 * MB,
+                               'marker': True, 'path_type': "daily"},
 
             'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1009", 'size': 100 * MB,
                                'marker': True, 'path_type': "daily"},
@@ -108,11 +108,11 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 0.8 * GB,
+            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 600 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 950 * MB,
+            'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 600 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
@@ -235,7 +235,7 @@ class AppsPathResolver(object):
                              'path_type': "daily"},
 
             'base_dataset': {'main_path': "daily/osm/base-dataset",
-                                     'size': 8 * MB, 'marker': True,
+                                     'size': 6 * MB, 'marker': True,
                                      'path_type': "daily"},
 
             'domain_fg': {'main_path': "daily/osm/domain-fg",
