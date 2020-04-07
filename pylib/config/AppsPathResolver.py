@@ -238,6 +238,10 @@ class AppsPathResolver(object):
                                      'size': 6 * MB, 'marker': True,
                                      'path_type': "daily"},
 
+            'usage_base_dataset': {'main_path': "daily/osm_usage/base-dataset",
+                             'size': 6 * MB, 'marker': True,
+                             'path_type': "daily"},
+
             'domain_fg': {'main_path': "daily/osm/domain-fg",
                              'size': 800 * KB, 'marker': True,
                              'path_type': "daily"},# TODO fix
@@ -467,6 +471,10 @@ class AppsPathResolver(object):
     def get_base_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['base_dataset'], path_suffix)
+
+    def get_usage_base_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_base_dataset'], path_suffix)
 
     def get_domain_fg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
