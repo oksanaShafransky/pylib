@@ -239,7 +239,7 @@ class AppsPathResolver(object):
                                      'path_type': "daily"},
 
             'usage_base_dataset': {'main_path': "daily/osm_usage/base-dataset",
-                             'size': 6 * MB, 'marker': True,
+                             'size': 1 * KB, 'marker': True,
                              'path_type': "daily"},
 
             'domain_fg': {'main_path': "daily/osm/domain-fg",
