@@ -243,11 +243,11 @@ class AppsPathResolver(object):
                              'path_type': "daily"},
 
             'domain_fg': {'main_path': "daily/osm/domain-fg",
-                             'size': 800 * KB, 'marker': True,
+                             'size': 400 * KB, 'marker': True,
                              'path_type': "daily"},# TODO fix
 
             'usage_domain_fg': {'main_path': "daily/osm_usage/domain-fg",
-                          'size': 800 * KB, 'marker': True,
+                          'size': 400 * KB, 'marker': True,
                           'path_type': "daily"},  # TODO fix
 
             'osm_features': {'main_path': "daily/osm/features",
