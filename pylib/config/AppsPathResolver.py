@@ -74,7 +74,7 @@ class AppsPathResolver(object):
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 200 * MB,
                                         'marker': True, 'path_type': "daily"},
 
-            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 39 * GB,
+            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 32 * GB,
                               'marker': True, 'path_type': "daily"},
 
             'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey", 'size': 10 * MB,
@@ -83,17 +83,17 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 40 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 30 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 500 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 850 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 400 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 0 * MB,
-                               'marker': True, 'path_type': "daily"}, # TODO decide about size
+            'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 50 * MB,
+                               'marker': True, 'path_type': "daily"},
 
             'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1009", 'size': 100 * MB,
                                'marker': True, 'path_type': "daily"},
@@ -104,15 +104,15 @@ class AppsPathResolver(object):
             'extractor_1015': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1015", 'size': 110 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 40 * GB,
+            'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 30 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 0.8 * GB,
+            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 600 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 950 * MB,
+            'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 600 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
@@ -124,7 +124,7 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 120 * GB,
+            'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 80 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
             'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 1 * GB,
@@ -200,7 +200,7 @@ class AppsPathResolver(object):
 
             'app_downloads_alph': {
                 'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey",
-                'size': 95 * MB, 'marker': True,
+                'size': 80 * MB, 'marker': True,
                 'path_type': "daily"},
 
             'app_engagement_realnumbers': {
@@ -222,37 +222,65 @@ class AppsPathResolver(object):
                                   'size': 1 * KB, 'marker': True,
                                   'path_type': "daily"}, #TODO fix
 
+            'preprocessed_1008': {'main_path': "daily/osm_usage/preprocessed-1008",
+                                  'size': 1 * KB, 'marker': True,
+                                  'path_type': "daily"},  # TODO fix
+
             'osm_ip_model': {'main_path': "monthly/osm-ip-model",
                                   'size': 400 * MB, 'marker': True,
                                   'path_type': "monthly"},
 
             'domain_resolved_1010': {'main_path': "daily/osm/domain-resolved-1010",
-                             'size': 90 * GB, 'marker': True,
+                             'size': 70 * GB, 'marker': True,
                              'path_type': "daily"},
 
             'base_dataset': {'main_path': "daily/osm/base-dataset",
-                                     'size': 8 * MB, 'marker': True,
+                                     'size': 6 * MB, 'marker': True,
                                      'path_type': "daily"},
 
+            'usage_base_dataset': {'main_path': "daily/osm_usage/base-dataset",
+                             'size': 1 * KB, 'marker': True,
+                             'path_type': "daily"},
+
             'domain_fg': {'main_path': "daily/osm/domain-fg",
-                             'size': 800 * KB, 'marker': True,
+                             'size': 400 * KB, 'marker': True,
                              'path_type': "daily"},# TODO fix
+
+            'usage_domain_fg': {'main_path': "daily/osm_usage/domain-fg",
+                          'size': 400 * KB, 'marker': True,
+                          'path_type': "daily"},  # TODO fix
 
             'osm_features': {'main_path': "daily/osm/features",
                           'size': 1 * MB, 'marker': True,
                           'path_type': "daily"},  # TODO fix
 
+            'usage_osm_features': {'main_path': "daily/osm_usage/features",
+                             'size': 1 * MB, 'marker': True,
+                             'path_type': "daily"},  # TODO fix
+
             'nsm_model': {'main_path': "daily/osm/nsm_model",
               'size': 1 * KB, 'marker': False,
               'path_type': "daily"},  # TODO fix
+
+            'usage_osm_model': {'main_path': "daily/osm_usage/usage_osm_model",
+                          'size': 1 * KB, 'marker': False,
+                          'path_type': "daily"},  # TODO fix
 
             'nsm_to_osm_predictions': {'main_path': "daily/osm/predictions",
                           'size': 1 * KB, 'marker': True,
                           'path_type': "daily"}, # TODO fix
 
+            'usage_to_osm_predictions': {'main_path': "daily/osm_usage/predictions",
+                                       'size': 1 * KB, 'marker': True,
+                                       'path_type': "daily"},  # TODO fix
+
             'nsm_test_dataset': {'main_path': "daily/osm/test_dataset",
                                        'size': 1 * KB, 'marker': True,
                                        'path_type': "daily"},  # TODO fix
+
+            'usage_test_dataset': {'main_path': "daily/osm_usage/test_dataset",
+                                   'size': 1 * KB, 'marker': True,
+                                   'path_type': "daily"},  # TODO fix
 
             'osm_predictions_not_fixed': {'main_path': "daily/osm/predictions_not_fixed",
                                        'size': 1 * KB, 'marker': True,
@@ -428,6 +456,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['preprocessed_1015'], path_suffix)
 
+    def get_preprocessed_1008(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['preprocessed_1008'], path_suffix)
+
     def get_osm_ip_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                                 self.apps_paths['osm_ip_model'], path_suffix)
@@ -440,25 +472,49 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['base_dataset'], path_suffix)
 
+    def get_usage_base_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_base_dataset'], path_suffix)
+
     def get_domain_fg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['domain_fg'], path_suffix)
+
+    def get_usage_domain_fg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_domain_fg'], path_suffix)
 
     def get_osm_features(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['osm_features'], path_suffix)
 
+    def get_usage_osm_features(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_osm_features'], path_suffix)
+
     def get_nsm_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['nsm_model'], path_suffix)
+
+    def get_usage_osm_model(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_osm_model'], path_suffix)
 
     def get_nsm_to_osm_predictions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['nsm_to_osm_predictions'], path_suffix)
 
+    def get_usage_to_osm_predictions(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_to_osm_predictions'], path_suffix)
+
     def get_nsm_test_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['nsm_test_dataset'], path_suffix)
+
+    def get_usage_test_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_test_dataset'], path_suffix)
 
     #Temp
     def get_osm_predictions_not_fixed(self, in_or_out, path_prefix=None, path_suffix=None):
