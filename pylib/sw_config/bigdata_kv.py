@@ -14,7 +14,8 @@ snowflake_keys = {
     Purposes.DataFactory: 'df-consul-kv'
 }
 
-def get_kv(purpose=Purposes.BigData, snowflake_env=None, append_prefix=True):
+
+def get_kv(purpose=Purposes.BigData, snowflake_env=None, append_prefix=True, dc=None):
     # import snowflake config in function to allow mock in unit tests
     from pylib.config.SnowflakeConfig import SnowflakeConfig
     consul_snowflake_key = snowflake_keys[purpose]
@@ -23,7 +24,8 @@ def get_kv(purpose=Purposes.BigData, snowflake_env=None, append_prefix=True):
 
     basic_kv = ConsulProxy(
         server=consul_properties['server'],
-        token=consul_properties.get('token')  # user .get to allow None token
+        token=consul_properties.get('token'),  # user .get to allow None token
+        dc=dc
     )
 
     if not append_prefix or 'prefix' not in consul_properties:
