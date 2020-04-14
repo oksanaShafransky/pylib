@@ -71,6 +71,9 @@ class AppsPathResolver(object):
         self.ti = ti
         self.apps_paths = {
             # Daily
+            'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KB,
+                              'marker': True, 'path_type': "daily"},
+
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 200 * MB,
                                         'marker': True, 'path_type': "daily"},
 
@@ -367,6 +370,10 @@ class AppsPathResolver(object):
     def get_agg_app_country_delta_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['agg_app_country_delta_key'], path_suffix)
+
+    def get_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['sfa'], path_suffix)
 
     def get_agg_country_delta_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
