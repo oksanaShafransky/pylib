@@ -7,9 +7,9 @@ logging.getLogger('consulate').setLevel(logging.WARNING)
 
 
 class ConsulProxy(KeyValueProxy):
-    def __init__(self, server, token=None):
+    def __init__(self, server, token=None, dc=None):
         super(ConsulProxy, self).__init__()
-        self.client = consulate.Consul(server, token=token)
+        self.client = consulate.Consul(server, token=token, datacenter=dc)
 
     def get(self, key):
         return self.client.kv.get(str(key))

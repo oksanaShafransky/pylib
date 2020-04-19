@@ -9,9 +9,10 @@ import pylib.sw_config.consul
 
 
 class ConsulProxyMock(object):
-    def __init__(self, server, token):
+    def __init__(self, server, token, dc):
         self.server = server
         self.token = token
+        self.dc = dc
 
 
 pylib.sw_config.consul.ConsulProxy = ConsulProxyMock
