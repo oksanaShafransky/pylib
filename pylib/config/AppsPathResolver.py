@@ -130,7 +130,7 @@ class AppsPathResolver(object):
             'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 80 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
-            'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 1 * GB,
+            'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 500 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
@@ -243,7 +243,7 @@ class AppsPathResolver(object):
                              'path_type': "daily"},
 
             'base_dataset': {'main_path': "daily/osm/base-dataset",
-                                     'size': 6 * MB, 'marker': True,
+                                     'size': 3 * MB, 'marker': True,
                                      'path_type': "daily"},
 
             'usage_base_dataset': {'main_path': "daily/osm_usage/base-dataset",
