@@ -134,7 +134,7 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'agg_app_country_source_days_back':{'main_path': "daily/aggregations/aggKey=AppCountryDeltaKey",
+            'agg_app_country_source_days_back':{'main_path': "daily/aggregations/aggKey=AppCountrySourceDaysbackKey",
                                           'size': 150 * MB,
                                           'marker': True, 'path_type': "daily"},
 
