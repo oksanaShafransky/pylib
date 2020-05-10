@@ -54,6 +54,10 @@ class AppsPathResolver(object):
                                 required_size=self.required_size,
                                 required_marker=self.required_marker)
 
+        def get_ranged_data_artifact(self, dates):
+            return RangedDataArtifact(self.full_base_path, dates,
+                                      required_size=self.required_size, required_marker=self.required_marker)
+
         # Rerurn base path without date_suffix
         def get_base_path(self):
             return self.full_base_path
