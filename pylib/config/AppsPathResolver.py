@@ -81,7 +81,7 @@ class AppsPathResolver(object):
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 200 * MB,
                                         'marker': True, 'path_type': "daily"},
 
-            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 32 * GB,
+            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 16 * GB,
                               'marker': True, 'path_type': "daily"},
 
             'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey", 'size': 10 * MB,
@@ -90,13 +90,13 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 30 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 15 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 500 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 400 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 50 * MB,
@@ -123,7 +123,7 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1008_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1008", 'size': 200 * MB,
+            'grouping_1008_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1008", 'size': 100 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
@@ -134,13 +134,18 @@ class AppsPathResolver(object):
             'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 80 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
-            'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 1 * GB,
+            'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 500 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
+
+            'agg_app_country_source_days_back':{'main_path': "daily/aggregations/aggKey=AppCountrySourceDaysbackKey",
+                                          'size': 150 * MB,
+                                          'marker': True, 'path_type': "daily"},
 
             'agg_app_country_delta_key': {'main_path': "daily/aggregations/aggKey=AppCountryDeltaKey",
                                           'size': 600 * MB,
                                           'marker': True, 'path_type': "daily"},
+
             'agg_country_delta_key': {'main_path': "daily/aggregations/aggKey=CountryDeltaKey",
                                       'size': 120 * KB,  # TODO update.
                                       'marker': True, 'path_type': "daily"},
@@ -207,7 +212,7 @@ class AppsPathResolver(object):
 
             'app_downloads_alph': {
                 'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey",
-                'size': 80 * MB, 'marker': True,
+                'size': 40 * MB, 'marker': True,
                 'path_type': "daily"},
 
             'app_engagement_realnumbers': {
@@ -242,7 +247,7 @@ class AppsPathResolver(object):
                              'path_type': "daily"},
 
             'base_dataset': {'main_path': "daily/osm/base-dataset",
-                                     'size': 6 * MB, 'marker': True,
+                                     'size': 3 * MB, 'marker': True,
                                      'path_type': "daily"},
 
             'usage_base_dataset': {'main_path': "daily/osm_usage/base-dataset",
@@ -402,6 +407,10 @@ class AppsPathResolver(object):
     def get_agg_app_country_source_day_hour(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['agg_app_country_source_day_hour'], path_suffix)
+
+    def get_agg_app_country_source_days_back(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['agg_app_country_source_days_back'], path_suffix)
 
     def agg_app_country_source_joined_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
