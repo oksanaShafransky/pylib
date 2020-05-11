@@ -425,4 +425,4 @@ class TestContextualizedTasksInfra(object):
             assert TasksInfra.table_suffix(dt, 'snapshot', 'monthly') == '_19_03'
             assert TasksInfra.table_suffix(dt, 'daily', 'daily') == '_19_03_22'
             assert TasksInfra.table_suffix(dt, 'mutable', 'daily') == ''
-            assert TasksInfra.table_suffix(dt, 'window', 'last-28') == '_last-28-19_03_22'
+            assert TasksInfra.table_suffix(dt, 'window', 'last-28') == '_last-28_19_03_22'
