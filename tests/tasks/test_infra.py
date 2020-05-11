@@ -420,3 +420,9 @@ class TestContextualizedTasksInfra(object):
             ymd = TasksInfra.year_month_next_day(d, zero_padding=False)
             assert ymd == 'year=17/month=1/day=1'
 
+        def test_table_suffix(self):
+            dt = datetime.datetime(2019, 3, 22)
+            assert TasksInfra.table_suffix(dt, 'snapshot', 'monthly') == '_19_03'
+            assert TasksInfra.table_suffix(dt, 'daily', 'daily') == '_19_03_22'
+            assert TasksInfra.table_suffix(dt, 'mutable', 'daily') == ''
+            assert TasksInfra.table_suffix(dt, 'window', 'last-28') == '_last-28-19_03-22'
