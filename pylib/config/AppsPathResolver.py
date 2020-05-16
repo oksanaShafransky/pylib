@@ -56,7 +56,8 @@ class AppsPathResolver(object):
 
         def get_ranged_data_artifact(self, dates):
             return RangedDataArtifact(self.full_base_path, dates,
-                                      required_size=self.required_size, required_marker=self.required_marker)
+                                      required_size=self.required_size,
+                                      required_marker=self.required_marker)
 
         # Rerurn base path without date_suffix
         def get_base_path(self):
@@ -115,7 +116,7 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 600 * MB,
+            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 400 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
