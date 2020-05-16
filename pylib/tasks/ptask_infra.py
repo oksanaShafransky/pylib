@@ -190,6 +190,18 @@ class TasksInfra(object):
     }
 
     @staticmethod
+    def table_suffix(date, mode, mode_type):
+        if mode == 'snapshot':
+            return '_%s' % date.strftime('%y_%m')
+        elif mode == 'daily':
+            return '_%s' % date.strftime('%y_%m_%d')
+        elif mode == 'mutable':
+            return ''
+        else:
+            return '_%s_%s' % (mode_type, date.strftime('%y_%m_%d'))
+
+
+    @staticmethod
     def add_command_params(command, command_params, value_wrap='', *positional):
         ans = command + ' ' + ' '.join(positional)
 
@@ -1595,14 +1607,7 @@ class ContextualizedTasksInfra(object):
     # suffix for hbase tables
     @property
     def table_suffix(self):
-        if self.mode == 'snapshot':
-            return '_%s' % self.date.strftime('%y_%m')
-        elif self.mode == 'daily':
-            return '_%s' % self.date.strftime('%y_%m_%d')
-        elif self.mode == 'mutable':
-            return ''
-        else:
-            return '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
+        return TasksInfra.table_suffix(self.date, self.mode, self.mode_type)
 
     @property
     def date_title(self):
