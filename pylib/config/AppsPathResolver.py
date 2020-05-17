@@ -94,7 +94,7 @@ class AppsPathResolver(object):
             'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 15 * GB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 500 * MB,
+            'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 400 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
@@ -220,7 +220,7 @@ class AppsPathResolver(object):
                 'main_path': "daily/estimate/app-engagement-realnumbers-tsv/estkey=AppCountryKey",
                 'size': 1.5 * GB, 'marker': True,
                 'path_type': "daily"},
-            # Snapshot/Window
+            # Snapshot/WindowF
             'app_scores': {
                 'main_path': "%(mode)s/app-scores" % {'mode': self.ti.mode},
                 'size': 900 * MB, 'marker': True,  # Size close for both window ,and snapshot
