@@ -470,6 +470,7 @@ class ContextualizedTasksInfra(object):
                 if not (self.dry_run or self.checks_only):
                     self.delete_dir_common_fs(dir)
                 else:
+                    self.assert_path_is_safe_to_delete(dir)
                     sys.stdout.write("Dry Run: would delete output folder: %s\n" % dir)
 
     def is_valid_input_exists(self, directories, min_size_bytes=0, validate_marker=False):
@@ -608,12 +609,21 @@ class ContextualizedTasksInfra(object):
         cmd = 'hadoop fs {jvm_opts} -rm -r -f {target_path}'.format(
             jvm_opts=TasksInfra.add_jvm_options("", self.hadoop_configs),
             target_path=path)
-
+        self.assert_path_is_safe_to_delete(path)
         if self.dry_run:
             print("Would have deleted %s" % path)
         else:
             print("Deleteing %s" % path)
             self.run_bash(cmd)
+
+    # safety function in case someone tries to delete '/similargroup' by mistake
+    def assert_path_is_safe_to_delete(self, path):
+        path = path.split('://')
+        if len(path) > 1 :
+            path = '/' + path[len(path)-1]
+        else:
+            path = path[len(path)-1]
+        assert path.count('/') > 4, "can't delete programmatically folders this close to root. are you sure you intended to delete %s" % path
 
     def run_distcp(self, source, target, mappers=20, overwrite=True):
         if overwrite:
