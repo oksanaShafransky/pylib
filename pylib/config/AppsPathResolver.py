@@ -143,6 +143,10 @@ class AppsPathResolver(object):
                                           'size': 150 * MB,
                                           'marker': True, 'path_type': "daily"},
 
+            'agg_app_country_source_days_back_ww':{'main_path': "daily/aggregations/aggKey=AppCountrySourceDaysbackWWKey",
+                                          'size': 150 * MB,
+                                          'marker': True, 'path_type': "daily"},
+
             'agg_app_country_delta_key': {'main_path': "daily/aggregations/aggKey=AppCountryDeltaKey",
                                           'size': 600 * MB,
                                           'marker': True, 'path_type': "daily"},
@@ -195,6 +199,12 @@ class AppsPathResolver(object):
             'app_engagement_estimation': {'main_path': "daily/estimate/app-engagement/estkey=AppCountryKey",
                                           'size': 570 * MB, 'marker': True,
                                           'path_type': "daily"},
+
+            #TODO - decide about size
+            'est_app_country_source_days_back':{'main_path': "daily/estimate/app-enrichment/estKey=AppCountryDaysBackKey",
+                                          'size': 10 * MB, 'marker': True,
+                                          'path_type': "daily"},
+
 
             'real_numbers_adjustments_by_new_users': {
                 'main_path': "monthly/android-real-numbers-v2/by-new-users/adjustments",
@@ -413,6 +423,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['agg_app_country_source_days_back'], path_suffix)
 
+    def get_agg_app_country_source_days_back_ww(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                         self.apps_paths['agg_app_country_source_days_back_ww'], path_suffix)
+
     def agg_app_country_source_joined_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['agg_app_country_source_joined_key'], path_suffix)
@@ -420,6 +434,10 @@ class AppsPathResolver(object):
     def get_pre_estimate_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['pre_estimate_app_country'], path_suffix)
+
+    def get_est_app_country_source_days_back(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['est_app_country_source_days_back'], path_suffix)
 
     def get_pre_estimate_1009_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
