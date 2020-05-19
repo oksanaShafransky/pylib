@@ -88,3 +88,10 @@ def robust_ls(path):
     else:
         children = os.listdir(path)
     return [path + c for c in  children]
+
+
+def create_file(s3_url, file_content=""):
+    s3_conn = boto.connect_s3()
+    bucket_name, filename = parse_s3_url(s3_url)
+    bucket = s3_conn.get_bucket(bucket_name)
+    bucket.new_key(filename).set_contents_from_string(file_content)

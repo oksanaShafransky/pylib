@@ -190,6 +190,18 @@ class TasksInfra(object):
     }
 
     @staticmethod
+    def table_suffix(date, mode, mode_type):
+        if mode == 'snapshot':
+            return '_%s' % date.strftime('%y_%m')
+        elif mode == 'daily':
+            return '_%s' % date.strftime('%y_%m_%d')
+        elif mode == 'mutable':
+            return ''
+        else:
+            return '_%s_%s' % (mode_type, date.strftime('%y_%m_%d'))
+
+
+    @staticmethod
     def add_command_params(command, command_params, value_wrap='', *positional):
         ans = command + ' ' + ' '.join(positional)
 
@@ -463,10 +475,12 @@ class ContextualizedTasksInfra(object):
         self.log_lineage_hdfs(directories, 'output')
         return self.__is_hdfs_collection_valid(directories, min_size_bytes, validate_marker)
 
-    def clear_output_dirs(self, output_dirs):
+    def clear_output_dirs(self, output_dirs, check_depth=True):
         if output_dirs is not None:
             assert isinstance(output_dirs, list), "Output dirs need to be passed in a list."
             for dir in output_dirs:
+                if check_depth:
+                    self.assert_path_is_safe_to_delete(dir)
                 if not (self.dry_run or self.checks_only):
                     self.delete_dir_common_fs(dir)
                 else:
@@ -604,16 +618,26 @@ class ContextualizedTasksInfra(object):
 
             print('snapshot exists')
 
-    def delete_dir_common_fs(self, path):
+    def delete_dir_common_fs(self, path, check_depth=True):
         cmd = 'hadoop fs {jvm_opts} -rm -r -f {target_path}'.format(
             jvm_opts=TasksInfra.add_jvm_options("", self.hadoop_configs),
             target_path=path)
-
+        if check_depth:
+            self.assert_path_is_safe_to_delete(path)
         if self.dry_run:
             print("Would have deleted %s" % path)
         else:
             print("Deleteing %s" % path)
             self.run_bash(cmd)
+
+    # safety function in case someone tries to delete '/similargroup' by mistake
+    def assert_path_is_safe_to_delete(self, path):
+        split_path = path.split('://')
+        if len(split_path) > 1:
+            split_path = '/' + split_path[-1]
+        else:
+            split_path = split_path[-1]
+        assert split_path.count('/') > 4, "can't delete programmatically folders this close to root. are you sure you intended to delete %s" % path
 
     def run_distcp(self, source, target, mappers=20, overwrite=True):
         if overwrite:
@@ -1595,14 +1619,7 @@ class ContextualizedTasksInfra(object):
     # suffix for hbase tables
     @property
     def table_suffix(self):
-        if self.mode == 'snapshot':
-            return '_%s' % self.date.strftime('%y_%m')
-        elif self.mode == 'daily':
-            return '_%s' % self.date.strftime('%y_%m_%d')
-        elif self.mode == 'mutable':
-            return ''
-        else:
-            return '_%s_%s' % (self.mode_type, self.date.strftime('%y_%m_%d'))
+        return TasksInfra.table_suffix(self.date, self.mode, self.mode_type)
 
     @property
     def date_title(self):
