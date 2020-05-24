@@ -174,7 +174,7 @@ class AppsPathResolver(object):
                                        'path_type': "daily"},
 
             'agg_app_country_source_joined_key': {'main_path': "daily/aggregations/aggKey=AppCountrySourceJoinedKey",
-                                                  'size': 7.4 * GB, 'marker': True,
+                                                  'size': 3 * GB, 'marker': True,
                                                   'path_type': "daily"},
 
             'pre_estimate_app_country': {'main_path': "daily/pre-estimate/app-engagement/estkey=AppCountryKey",
