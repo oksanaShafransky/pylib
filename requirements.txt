@@ -2,3 +2,5 @@ urllib3==1.16
 setuptools==35.0.2
 twine==1.11.0
 requests==2.14.2
+path.py==11.5.0
+jaraco.windows==4.0
