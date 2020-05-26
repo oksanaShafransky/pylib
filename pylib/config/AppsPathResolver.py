@@ -226,6 +226,10 @@ class AppsPathResolver(object):
                 'main_path': "daily/estimate/app-engagement-realnumbers-tsv/estkey=AppCountryKey",
                 'size': 1.5 * GB, 'marker': True,
                 'path_type': "daily"},
+            'app_engagement_realnumbers_parquet': {
+                'main_path': "daily/estimate/app-engagement-realnumbers/estkey=AppCountryKey",
+                'size': 400 * MB, 'marker': True,
+                'path_type': "daily"},
             # Snapshot/WindowF
             'app_scores': {
                 'main_path': "%(mode)s/app-scores" % {'mode': self.ti.mode},
@@ -466,6 +470,10 @@ class AppsPathResolver(object):
     def get_app_engagement_realnumbers(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_engagement_realnumbers'], path_suffix)
+
+    def get_app_engagement_realnumbers_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['get_app_engagement_realnumbers_parquet'], path_suffix)
 
     def get_apps_datapool(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
