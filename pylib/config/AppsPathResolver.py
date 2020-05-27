@@ -112,7 +112,7 @@ class AppsPathResolver(object):
             'extractor_1015': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1015", 'size': 110 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 30 * GB,
+            'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 20 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
 
@@ -132,7 +132,7 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 80 * GB,
+            'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 70 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
             'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 500 * MB,
@@ -196,10 +196,25 @@ class AppsPathResolver(object):
                                           'size': 570 * MB, 'marker': True,
                                           'path_type': "daily"},
 
-            #TODO - decide about size
-            'est_app_country_source_days_back':{'main_path': "daily/estimate/app-enrichment/estKey=AppCountryDaysBackKey",
-                                          'size': 10 * MB, 'marker': True,
+            #retention
+            #TODO - decide about sizes
+            'est_app_country_source_days_back':{'main_path': "daily/app-retention/estimate/estKey=AppCountryDaysBackKey",
+                                          'size': 5* GB, 'marker': True,
                                           'path_type': "daily"},
+
+            'churn_retention':{'main_path': "daily/app-retention/post-estimate/churn",
+                                                 'size': 200 * KB, 'marker': True,
+                                                 'path_type': "daily"},
+
+            'smooth_retention': {'main_path': "daily/app-retention/post-estimate/smoothed",
+                                                 'size': 80 * KB, 'marker': True,
+                                                 'path_type': "daily"},
+
+            'retention_func':{
+                'main_path': "daily/app-retention/post-estimate/retention-function",
+                         'size': 80 * KB, 'marker': True,
+                              'path_type': "daily"},
+            #retention
 
 
             'real_numbers_adjustments_by_new_users': {
@@ -434,6 +449,18 @@ class AppsPathResolver(object):
     def get_est_app_country_source_days_back(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['est_app_country_source_days_back'], path_suffix)
+
+    def get_churn_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['churn_retention'], path_suffix)
+
+    def get_smooth_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['smooth_retention'], path_suffix)
+
+    def get_retention_function(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['retention_func'], path_suffix)
 
     def get_pre_estimate_1009_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
