@@ -1416,9 +1416,9 @@ class ContextualizedTasksInfra(object):
     @staticmethod
     def _set_python_env(python_env, env_path='s3a://similargroup-research/deploy/envs'):
         spark_configs = ''
-        spark_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
-        spark_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
-        spark_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON={}/bin/python"'.format(python_env)
+        spark_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON=/{}/bin/python"'.format(python_env)
+        spark_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON=/{}/bin/python"'.format(python_env)
+        spark_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON=/{}/bin/python"'.format(python_env)
         spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip/#{}"'.format(env_path, python_env, python_env, python_env)
         return spark_configs
 
