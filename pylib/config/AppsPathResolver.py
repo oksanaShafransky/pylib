@@ -269,7 +269,7 @@ class AppsPathResolver(object):
                                   'path_type': "monthly"},
 
             'domain_resolved_1010': {'main_path': "daily/osm/domain-resolved-1010",
-                             'size': 70 * GB, 'marker': True,
+                             'size': 60 * GB, 'marker': True,
                              'path_type': "daily"},
 
             'base_dataset': {'main_path': "daily/osm/base-dataset",
