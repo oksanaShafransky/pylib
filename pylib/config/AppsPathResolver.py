@@ -109,7 +109,7 @@ class AppsPathResolver(object):
             'extractor_1010': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1010", 'size': 400 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1015': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1015", 'size': 110 * MB,
+            'extractor_1015': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1015", 'size': 80 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 20 * GB,
@@ -128,11 +128,11 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1009_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1009", 'size': 1 * GB,
+            'grouping_1009_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1009", 'size': 900 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 70 * GB,
+            'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 50 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
             'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 500 * MB,
@@ -152,7 +152,7 @@ class AppsPathResolver(object):
                                       'marker': True, 'path_type': "daily"},
 
             'agg_app_country_source_day_hour': {'main_path': "daily/aggregations/aggKey=AppCountrySourceDayHourKey",
-                                                'size': 50 * MB,
+                                                'size': 30 * MB,
                                                 'marker': True, 'path_type': "daily"},
 
             'agg_app_country_source_1009_key': {'main_path': "daily/aggregations/aggKey=AppCountrySource1009Key",
