@@ -248,15 +248,13 @@ class TasksInfra(object):
         :param str format: Format for email content. Defaults to plain. Is optional.
         :param str image_attachment: Image as byte string. Is optional.
         """
-
-        if isinstance(mail_to, list):
-            mail_to = ','.join(mail_to)
+        assert isinstance(mail_to, list) or isinstance(mail_to, str)
 
         msg = MIMEMultipart()
         msg.attach(MIMEText(content, format))
 
         msg['From'] = mail_from
-        msg['To'] = mail_to
+        msg['To'] = mail_to if isinstance(mail_to, str) else ','.join(mail_to)
         msg['Subject'] = mail_subject
 
         if image_attachment:
