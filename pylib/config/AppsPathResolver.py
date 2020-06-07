@@ -253,7 +253,7 @@ class AppsPathResolver(object):
 
             #NSM TO OSM
             'preprocessed_1010': {'main_path': "daily/osm/preprocessed-1010",
-                                         'size': 90 * GB, 'marker': True,
+                                         'size': 80 * GB, 'marker': True,
                                          'path_type': "daily"},
 
             'preprocessed_1015': {'main_path': "daily/osm/preprocessed-1015",
