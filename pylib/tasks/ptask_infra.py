@@ -248,15 +248,13 @@ class TasksInfra(object):
         :param str format: Format for email content. Defaults to plain. Is optional.
         :param str image_attachment: Image as byte string. Is optional.
         """
-
-        if isinstance(mail_to, list):
-            mail_to = ','.join(mail_to)
+        assert isinstance(mail_to, list) or isinstance(mail_to, str)
 
         msg = MIMEMultipart()
         msg.attach(MIMEText(content, format))
 
         msg['From'] = mail_from
-        msg['To'] = mail_to
+        msg['To'] = mail_to if isinstance(mail_to, str) else ','.join(mail_to)
         msg['Subject'] = mail_subject
 
         if image_attachment:
@@ -1507,7 +1505,9 @@ class ContextualizedTasksInfra(object):
     # Storing the credentials in env variables is probably the least secured option and is disabled by default.
     # Please set set_env_variables only as a last resort.
     def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
-        access_key = access or self.read_s3_configuration('access_key', section=section)
+        access_key = access \
+                     or self.read_s3_configuration('access_key', section=section) \
+                     or self.read_s3_configuration('aws_access_key_id', section=section)
         self.hadoop_configs['fs.s3a.access.key'] = access_key
         command_access_key = 'aws configure set aws_access_key_id %s' % access_key
         print("Setting aws access key: %s" % access_key)
@@ -1515,7 +1515,9 @@ class ContextualizedTasksInfra(object):
         if set_env_variables:
             os.environ["AWS_ACCESS_KEY_ID"] = access_key
 
-        secret_key = secret or self.read_s3_configuration('secret_key', section=section)
+        secret_key = secret \
+                     or self.read_s3_configuration('secret_key', section=section) \
+                     or self.read_s3_configuration('aws_secret_access_key', section=section)
         self.hadoop_configs['fs.s3a.secret.key'] = secret_key
         command_secret_key = 'aws configure set aws_secret_access_key %s' % secret_key
         print("Setting aws secret key: %s" % secret_key)
