@@ -138,7 +138,7 @@ class AppsPathResolver(object):
             'grouping_1010_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1010", 'size': 50 * GB,
                                              'marker': True,
                                              'path_type': "daily"},
-            'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 500 * MB,
+            'grouping_1015_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1015", 'size': 300 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
