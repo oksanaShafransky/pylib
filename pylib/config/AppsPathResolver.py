@@ -112,7 +112,6 @@ class AppsPathResolver(object):
             'extractor_1015': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1015", 'size': 60 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            ## Embee
             'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 50 * MB,
                                'marker': True, 'path_type': "daily"},
 
@@ -219,22 +218,23 @@ class AppsPathResolver(object):
 
             #retention
             #TODO - decide about sizes
-            'est_app_country_source_days_back':{'main_path': "daily/app-retention/estimate/estKey=AppCountryDaysBackKey",
-                                          'size': 5* GB, 'marker': True,
-                                          'path_type': "daily"},
+            'est_app_country_source_days_back': {
+                'main_path': "daily/app-retention/estimate/estKey=AppCountryDaysBackKey",
+                'size': 400 * MB, 'marker': True,
+                'path_type': "daily"},
 
-            'churn_retention':{'main_path': "daily/app-retention/post-estimate/churn",
-                                                 'size': 200 * KB, 'marker': True,
-                                                 'path_type': "daily"},
+            'churn_retention': {'main_path': "daily/app-retention/post-estimate/churn",
+                                'size': 100 * KB, 'marker': True,
+                                'path_type': "daily"},
 
             'smooth_retention': {'main_path': "daily/app-retention/post-estimate/smoothed",
-                                                 'size': 80 * KB, 'marker': True,
-                                                 'path_type': "daily"},
+                                 'size': 40 * KB, 'marker': True,
+                                 'path_type': "daily"},
 
-            'retention_func':{
+            'retention_func': {
                 'main_path': "daily/app-retention/post-estimate/retention-function",
-                         'size': 80 * KB, 'marker': True,
-                              'path_type': "daily"},
+                'size': 30 * KB, 'marker': True,
+                'path_type': "daily"},
             #retention
 
 
@@ -395,7 +395,6 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1015'], path_suffix)
 
-    ## Embee
     def get_extractor_1111(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1111'], path_suffix)
