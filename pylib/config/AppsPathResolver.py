@@ -205,7 +205,7 @@ class AppsPathResolver(object):
                                               'path_type': "daily"},
 
             'time_series_estimation': {'main_path': "daily/time-series-weighted-predict",
-                                       'size': 750 * MB, 'marker': True,
+                                       'size': 650 * MB, 'marker': True,
                                        'path_type': "daily"},
 
             'apps_for_analyze_decision': {'main_path': "daily/osm/apps_for_analyze_decision",
