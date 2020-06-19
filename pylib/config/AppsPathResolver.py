@@ -112,6 +112,9 @@ class AppsPathResolver(object):
             'extractor_1015': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1015", 'size': 60 * MB,
                                'marker': True, 'path_type': "daily"},
 
+            'extractor_1019': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1015", 'size': 100 * MB,
+                               'marker': True, 'path_type': "daily"}, #TODO fix size
+
             'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 50 * MB,
                                'marker': True, 'path_type': "daily"},
 
@@ -394,6 +397,10 @@ class AppsPathResolver(object):
     def get_extractor_1015(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1015'], path_suffix)
+
+    def get_extractor_1019(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_1019'], path_suffix)
 
     def get_extractor_1111(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
