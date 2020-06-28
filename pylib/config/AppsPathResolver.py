@@ -100,7 +100,7 @@ class AppsPathResolver(object):
             'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 50 * MB,
+            'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 30 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1009': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1009", 'size': 100 * MB,
@@ -218,27 +218,6 @@ class AppsPathResolver(object):
             'app_engagement_estimation': {'main_path': "daily/estimate/app-engagement/estkey=AppCountryKey",
                                           'size': 570 * MB, 'marker': True,
                                           'path_type': "daily"},
-
-            #retention
-            #TODO - decide about sizes
-            'est_app_country_source_days_back': {
-                'main_path': "daily/app-retention/estimate/estKey=AppCountryDaysBackKey",
-                'size': 400 * MB, 'marker': True,
-                'path_type': "daily"},
-
-            'churn_retention': {'main_path': "daily/app-retention/post-estimate/churn",
-                                'size': 100 * KB, 'marker': True,
-                                'path_type': "daily"},
-
-            'smooth_retention': {'main_path': "daily/app-retention/post-estimate/smoothed",
-                                 'size': 40 * KB, 'marker': True,
-                                 'path_type': "daily"},
-
-            'retention_func': {
-                'main_path': "daily/app-retention/post-estimate/retention-function",
-                'size': 30 * KB, 'marker': True,
-                'path_type': "daily"},
-            #retention
 
 
             'real_numbers_adjustments_by_new_users': {
@@ -502,18 +481,6 @@ class AppsPathResolver(object):
     def get_est_app_country_source_days_back(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['est_app_country_source_days_back'], path_suffix)
-
-    def get_churn_retention(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['churn_retention'], path_suffix)
-
-    def get_smooth_retention(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['smooth_retention'], path_suffix)
-
-    def get_retention_function(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['retention_func'], path_suffix)
 
     def get_pre_estimate_1009_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
