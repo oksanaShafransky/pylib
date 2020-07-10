@@ -77,7 +77,7 @@ class AppsPathResolver(object):
         self.apps_paths = {
             #￿￿New users
             'new_users_db': {'main_path': "daily/new_users/new_users_db", 'size': 1 * KB,
-                    'marker': True, 'path_type': "daily"}, #TODO update size
+                    'marker': True, 'path_type': "daily"},#TODO update size
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KB,
                               'marker': True, 'path_type': "daily"},
@@ -89,7 +89,7 @@ class AppsPathResolver(object):
                               'marker': True, 'path_type': "daily"},
 
             'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey", 'size': 10 * MB,
-                              'marker': True, 'path_type': "daily"}, # TODO Fix
+                              'marker': True, 'path_type': "daily"},#TODO Fix
 
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
@@ -102,6 +102,9 @@ class AppsPathResolver(object):
 
             'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
+
+            'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 200 * MB,
+                               'marker': True, 'path_type': "daily"}, # TODO update real size
 
             'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 30 * MB,
                                'marker': True, 'path_type': "daily"},
@@ -363,6 +366,10 @@ class AppsPathResolver(object):
     def get_extractor_1005(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1005'], path_suffix)
+
+    def get_extractor_5555(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_5555'], path_suffix)
 
     def get_extractor_1008(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
