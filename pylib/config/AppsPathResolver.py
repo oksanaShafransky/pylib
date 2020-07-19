@@ -75,9 +75,13 @@ class AppsPathResolver(object):
     def __init__(self, ti):
         self.ti = ti
         self.apps_paths = {
-            #￿￿New users
-            'new_users_db': {'main_path': "daily/new_users/new_users_db", 'size': 1 * KB,
+            #￿￿Downloads
+            'new_users_db': {'main_path': "daily/downloads/new_users/new_users_db", 'size': 1 * KB,
                     'marker': True, 'path_type': "daily"},#TODO update size
+
+            'downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryCountrySourceKey",
+                                                         'size': 1 * KB,
+                             'marker': True, 'path_type': "daily"},  # TODO update size
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KB,
                               'marker': True, 'path_type': "daily"},
@@ -620,6 +624,10 @@ class AppsPathResolver(object):
     def get_new_users_db(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['new_users_db'], path_suffix)
+
+    def get_downloads_app_country_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['downloads_app_country_country_source_agg'], path_suffix)
 
 
 
