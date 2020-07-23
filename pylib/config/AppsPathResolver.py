@@ -190,6 +190,10 @@ class AppsPathResolver(object):
                                           'size': 600 * MB,
                                           'marker': True, 'path_type': "daily"},
 
+            'app_pairs_agg': {'main_path': "daily/aggregations/aggkey=AppPairCountryKey",
+                                          'size': 600 * MB, #TODO change.
+                                          'marker': True, 'path_type': "daily"},
+
             'agg_country_delta_key': {'main_path': "daily/aggregations/aggKey=CountryDeltaKey",
                                       'size': 120 * KB,  # TODO update.
                                       'marker': True, 'path_type': "daily"},
@@ -461,6 +465,10 @@ class AppsPathResolver(object):
     def get_agg_app_country_delta_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['agg_app_country_delta_key'], path_suffix)
+
+    def get_app_pairs_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['app_pairs_agg'], path_suffix)
 
     def get_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
