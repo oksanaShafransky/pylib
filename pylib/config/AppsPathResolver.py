@@ -89,7 +89,7 @@ class AppsPathResolver(object):
 
             'downloads_country_delta_key_agg': {
                 'main_path': "daily/downloads/aggregations/aggKey=CountryDeltaKey",
-                'size': 1 * MB,
+                'size': 1 * KB,
                 'marker': True, 'path_type': "daily"},  # TODO update size
 
             # Daily
