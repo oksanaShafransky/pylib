@@ -105,6 +105,10 @@ class AppsPathResolver(object):
             'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey", 'size': 10 * MB,
                               'marker': True, 'path_type': "daily"},#TODO Fix
 
+            'new_user_alpha_estimation': {'main_path': "daily/downloads/new_users/estimation/app-downloads-alph/estkey=AppCountryKey",
+                                           'size': 10 * MB,
+                                           'marker': True, 'path_type': "daily"},  # TODO Fix
+
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
@@ -565,6 +569,10 @@ class AppsPathResolver(object):
     def get_downloads_alpha_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_alpha_estimation'], path_suffix)
+
+    def get_new_user_alpha_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['new_user_alpha_estimation'], path_suffix)
 
     def get_preprocessed_1010(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
