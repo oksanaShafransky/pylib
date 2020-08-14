@@ -19,7 +19,7 @@ class MobileWebConfig(object):
     @property
     def countries(self):
         if not self._countries:
-            self._countries = dict([(country_code, pycountry.countries.get(numeric='%s' % country_code.zfill(3)).alpha_2)
+            self._countries = dict([(country_code, pycountry.countries.get(numeric='%s' % country_code.zfill(3)).alpha2)
                                     for country_code in self.conf.get('%s/countries' % self.root).split(',')])
 
         return self._countries
