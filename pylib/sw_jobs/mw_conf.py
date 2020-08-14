@@ -16,6 +16,7 @@ class MobileWebConfig(object):
         self.conf = kv_provider or get_kv(snowflake_env=snowflake_env)
         self._countries = {}
 
+
     @property
     def countries(self):
         if not self._countries:
