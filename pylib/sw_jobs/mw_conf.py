@@ -1,10 +1,9 @@
 __author__ = 'Amit'
 
-from pycountry import countries
+import pycountry
 from pylib.sw_config.bigdata_kv import get_kv
-import logging
 
-logger = logging.getLogger("mw_conf")
+
 
 # import sys ;logger.setLevel(logging.DEBUG); handler = logging.StreamHandler(sys.stdout) ;
 # handler.setLevel( logging.DEBUG)
@@ -21,18 +20,17 @@ class MobileWebConfig(object):
     @property
     def countries(self):
         if not self._countries:
-            # TODO check that all of the envs. updated to pycontry version 18.12.8 and remove this check
+            # TODO check that all of the envs. updated to pycountry version 18.12.8 and remove this check
             #  REMOVE THE LOG!
-            if hasattr(countries.get(numeric='840'), 'alpha2'):
-                logger.debug('using pycountry v==1.2')
-                self._countries = dict([(country_code, countries.get(numeric='%s' % country_code.zfill(3)).alpha2)
+            if hasattr(pycountry.countries.get(numeric='840'), 'alpha2'):
+                print('\nusing pycountry v==1.2\n')
+                self._countries = dict([(country_code, pycountry.countries.get(numeric='%s' % country_code.zfill(3)).alpha2)
                                         for country_code in self.conf.get('%s/countries' % self.root).split(',')])
             else:
-                logger.debug('using pycountry v==18.12.8')
-                self._countries = dict([(country_code, countries.get(numeric='%s' % country_code.zfill(3)).alpha_2)
+                print('\nusing pycountry v==18.12.8\n')
+                self._countries = dict([(country_code, pycountry.countries.get(numeric='%s' % country_code.zfill(3)).alpha_2)
                                         for country_code in self.conf.get('%s/countries' % self.root).split(',')])
 
         return self._countries
-
 
 
