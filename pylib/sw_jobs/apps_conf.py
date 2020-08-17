@@ -26,9 +26,17 @@ class AppsEngagementConfig(object):
 
     @property
     def countries(self):
+        # TODO check that all of the envs. updated to pycountry version 18.12.8 and remove this check
+        #  REMOVE THE LOG!
         if not self._countries:
-            self._countries = dict([(country_code, countries.get(numeric='%s' % country_code.zfill(3)).alpha2)
-                                    for country_code in self._parse_list_or_default('%s/countries' % self.root)])
+            if hasattr(countries.get(numeric='840'), 'alpha2'):
+                print('\nusing pycountry v==1.2\n')
+                self._countries = dict([(country_code, countries.get(numeric='%s' % country_code.zfill(3)).alpha2)
+                                        for country_code in self._parse_list_or_default('%s/countries' % self.root)])
+            else:
+                print('\nusing pycountry v==18.12.8\n')
+                self._countries = dict([(country_code, countries.get(numeric='%s' % country_code.zfill(3)).alpha_2)
+                                        for country_code in self._parse_list_or_default('%s/countries' % self.root)])
         return self._countries
 
     @property

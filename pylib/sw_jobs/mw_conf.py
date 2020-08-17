@@ -2,7 +2,6 @@ __author__ = 'Amit'
 
 import pycountry
 from pylib.sw_config.bigdata_kv import get_kv
-import logging
 
 
 # import sys ;logger.setLevel(logging.DEBUG); handler = logging.StreamHandler(sys.stdout) ;
