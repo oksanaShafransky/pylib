@@ -96,7 +96,7 @@ class AppsPathResolver(object):
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KB,
                               'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 200 * MB,
+            'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 100 * MB,
                                         'marker': True, 'path_type': "daily"},
 
             'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 16 * GB,
