@@ -124,7 +124,7 @@ class AppsPathResolver(object):
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_download_panel_country_share_est': {
-                'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share",
+                'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/estKey=AppCountryKey",
                 'size': 1 * MB,
                 'marker': True, 'path_type': "daily"},  # TODO Fix
 
