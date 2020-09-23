@@ -118,6 +118,16 @@ class AppsPathResolver(object):
                 'size': 10 * MB,
                 'marker': True, 'path_type': "daily"},  # TODO Fix
 
+            'ww_store_download_country_population': {
+                'main_path': "daily/downloads/store_downloads/static/country_pop_adj",
+                'size': 2 * KB,
+                'marker': True, 'path_type': "daily"},
+
+            'ww_store_download_panel_country_share_est': {
+                'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share",
+                'size': 1 * MB,
+                'marker': True, 'path_type': "daily"},  # TODO Fix
+
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
@@ -590,6 +600,14 @@ class AppsPathResolver(object):
     def get_ww_store_downloads_fetch(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ww_store_downloads_fetch'], path_suffix)
+
+    def get_ww_store_download_country_population(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_store_download_country_population'], path_suffix)
+
+    def get_ww_store_download_panel_country_share_est(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_store_download_panel_country_share_est'], path_suffix)
 
     def get_preprocessed_1010(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
