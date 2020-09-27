@@ -92,6 +92,30 @@ class AppsPathResolver(object):
                 'size': 1 * KB,
                 'marker': True, 'path_type': "daily"},  # TODO update size
 
+            #dau
+            'dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceKey",
+                                          'size': 350 * MB,
+                                          'marker': True, 'path_type': "daily"},
+            'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
+                                           'size': 200 * MB,
+                                           'marker': True, 'path_type': "daily"},
+
+            'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
+                                           'size': 200 * MB,
+                                           'marker': True, 'path_type': "daily"},
+
+            'dau_sqs_preliminary': {'main_path': "daily/dau/sqs/sqs-preliminary",
+                                           'size': 4 * GB,
+                                           'marker': True, 'path_type': "daily"},
+
+            'sqs_calc':{'main_path': "daily/dau/sqs/calc_weights",
+                                           'size': 50 * GB,
+                                           'marker': True, 'path_type': "daily"},
+
+            'engagement_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
+                                           'size': 700 * MB,
+                                           'marker': True, 'path_type': "daily"},
+
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KB,
                               'marker': True, 'path_type': "daily"},
@@ -178,7 +202,7 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 400 * MB,
+            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 300 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
@@ -697,6 +721,45 @@ class AppsPathResolver(object):
     def get_downloads_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_country_delta_key_agg'], path_suffix)
+
+    #dau
+    def get_dau_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_app_country_source_agg'], path_suffix)
+
+    def get_dau_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_country_source_agg'], path_suffix)
+
+    def get_dau_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_join_agg'], path_suffix)
+
+    def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_sqs_preliminary'], path_suffix)
+
+    def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_sqs_preliminary'], path_suffix)
+
+    def get_sqs_calc(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['sqs_calc'], path_suffix)
+
+    def get_engagement_prior(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['engagement_prior'], path_suffix)
+
+
+
+
+
+
+
+    #dau
+
+
 
 
 
