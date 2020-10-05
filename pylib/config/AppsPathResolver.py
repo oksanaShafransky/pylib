@@ -167,6 +167,11 @@ class AppsPathResolver(object):
                 'size': 1 * KB,  # TODO Fix
                 'marker': True, 'path_type': "daily"},
 
+            'store_downloads_realnumbers_estimation': {
+                'main_path': "daily/downloads/store_downloads/estimation/est-realnumbers",
+                'size': 1 * KB,  # TODO Fix
+                'marker': True, 'path_type': "daily"},
+
 
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
@@ -660,6 +665,10 @@ class AppsPathResolver(object):
     def get_store_download_country_adj_row(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['store_download_country_adj_row'], path_suffix)
+
+    def get_store_downloads_realnumbers_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['store_downloads_realnumbers_estimation'], path_suffix)
 
     def get_preprocessed_1010(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
