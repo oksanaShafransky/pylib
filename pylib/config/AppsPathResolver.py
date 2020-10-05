@@ -104,17 +104,31 @@ class AppsPathResolver(object):
                                            'size': 200 * MB,
                                            'marker': True, 'path_type': "daily"},
 
-            'dau_sqs_preliminary': {'main_path': "daily/dau/sqs/sqs-preliminary",
+            'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
                                            'size': 4 * GB,
                                            'marker': True, 'path_type': "daily"},
 
-            'sqs_calc':{'main_path': "daily/dau/sqs/calc_weights",
+            'sqs_calc':{'main_path': "daily/dau/pre-estimate/calc_weights",
                                            'size': 50 * GB,
                                            'marker': True, 'path_type': "daily"},
 
             'engagement_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
                                            'size': 700 * MB,
                                            'marker': True, 'path_type': "daily"},
+
+            'engagement_estimate': {'main_path': "daily/dau/estimate/engagement",
+                                 'size': 1 * GB,
+                                 'marker': True, 'path_type': "daily"},
+
+            'engagement_real_numbers': {'main_path': "daily/dau/estimate/engagement-real-numbers",
+                                 'size': 300 * MB,
+                                 'marker': True, 'path_type': "daily"},
+
+            'engagement_rn_tsv':{'main_path': "daily/dau/estimate/engagement-real-numbers-tsv",
+                                 'size': 1 * GB,
+                                 'marker': True, 'path_type': "daily"},
+
+
 
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KB,
@@ -779,9 +793,17 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['engagement_prior'], path_suffix)
 
+    def get_engagement_final_est(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['engagement_estimate'], path_suffix)
 
+    def get_engagement_real_numbers(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['engagement_real_numbers'], path_suffix)
 
-
+    def get_engagement_real_numbers_tsv(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['engagement_rn_tsv'], path_suffix)
 
 
 
