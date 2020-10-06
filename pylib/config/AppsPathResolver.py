@@ -109,23 +109,23 @@ class AppsPathResolver(object):
                                            'marker': True, 'path_type': "daily"},
 
             'sqs_calc':{'main_path': "daily/dau/pre-estimate/calc_weights",
-                                           'size': 50 * GB,
+                                           'size': 2 * GB,
                                            'marker': True, 'path_type': "daily"},
 
             'engagement_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
-                                           'size': 700 * MB,
+                                           'size': 200 * MB,
                                            'marker': True, 'path_type': "daily"},
 
             'engagement_estimate': {'main_path': "daily/dau/estimate/engagement",
-                                 'size': 1 * GB,
+                                 'size': 500 * MB,
                                  'marker': True, 'path_type': "daily"},
 
             'engagement_real_numbers': {'main_path': "daily/dau/estimate/engagement-real-numbers",
-                                 'size': 300 * MB,
+                                 'size': 30 * MB,
                                  'marker': True, 'path_type': "daily"},
 
             'engagement_rn_tsv':{'main_path': "daily/dau/estimate/engagement-real-numbers-tsv",
-                                 'size': 1 * GB,
+                                 'size': 500 * MB,
                                  'marker': True, 'path_type': "daily"},
 
 
