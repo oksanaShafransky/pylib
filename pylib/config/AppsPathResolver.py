@@ -229,7 +229,7 @@ class AppsPathResolver(object):
             'embee_demographics': {'main_path': "raw-stats-embee/demographics", 'size': 3 * MB,
                                    'marker': True, 'path_type': "daily"},
 
-            'embee_naive_estimation': {'main_path': "raw-stats-embee/naive_estimation", 'size': 1 * MB,
+            'embee_naive_estimation': {'main_path': "raw-stats-embee/naive_estimation", 'size': 0 * MB,
                                    'marker': True, 'path_type': "daily"},
 
             'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 10 * MB,
