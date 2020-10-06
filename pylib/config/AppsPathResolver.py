@@ -97,10 +97,10 @@ class AppsPathResolver(object):
                                           'size': 350 * MB,
                                           'marker': True, 'path_type': "daily"},
             'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
-                                           'size': 200 * MB,
+                                           'size': 200 * KB,
                                            'marker': True, 'path_type': "daily"},
 
-            'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
+            'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
                                            'size': 200 * MB,
                                            'marker': True, 'path_type': "daily"},
 
@@ -776,10 +776,6 @@ class AppsPathResolver(object):
     def get_dau_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_join_agg'], path_suffix)
-
-    def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_sqs_preliminary'], path_suffix)
 
     def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
