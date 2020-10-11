@@ -229,6 +229,9 @@ class AppsPathResolver(object):
             'embee_demographics': {'main_path': "raw-stats-embee/demographics", 'size': 3 * MB,
                                    'marker': True, 'path_type': "daily"},
 
+            'embee_naive_estimation': {'main_path': "raw-stats-embee/naive_estimation", 'size': 0 * MB,
+                                   'marker': True, 'path_type': "daily"},
+
             'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 10 * MB,
                                          'marker': True, 'path_type': "daily"},
             ###
@@ -510,6 +513,10 @@ class AppsPathResolver(object):
     def get_embee_joined_data_output(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['embee_joined_data_output'], path_suffix)
+
+    def get_embee_naive_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['embee_naive_estimation'], path_suffix)
     ###
 
     def get_grouping_1001_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
