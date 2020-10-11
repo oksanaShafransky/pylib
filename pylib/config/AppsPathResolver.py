@@ -108,7 +108,7 @@ class AppsPathResolver(object):
                                            'size': 1 * GB,
                                            'marker': True, 'path_type': "daily"},
 
-            'sqs_calc':{'main_path': "daily/dau/pre-estimate/calc_weights",
+            'sqs_calc':{'main_path': "daily/dau/pre-estimate/sqs-calc-weights",
                                            'size': 2 * GB,
                                            'marker': True, 'path_type': "daily"},
 
