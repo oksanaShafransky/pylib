@@ -24,7 +24,7 @@ setup(
         'numpy==1.12.0'
     ],
     setup_requires=[
-        'pytest-runner==5.1',
+        'pytest-runner',
         'wheel==0.29.0'
     ],
     tests_require=[
