@@ -92,6 +92,11 @@ class AppsPathResolver(object):
                 'size': 1 * KB,
                 'marker': True, 'path_type': "daily"},  # TODO update size
 
+            'downloads_prior': {
+                'main_path': "daily/downloads/downloads-prior/aggKey=AppCountry",
+                'size': 1 * KB,
+                'marker': True, 'path_type': "daily"},  # TODO update size
+
             #dau
             'dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceKey",
                                           'size': 350 * MB,
@@ -779,6 +784,10 @@ class AppsPathResolver(object):
     def get_downloads_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_country_delta_key_agg'], path_suffix)
+
+    def get_downloads_prior(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['downloads_prior'], path_suffix)
 
     #dau
     def get_dau_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
