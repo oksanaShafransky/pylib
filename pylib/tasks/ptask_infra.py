@@ -948,6 +948,237 @@ class ContextualizedTasksInfra(object):
         # Similarweb default repositories
         return ["https://nexus.similarweb.io/repository/similar-bigdata/"]
 
+    def run_sw_pyspark(self,
+                       main_py_file,
+                       app_name=None,
+                       command_params=None,
+                       files=None,
+                       jars=None,
+                       library_dir=None,
+                       named_spark_args=None,
+                       packages=None,
+                       repositories=None,
+                       py_files=None,
+                       spark_configs=None,
+                       queue=None,
+                       determine_partitions_by_output=False,
+                       managed_output_dirs=None,
+                       spark_submit_script='spark2-submit',
+                       python_env=None
+                       ):
+        """
+        Run a pyspark job. The spark-submit script is executed in the execution
+        directory.  All paths for jars and files should be absolute or relative
+        to the execution directory. Control the spark version by specifying the
+        appropriate spark submit script.
+
+        :param main_py_file: path to python file that contains the application entrypoint
+        :type main_py_file: str
+        :param app_name: yarn application name
+        :type app_name: str
+        :param command_params: application arguments
+        :type command_params: dict[str, str]
+        :param files: additional files for job, pass as list of paths
+        :type files: list[str]
+        :param jars: additional jars to pass to job, pass as list of paths
+        :type jars: list[str]
+        :param library_dir: path to directory of jars to pass to job
+        :type library_dir: str
+        :param named_spark_args: spark command line options
+        :type named_spark_args: dict[str, str]
+        :param packages: maven coordinates of jars to include
+        :type packages: list[str]
+        :param repositories: additional remote repositories to search for maven coordinates given with packages argument
+        :type repositories: list[str]
+        :param py_files: list of paths of .zip, .egg or .py files to place on the PYTHONPATH
+        :type py_files: list[str]
+        :param spark_configs: spark properties (passed with a --conf flag)
+        :type spark_configs: dict[str, str]
+        :param queue: yarn queue
+        :type queue: 
+        :param determine_partitions_by_output: use the spark partition calculator to determine output split size
+        :type determine_partitions_by_output: bool
+        :param managed_output_dirs: output directory to delete on job initialization
+        :type managed_output_dirs: list[str]
+        :param spark_submit_script: spark submit script to use (spark1x: spark-submit, spark2x: spark2-submit)
+        :type spark_submit_script:
+        :param python_env: name of external Python environment on s3 to use as driver and executor Python executable
+        :type python_env:
+        :return:
+        """
+        final_jars = []
+        if library_dir:
+            final_jars.extend(os.listdir(library_dir))
+        if jars:
+            final_jars.extend(jars)
+
+        # delete output on start
+        self.clear_output_dirs(managed_output_dirs)
+
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
+        additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
+
+        if python_env is not None:
+            additional_configs += self._set_python_env(python_env)
+
+        py_files_cmd = ' --py-files "%s"' % ','.join(py_files) if py_files else ''
+
+        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
+
+        command = 'cd {execution_dir};{spark_submit_script}' \
+                  ' --name "{app_name}"' \
+                  ' --master yarn-cluster' \
+                  ' {queue}' \
+                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
+                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
+                  ' --conf "spark.yarn.tags={yarn_application_tags}"' \
+                  ' --deploy-mode cluster' \
+                  ' --jars "{jars}"' \
+                  ' --files "{files}"' \
+                  ' {extra_pkg_cmd}' \
+                  ' {extra_repo_cmd}' \
+                  ' {py_files_cmd}' \
+                  ' {spark-confs}' \
+                  ' {main_py}' \
+            .format(**{
+                        'execution_dir': self.execution_dir,
+                        'spark_submit_script': spark_submit_script,
+                        'app_name': app_name if app_name else os.path.basename(main_py_file),
+                        'queue': '--queue {}'.format(queue) if queue else '',
+                        'snowflake_env': snowflake_cur_env,
+                        'files': ','.join(files or []) if files else '',
+                        'py_files_cmd': py_files_cmd,
+                        'extra_pkg_cmd': (' --packages {}'.format(','.join(packages))) if packages is not None else '',
+                        'extra_repo_cmd': ' --repositories {}'.format(
+                            ','.join((repositories if repositories is not None else []) + self.get_sw_repos())),
+                        'spark-confs': additional_configs,
+                        'jars': ','.join(final_jars) if final_jars else '',
+                        'main_py': main_py_file,
+                        'yarn_application_tags': yarn_tags
+        })
+
+        command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
+        return self.run_bash(command).ok
+
+    def run_sw_spark(self,
+                     main_class,
+                     module,
+                     queue,
+                     app_name,
+                     command_params,
+                     jars=None,
+                     library_dir=None,
+                     files=None,
+                     spark_configs=None,
+                     named_spark_args=None,
+                     determine_partitions_by_output=None,
+                     packages=None,
+                     managed_output_dirs=None,
+                     repositories=None,
+                     java_opts=" -Xms16m",
+                     jar_name='{}-1.0-SNAPSHOT-jar-with-dependencies.jar',
+                     spark_submit_script='spark2-submit'
+                     ):
+        """
+        Run a spark job. The spark-submit script is executed in the execution
+        directory.  All paths for jars and files should be absolute or relative
+        to the execution directory. Control the spark version by specifying the
+        appropriate spark submit script.
+
+        :param main_class: qualified name of application's main class
+        :type main_class: str
+        :param module: relative path from execution dir to module
+        :type module: str
+        :param queue: yarn queue
+        :type queue: str
+        :param app_name: yarn application name
+        :type app_name: str
+        :param command_params: application arguments
+        :type command_params: dict[str, str]
+        :param jars: additional jars to pass to job, pass as list of paths
+        :type list[str]
+        :param library_dir: path to directory of jars to pass to job
+        :type library_dir: str
+        :param files: additional files for job, pass as list of paths
+        :type files: list[str]
+        :param spark_configs: spark properties (passed with a --conf flag)
+        :type spark_configs: dict[str, str]
+        :param named_spark_args: spark command line options
+        :type named_spark_args: dict[str, str]
+        :param determine_partitions_by_output: use the spark partition calculator to determine output split size
+        :type determine_partitions_by_output: bool
+        :param packages: maven coordinates of jars to include
+        :type packages: list[str]
+        :param managed_output_dirs: output directory to delete on job initialization
+        :type managed_output_dirs: list[str]
+        :param jar_name: name of jar containing application's main class
+        :type jar_name: str
+        :param spark_submit_script: spark submit script to use (spark1x: spark-submit, spark2x: spark2-submit)
+        :type spark_submit_script: str
+        :param java_opts: set JVM options through the SPARK_SUBMIT_OPTS environment variable
+        :type java_opts: str
+        :param repositories: additional remote repositories to search for maven coordinates given with packages argument
+        :type repositories: str
+        :return: bool
+        """
+
+        final_jars = []
+        if library_dir:
+            final_jars.extend(os.listdir(library_dir))
+        if jars:
+            final_jars.extend(jars)
+
+        spark_submit_opts = os.getenv("SPARK_SUBMIT_OPTS")
+        if not spark_submit_opts:
+            spark_submit_opts = ""
+        os.environ["SPARK_SUBMIT_OPTS"] = spark_submit_opts + " " + java_opts
+
+        # delete output on start
+        self.clear_output_dirs(managed_output_dirs)
+
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
+        additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
+
+        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
+
+        command = 'cd {execution_dir};{spark_submit_script}' \
+                  ' --queue {queue}' \
+                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
+                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
+                  ' --conf "spark.yarn.tags={yarn_application_tags}"' \
+                  ' --name "{app_name}"' \
+                  ' --master yarn-cluster' \
+                  ' --deploy-mode cluster' \
+                  ' {add_opts} ' \
+                  ' --jars "{jars}"' \
+                  ' --files "{files}"' \
+                  ' {extra_pkg_cmd}' \
+                  ' {extra_repo_cmd}' \
+                  ' --class {main_class}' \
+                  ' {jar} ' \
+            .format(**{
+                        'execution_dir': self.execution_dir,
+                        'spark_submit_script': spark_submit_script,
+                        'queue': queue,
+                        'app_name': app_name,
+                        'add_opts': additional_configs,
+                        'snowflake_env': snowflake_cur_env,
+                        'jars': ','.join(final_jars) if final_jars else '',
+                        'files': ','.join(files or []) if files else '',
+                        'extra_pkg_cmd': (' --packages {}'.format(','.join(packages))) if packages else '',
+                        'extra_repo_cmd': ' --repositories {}'.format(
+                            ','.join((repositories if repositories else []) + self.get_sw_repos())),
+                        'main_class': main_class,
+                        'jar': '{}/{}'.format(module, jar_name),
+                        'yarn_application_tags': yarn_tags
+        })
+
+        command = TasksInfra.add_command_params(command, command_params,
+                                                value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
+        return self.run_bash(command).ok
+
     # module is either 'mobile' or 'analytics'
     def run_spark2(self,
                    main_class,
