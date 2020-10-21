@@ -1076,8 +1076,7 @@ class ContextualizedTasksInfra(object):
                      packages=None,
                      managed_output_dirs=None,
                      repositories=None,
-                     java_opts=" -Xms16m",
-                     jar_name='{}-1.0-SNAPSHOT-jar-with-dependencies.jar',
+                     jar_name=None,
                      spark_submit_script='spark2-submit'
                      ):
         """
@@ -1116,8 +1115,6 @@ class ContextualizedTasksInfra(object):
         :type jar_name: str
         :param spark_submit_script: spark submit script to use (spark1x: spark-submit, spark2x: spark2-submit)
         :type spark_submit_script: str
-        :param java_opts: set JVM options through the SPARK_SUBMIT_OPTS environment variable
-        :type java_opts: str
         :param repositories: additional remote repositories to search for maven coordinates given with packages argument
         :type repositories: str
         :return: bool
@@ -1132,7 +1129,6 @@ class ContextualizedTasksInfra(object):
         spark_submit_opts = os.getenv("SPARK_SUBMIT_OPTS")
         if not spark_submit_opts:
             spark_submit_opts = ""
-        os.environ["SPARK_SUBMIT_OPTS"] = spark_submit_opts + " " + java_opts
 
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
