@@ -972,6 +972,10 @@ class ContextualizedTasksInfra(object):
         to the execution directory. Control the spark version by specifying the
         appropriate spark submit script.
 
+        This runner will not automatically submit the egg file containing your
+        application code. You must explicitly include it with the pyfiles argument.
+        For example: pyfiles=['sw-dag/mobile-web-keywords/mobile_web_keywords-0.0.0-py2.7.egg'].
+
         :param main_py_file: path to python file that contains the application entrypoint
         :type main_py_file: str
         :param app_name: yarn application name
