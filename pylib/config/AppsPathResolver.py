@@ -121,16 +121,8 @@ class AppsPathResolver(object):
                                            'size': 200 * MB,
                                            'marker': True, 'path_type': "daily"},
 
-            'dau_estimate': {'main_path': "daily/dau/estimate/dau-engagement",
+            'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
                                  'size': 300 * MB,
-                                 'marker': True, 'path_type': "daily"},
-
-            'dau_real_numbers': {'main_path': "daily/dau/estimate/dau-real-numbers",
-                                 'size': 30 * MB,
-                                 'marker': True, 'path_type': "daily"},
-
-            'dau_rn_tsv':{'main_path': "daily/dau/estimate/dau-real-numbers-tsv",
-                                 'size': 500 * MB,
                                  'marker': True, 'path_type': "daily"},
 
 
@@ -817,15 +809,6 @@ class AppsPathResolver(object):
     def get_dau_final_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_estimate'], path_suffix)
-
-    def get_dau_real_numbers(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_real_numbers'], path_suffix)
-
-    def get_dau_real_numbers_tsv(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_rn_tsv'], path_suffix)
-
 
 
     #dau
