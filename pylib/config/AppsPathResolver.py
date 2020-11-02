@@ -99,18 +99,18 @@ class AppsPathResolver(object):
 
             #dau
             'dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceKey",
-                                          'size': 350 * MB,
+                                          'size': 600 * MB,
                                           'marker': True, 'path_type': "daily"},
             'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
                                            'size': 200 * KB,
                                            'marker': True, 'path_type': "daily"},
 
             'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
-                                           'size': 200 * MB,
+                                           'size': 1 * GB,
                                            'marker': True, 'path_type': "daily"},
 
             'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
-                                           'size': 1 * GB,
+                                           'size': 6 * GB,
                                            'marker': True, 'path_type': "daily"},
 
             'sqs_calc':{'main_path': "daily/dau/pre-estimate/sqs-calc-weights",
@@ -118,11 +118,11 @@ class AppsPathResolver(object):
                                            'marker': True, 'path_type': "daily"},
 
             'dau_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
-                                           'size': 200 * MB,
+                                           'size': 500 * MB,
                                            'marker': True, 'path_type': "daily"},
 
             'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
-                                 'size': 300 * MB,
+                                 'size': 200 * MB,
                                  'marker': True, 'path_type': "daily"},
 
 
