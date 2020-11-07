@@ -165,7 +165,7 @@ class AppsPathResolver(object):
 
             'ww_store_download_app_delta': {
                 'main_path': "daily/downloads/store_downloads/ww_downloads/ww_app_delta",
-                'size': 5 * MB,
+                'size': 1 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_download_weighted_download_est': {
