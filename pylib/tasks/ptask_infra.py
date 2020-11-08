@@ -950,17 +950,17 @@ class ContextualizedTasksInfra(object):
 
     def run_sw_pyspark(self,
                        main_py_file,
-                       app_name=None,
-                       command_params=None,
-                       files=None,
+                       app_name,
+                       queue,
+                       command_params,
                        jars=None,
-                       library_dir=None,
-                       named_spark_args=None,
+                       files=None,
                        packages=None,
                        repositories=None,
-                       py_files=None,
+                       library_dir=None,
                        spark_configs=None,
-                       queue=None,
+                       named_spark_args=None,
+                       py_files=None,
                        determine_partitions_by_output=False,
                        managed_output_dirs=None,
                        spark_submit_script='spark2-submit',
@@ -980,26 +980,26 @@ class ContextualizedTasksInfra(object):
         :type main_py_file: str
         :param app_name: yarn application name
         :type app_name: str
+        :param queue: yarn queue
+        :type queue:
         :param command_params: application arguments
         :type command_params: dict[str, str]
-        :param files: additional files for job, pass as list of paths
-        :type files: list[str]
         :param jars: additional jars to pass to job, pass as list of paths
         :type jars: list[str]
-        :param library_dir: path to directory of jars to pass to job. Must be relative to the execution dir.
-        :type library_dir: str
-        :param named_spark_args: spark command line options
-        :type named_spark_args: dict[str, str]
+        :param files: additional files for job, pass as list of paths
+        :type files: list[str]
         :param packages: maven coordinates of jars to include
         :type packages: list[str]
         :param repositories: additional remote repositories to search for maven coordinates given with packages argument
         :type repositories: list[str]
-        :param py_files: list of paths of .zip, .egg or .py files to place on the PYTHONPATH
-        :type py_files: list[str]
+        :param library_dir: path to directory of jars to pass to job. Must be relative to the execution dir.
+        :type library_dir: str
         :param spark_configs: spark properties (passed with a --conf flag)
         :type spark_configs: dict[str, str]
-        :param queue: yarn queue
-        :type queue: 
+        :param named_spark_args: spark command line options
+        :type named_spark_args: dict[str, str]
+        :param py_files: list of paths of .zip, .egg or .py files to place on the PYTHONPATH
+        :type py_files: list[str]
         :param determine_partitions_by_output: use the spark partition calculator to determine output split size
         :type determine_partitions_by_output: bool
         :param managed_output_dirs: output directory to delete on job initialization
@@ -1064,19 +1064,19 @@ class ContextualizedTasksInfra(object):
 
     def run_sw_spark(self,
                      main_class,
-                     module,
-                     queue,
+                     main_jar,
                      app_name,
+                     queue,
                      command_params,
                      jars=None,
-                     library_dir=None,
                      files=None,
+                     packages=None,
+                     repositories=None,
+                     library_dir=None,
                      spark_configs=None,
                      named_spark_args=None,
                      determine_partitions_by_output=None,
-                     packages=None,
                      managed_output_dirs=None,
-                     repositories=None,
                      spark_submit_script='spark2-submit'
                      ):
         """
@@ -1087,36 +1087,36 @@ class ContextualizedTasksInfra(object):
 
         :param main_class: qualified name of application's main class
         :type main_class: str
-        :param module: relative path from execution dir to module
-        :type module: str
-        :param queue: yarn queue
-        :type queue: str
+        :param main jar: path to jar containing application's main class 
+        :type main_jar: str
         :param app_name: yarn application name
         :type app_name: str
+        :param queue: yarn queue
+        :type queue: str
         :param command_params: application arguments
         :type command_params: dict[str, str]
         :param jars: additional jars to pass to job, pass as list of paths
         :type list[str]
-        :param library_dir: path to directory of jars to pass to job
-        :type library_dir: str
         :param files: additional files for job, pass as list of paths
         :type files: list[str]
+        :param packages: maven coordinates of jars to include
+        :type packages: list[str]
+        :param repositories: additional remote repositories to search for maven coordinates given with packages argument
+        :type repositories: str
+        :param library_dir: path to directory of jars to pass to job
+        :type library_dir: str
         :param spark_configs: spark properties (passed with a --conf flag)
         :type spark_configs: dict[str, str]
         :param named_spark_args: spark command line options
         :type named_spark_args: dict[str, str]
         :param determine_partitions_by_output: use the spark partition calculator to determine output split size
         :type determine_partitions_by_output: bool
-        :param packages: maven coordinates of jars to include
-        :type packages: list[str]
         :param managed_output_dirs: output directory to delete on job initialization
         :type managed_output_dirs: list[str]
         :param jar_name: name of jar containing application's main class
         :type jar_name: str
         :param spark_submit_script: spark submit script to use (spark1x: spark-submit, spark2x: spark2-submit)
         :type spark_submit_script: str
-        :param repositories: additional remote repositories to search for maven coordinates given with packages argument
-        :type repositories: str
         :return: bool
         """
 
@@ -1163,7 +1163,7 @@ class ContextualizedTasksInfra(object):
                     'extra_repo_cmd': ' --repositories {}'.format(
                         ','.join((repositories if repositories else []) + self.get_sw_repos())),
                     'main_class': main_class,
-                    'jar': '{}/{}'.format(module, jar_name),
+                    'jar': main_jar
                     })
 
         command = TasksInfra.add_command_params(command, command_params,
