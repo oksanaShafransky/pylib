@@ -1126,10 +1126,6 @@ class ContextualizedTasksInfra(object):
         if jars:
             final_jars.extend(jars)
 
-        spark_submit_opts = os.getenv("SPARK_SUBMIT_OPTS")
-        if not spark_submit_opts:
-            spark_submit_opts = ""
-
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
