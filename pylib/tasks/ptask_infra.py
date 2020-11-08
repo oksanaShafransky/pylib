@@ -986,7 +986,7 @@ class ContextualizedTasksInfra(object):
         :type files: list[str]
         :param jars: additional jars to pass to job, pass as list of paths
         :type jars: list[str]
-        :param library_dir: path to directory of jars to pass to job
+        :param library_dir: path to directory of jars to pass to job. Must be relative to the execution dir.
         :type library_dir: str
         :param named_spark_args: spark command line options
         :type named_spark_args: dict[str, str]
@@ -1012,55 +1012,52 @@ class ContextualizedTasksInfra(object):
         """
         final_jars = []
         if library_dir:
-            final_jars.extend(os.listdir(library_dir))
+            final_jars.extend(self.execution_dir +  "/" + os.listdir(library_dir))
         if jars:
             final_jars.extend(jars)
 
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
+        if determine_partitions_by_output:
+            command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
+
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         if python_env is not None:
             additional_configs += self._set_python_env(python_env)
 
-        py_files_cmd = ' --py-files "%s"' % ','.join(py_files) if py_files else ''
-
-        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
-
         command = 'cd {execution_dir};{spark_submit_script}' \
-                  ' --name "{app_name}"' \
-                  ' --master yarn-cluster' \
-                  ' {queue}' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
-                  ' --conf "spark.yarn.tags={yarn_application_tags}"' \
-                  ' --deploy-mode cluster' \
-                  ' --jars "{jars}"' \
-                  ' --files "{files}"' \
-                  ' {extra_pkg_cmd}' \
-                  ' {extra_repo_cmd}' \
-                  ' {py_files_cmd}' \
-                  ' {spark-confs}' \
-                  ' {main_py}' \
-            .format(**{
-                        'execution_dir': self.execution_dir,
-                        'spark_submit_script': spark_submit_script,
-                        'app_name': app_name if app_name else os.path.basename(main_py_file),
-                        'queue': '--queue {}'.format(queue) if queue else '',
-                        'snowflake_env': snowflake_cur_env,
-                        'files': ','.join(files or []) if files else '',
-                        'py_files_cmd': py_files_cmd,
-                        'extra_pkg_cmd': (' --packages {}'.format(','.join(packages))) if packages is not None else '',
-                        'extra_repo_cmd': ' --repositories {}'.format(
-                            ','.join((repositories if repositories is not None else []) + self.get_sw_repos())),
-                        'spark-confs': additional_configs,
-                        'jars': ','.join(final_jars) if final_jars else '',
-                        'main_py': main_py_file,
-                        'yarn_application_tags': yarn_tags
-        })
+                ' --name "{app_name}"' \
+                ' --master yarn-cluster' \
+                ' {queue}' \
+                ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
+                ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
+                ' --conf "spark.yarn.tags={yarn_application_tags}"' \
+                ' --deploy-mode cluster' \
+                ' --jars "{jars}"' \
+                ' --files "{files}"' \
+                ' {extra_pkg_cmd}' \
+                ' {extra_repo_cmd}' \
+                ' {py_files_cmd}' \
+                ' {spark-confs}' \
+                ' {main_py}' \
+                .format(**{
+                    'execution_dir': self.execution_dir,
+                    'spark_submit_script': spark_submit_script,
+                    'app_name': app_name if app_name else os.path.basename(main_py_file),
+                    'queue': '--queue {}'.format(queue) if queue else '',
+                    'snowflake_env': os.environ.get('SNOWFLAKE_ENV'),
+                    'yarn_application_tags': os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else '',
+                    'jars': ','.join(final_jars) if final_jars else '',
+                    'files': ','.join(files or []) if files else '',
+                    'extra_pkg_cmd': (' --packages {}'.format(','.join(packages))) if packages else '',
+                    'extra_repo_cmd': ' --repositories {}'.format(
+                        ','.join((repositories if repositories else []) + self.get_sw_repos())),
+                    'py_files_cmd': ' --py-files "%s"' % ','.join(py_files) if py_files else '',
+                    'spark-confs': additional_configs,
+                    'main_py': main_py_file
+                    })
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         return self.run_bash(command).ok
@@ -1126,7 +1123,7 @@ class ContextualizedTasksInfra(object):
 
         final_jars = []
         if library_dir:
-            final_jars.extend(os.listdir(library_dir))
+            final_jars.extend(self.execution_dir +  "/" + os.listdir(library_dir))
         if jars:
             final_jars.extend(jars)
 
@@ -1137,43 +1134,42 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
+        if determine_partitions_by_output:
+            command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
+
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
-        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
-
         command = 'cd {execution_dir};{spark_submit_script}' \
-                  ' --queue {queue}' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
-                  ' --conf "spark.yarn.tags={yarn_application_tags}"' \
-                  ' --name "{app_name}"' \
-                  ' --master yarn-cluster' \
-                  ' --deploy-mode cluster' \
-                  ' {add_opts} ' \
-                  ' --jars "{jars}"' \
-                  ' --files "{files}"' \
-                  ' {extra_pkg_cmd}' \
-                  ' {extra_repo_cmd}' \
-                  ' --class {main_class}' \
-                  ' {jar} ' \
-            .format(**{
-                        'execution_dir': self.execution_dir,
-                        'spark_submit_script': spark_submit_script,
-                        'queue': queue,
-                        'app_name': app_name,
-                        'add_opts': additional_configs,
-                        'snowflake_env': snowflake_cur_env,
-                        'jars': ','.join(final_jars) if final_jars else '',
-                        'files': ','.join(files or []) if files else '',
-                        'extra_pkg_cmd': (' --packages {}'.format(','.join(packages))) if packages else '',
-                        'extra_repo_cmd': ' --repositories {}'.format(
-                            ','.join((repositories if repositories else []) + self.get_sw_repos())),
-                        'main_class': main_class,
-                        'jar': '{}/{}'.format(module, jar_name),
-                        'yarn_application_tags': yarn_tags
-        })
+                ' --queue {queue}' \
+                ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
+                ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
+                ' --conf "spark.yarn.tags={yarn_application_tags}"' \
+                ' --name "{app_name}"' \
+                ' --master yarn-cluster' \
+                ' --deploy-mode cluster' \
+                ' {add_opts} ' \
+                ' --jars "{jars}"' \
+                ' --files "{files}"' \
+                ' {extra_pkg_cmd}' \
+                ' {extra_repo_cmd}' \
+                ' --class {main_class}' \
+                ' {jar} ' \
+                .format(**{
+                    'execution_dir': self.execution_dir,
+                    'spark_submit_script': spark_submit_script,
+                    'queue': queue,
+                    'snowflake_env': os.environ.get('SNOWFLAKE_ENV'),
+                    'yarn_application_tags': os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else '',
+                    'app_name': app_name,
+                    'add_opts': additional_configs,
+                    'jars': ','.join(final_jars) if final_jars else '',
+                    'files': ','.join(files or []) if files else '',
+                    'extra_pkg_cmd': (' --packages {}'.format(','.join(packages))) if packages else '',
+                    'extra_repo_cmd': ' --repositories {}'.format(
+                        ','.join((repositories if repositories else []) + self.get_sw_repos())),
+                    'main_class': main_class,
+                    'jar': '{}/{}'.format(module, jar_name),
+                    })
 
         command = TasksInfra.add_command_params(command, command_params,
                                                 value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
