@@ -1077,7 +1077,6 @@ class ContextualizedTasksInfra(object):
                      packages=None,
                      managed_output_dirs=None,
                      repositories=None,
-                     jar_name=None,
                      spark_submit_script='spark2-submit'
                      ):
         """
