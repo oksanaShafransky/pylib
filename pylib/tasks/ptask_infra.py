@@ -959,7 +959,6 @@ class ContextualizedTasksInfra(object):
                       files=None,
                       packages=None,
                       repositories=None,
-                      library_dir=None,
                       spark_configs=None,
                       named_spark_args=None,
                       py_files=None,
@@ -968,12 +967,6 @@ class ContextualizedTasksInfra(object):
                       spark_submit_script=None,
                       python_env=None
                       ):
-
-        final_jars = []
-        if library_dir:
-            final_jars.extend(self.execution_dir + "/" + os.listdir(library_dir))
-        if jars:
-            final_jars.extend(jars)
 
         self.clear_output_dirs(managed_output_dirs)
 
@@ -1009,8 +1002,8 @@ class ContextualizedTasksInfra(object):
             command += ' --queue {}'.format(queue)
         if 'YARN_TAGS' in os.environ:
             command += ' --conf "spark.yarn.tags={}"'.format(os.environ['YARN_TAGS'])
-        if final_jars:
-            command += ' --jars "{}"'.format(','.join(final_jars))
+        if jars:
+            command += ' --jars "{}"'.format(','.join(jars))
         if files:
             command += ' --files "{}"'.format(','.join(files))
         if packages:
@@ -1041,7 +1034,6 @@ class ContextualizedTasksInfra(object):
                        files=None,
                        packages=None,
                        repositories=None,
-                       library_dir=None,
                        spark_configs=None,
                        named_spark_args=None,
                        determine_partitions_by_output=False,
@@ -1076,8 +1068,6 @@ class ContextualizedTasksInfra(object):
         :type packages: list[str]
         :param repositories: additional remote repositories to search for maven coordinates given with packages argument
         :type repositories: list[str]
-        :param library_dir: path to directory of jars to pass to job. Must be relative to the execution dir.
-        :type library_dir: str
         :param spark_configs: spark properties (passed with a --conf flag)
         :type spark_configs: dict[str, str]
         :param named_spark_args: spark command line options
@@ -1113,7 +1103,6 @@ class ContextualizedTasksInfra(object):
                                   files=files,
                                   packages=packages,
                                   repositories=repositories,
-                                  library_dir=library_dir,
                                   spark_configs=spark_configs,
                                   named_spark_args=named_spark_args,
                                   py_files=py_files,
@@ -1132,7 +1121,6 @@ class ContextualizedTasksInfra(object):
                      files=None,
                      packages=None,
                      repositories=None,
-                     library_dir=None,
                      spark_configs=None,
                      named_spark_args=None,
                      determine_partitions_by_output=None,
@@ -1163,8 +1151,6 @@ class ContextualizedTasksInfra(object):
         :type packages: list[str]
         :param repositories: additional remote repositories to search for maven coordinates given with packages argument
         :type repositories: str
-        :param library_dir: path to directory of jars to pass to job
-        :type library_dir: str
         :param spark_configs: spark properties (passed with a --conf flag)
         :type spark_configs: dict[str, str]
         :param named_spark_args: spark command line options
@@ -1188,7 +1174,6 @@ class ContextualizedTasksInfra(object):
                                   files=files,
                                   packages=packages,
                                   repositories=repositories,
-                                  library_dir=library_dir,
                                   spark_configs=spark_configs,
                                   named_spark_args=named_spark_args,
                                   determine_partitions_by_output=determine_partitions_by_output,
