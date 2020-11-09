@@ -1057,7 +1057,7 @@ class ContextualizedTasksInfra(object):
         :param app_name: yarn application name
         :type app_name: str
         :param queue: yarn queue
-        :type queue:
+        :type queue: str
         :param command_params: application arguments
         :type command_params: dict[str, str]
         :param jars: additional jars to pass to job, pass as list of paths
@@ -1135,7 +1135,7 @@ class ContextualizedTasksInfra(object):
 
         :param main_class: qualified name of application's main class
         :type main_class: str
-        :param main jar_path: path to jar containing application's main class
+        :param main_jar_path: path to jar containing application's main class
         :type main_jar_path: str
         :param app_name: yarn application name
         :type app_name: str
@@ -1144,7 +1144,7 @@ class ContextualizedTasksInfra(object):
         :param command_params: application arguments
         :type command_params: dict[str, str]
         :param jars: additional jars to pass to job, pass as list of paths
-        :type list[str]
+        :type jars: list[str]
         :param files: additional files for job, pass as list of paths
         :type files: list[str]
         :param packages: maven coordinates of jars to include
@@ -1159,8 +1159,6 @@ class ContextualizedTasksInfra(object):
         :type determine_partitions_by_output: bool
         :param managed_output_dirs: output directory to delete on job initialization
         :type managed_output_dirs: list[str]
-        :param jar_name: name of jar containing application's main class
-        :type jar_name: str
         :param spark_submit_script: spark submit script to use (spark1x: spark-submit, spark2x: spark2-submit)
         :type spark_submit_script: str
         :return: bool
