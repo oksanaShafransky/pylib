@@ -99,18 +99,18 @@ class AppsPathResolver(object):
 
             #dau
             'dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceKey",
-                                          'size': 350 * MB,
+                                          'size': 600 * MB,
                                           'marker': True, 'path_type': "daily"},
             'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
                                            'size': 200 * KB,
                                            'marker': True, 'path_type': "daily"},
 
             'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
-                                           'size': 200 * MB,
+                                           'size': 1 * GB,
                                            'marker': True, 'path_type': "daily"},
 
             'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
-                                           'size': 1 * GB,
+                                           'size': 6 * GB,
                                            'marker': True, 'path_type': "daily"},
 
             'sqs_calc':{'main_path': "daily/dau/pre-estimate/sqs-calc-weights",
@@ -118,19 +118,11 @@ class AppsPathResolver(object):
                                            'marker': True, 'path_type': "daily"},
 
             'dau_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
-                                           'size': 200 * MB,
+                                           'size': 500 * MB,
                                            'marker': True, 'path_type': "daily"},
 
-            'dau_estimate': {'main_path': "daily/dau/estimate/dau-engagement",
-                                 'size': 300 * MB,
-                                 'marker': True, 'path_type': "daily"},
-
-            'dau_real_numbers': {'main_path': "daily/dau/estimate/dau-real-numbers",
-                                 'size': 30 * MB,
-                                 'marker': True, 'path_type': "daily"},
-
-            'dau_rn_tsv':{'main_path': "daily/dau/estimate/dau-real-numbers-tsv",
-                                 'size': 500 * MB,
+            'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
+                                 'size': 200 * MB,
                                  'marker': True, 'path_type': "daily"},
 
 
@@ -173,7 +165,7 @@ class AppsPathResolver(object):
 
             'ww_store_download_app_delta': {
                 'main_path': "daily/downloads/store_downloads/ww_downloads/ww_app_delta",
-                'size': 5 * MB,
+                'size': 1 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_download_weighted_download_est': {
@@ -219,8 +211,8 @@ class AppsPathResolver(object):
             'extractor_1015': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1015", 'size': 60 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1019': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1019", 'size': 100 * MB,
-                               'marker': True, 'path_type': "daily"}, #TODO fix size
+            'extractor_1019': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1019", 'size': 20 * MB,
+                               'marker': True, 'path_type': "daily"},
 
             'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 50 * MB,
                                'marker': True, 'path_type': "daily"},
@@ -817,15 +809,6 @@ class AppsPathResolver(object):
     def get_dau_final_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_estimate'], path_suffix)
-
-    def get_dau_real_numbers(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_real_numbers'], path_suffix)
-
-    def get_dau_real_numbers_tsv(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_rn_tsv'], path_suffix)
-
 
 
     #dau
