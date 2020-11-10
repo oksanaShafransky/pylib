@@ -8,8 +8,6 @@ import os
 SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
-# TODO there is infra in s3/data_checks that solves some this, given a connection and bucket objects
-# it might be more efficient, but do we really want hold s3 constructs here? need to decide
 
 logger = logging.getLogger('data_artifact')
 
@@ -94,7 +92,6 @@ class DataArtifact(object):
 
         if self.locate_data_source.is_exist and self.locate_data_source.is_size and self.locate_data_source.is_marker:
             for reporter in reporters:
-                # TODO decide how to treat the distinction of data found on hdfs/s3
                 reporter.report_lineage('input',
                                         {self.locate_data_source.prefixed_collection: self.locate_data_source.effective_size})
 
