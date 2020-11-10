@@ -1,10 +1,7 @@
 import logging
 import json
-
-from pylib.hadoop.hdfs_util import get_size as size_on_hdfs, file_exists as exists_hdfs, directory_exists as dir_exists_hdfs
-from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_s3
 from pylib.config.SnowflakeConfig import SnowflakeConfig
-from itertools import ifilter
+from datasource import HDFSDataSource, S3DataSource
 
 import os
 
@@ -16,21 +13,9 @@ DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
 logger = logging.getLogger('data_artifact')
 
+# Extract default data sources, it's here because we want it to run once.
+default_data_sources_json = json.loads(SnowflakeConfig().get_service_name(service_name="da-input-sources"))
 
-def human_size(raw_size):
-    scale = 1024
-    sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'HB']
-    curr_size, curr_idx = float(raw_size), 0
-
-    while curr_size >= scale:
-        curr_size, curr_idx = curr_size / scale, curr_idx + 1
-
-    return curr_size, sizes[curr_idx]
-
-
-def get_s3_buckets(buckets=None):
-    effective_buckets = buckets or SnowflakeConfig().get_service_name(service_name="da-s3-buckets")
-    return json.loads(effective_buckets)
 
 
 class RangedDataArtifact(object):
@@ -60,124 +45,71 @@ class RangedDataArtifact(object):
         return item_delimiter.join([tuple_delimiter.join(tup) for tup in tuples])
 
 
+
+
+
 class DataArtifact(object):
-    def __init__(self, path, required_size=0, required_marker=True, bucket=None, pref=None, buckets=None):
+
+    def __init__(self, path, required_size=0, required_marker=True, override_data_sources=None, ti=None):
         self.raw_path = path
         self.min_required_size = required_size
         self.check_marker = required_marker
-        self.buckets = self._get_override_buckets(bucket, pref) or buckets
 
-    def _get_override_buckets(self, override_bucket, override_prefix):
-        class Bucket(object):
-            def __init__(self, name, prefix=None):
-                self.name = name
-                self.prefix = prefix
+        # Decide on datasources - This section still need design after we will enable datasource changes through ti.
+        self.raw_data_sources_list = override_data_sources if override_data_sources else default_data_sources_json
 
-        return json.dumps([Bucket(override_bucket, override_prefix).__dict__]) if override_bucket else None
+        # Create DataSources Hirechy
+        self.locate_data_source = None
+        data_sources = []
+        for d in self.raw_data_sources_list:
+            if d.get('type') == "hdfs":
+                data_sources.append(HDFSDataSource(self.raw_path, self.min_required_size,
+                                                   self.check_marker, d.get("name"), d.get("prefix")))
+            elif d.get('type') == "s3":
+                data_sources.append(S3DataSource(self.raw_path, self.min_required_size,
+                                                   self.check_marker, d.get("name"), d.get("prefix")))
+            else:
+                raise Exception("DataArtifact: unknown data source")
 
-    def _hdfs_size(self):
-        if dir_exists_hdfs(self.raw_path):
-            return size_on_hdfs(self.raw_path)
-        else:
-            return None
+        #Search in datasource one by one break if we found one.
+        for d in data_sources:
+            #Checking current datasource
+            if d.is_dir_exist():
+                #From here if something breaks datasource will throw exception
+                d.validate_marker()
+                d.validate_size()
 
-    def _s3_path(self, bucket, prefix=None):
-        return '%s%s%s' % (bucket, prefix or '', self.raw_path)
+            if d.is_exist and d.is_marker and d.is_size:
+                #We found a datasource
+                self.locate_data_source = d
+                return
 
-    def _resolve_s3_size(self):
-        path = self._resolve_s3_path_by_size()
-        return size_on_s3('s3://%s' % path) if path else 0
+        #If we got here we should fail Data artifact with no collection found
+        raise Exception("DataArtifact - Couldn't locate collection in any of the datasources")
 
-    def _resolve_s3_path_by_size(self):
-        def paths_by_buckets():
-            bucks = get_s3_buckets(self.buckets)
-            return [self._s3_path(b.get('name'), b.get('prefix')) for b in bucks]
-
-        def filter_by_size(path):
-            return size_on_s3('s3://%s' % path) > 0
-
-        return next(ifilter(filter_by_size, paths_by_buckets()), None)
-
-    @property
-    def actual_size(self):
-        hdfs_size = self._hdfs_size()
-        if hdfs_size is not None:
-            return hdfs_size
-        else:
-            return self._resolve_s3_size()
-
-    def check_size(self):
-        return self.actual_size >= self.min_required_size
-
-    def _is_data_valid(self, direction, max_size, *reporters):
-        hdfs_size = self._hdfs_size()
-        check_marker_ok = True
-        if hdfs_size is not None:
-            logger.info('Checking that dir %s on hdfs is larger than %d...' % (self.raw_path, self.min_required_size))
-            effective_size = hdfs_size
-            if self.check_marker and not exists_hdfs(os.path.join(self.raw_path, SUCCESS_MARKER)):
-                check_marker_ok = False
-        else:
-            effective_s3_path = self._resolve_s3_path_by_size()
-            if effective_s3_path is None:
-                logger.error('dir %s not found in hdfs or in s3' % self.raw_path)
-                return False
-
-            logger.info('Checking that dir %s on s3 is larger than %d...' % (effective_s3_path, self.min_required_size))
-            effective_size = size_on_s3('s3://%s' % effective_s3_path)
-            if self.check_marker and not exists_s3(os.path.join('s3://%s' % effective_s3_path, SUCCESS_MARKER)):
-                check_marker_ok = False
-
-        for reporter in reporters:
-            # TODO decide how to treat the distinction of data found on hdfs/s3
-            reporter.report_lineage('input', {self.raw_path: effective_size})
-
-        resolved_path = self.resolved_path
-        if not effective_size >= self.min_required_size:
-            logger.error('%s data is not valid at %s. size is %s, required %s' % (direction, resolved_path, human_size(effective_size), human_size(self.min_required_size)))
-            return False
-
-        if not check_marker_ok:
-            logger.error('no success marker was found at path %s' % resolved_path)
-            return False
-
-        if max_size is not None:
-            if not effective_size >= self.min_required_size:
-                logger.error('requested threshold too small for %s data  at %s. size is %s, required %s' % (direction, resolved_path, human_size(effective_size), human_size(self.min_required_size)))
-                return False
-
-        logger.info('Data validity checks passed for path %s' % resolved_path)
-        return True
-
-    def _assert_data_validity(self, direction, max_size, *reporters):
-        assert self._is_data_valid(direction, max_size, *reporters)
-
-    def is_input_valid(self, *reporters):
-        return self._is_data_valid('input', None, *reporters)
-
+    # This function should be depcrecated we only allow it for backward compatibility
     def assert_input_validity(self, *reporters):
-        self._assert_data_validity('input', None, *reporters)
+        if not self.locate_data_source:
+            raise Exception("DataArtifact Failure no valid datasource was found")
 
-    STRICT_SIZE_THRESHOLD = 30
+        if self.locate_data_source.is_exist and self.locate_data_source.is_size and self.locate_data_source.is_marker:
+            for reporter in reporters:
+                # TODO decide how to treat the distinction of data found on hdfs/s3
+                reporter.report_lineage('input',
+                                        {self.locate_data_source.prefixed_collection: self.locate_data_source.effective_size})
 
-    def is_output_valid(self, is_strict=False, *reporters):
-        return self._is_data_valid('output', self.min_required_size * DataArtifact.STRICT_SIZE_THRESHOLD if is_strict else None, *reporters)
 
-    def assert_output_validity(self, is_strict=False, *reporters):
-        self._assert_data_validity('output', self.min_required_size * DataArtifact.STRICT_SIZE_THRESHOLD if is_strict else None, *reporters)
-
-    def is_local(self):
-        return dir_exists_hdfs(self.raw_path)
 
     @property
     def resolved_path(self):
-        if self.is_local():
-            return self.raw_path
+        if self.locate_data_source:
+            return self.locate_data_source.resolved_path()
         else:
-            path = self._resolve_s3_path_by_size()
-            return None if not path else "s3a://%s" % path
+            raise Exception("DataArtifact Failure no datasource located")
 
 
 if __name__ == '__main__':
-    da = DataArtifact('path')
+    da = DataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=07', required_size=1000, required_marker=True)
+    da.assert_input_validity()
+    print(da.resolved_path)
 
