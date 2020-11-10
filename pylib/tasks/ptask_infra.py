@@ -1093,7 +1093,7 @@ class ContextualizedTasksInfra(object):
         """
 
         if not py_files:
-            logger.warn(pyfiles_warning)
+            logging.warn(pyfiles_warning)
 
         return self._spark_submit(app_name=app_name,
                                   queue=queue,
@@ -1195,7 +1195,7 @@ class ContextualizedTasksInfra(object):
                    repositories=None,
                    java_opts=" -Xms16m"):
 
-        logger.warn("run_spark2 is a deprecated method. Use run_sw_spark instead.")
+        logging.warn("run_spark2 is a deprecated method. Use run_sw_spark instead.")
 
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
@@ -1265,7 +1265,7 @@ class ContextualizedTasksInfra(object):
                   packages=None,
                   managed_output_dirs=None):
 
-        logger.warn("run_spark is a deprecated method. Use run_sw_spark instead.")
+        logging.warn("run_spark is a deprecated method. Use run_sw_spark instead.")
 
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
@@ -1386,7 +1386,7 @@ class ContextualizedTasksInfra(object):
                      python_env=None
                      ):
 
-        logger.warn("run_py_spark2 is a deprecated method. Use run_sw_pyspark instead.")
+        logging.warn("run_py_spark2 is a deprecated method. Use run_sw_pyspark instead.")
 
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
@@ -1497,7 +1497,7 @@ class ContextualizedTasksInfra(object):
                      python_env=None
                      ):
 
-        logger.warn("run_py_spark is a deprecated method. Use run_sw_pyspark instead.")
+        logging.warn("run_py_spark is a deprecated method. Use run_sw_pyspark instead.")
 
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
