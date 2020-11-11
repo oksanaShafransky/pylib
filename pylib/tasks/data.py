@@ -15,7 +15,6 @@ logger = logging.getLogger('data_artifact')
 default_data_sources_json = json.loads(SnowflakeConfig().get_service_name(service_name="da-input-sources"))
 
 
-
 class RangedDataArtifact(object):
 
     def __init__(self, collection_path, dates, suffix_format=DEFAULT_SUFFIX_FORMAT, *args, **kwargs):
@@ -53,7 +52,7 @@ class DataArtifact(object):
         self.min_required_size = required_size
         self.check_marker = required_marker
 
-        # Decide on datasources - This section still need design after we will enable datasource changes through ti.
+        # Decide on datasources - This section still need redesign after we will enable datasource changes through ti.
         self.raw_data_sources_list = override_data_sources if override_data_sources else default_data_sources_json
 
         # Create DataSources Hirechy
@@ -83,7 +82,7 @@ class DataArtifact(object):
                 return
 
         #If we got here we should fail Data artifact with no collection found
-        raise Exception("DataArtifact - Couldn't locate collection in any of the datasources")
+        raise Exception("DataArtifact - Couldn't locate collection: %s in any of the datasources" % self.raw_path)
 
     # This function should be depcrecated we only allow it for backward compatibility
     def assert_input_validity(self, *reporters):
@@ -96,7 +95,6 @@ class DataArtifact(object):
                                         {self.locate_data_source.prefixed_collection: self.locate_data_source.effective_size})
 
 
-
     @property
     def resolved_path(self):
         if self.locate_data_source:
@@ -106,7 +104,8 @@ class DataArtifact(object):
 
 
 if __name__ == '__main__':
-    da = DataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=07', required_size=1000, required_marker=True)
-    da.assert_input_validity()
-    print(da.resolved_path)
+    da = DataArtifact('path')
+    # da = DataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=07', required_size=1000, required_marker=True)
+    # da.assert_input_validity()
+    # print(da.resolved_path)
 
