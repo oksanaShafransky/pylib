@@ -1,4 +1,4 @@
-from pylib.tasks.data import DataArtifact, RangedDataArtifact
+from pylib.tasks.input_data_artifact import InputDataArtifact, InputRangedDataArtifact
 from enum import Enum
 
 GB = 1024 ** 3
@@ -50,12 +50,12 @@ class AppsPathResolver(object):
 
         def get_data_artifact(self, date_suffix=None):
             date_suffix = date_suffix if date_suffix else self.__get_date_suffix_by_type()
-            return DataArtifact(path_join(self.full_base_path, date_suffix, self.path_suffix),
+            return InputDataArtifact(path_join(self.full_base_path, date_suffix, self.path_suffix),
                                 required_size=self.required_size,
                                 required_marker=self.required_marker)
 
         def get_ranged_data_artifact(self, dates):
-            return RangedDataArtifact(self.full_base_path, dates,
+            return InputRangedDataArtifact(self.full_base_path, dates,
                                       required_size=self.required_size,
                                       required_marker=self.required_marker)
 
