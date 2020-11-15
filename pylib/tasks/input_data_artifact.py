@@ -1,7 +1,7 @@
 import logging
 import json
 from pylib.config.SnowflakeConfig import SnowflakeConfig
-from datasource import HDFSDataSource, S3DataSource
+from datasource import HDFSDataSource, S3DataSource, DatasourceTypes
 
 import os
 
@@ -59,25 +59,27 @@ class InputDataArtifact(object):
         self.locate_data_source = None
         data_sources = []
         for d in self.raw_data_sources_list:
-            if d.get('type') == "hdfs":
+            d_type = d.get('type')
+            if d_type == DatasourceTypes.HDFS.value:
                 data_sources.append(HDFSDataSource(self.raw_path, self.min_required_size,
                                                    self.check_marker, d.get("name"), d.get("prefix")))
-            elif d.get('type') == "s3":
+            elif d_type == DatasourceTypes.S3.value:
                 data_sources.append(S3DataSource(self.raw_path, self.min_required_size,
                                                    self.check_marker, d.get("name"), d.get("prefix")))
             else:
-                raise Exception("InputDataArtifact: unknown data source")
+                raise Exception("InputDataArtifact: unknown data source:%s options - %s" % (d_type, {d.name: d.value for d in DatasourceTypes}))
 
         #Search in datasource one by one break if we found one.
         for d in data_sources:
             #Checking current datasource
-            logger.info("InputDataArtifact: Datasource check if dir exsits")
+            logger.info("Checking datasource: " + repr(d))
+            logger.info("InputDataArtifact: Datasource check if dir exsits on collection: " + self.raw_path)
             if d.is_dir_exist():
                 #From here if something breaks datasource will throw exception
-                logger.info("InputDataArtifact: Datasource validate marker")
-                d.validate_marker()
-                logger.info("InputDataArtifact: Datasource validate marker")
-                d.validate_size()
+                logger.info("InputDataArtifact: Datasource validate marker, required_marker: " + str(required_marker))
+                d.assert_marker()
+                logger.info("InputDataArtifact: Datasource validate size, required_size: " + str(required_size))
+                d.assert_size()
 
             if d.is_exist and d.is_marker_validated and d.is_size_validated:
                 #We found a datasource
@@ -110,7 +112,7 @@ class InputDataArtifact(object):
 
 if __name__ == '__main__':
     # da = InputDataArtifact('path')
-    da = InputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=09/day=07', required_size=10000, required_marker=True)
+    da = InputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=07', required_size=10000, required_marker=True)
     da.assert_input_validity()
     print(da.resolved_path)
 

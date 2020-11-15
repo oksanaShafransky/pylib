@@ -1,5 +1,6 @@
 import logging
 import abc
+from enum import Enum
 import os
 from pylib.hadoop.hdfs_util import get_size as size_on_hdfs, file_exists as exists_hdfs, directory_exists as dir_exists_hdfs, create_client
 from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_s3
@@ -20,7 +21,7 @@ def human_size(raw_size):
 
     return str(curr_size) + str(sizes[curr_idx])
 
-class DatasourceTypes(enum.Enum):
+class DatasourceTypes(Enum):
    S3 = "s3"
    HDFS = "hdfs"
 
@@ -61,12 +62,12 @@ class DataSource(object):
         return
 
     @abc.abstractmethod
-    def validate_size(self):
+    def assert_size(self):
         """Method documentation"""
         return
 
     @abc.abstractmethod
-    def validate_marker(self):
+    def assert_marker(self):
         """Method documentation"""
         return
 
@@ -80,6 +81,11 @@ class DataSource(object):
         """Method documentation"""
         return
 
+    @abc.abstractmethod
+    def __repr__(self):
+        """Method documentation"""
+        return
+
 
 class S3DataSource(DataSource):
 
@@ -88,33 +94,27 @@ class S3DataSource(DataSource):
         self.bucket_name = bucket_name
         self.prefix = prefix
         self.prefixed_collection = "%s%s" % (self.prefix, self.collection)
-        self.full_uri = "s3://%s%s" % (self.bucket_name, self.prefixed_collection)
-
+        self.full_uri = "s3a://%s%s" % (self.bucket_name, self.prefixed_collection)
 
     def log_success(self):
         logger.info(
             "DataArtifact S3(bucket:%s) - Location is located and validated. Collection: %s , Actual size: %s, Marker: %s" %
             (self.bucket_name, self.prefixed_collection, self.effective_size, self.required_marker))
 
-
-    def validate_size(self):
+    def assert_size(self):
         if not self.is_exist:
             logger.error('Validate size called when dir is not exist %s on s3 bucket: %s' % (self.prefixed_collection, self.bucket_name))
             raise Exception("DataArtifact Failure")
 
         logger.info(
             'Checking that dir %s on s3 is larger than %d...' % (self.prefixed_collection, self.required_size))
-        if not self.effective_size >= self.required_size:
-            logger.error('Size test failed on %s required size: %d actual size: %d'
-                         % (self.prefixed_collection, self.required_size, self.effective_size))
-            raise Exception("DataArtifact Failure")
-        else:
-            logger.info("Size is valid: %s" % human_size(self.effective_size))
-            self.is_size_validated = True  # TODO delete this
+        assert self.effective_size >= self.required_size,\
+            'Size test failed on %s required size: %d actual size: %d' % (self.prefixed_collection, self.required_size, self.effective_size)
 
-        return True
+        logger.info("Size is valid: %s" % human_size(self.effective_size))
+        self.is_size_validated = True
 
-    def validate_marker(self):
+    def assert_marker(self):
         if not self.is_exist:
             logger.error('Validate marker called when dir is not exist %s on s3 bucket: %s' % (self.prefixed_collection, self.bucket_name))
             raise Exception("DataArtifact Failure")
@@ -122,15 +122,10 @@ class S3DataSource(DataSource):
         logger.info('Checking if marker required or exist %s on s3 bucket: %s' % (
         self.prefixed_collection, self.bucket_name))
         self.is_marker_validated = exists_s3(os.path.join(self.full_uri, SUCCESS_MARKER))
-        if self.required_marker and not self.is_marker_validated:
-            logger.error(
-                'No success marker found in %s on s3 bucket %s' % (self.prefixed_collection, self.bucket_name))
-            raise Exception("DataArtifact Failure")
-        else:
-            logger.info("Marker is valid, required_marker %s" % str(self.required_marker))
-            self.is_marker_validated = True
-
-        return True
+        assert not self.required_marker or self.is_marker_validated, \
+            'No success marker found in %s on s3 bucket %s' % (self.prefixed_collection, self.bucket_name)
+        logger.info("Marker is valid, required_marker %s" % str(self.required_marker))
+        self.is_marker_validated = True
 
     def is_dir_exist(self):
         #We already checked
@@ -154,6 +149,10 @@ class S3DataSource(DataSource):
         else:
             raise Exception("DataArtifact Failure chosen datasource doesn't have valid path")
 
+    def __repr__(self):
+        return 'S3 Datasource reading from %s bucket with %s prefix(could be empty)' % (self.bucket_name, self.prefix)
+
+
 
 class HDFSDataSource(DataSource):
 
@@ -173,8 +172,8 @@ class HDFSDataSource(DataSource):
 
     def log_success(self):
         logger.info(
-            "DataSource HDFS(%s) - Location is located and validated. Collection: %s , Actual size: %s, Marker: %s" %
-            (self.name, self.prefixed_collection, self.effective_size, self.required_marker))
+            "DataSource HDFS(%s) - Location is located and validated. Collection: %s , Actual size: %s, Marker: %s, Full Uri: %s" %
+            (self.name, self.prefixed_collection, self.effective_size, self.required_marker, self.full_uri))
 
     def log_fail_to_find(self):
         logger.info("DataSource HDFS(%s) - Couldn't find %s collection" % (self.name, self.prefixed_collection))
@@ -192,42 +191,42 @@ class HDFSDataSource(DataSource):
 
         return False
 
-    def validate_marker(self):
-        if not self.effective_size:
+    def assert_marker(self):
+        if not self.is_exist:
             logger.error('Validate marker called when dir is not exist %s on hdfs: %s' % (self.prefixed_collection, self.name))
             raise Exception("DataArtifact Failure")
 
         logger.info('Checking if marker required or exist %s on hdfs: %s' % (self.prefixed_collection, self.name))
-        if not self.required_marker or exists_hdfs(os.path.join(self.prefixed_collection, SUCCESS_MARKER),
-                                                   hdfs_client=self.hdfs_client):
-            logger.info("Marker is valid, required_marker %s" % str(self.required_marker))
-            self.is_marker_validated = True
-            return True
-        else:
-            logger.error('No success marker found in %s on HDFS %s' % (self.prefixed_collection, self.name))
-            raise Exception("DataArtifact Failure")
+        is_marker_exist_in_hdfs = exists_hdfs(os.path.join(self.prefixed_collection, SUCCESS_MARKER),
+                                                   hdfs_client=self.hdfs_client)
 
-    def validate_size(self):
-        if not self.effective_size:
+        assert not self.required_marker or is_marker_exist_in_hdfs, \
+            'No success marker found in %s on HDFS %s' % (self.prefixed_collection, self.name)
+
+        logger.info("Marker is valid, required_marker %s" % str(self.required_marker))
+        self.is_marker_validated = True
+
+    def assert_size(self):
+        if not self.is_exist:
             logger.error('Validate size called when dir is not exist %s on hdfs: %s' % (self.prefixed_collection, self.name))
             raise Exception("DataArtifact Failure")
 
         logger.info(
             'Checking that dir %s on hdfs is larger than %d...' % (self.prefixed_collection, self.required_size))
-        if not self.effective_size >= self.required_size:
-            logger.error('Size test failed on %s required size: %d actual size: %d'
-                         % (self.prefixed_collection, self.required_size, self.effective_size))
-            raise Exception("DataArtifact Failure")
-        else:
-            logger.info("Size is valid: %s" % human_size(self.effective_size))
-            self.is_size_validated = True  # TODO delete this
-            return True
+        assert self.effective_size >= self.required_size, 'Size test failed on %s required size: %d actual size: %d'% (self.prefixed_collection, self.required_size, self.effective_size)
+
+        logger.info("Size is valid: %s" % human_size(self.effective_size))
+        self.is_size_validated = True
+
 
     def resolved_path(self):
         if self.is_exist and self.is_marker_validated and self.is_size_validated:
             return self.full_uri
         else:
             raise Exception("DataArtifact Failure chosen datasource doesn't have valid path")
+
+    def __repr__(self):
+        return 'HDFS Datasource reading from %s namenode with %s prefix(could be empty)' % (self.name, self.prefix)
 
 
 
