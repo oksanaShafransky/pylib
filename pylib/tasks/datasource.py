@@ -3,6 +3,7 @@ import abc
 import os
 from pylib.hadoop.hdfs_util import get_size as size_on_hdfs, file_exists as exists_hdfs, directory_exists as dir_exists_hdfs, create_client
 from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_s3
+import enum
 
 
 logger = logging.getLogger('data_artifact')
@@ -18,6 +19,21 @@ def human_size(raw_size):
         curr_size, curr_idx = curr_size / scale, curr_idx + 1
 
     return str(curr_size) + str(sizes[curr_idx])
+
+class DatasourceTypes(enum.Enum):
+   S3 = "s3"
+   HDFS = "hdfs"
+
+
+def create_datasource_input_dict(type, name, prefix):
+    if not isinstance(type, DatasourceTypes):
+        raise Exception("DataSource Error - DataSourcesTypes type was expected")
+
+    return {'type': type.value,
+            'name': name,
+            'pref': prefix
+    }
+
 
 class DataSource(object):
     __metaclass__ = abc.ABCMeta
