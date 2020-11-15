@@ -66,17 +66,20 @@ class InputDataArtifact(object):
                 data_sources.append(S3DataSource(self.raw_path, self.min_required_size,
                                                    self.check_marker, d.get("name"), d.get("prefix")))
             else:
-                raise Exception("DataArtifact: unknown data source")
+                raise Exception("InputDataArtifact: unknown data source")
 
         #Search in datasource one by one break if we found one.
         for d in data_sources:
             #Checking current datasource
+            logger.info("InputDataArtifact: Datasource check if dir exsits")
             if d.is_dir_exist():
                 #From here if something breaks datasource will throw exception
+                logger.info("InputDataArtifact: Datasource validate marker")
                 d.validate_marker()
+                logger.info("InputDataArtifact: Datasource validate marker")
                 d.validate_size()
 
-            if d.is_exist and d.is_marker and d.is_size:
+            if d.is_exist and d.is_marker_validated and d.is_size_validated:
                 #We found a datasource
                 self.locate_data_source = d
                 self.locate_data_source.log_success()
@@ -84,14 +87,14 @@ class InputDataArtifact(object):
             d.log_fail_to_find()
 
         #If we got here we should fail Data artifact with no collection found
-        raise Exception("DataArtifact - Couldn't locate collection: %s in any of the datasources" % self.raw_path)
+        raise Exception("InputDataArtifact - Couldn't locate collection: %s in any of the datasources" % self.raw_path)
 
     # This function should be depcrecated we only allow it for backward compatibility
     def assert_input_validity(self, *reporters):
         if not self.locate_data_source:
-            raise Exception("DataArtifact Failure no valid datasource was found")
+            raise Exception("InputDataArtifact Failure no valid datasource was found")
 
-        if self.locate_data_source.is_exist and self.locate_data_source.is_size and self.locate_data_source.is_marker:
+        if self.locate_data_source.is_exist and self.locate_data_source.is_size_validated and self.locate_data_source.is_marker_validated:
             for reporter in reporters:
                 reporter.report_lineage('input',
                                         {self.locate_data_source.prefixed_collection: self.locate_data_source.effective_size})
@@ -102,11 +105,11 @@ class InputDataArtifact(object):
         if self.locate_data_source:
             return self.locate_data_source.resolved_path()
         else:
-            raise Exception("DataArtifact Failure no datasource located")
+            raise Exception("InputDataArtifact Failure no datasource located")
 
 
 if __name__ == '__main__':
-    # da = DataArtifact('path')
+    # da = InputDataArtifact('path')
     da = InputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=09/day=07', required_size=10000, required_marker=True)
     da.assert_input_validity()
     print(da.resolved_path)

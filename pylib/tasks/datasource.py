@@ -45,8 +45,8 @@ class DataSource(object):
         self.required_marker = required_marker
         self.full_uri = None
         self.is_exist = None
-        self.is_marker = None
-        self.is_size = None
+        self.is_marker_validated = None
+        self.is_size_validated = None
         self.effective_size = None
 
 
@@ -110,7 +110,7 @@ class S3DataSource(DataSource):
             raise Exception("DataArtifact Failure")
         else:
             logger.info("Size is valid: %s" % human_size(self.effective_size))
-            self.is_size = True  # TODO delete this
+            self.is_size_validated = True  # TODO delete this
 
         return True
 
@@ -121,14 +121,14 @@ class S3DataSource(DataSource):
 
         logger.info('Checking if marker required or exist %s on s3 bucket: %s' % (
         self.prefixed_collection, self.bucket_name))
-        self.is_marker = exists_s3(os.path.join(self.full_uri, SUCCESS_MARKER))
-        if self.required_marker and not self.is_marker:
+        self.is_marker_validated = exists_s3(os.path.join(self.full_uri, SUCCESS_MARKER))
+        if self.required_marker and not self.is_marker_validated:
             logger.error(
                 'No success marker found in %s on s3 bucket %s' % (self.prefixed_collection, self.bucket_name))
             raise Exception("DataArtifact Failure")
         else:
             logger.info("Marker is valid, required_marker %s" % str(self.required_marker))
-            self.is_marker = True
+            self.is_marker_validated = True
 
         return True
 
@@ -149,7 +149,7 @@ class S3DataSource(DataSource):
 
 
     def resolved_path(self):
-        if self.is_exist and self.is_marker and self.is_size:
+        if self.is_exist and self.is_marker_validated and self.is_size_validated:
             return self.full_uri
         else:
             raise Exception("DataArtifact Failure chosen datasource doesn't have valid path")
@@ -173,11 +173,11 @@ class HDFSDataSource(DataSource):
 
     def log_success(self):
         logger.info(
-            "DataArtifact HDFS(%s) - Location is located and validated. Collection: %s , Actual size: %s, Marker: %s" %
+            "DataSource HDFS(%s) - Location is located and validated. Collection: %s , Actual size: %s, Marker: %s" %
             (self.name, self.prefixed_collection, self.effective_size, self.required_marker))
 
     def log_fail_to_find(self):
-        logger.info("DataArtifact HDFS(%s) - Couldn't find %s collection" % (self.name, self.prefixed_collection))
+        logger.info("DataSource HDFS(%s) - Couldn't find %s collection" % (self.name, self.prefixed_collection))
 
 
     def is_dir_exist(self):
@@ -201,7 +201,7 @@ class HDFSDataSource(DataSource):
         if not self.required_marker or exists_hdfs(os.path.join(self.prefixed_collection, SUCCESS_MARKER),
                                                    hdfs_client=self.hdfs_client):
             logger.info("Marker is valid, required_marker %s" % str(self.required_marker))
-            self.is_marker = True
+            self.is_marker_validated = True
             return True
         else:
             logger.error('No success marker found in %s on HDFS %s' % (self.prefixed_collection, self.name))
@@ -220,11 +220,11 @@ class HDFSDataSource(DataSource):
             raise Exception("DataArtifact Failure")
         else:
             logger.info("Size is valid: %s" % human_size(self.effective_size))
-            self.is_size = True  # TODO delete this
+            self.is_size_validated = True  # TODO delete this
             return True
 
     def resolved_path(self):
-        if self.is_exist and self.is_marker and self.is_size:
+        if self.is_exist and self.is_marker_validated and self.is_size_validated:
             return self.full_uri
         else:
             raise Exception("DataArtifact Failure chosen datasource doesn't have valid path")
