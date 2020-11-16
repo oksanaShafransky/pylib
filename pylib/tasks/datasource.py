@@ -7,7 +7,7 @@ from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_
 import enum
 
 
-logger = logging.getLogger('data_artifact')
+logger = logging.getLogger('data_source')
 
 SUCCESS_MARKER = '_SUCCESS'
 
