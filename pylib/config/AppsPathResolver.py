@@ -75,6 +75,12 @@ class AppsPathResolver(object):
     def __init__(self, ti):
         self.ti = ti
         self.apps_paths = {
+            #MAU
+            'mau_feature2_agg': {
+                'main_path': "monthly/mau/aggregations/aggkey=Feature2Key",
+                'size': 1 * KB, #TODO change
+                'marker': True, 'path_type': "daily"},
+
             #￿￿Downloads
             'new_users_db': {'main_path': "daily/downloads/new_users/new_users_db", 'size': 1 * KB,
                     'marker': True, 'path_type': "daily"},#TODO update size
@@ -809,6 +815,11 @@ class AppsPathResolver(object):
     def get_dau_final_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_estimate'], path_suffix)
+    #MAU
+    def get_mau_feature2_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['mau_feature2_agg'], path_suffix)
+
 
 
     #dau
