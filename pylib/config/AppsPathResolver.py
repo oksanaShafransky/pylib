@@ -82,7 +82,7 @@ class AppsPathResolver(object):
                 'marker': True, 'path_type': "daily"},
 
 
-            'user_app_country_agg': {
+            'mau_user_app_country_agg': {
                 'main_path': "monthly/mau/aggregations/aggkey=UserAppCountry",
                 'size': 1 * KB,  # TODO change
                 'marker': True, 'path_type': "daily"},
@@ -822,9 +822,9 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_estimate'], path_suffix)
     #MAU
-    def get_user_app_country_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_mau_user_app_country_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['user_app_country_agg'], path_suffix)
+                                             self.apps_paths['mau_user_app_country_agg'], path_suffix)
 
     def get_mau_feature2_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
