@@ -160,6 +160,11 @@ class AppsPathResolver(object):
                 'size': 10 * MB,
                 'marker': True, 'path_type': "daily"},  # TODO Fix
 
+            'reach_estimation': {
+                'main_path': "daily/downloads/devices/estimation/reach/estkey=AppCountryKey",
+                'size': 1 * MB,
+                'marker': True, 'path_type': "daily"},  # TODO Fix
+
             'ww_store_downloads_fetch': {
                 'main_path': "daily/downloads/store_downloads/raw_ww_store_fetch",
                 'size': 10 * MB,
@@ -671,6 +676,10 @@ class AppsPathResolver(object):
     def get_installs_alpha_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['installs_alpha_estimation'], path_suffix)
+
+    def get_reach_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['reach_estimation'], path_suffix)
 
     def get_ww_store_downloads_fetch(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
