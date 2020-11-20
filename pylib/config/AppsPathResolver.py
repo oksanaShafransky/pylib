@@ -161,7 +161,7 @@ class AppsPathResolver(object):
                 'marker': True, 'path_type': "daily"},  # TODO Fix
 
             'reach_estimation': {
-                'main_path': "daily/downloads/devices/estimation/reach/estkey=AppCountryKey",
+                'main_path': "daily/downloads/installed-apps/estimation/reach/estkey=AppCountryKey",
                 'size': 1 * MB,
                 'marker': True, 'path_type': "daily"},  # TODO Fix
 
