@@ -353,6 +353,11 @@ class AppsPathResolver(object):
                 'size': 1 * KB, 'marker': True,
                 'path_type': "monthly"},
 
+            'real_numbers_adjustments_by_active_devices': {
+                'main_path': "monthly/android-real-numbers-v2/by-active-devices/adjustments",
+                'size': 1 * KB, 'marker': True,
+                'path_type': "monthly"},
+
             'system_apps': {
                 'main_path': "daily/system-apps",
                 'size': 150 * KB, 'marker': True,
@@ -640,6 +645,10 @@ class AppsPathResolver(object):
     def get_real_numbers_adjustments_by_active_users(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['real_numbers_adjustments_by_active_users'], path_suffix)
+
+    def get_real_numbers_adjustments_by_active_devices(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['real_numbers_adjustments_by_active_devices'], path_suffix)
 
     def get_system_apps(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
