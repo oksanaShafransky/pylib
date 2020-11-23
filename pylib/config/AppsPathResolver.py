@@ -89,25 +89,25 @@ class AppsPathResolver(object):
 
             #￿￿Downloads
             'new_users_db': {'main_path': "daily/downloads/new_users/new_users_db", 'size': 1 * KB,
-                    'marker': True, 'path_type': "daily"},#TODO update size
+                    'marker': True, 'path_type': "daily"},#We Can't track size here in a good way.
 
             'downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryCountrySourceKey",
-                                                         'size': 1 * KB,
-                             'marker': True, 'path_type': "daily"},  # TODO update size
+                                                         'size': 6 * GB,
+                             'marker': True, 'path_type': "daily"},
 
             'downloads_app_country_delta_key_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryDeltaKey",
-                                          'size': 1 * MB,
-                                          'marker': True, 'path_type': "daily"}, # TODO update size
+                                          'size': 1 * GB,
+                                          'marker': True, 'path_type': "daily"},
 
             'downloads_country_delta_key_agg': {
                 'main_path': "daily/downloads/aggregations/aggKey=CountryDeltaKey",
-                'size': 1 * KB,
-                'marker': True, 'path_type': "daily"},  # TODO update size
+                'size': 200 * KB,
+                'marker': True, 'path_type': "daily"},
 
             'downloads_prior': {
                 'main_path': "daily/downloads/downloads-prior/aggKey=AppCountry",
-                'size': 1 * KB,
-                'marker': True, 'path_type': "daily"},  # TODO update size
+                'size': 900 * MB,
+                'marker': True, 'path_type': "daily"},
 
             #dau
             'dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceKey",
@@ -149,26 +149,27 @@ class AppsPathResolver(object):
             'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 16 * GB,
                               'marker': True, 'path_type': "daily"},
 
-            'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey", 'size': 10 * MB,
-                              'marker': True, 'path_type': "daily"},#TODO Fix
+            'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey",
+                                           'size': 10 * MB,
+                              'marker': True, 'path_type': "daily"},#TODO Delete After 1.12.2020 release
 
             'new_user_alpha_estimation': {'main_path': "daily/downloads/new_users/estimation/app-downloads-alph/estkey=AppCountryKey",
-                                           'size': 10 * MB,
-                                           'marker': True, 'path_type': "daily"},  # TODO Fix
+                                           'size': 350 * MB,
+                                           'marker': True, 'path_type': "daily"},
             'installs_alpha_estimation': {
                 'main_path': "daily/downloads/installs/estimation/app-downloads-alph/estkey=AppCountryKey",
-                'size': 10 * MB,
-                'marker': True, 'path_type': "daily"},  # TODO Fix
+                'size': 400 * MB,
+                'marker': True, 'path_type': "daily"},
 
             'reach_estimation': {
                 'main_path': "daily/downloads/installed-apps/estimation/reach/estkey=AppCountryKey",
-                'size': 1 * MB,
-                'marker': True, 'path_type': "daily"},  # TODO Fix
+                'size': 700 * MB,
+                'marker': True, 'path_type': "daily"},
 
             'ww_store_downloads_fetch': {
                 'main_path': "daily/downloads/store_downloads/raw_ww_store_fetch",
-                'size': 10 * MB,
-                'marker': True, 'path_type': "daily"},  # TODO Fix
+                'size': 85 * MB,
+                'marker': True, 'path_type': "daily"},
 
             'ww_store_download_country_population': {
                 'main_path': "daily/downloads/store_downloads/static/country_pop_adj",
@@ -177,8 +178,8 @@ class AppsPathResolver(object):
 
             'ww_store_download_panel_country_share_est': {
                 'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/estKey=AppCountryKey",
-                'size': 1 * MB,
-                'marker': True, 'path_type': "daily"},  # TODO Fix
+                'size': 400 * MB,
+                'marker': True, 'path_type': "daily"},
 
             'ww_store_download_app_delta': {
                 'main_path': "daily/downloads/store_downloads/ww_downloads/ww_app_delta",
