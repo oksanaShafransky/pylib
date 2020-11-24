@@ -371,7 +371,7 @@ class AppsPathResolver(object):
 
             'app_engagement_realnumbers': {
                 'main_path': "daily/estimate/app-engagement-realnumbers-tsv/estkey=AppCountryKey",
-                'size': 1.5 * GB, 'marker': True,
+                'size': 1 * GB, 'marker': True,
                 'path_type': "daily"},
             'app_engagement_realnumbers_parquet': {
                 'main_path': "daily/estimate/app-engagement-realnumbers/estkey=AppCountryKey",
