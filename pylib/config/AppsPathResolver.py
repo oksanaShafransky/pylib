@@ -137,11 +137,13 @@ class AppsPathResolver(object):
                                  'size': 200 * MB,
                                  'marker': True, 'path_type': "daily"},
 
-
             'mau_embee_estimate': {'main_path': "monthly/mau/estimate-embee/estKey=AppContryKey",
                                  'size': 0 * MB,
                                  'marker': True, 'path_type': "monthly"},
 
+            'mau_weighted_embee_est': {'main_path': "monthly/mau/estimate-embee-weighted/estKey=AppContryKey",
+                                 'size': 0 * MB,
+                                 'marker': True, 'path_type': "monthly"},
 
             'mau_pre_est': {'main_path': "monthly/mau/estimate-pre-adjust/estKey=AppContryKey",
                                  'size': 0 * MB,
@@ -868,6 +870,10 @@ class AppsPathResolver(object):
     def get_mau_embee_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_embee_estimate'], path_suffix)
+
+    def get_mau_weighted_embee_est(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['mau_weighted_embee_est'], path_suffix)
 
     def get_mau_pre_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
