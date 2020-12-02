@@ -145,11 +145,11 @@ class AppsPathResolver(object):
                                  'size': 0 * MB,
                                  'marker': True, 'path_type': "monthly"},
 
-            'mau_pre_est': {'main_path': "monthly/mau/estimate-pre-adjust/estKey=AppContryKey",
+            'mau_pre_est': {'main_path': "snapshot/estimate/app-mau-dp/estkey=AppCountry",
                                  'size': 0 * MB,
                                  'marker': True, 'path_type': "monthly"},
 
-            'mau_final_est': {'main_path': "monthly/mau/estimate/estKey=AppContryKey",
+            'mau_final_est': {'main_path': "snapshot/estimate/app-mau-adjusted-to-dau-dp/estkey=AppCountry",
                                  'size': 0 * MB,
                                  'marker': True, 'path_type': "monthly"},
 
@@ -864,19 +864,19 @@ class AppsPathResolver(object):
                                              self.apps_paths['mau_feature2_agg'], path_suffix)
 
     def get_mau_est(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_final_est'], path_suffix)
 
     def get_mau_embee_est(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_embee_estimate'], path_suffix)
 
     def get_mau_weighted_embee_est(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_weighted_embee_est'], path_suffix)
 
     def get_mau_pre_est(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                          self.apps_paths['mau_pre_est'], path_suffix)
     #dau
 
