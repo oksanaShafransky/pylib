@@ -222,7 +222,7 @@ class AppsPathResolver(object):
             'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 15 * GB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 300 * MB,
+            'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
