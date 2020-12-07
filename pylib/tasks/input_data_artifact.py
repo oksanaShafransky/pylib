@@ -12,7 +12,7 @@ DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 logger = logging.getLogger('data_artifact')
 
 # Extract default data sources, it's here because we want it to run once.
-default_data_sources_json = json.loads(SnowflakeConfig().get_service_name(service_name="da-input-sources"))
+default_data_sources_json = json.loads(SnowflakeConfig().get_service_name(service_name="da-data-sources"))
 
 
 class InputRangedDataArtifact(object):
