@@ -2,6 +2,7 @@ import logging
 import json
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 from datasource import HDFSDataSource, S3DataSource, DatasourceTypes
+from data_artifact import DataArtifact
 
 import os
 
@@ -11,8 +12,6 @@ DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
 logger = logging.getLogger('data_artifact')
 
-# Extract default data sources, it's here because we want it to run once.
-default_data_sources_json = json.loads(SnowflakeConfig().get_service_name(service_name="da-data-sources"))
 
 
 class InputRangedDataArtifact(object):
@@ -45,40 +44,21 @@ class InputRangedDataArtifact(object):
 
 
 
-class InputDataArtifact(object):
+class InputDataArtifact(DataArtifact):
 
     def __init__(self, path, required_size=0, required_marker=True, override_data_sources=None, ti=None):
-        self.raw_path = path
-        self.min_required_size = required_size
-        self.check_marker = required_marker
-
-        # Decide on datasources - This section still need redesign after we will enable datasource changes through ti.
-        self.raw_data_sources_list = override_data_sources if override_data_sources else default_data_sources_json
-
-        # Create DataSources Hirechy
-        self.locate_data_source = None
-        data_sources = []
-        for d in self.raw_data_sources_list:
-            d_type = d.get('type')
-            if d_type == DatasourceTypes.HDFS.value:
-                data_sources.append(HDFSDataSource(self.raw_path, self.min_required_size,
-                                                   self.check_marker, d.get("name"), d.get("prefix")))
-            elif d_type == DatasourceTypes.S3.value:
-                data_sources.append(S3DataSource(self.raw_path, self.min_required_size,
-                                                   self.check_marker, d.get("name"), d.get("prefix")))
-            else:
-                raise Exception("InputDataArtifact: unknown data source:%s options - %s" % (d_type, {d.name: d.value for d in DatasourceTypes}))
+        super(InputDataArtifact, self).__init__(path, required_size, required_marker, override_data_sources, ti)
 
         #Search in datasource one by one break if we found one.
-        for d in data_sources:
+        for d in self.data_sources:
             #Checking current datasource
             logger.info("Checking datasource: " + repr(d))
             logger.info("InputDataArtifact: Datasource check if dir exsits on collection: " + self.raw_path)
             if d.is_dir_exist():
                 #From here if something breaks datasource will throw exception
-                logger.info("InputDataArtifact: Datasource validate marker, required_marker: " + str(required_marker))
+                logger.info("InputDataArtifact: Datasource validate marker, required_marker: " + str(self.check_marker))
                 d.assert_marker()
-                logger.info("InputDataArtifact: Datasource validate size, required_size: " + str(required_size))
+                logger.info("InputDataArtifact: Datasource validate size, required_size: " + str(self.min_required_size))
                 d.assert_size()
 
             if d.is_exist and d.is_marker_validated and d.is_size_validated:
