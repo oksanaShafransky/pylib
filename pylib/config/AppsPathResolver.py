@@ -1,4 +1,5 @@
 from pylib.tasks.input_data_artifact import InputDataArtifact, InputRangedDataArtifact
+from pylib.tasks.output_data_artifact import OutputDataArtifact
 from enum import Enum
 
 GB = 1024 ** 3
@@ -30,7 +31,8 @@ def path_join(path, *paths):
 class AppsPathResolver(object):
     # Inner class start
     class AppPath(object):
-        def __init__(self, ti, base_dir, main_path, required_size, required_marker, path_type, path_suffix=None):
+        def __init__(self, ti, base_dir, main_path, required_size, required_marker, path_type,
+                     path_suffix=None, in_or_out='in'):
             self.ti = ti
             self.base_dir = base_dir
             self.main_path = main_path
@@ -39,6 +41,7 @@ class AppsPathResolver(object):
             self.required_marker = required_marker
             self.path_type = path_type
             self.path_suffix = path_suffix
+            self.in_or_out = in_or_out
 
         def __get_date_suffix_by_type(self):
             if self.path_type == "daily":
@@ -50,11 +53,18 @@ class AppsPathResolver(object):
 
         def get_data_artifact(self, date_suffix=None):
             date_suffix = date_suffix if date_suffix else self.__get_date_suffix_by_type()
-            return InputDataArtifact(path_join(self.full_base_path, date_suffix, self.path_suffix),
-                                     required_size=self.required_size,
-                                     required_marker=self.required_marker)
+            if self.in_or_out == 'in':
+                return InputDataArtifact(path_join(self.full_base_path, date_suffix, self.path_suffix),
+                                         required_size=self.required_size,
+                                         required_marker=self.required_marker)
+            else:
+                return OutputDataArtifact(path_join(self.full_base_path, date_suffix, self.path_suffix),
+                                         required_size=self.required_size,
+                                         required_marker=self.required_marker)
 
         def get_ranged_data_artifact(self, dates):
+            if self.in_or_out == 'out':
+                raise Exception("AppsPathSolver - Output doesn't have ranged data artifact")
             return InputRangedDataArtifact(self.full_base_path, dates,
                                            required_size=self.required_size,
                                            required_marker=self.required_marker)
@@ -64,7 +74,7 @@ class AppsPathResolver(object):
             return self.full_base_path
 
         def get_full_path(self):
-            return path_join(self.get_base_path(), self.__get_date_suffix_by_type())
+            return self.get_data_artifact().get_full_uri()
 
         def assert_output_validity(self):
             return self.ti.assert_output_validity(self.get_full_path(), min_size_bytes=self.required_size,
@@ -87,7 +97,6 @@ class AppsPathResolver(object):
                 'size': 1 * KB,  # TODO change
                 'marker': True, 'path_type': "daily"},
 
-            #￿￿Downloads
             'new_users_db': {'main_path': "daily/downloads/new_users/new_users_db", 'size': 1 * KB,
                              'marker': True, 'path_type': "daily"},#We Can't track size here in a good way.
 
@@ -494,397 +503,397 @@ class AppsPathResolver(object):
     # Paths Getters
     def get_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['app_country_source_agg'], path_suffix)
+                                             self.apps_paths['app_country_source_agg'], path_suffix, in_or_out)
 
     def get_extractor_1001(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1001'], path_suffix)
+                                             self.apps_paths['extractor_1001'], path_suffix, in_or_out)
 
     def get_extractor_1003(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1003'], path_suffix)
+                                             self.apps_paths['extractor_1003'], path_suffix, in_or_out)
 
     def get_extractor_1005(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1005'], path_suffix)
+                                             self.apps_paths['extractor_1005'], path_suffix, in_or_out)
 
     def get_extractor_5555(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_5555'], path_suffix)
+                                             self.apps_paths['extractor_5555'], path_suffix, in_or_out)
 
     def get_extractor_1008(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1008'], path_suffix)
+                                             self.apps_paths['extractor_1008'], path_suffix, in_or_out)
 
     def get_extractor_1009(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1009'], path_suffix)
+                                             self.apps_paths['extractor_1009'], path_suffix, in_or_out)
 
     def get_extractor_1010(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1010'], path_suffix)
+                                             self.apps_paths['extractor_1010'], path_suffix, in_or_out)
 
     def get_extractor_1015(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1015'], path_suffix)
+                                             self.apps_paths['extractor_1015'], path_suffix, in_or_out)
 
     def get_extractor_1019(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1019'], path_suffix)
+                                             self.apps_paths['extractor_1019'], path_suffix, in_or_out)
 
     def get_extractor_1111(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1111'], path_suffix)
+                                             self.apps_paths['extractor_1111'], path_suffix, in_or_out)
 
     def get_embee_app_session(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['embee_app_session'], path_suffix)
+                                             self.apps_paths['embee_app_session'], path_suffix, in_or_out)
 
     def get_embee_device_info(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['embee_device_info'], path_suffix)
+                                             self.apps_paths['embee_device_info'], path_suffix, in_or_out)
 
     def get_embee_demographics(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['embee_demographics'], path_suffix)
+                                             self.apps_paths['embee_demographics'], path_suffix, in_or_out)
 
     def get_embee_joined_data_output(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['embee_joined_data_output'], path_suffix)
+                                             self.apps_paths['embee_joined_data_output'], path_suffix, in_or_out)
 
     def get_embee_naive_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['embee_naive_estimation'], path_suffix)
+                                             self.apps_paths['embee_naive_estimation'], path_suffix, in_or_out)
     ###
 
     def get_grouping_1001_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['grouping_1001_report_parquet'], path_suffix)
+                                             self.apps_paths['grouping_1001_report_parquet'], path_suffix, in_or_out)
 
     def get_grouping_1003_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['grouping_1003_report_parquet'], path_suffix)
+                                             self.apps_paths['grouping_1003_report_parquet'], path_suffix, in_or_out)
 
     def get_grouping_1005_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['grouping_1005_report_parquet'], path_suffix)
+                                             self.apps_paths['grouping_1005_report_parquet'], path_suffix, in_or_out)
 
     def get_grouping_1008_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['grouping_1008_report_parquet'], path_suffix)
+                                             self.apps_paths['grouping_1008_report_parquet'], path_suffix, in_or_out)
 
     def get_grouping_1009_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['grouping_1009_report_parquet'], path_suffix)
+                                             self.apps_paths['grouping_1009_report_parquet'], path_suffix, in_or_out)
 
     def get_grouping_1010_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['grouping_1010_report_parquet'], path_suffix)
+                                             self.apps_paths['grouping_1010_report_parquet'], path_suffix, in_or_out)
 
     def get_grouping_1015_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['grouping_1015_report_parquet'], path_suffix)
+                                             self.apps_paths['grouping_1015_report_parquet'], path_suffix, in_or_out)
 
     def get_grouping_1111_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['grouping_1111_report_parquet'], path_suffix)
+                                             self.apps_paths['grouping_1111_report_parquet'], path_suffix, in_or_out)
 
     def get_agg_app_country_delta_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_app_country_delta_key'], path_suffix)
+                                             self.apps_paths['agg_app_country_delta_key'], path_suffix, in_or_out)
 
     def get_app_pairs_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['app_pairs_agg'], path_suffix)
+                                             self.apps_paths['app_pairs_agg'], path_suffix, in_or_out)
 
     def get_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['sfa'], path_suffix)
+                                             self.apps_paths['sfa'], path_suffix, in_or_out)
 
     def get_agg_country_delta_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_country_delta_key'], path_suffix)
+                                             self.apps_paths['agg_country_delta_key'], path_suffix, in_or_out)
 
     def get_agg_app_country_source_1009_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_app_country_source_1009_key'], path_suffix)
+                                             self.apps_paths['agg_app_country_source_1009_key'], path_suffix, in_or_out)
 
     def get_agg_app_country_source_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_app_country_source_key'], path_suffix)
+                                             self.apps_paths['agg_app_country_source_key'], path_suffix, in_or_out)
 
     def get_agg_country_source_1009_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_country_source_1009_key'], path_suffix)
+                                             self.apps_paths['agg_country_source_1009_key'], path_suffix, in_or_out)
 
     def get_agg_country_source_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_country_source_key'], path_suffix)
+                                             self.apps_paths['agg_country_source_key'], path_suffix, in_or_out)
 
     def get_agg_app_country_source_day_hour(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_app_country_source_day_hour'], path_suffix)
+                                             self.apps_paths['agg_app_country_source_day_hour'], path_suffix, in_or_out)
 
     def get_agg_app_country_source_days_back(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_app_country_source_days_back'], path_suffix)
+                                             self.apps_paths['agg_app_country_source_days_back'], path_suffix, in_or_out)
 
     def agg_app_country_source_joined_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_app_country_source_joined_key'], path_suffix)
+                                             self.apps_paths['agg_app_country_source_joined_key'], path_suffix, in_or_out)
 
     def get_pre_estimate_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['pre_estimate_app_country'], path_suffix)
+                                             self.apps_paths['pre_estimate_app_country'], path_suffix, in_or_out)
 
     def get_est_app_country_source_days_back(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['est_app_country_source_days_back'], path_suffix)
+                                             self.apps_paths['est_app_country_source_days_back'], path_suffix, in_or_out)
 
     def get_pre_estimate_1009_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['pre_estimate_1009_app_country'], path_suffix)
+                                             self.apps_paths['pre_estimate_1009_app_country'], path_suffix, in_or_out)
 
     def get_time_series_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['time_series_estimation'], path_suffix)
+                                             self.apps_paths['time_series_estimation'], path_suffix, in_or_out)
 
     def get_apps_for_analyze_decision(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['apps_for_analyze_decision'], path_suffix)
+                                             self.apps_paths['apps_for_analyze_decision'], path_suffix, in_or_out)
 
     def get_app_engagement_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['app_engagement_estimation'], path_suffix)
+                                             self.apps_paths['app_engagement_estimation'], path_suffix, in_or_out)
 
     def get_real_numbers_adjustments_by_new_users(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['real_numbers_adjustments_by_new_users'], path_suffix)
+                                             self.apps_paths['real_numbers_adjustments_by_new_users'], path_suffix, in_or_out)
 
     def get_real_numbers_adjustments_by_active_users(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['real_numbers_adjustments_by_active_users'], path_suffix)
+                                             self.apps_paths['real_numbers_adjustments_by_active_users'], path_suffix, in_or_out)
 
     def get_real_numbers_adjustments_by_active_devices(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['real_numbers_adjustments_by_active_devices'], path_suffix)
+                                             self.apps_paths['real_numbers_adjustments_by_active_devices'], path_suffix, in_or_out)
 
     def get_system_apps(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['system_apps'], path_suffix)
+                                             self.apps_paths['system_apps'], path_suffix, in_or_out)
 
     def get_app_downloads_alph(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['app_downloads_alph'], path_suffix)
+                                             self.apps_paths['app_downloads_alph'], path_suffix, in_or_out)
 
     def get_app_engagement_realnumbers(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['app_engagement_realnumbers'], path_suffix)
+                                             self.apps_paths['app_engagement_realnumbers'], path_suffix, in_or_out)
 
     def get_app_engagement_realnumbers_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['app_engagement_realnumbers_parquet'], path_suffix)
+                                             self.apps_paths['app_engagement_realnumbers_parquet'], path_suffix, in_or_out)
 
     def get_apps_datapool(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['apps_datapool'], path_suffix)
+                                             self.apps_paths['apps_datapool'], path_suffix, in_or_out)
 
     def get_usage_patterns_estimate(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_estimate'], path_suffix)
+                                             self.apps_paths['usage_patterns_estimate'], path_suffix, in_or_out)
 
     def get_downloads_alpha_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['downloads_alpha_estimation'], path_suffix)
+                                             self.apps_paths['downloads_alpha_estimation'], path_suffix, in_or_out)
 
     def get_new_user_alpha_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['new_user_alpha_estimation'], path_suffix)
+                                             self.apps_paths['new_user_alpha_estimation'], path_suffix, in_or_out)
 
     def get_installs_alpha_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['installs_alpha_estimation'], path_suffix)
+                                             self.apps_paths['installs_alpha_estimation'], path_suffix, in_or_out)
 
     def get_reach_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['reach_estimation'], path_suffix)
+                                             self.apps_paths['reach_estimation'], path_suffix, in_or_out)
 
     def get_ww_store_downloads_fetch(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ww_store_downloads_fetch'], path_suffix)
+                                             self.apps_paths['ww_store_downloads_fetch'], path_suffix, in_or_out)
 
     def get_ww_store_download_country_population(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ww_store_download_country_population'], path_suffix)
+                                             self.apps_paths['ww_store_download_country_population'], path_suffix, in_or_out)
 
     def get_ww_store_download_panel_country_share_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ww_store_download_panel_country_share_est'], path_suffix)
+                                             self.apps_paths['ww_store_download_panel_country_share_est'], path_suffix, in_or_out)
 
     def get_ww_store_download_app_delta(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ww_store_download_app_delta'], path_suffix)
+                                             self.apps_paths['ww_store_download_app_delta'], path_suffix, in_or_out)
 
     def get_ww_store_download_weighted_download_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ww_store_download_weighted_download_est'], path_suffix)
+                                             self.apps_paths['ww_store_download_weighted_download_est'], path_suffix, in_or_out)
 
     def get_store_download_country_adj_row(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['store_download_country_adj_row'], path_suffix)
+                                             self.apps_paths['store_download_country_adj_row'], path_suffix, in_or_out)
 
     def get_store_downloads_realnumbers_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['store_downloads_realnumbers_estimation'], path_suffix)
+                                             self.apps_paths['store_downloads_realnumbers_estimation'], path_suffix, in_or_out)
 
     def get_preprocessed_1010(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['preprocessed_1010'], path_suffix)
+                                             self.apps_paths['preprocessed_1010'], path_suffix, in_or_out)
 
     def get_preprocessed_1015(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['preprocessed_1015'], path_suffix)
+                                             self.apps_paths['preprocessed_1015'], path_suffix, in_or_out)
 
     def get_preprocessed_1008(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['preprocessed_1008'], path_suffix)
+                                             self.apps_paths['preprocessed_1008'], path_suffix, in_or_out)
 
     def get_osm_ip_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['osm_ip_model'], path_suffix)
+                                             self.apps_paths['osm_ip_model'], path_suffix, in_or_out)
 
     def get_domain_resolved_1010(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['domain_resolved_1010'], path_suffix)
+                                             self.apps_paths['domain_resolved_1010'], path_suffix, in_or_out)
 
     def get_base_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['base_dataset'], path_suffix)
+                                             self.apps_paths['base_dataset'], path_suffix, in_or_out)
 
     def get_usage_base_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_base_dataset'], path_suffix)
+                                             self.apps_paths['usage_base_dataset'], path_suffix, in_or_out)
 
     def get_domain_fg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['domain_fg'], path_suffix)
+                                             self.apps_paths['domain_fg'], path_suffix, in_or_out)
 
     def get_usage_domain_fg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_domain_fg'], path_suffix)
+                                             self.apps_paths['usage_domain_fg'], path_suffix, in_or_out)
 
     def get_osm_features(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['osm_features'], path_suffix)
+                                             self.apps_paths['osm_features'], path_suffix, in_or_out)
 
     def get_usage_osm_features(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_osm_features'], path_suffix)
+                                             self.apps_paths['usage_osm_features'], path_suffix, in_or_out)
 
     def get_nsm_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['nsm_model'], path_suffix)
+                                             self.apps_paths['nsm_model'], path_suffix, in_or_out)
 
     def get_usage_osm_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_osm_model'], path_suffix)
+                                             self.apps_paths['usage_osm_model'], path_suffix, in_or_out)
 
     def get_nsm_to_osm_predictions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['nsm_to_osm_predictions'], path_suffix)
+                                             self.apps_paths['nsm_to_osm_predictions'], path_suffix, in_or_out)
 
     def get_usage_to_osm_predictions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_to_osm_predictions'], path_suffix)
+                                             self.apps_paths['usage_to_osm_predictions'], path_suffix, in_or_out)
 
     def get_nsm_test_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['nsm_test_dataset'], path_suffix)
+                                             self.apps_paths['nsm_test_dataset'], path_suffix, in_or_out)
 
     def get_usage_test_dataset(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_test_dataset'], path_suffix)
+                                             self.apps_paths['usage_test_dataset'], path_suffix, in_or_out)
 
     #Temp
     def get_osm_predictions_not_fixed(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['osm_predictions_not_fixed'], path_suffix)
+                                             self.apps_paths['osm_predictions_not_fixed'], path_suffix, in_or_out)
 
     def get_new_users_db(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['new_users_db'], path_suffix)
+                                             self.apps_paths['new_users_db'], path_suffix, in_or_out)
 
     def get_downloads_app_country_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['downloads_app_country_country_source_agg'], path_suffix)
+                                             self.apps_paths['downloads_app_country_country_source_agg'], path_suffix, in_or_out)
 
     def get_downloads_app_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['downloads_app_country_delta_key_agg'], path_suffix)
+                                             self.apps_paths['downloads_app_country_delta_key_agg'], path_suffix, in_or_out)
 
     def get_downloads_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['downloads_country_delta_key_agg'], path_suffix)
+                                             self.apps_paths['downloads_country_delta_key_agg'], path_suffix, in_or_out)
 
     def get_downloads_prior(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['downloads_prior'], path_suffix)
+                                             self.apps_paths['downloads_prior'], path_suffix, in_or_out)
 
     #dau
     def get_dau_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_app_country_source_agg'], path_suffix)
+                                             self.apps_paths['dau_app_country_source_agg'], path_suffix, in_or_out)
 
     def get_dau_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_country_source_agg'], path_suffix)
+                                             self.apps_paths['dau_country_source_agg'], path_suffix, in_or_out)
 
     def get_dau_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_join_agg'], path_suffix)
+                                             self.apps_paths['dau_join_agg'], path_suffix, in_or_out)
 
     def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_sqs_preliminary'], path_suffix)
+                                             self.apps_paths['dau_sqs_preliminary'], path_suffix, in_or_out)
 
     def get_sqs_calc(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['sqs_calc'], path_suffix)
+                                             self.apps_paths['sqs_calc'], path_suffix, in_or_out)
 
     def get_dau_prior(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_prior'], path_suffix)
+                                             self.apps_paths['dau_prior'], path_suffix, in_or_out)
 
     def get_dau_final_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_estimate'], path_suffix)
+                                             self.apps_paths['dau_estimate'], path_suffix, in_or_out)
     #MAU
     def get_mau_user_app_country_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['mau_user_app_country_agg'], path_suffix)
+                                             self.apps_paths['mau_user_app_country_agg'], path_suffix, in_or_out)
 
     def get_mau_feature2_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['mau_feature2_agg'], path_suffix)
+                                             self.apps_paths['mau_feature2_agg'], path_suffix, in_or_out)
 
     def get_mau_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['mau_final_est'], path_suffix)
+                                             self.apps_paths['mau_final_est'], path_suffix, in_or_out)
 
     def get_mau_embee_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['mau_embee_estimate'], path_suffix)
+                                             self.apps_paths['mau_embee_estimate'], path_suffix, in_or_out)
 
     def get_mau_weighted_embee_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['mau_weighted_embee_est'], path_suffix)
+                                             self.apps_paths['mau_weighted_embee_est'], path_suffix, in_or_out)
 
     def get_mau_pre_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['mau_pre_est'], path_suffix)
+                                             self.apps_paths['mau_pre_est'], path_suffix, in_or_out)
     #dau
 
     def get_ga(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['ga'], path_suffix)
+                                             self.apps_paths['ga'], path_suffix, in_or_out)
 
