@@ -51,13 +51,13 @@ class AppsPathResolver(object):
         def get_data_artifact(self, date_suffix=None):
             date_suffix = date_suffix if date_suffix else self.__get_date_suffix_by_type()
             return InputDataArtifact(path_join(self.full_base_path, date_suffix, self.path_suffix),
-                                required_size=self.required_size,
-                                required_marker=self.required_marker)
+                                     required_size=self.required_size,
+                                     required_marker=self.required_marker)
 
         def get_ranged_data_artifact(self, dates):
             return InputRangedDataArtifact(self.full_base_path, dates,
-                                      required_size=self.required_size,
-                                      required_marker=self.required_marker)
+                                           required_size=self.required_size,
+                                           required_marker=self.required_marker)
 
         # Rerurn base path without date_suffix
         def get_base_path(self):
@@ -89,15 +89,15 @@ class AppsPathResolver(object):
 
             #￿￿Downloads
             'new_users_db': {'main_path': "daily/downloads/new_users/new_users_db", 'size': 1 * KB,
-                    'marker': True, 'path_type': "daily"},#We Can't track size here in a good way.
+                             'marker': True, 'path_type': "daily"},#We Can't track size here in a good way.
 
             'downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryCountrySourceKey",
                                                          'size': 6 * GB,
-                             'marker': True, 'path_type': "daily"},
+                                                         'marker': True, 'path_type': "daily"},
 
             'downloads_app_country_delta_key_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryDeltaKey",
-                                          'size': 1 * GB,
-                                          'marker': True, 'path_type': "daily"},
+                                                    'size': 1 * GB,
+                                                    'marker': True, 'path_type': "daily"},
 
             'downloads_country_delta_key_agg': {
                 'main_path': "daily/downloads/aggregations/aggKey=CountryDeltaKey",
@@ -111,51 +111,51 @@ class AppsPathResolver(object):
 
             #dau
             'dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceKey",
-                                          'size': 600 * MB,
-                                          'marker': True, 'path_type': "daily"},
-            'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
-                                           'size': 200 * KB,
+                                           'size': 600 * MB,
                                            'marker': True, 'path_type': "daily"},
+            'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
+                                       'size': 200 * KB,
+                                       'marker': True, 'path_type': "daily"},
 
             'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
-                                           'size': 1 * GB,
-                                           'marker': True, 'path_type': "daily"},
+                             'size': 1 * GB,
+                             'marker': True, 'path_type': "daily"},
 
             'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
-                                           'size': 6 * GB,
-                                           'marker': True, 'path_type': "daily"},
+                                    'size': 6 * GB,
+                                    'marker': True, 'path_type': "daily"},
 
             'sqs_calc':{'main_path': "daily/dau/pre-estimate/sqs-calc-weights",
-                                           'size': 2 * GB,
-                                           'marker': True, 'path_type': "daily"},
+                        'size': 2 * GB,
+                        'marker': True, 'path_type': "daily"},
 
             'dau_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
-                                           'size': 500 * MB,
-                                           'marker': True, 'path_type': "daily"},
+                         'size': 500 * MB,
+                         'marker': True, 'path_type': "daily"},
 
             'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
-                                 'size': 200 * MB,
-                                 'marker': True, 'path_type': "daily"},
+                             'size': 200 * MB,
+                             'marker': True, 'path_type': "daily"},
 
             'mau_embee_estimate': {'main_path': "monthly/mau/estimate-embee/estKey=AppContryKey",
-                                 'size': 0 * MB,
-                                 'marker': True, 'path_type': "monthly"},
+                                   'size': 0 * MB,
+                                   'marker': True, 'path_type': "monthly"},
 
             'mau_weighted_embee_est': {'main_path': "monthly/mau/estimate-embee-weighted/estKey=AppContryKey",
-                                 'size': 0 * MB,
-                                 'marker': True, 'path_type': "monthly"},
+                                       'size': 0 * MB,
+                                       'marker': True, 'path_type': "monthly"},
 
-            'mau_pre_est': {'main_path': "monthly/mau/estimate-pre-adjust/estKey=AppContryKey",
-                                 'size': 0 * MB,
-                                 'marker': True, 'path_type': "monthly"},
+            'mau_pre_est': {'main_path': "snapshot/estimate/app-mau-dp/estkey=AppCountry",
+                            'size': 0 * MB,
+                            'marker': True, 'path_type': "monthly"},
 
-            'mau_final_est': {'main_path': "monthly/mau/estimate/estKey=AppContryKey",
-                                 'size': 0 * MB,
-                                 'marker': True, 'path_type': "monthly"},
+            'mau_final_est': {'main_path': "snapshot/estimate/app-mau-adjusted-to-dau-dp/estkey=AppCountry",
+                              'size': 0 * MB,
+                              'marker': True, 'path_type': "monthly"},
 
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KB,
-                              'marker': True, 'path_type': "daily"},
+                    'marker': True, 'path_type': "daily"},
 
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 100 * MB,
                                         'marker': True, 'path_type': "daily"},
@@ -165,11 +165,11 @@ class AppsPathResolver(object):
 
             'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey",
                                            'size': 10 * MB,
-                              'marker': True, 'path_type': "daily"},#TODO Delete After 1.12.2020 release
+                                           'marker': True, 'path_type': "daily"},#TODO Delete After 1.12.2020 release
 
             'new_user_alpha_estimation': {'main_path': "daily/downloads/new_users/estimation/app-downloads-alph/estkey=AppCountryKey",
-                                           'size': 350 * MB,
-                                           'marker': True, 'path_type': "daily"},
+                                          'size': 350 * MB,
+                                          'marker': True, 'path_type': "daily"},
             'installs_alpha_estimation': {
                 'main_path': "daily/downloads/installs/estimation/app-downloads-alph/estkey=AppCountryKey",
                 'size': 350 * MB,
@@ -253,13 +253,13 @@ class AppsPathResolver(object):
                                   'marker': True, 'path_type': "daily"},
 
             'embee_device_info': {'main_path': "raw-stats-embee/device_info", 'size': 10 * MB,
-                                    'marker': True, 'path_type': "daily"},
+                                  'marker': True, 'path_type': "daily"},
 
             'embee_demographics': {'main_path': "raw-stats-embee/demographics", 'size': 3 * MB,
                                    'marker': True, 'path_type': "daily"},
 
             'embee_naive_estimation': {'main_path': "raw-stats-embee/naive_estimation", 'size': 0 * MB,
-                                   'marker': True, 'path_type': "daily"},
+                                       'marker': True, 'path_type': "daily"},
 
             'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 10 * MB,
                                          'marker': True, 'path_type': "daily"},
@@ -297,16 +297,16 @@ class AppsPathResolver(object):
                                              'path_type': "daily"},
 
             'agg_app_country_source_days_back':{'main_path': "daily/aggregations/aggKey=AppCountrySourceDaysbackKey",
-                                          'size': 150 * MB,
-                                          'marker': True, 'path_type': "daily"},
+                                                'size': 150 * MB,
+                                                'marker': True, 'path_type': "daily"},
 
             'agg_app_country_delta_key': {'main_path': "daily/aggregations/aggKey=AppCountryDeltaKey",
                                           'size': 600 * MB,
                                           'marker': True, 'path_type': "daily"},
 
             'app_pairs_agg': {'main_path': "daily/aggregations/aggkey=AppPairCountryKey",
-                                          'size': 600 * MB, #TODO change.
-                                          'marker': True, 'path_type': "daily"},
+                              'size': 600 * MB, #TODO change.
+                              'marker': True, 'path_type': "daily"},
 
             'agg_country_delta_key': {'main_path': "daily/aggregations/aggKey=CountryDeltaKey",
                                       'size': 120 * KB,  # TODO update.
@@ -399,8 +399,8 @@ class AppsPathResolver(object):
 
             #NSM TO OSM
             'preprocessed_1010': {'main_path': "daily/osm/preprocessed-1010",
-                                         'size': 80 * GB, 'marker': True,
-                                         'path_type': "daily"},
+                                  'size': 80 * GB, 'marker': True,
+                                  'path_type': "daily"},
 
             'preprocessed_1015': {'main_path': "daily/osm/preprocessed-1015",
                                   'size': 1 * KB, 'marker': True,
@@ -411,64 +411,68 @@ class AppsPathResolver(object):
                                   'path_type': "daily"},  # TODO fix
 
             'osm_ip_model': {'main_path': "monthly/osm-ip-model",
-                                  'size': 400 * MB, 'marker': True,
-                                  'path_type': "monthly"},
+                             'size': 400 * MB, 'marker': True,
+                             'path_type': "monthly"},
 
             'domain_resolved_1010': {'main_path': "daily/osm/domain-resolved-1010",
-                             'size': 50 * GB, 'marker': True,
-                             'path_type': "daily"},
-
-            'base_dataset': {'main_path': "daily/osm/base-dataset",
-                                     'size': 3 * MB, 'marker': True,
+                                     'size': 50 * GB, 'marker': True,
                                      'path_type': "daily"},
 
-            'usage_base_dataset': {'main_path': "daily/osm_usage/base-dataset",
-                             'size': 1 * KB, 'marker': True,
+            'base_dataset': {'main_path': "daily/osm/base-dataset",
+                             'size': 3 * MB, 'marker': True,
                              'path_type': "daily"},
 
+            'usage_base_dataset': {'main_path': "daily/osm_usage/base-dataset",
+                                   'size': 1 * KB, 'marker': True,
+                                   'path_type': "daily"},
+
             'domain_fg': {'main_path': "daily/osm/domain-fg",
-                             'size': 400 * KB, 'marker': True,
-                             'path_type': "daily"},# TODO fix
+                          'size': 400 * KB, 'marker': True,
+                          'path_type': "daily"},# TODO fix
 
             'usage_domain_fg': {'main_path': "daily/osm_usage/domain-fg",
-                          'size': 400 * KB, 'marker': True,
-                          'path_type': "daily"},  # TODO fix
+                                'size': 400 * KB, 'marker': True,
+                                'path_type': "daily"},  # TODO fix
 
             'osm_features': {'main_path': "daily/osm/features",
-                          'size': 1 * MB, 'marker': True,
-                          'path_type': "daily"},  # TODO fix
-
-            'usage_osm_features': {'main_path': "daily/osm_usage/features",
                              'size': 1 * MB, 'marker': True,
                              'path_type': "daily"},  # TODO fix
 
-            'nsm_model': {'main_path': "daily/osm/nsm_model",
-              'size': 1 * KB, 'marker': False,
-              'path_type': "daily"},  # TODO fix
+            'usage_osm_features': {'main_path': "daily/osm_usage/features",
+                                   'size': 1 * MB, 'marker': True,
+                                   'path_type': "daily"},  # TODO fix
 
-            'usage_osm_model': {'main_path': "daily/osm_usage/usage_osm_model",
+            'nsm_model': {'main_path': "daily/osm/nsm_model",
                           'size': 1 * KB, 'marker': False,
                           'path_type': "daily"},  # TODO fix
 
+            'usage_osm_model': {'main_path': "daily/osm_usage/usage_osm_model",
+                                'size': 1 * KB, 'marker': False,
+                                'path_type': "daily"},  # TODO fix
+
             'nsm_to_osm_predictions': {'main_path': "daily/osm/predictions",
-                          'size': 1 * KB, 'marker': True,
-                          'path_type': "daily"}, # TODO fix
+                                       'size': 1 * KB, 'marker': True,
+                                       'path_type': "daily"}, # TODO fix
 
             'usage_to_osm_predictions': {'main_path': "daily/osm_usage/predictions",
-                                       'size': 1 * KB, 'marker': True,
-                                       'path_type': "daily"},  # TODO fix
+                                         'size': 1 * KB, 'marker': True,
+                                         'path_type': "daily"},  # TODO fix
 
             'nsm_test_dataset': {'main_path': "daily/osm/test_dataset",
-                                       'size': 1 * KB, 'marker': True,
-                                       'path_type': "daily"},  # TODO fix
+                                 'size': 1 * KB, 'marker': True,
+                                 'path_type': "daily"},  # TODO fix
 
             'usage_test_dataset': {'main_path': "daily/osm_usage/test_dataset",
                                    'size': 1 * KB, 'marker': True,
                                    'path_type': "daily"},  # TODO fix
 
             'osm_predictions_not_fixed': {'main_path': "daily/osm/predictions_not_fixed",
-                                       'size': 1 * KB, 'marker': True,
-                                       'path_type': "daily"},  # TODO fix
+                                          'size': 1 * KB, 'marker': True,
+                                          'path_type': "daily"},  # TODO fix
+
+            'ga': {'main_path': "ga/app-engagement/",
+                   'size': 1 * KB, 'marker': True,
+                   'path_type': "daily"},  # TODO fix
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -747,7 +751,7 @@ class AppsPathResolver(object):
 
     def get_osm_ip_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                                self.apps_paths['osm_ip_model'], path_suffix)
+                                             self.apps_paths['osm_ip_model'], path_suffix)
 
     def get_domain_resolved_1010(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
@@ -864,19 +868,23 @@ class AppsPathResolver(object):
                                              self.apps_paths['mau_feature2_agg'], path_suffix)
 
     def get_mau_est(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_final_est'], path_suffix)
 
     def get_mau_embee_est(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_embee_estimate'], path_suffix)
 
     def get_mau_weighted_embee_est(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_weighted_embee_est'], path_suffix)
 
     def get_mau_pre_est(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                         self.apps_paths['mau_pre_est'], path_suffix)
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['mau_pre_est'], path_suffix)
     #dau
+
+    def get_ga(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['ga'], path_suffix)
 
