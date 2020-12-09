@@ -45,3 +45,12 @@ class DataArtifact(object):
         if not self.locate_data_source:
             raise Exception("DataArtifact - Can't call full uri when data_source is not located.")
         return self.locate_data_source.get_full_uri()
+
+
+
+    @property
+    def resolved_path(self):
+        if self.locate_data_source:
+            return self.locate_data_source.resolved_path()
+        else:
+            raise Exception("DataArtifact Failure no datasource located")
