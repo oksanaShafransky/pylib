@@ -1367,26 +1367,26 @@ class ContextualizedTasksInfra(object):
         return jars
 
     def run_py_spark2(self,
-                      main_py_file,
-                      app_name=None,
-                      command_params=None,
-                      files=None,
-                      include_main_jar=True,
-                      jars_from_lib=None,
-                      module='mobile',
-                      named_spark_args=None,
-                      packages=None,
-                      repositories=None,
-                      py_files=None,
-                      py_modules=None,
-                      spark_configs=None,
-                      use_bigdata_defaults=False,
-                      queue=None,
-                      determine_partitions_by_output=False,
-                      managed_output_dirs=None,
-                      additional_artifacts=None,
-                      python_env=None
-                      ):
+                     main_py_file,
+                     app_name=None,
+                     command_params=None,
+                     files=None,
+                     include_main_jar=True,
+                     jars_from_lib=None,
+                     module='mobile',
+                     named_spark_args=None,
+                     packages=None,
+                     repositories=None,
+                     py_files=None,
+                     py_modules=None,
+                     spark_configs=None,
+                     use_bigdata_defaults=False,
+                     queue=None,
+                     determine_partitions_by_output=False,
+                     managed_output_dirs=None,
+                     additional_artifacts=None,
+                     python_env=None
+                     ):
 
         logging.warn("run_py_spark2 is a deprecated method. Use run_sw_pyspark instead.")
 
@@ -1404,8 +1404,7 @@ class ContextualizedTasksInfra(object):
         final_py_files = py_files or []
 
         module_dir = self.execution_dir + '/' + module
-        exec_py_file = 'python/sw_%s/%s' % (
-        module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
+        exec_py_file = 'python/sw_%s/%s' % (module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
 
         py_modules = py_modules or []
         if use_bigdata_defaults:
