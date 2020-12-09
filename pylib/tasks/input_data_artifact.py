@@ -82,6 +82,14 @@ class InputDataArtifact(DataArtifact):
                                         {self.locate_data_source.prefixed_collection: self.locate_data_source.effective_size})
 
 
+    @property
+    def resolved_path(self):
+        if self.locate_data_source:
+            return self.locate_data_source.resolved_path()
+        else:
+            raise Exception("InputDataArtifact Failure no datasource located")
+
+
 
 
 
