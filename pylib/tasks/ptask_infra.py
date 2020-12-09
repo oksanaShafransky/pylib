@@ -412,6 +412,7 @@ class ContextualizedTasksInfra(object):
         self.redis = None
         self.jvm_opts = {}
         self.hadoop_configs = {}
+        self.da_data_sources = None
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -1808,6 +1809,11 @@ class ContextualizedTasksInfra(object):
         for key, value in dict.items():
             print("-%s %s" % (key, value))
 
+    def get_default_da_data_sources(self):
+        if self.da_data_sources is None:
+            self.da_data_sources = SnowflakeConfig().get_service_name(service_name='da-data-sources')
+        return self.da_data_sources
+
     @property
     def base_dir(self):
         return self.__get_common_args()['base_dir']
@@ -1815,6 +1821,10 @@ class ContextualizedTasksInfra(object):
     @property
     def calc_dir(self):
         return self.__get_common_args().get('calc_dir', self.base_dir)
+
+    @property
+    def da_data_sources(self):
+        return self.__get_common_args().get('da_data_sources', self.get_default_da_data_sources())
 
     @property
     def production_base_dir(self):
