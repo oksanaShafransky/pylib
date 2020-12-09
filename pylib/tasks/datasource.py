@@ -83,6 +83,11 @@ class DataSource(object):
         return
 
     @abc.abstractmethod
+    def get_full_uri(self):
+        """Method documentation"""
+        return
+
+    @abc.abstractmethod
     def __repr__(self):
         """Method documentation"""
         return
@@ -150,6 +155,9 @@ class S3DataSource(DataSource):
         else:
             raise Exception("DataArtifact Failure chosen datasource doesn't have valid path")
 
+    # Get full URI without constrains.
+    def get_full_uri(self):
+        return self.full_uri
 
     def __repr__(self):
         return 'S3 Datasource reading from %s bucket with %s prefix(could be empty)' % (self.bucket_name, self.prefix)
@@ -227,6 +235,9 @@ class HDFSDataSource(DataSource):
         else:
             raise Exception("DataArtifact Failure chosen datasource doesn't have valid path")
 
+    # Get full URI without constrains.
+    def get_full_uri(self):
+        return self.full_uri
 
     def __repr__(self):
         return 'HDFS Datasource reading from %s namenode with %s prefix(could be empty)' % (self.name, self.prefix)
