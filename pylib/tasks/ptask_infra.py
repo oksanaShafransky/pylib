@@ -414,6 +414,7 @@ class ContextualizedTasksInfra(object):
         self.redis = None
         self.jvm_opts = {}
         self.hadoop_configs = {}
+        self.yarn_application_tags = extract_yarn_application_tags()
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -630,8 +631,8 @@ class ContextualizedTasksInfra(object):
             source_path=source,
             target_path=target
         )
-        yarn_application_tags = extract_yarn_application_tags(cmd)
-        self.kill_yarn_zombie_jobs(yarn_application_tags)
+        cmd = TasksInfra.add_jvm_options(cmd, {'mapreduce.job.tags': self.yarn_application_tags})
+        self.kill_yarn_zombie_jobs()
         self.run_bash(cmd)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False,
@@ -660,19 +661,13 @@ class ContextualizedTasksInfra(object):
         curr_jvm_opts = copy(self.jvm_opts)
         curr_jvm_opts.update(jvm_opts)
         curr_jvm_opts.update(self.hadoop_configs)
-        app_name = 'hadoopexec.{jar_path}.{jar_name}.{main_class}.{date}'.format(
-            jar_path=jar_path,
-            jar_name=jar_name,
-            main_class=main_class,
-            date=self.date_title
-        )
-        yarn_application_tags = extract_yarn_application_tags(app_name)
+
         command = TasksInfra.add_jvm_options(command, curr_jvm_opts)
-        command = TasksInfra.add_jvm_options(command, {'mapreduce.job.tags': yarn_application_tags})
+        command = TasksInfra.add_jvm_options(command, {'mapreduce.job.tags': self.yarn_application_tags})
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
         if self.rerun:
             command = self.__with_rerun_root_queue(command)
-        self.kill_yarn_zombie_jobs(yarn_application_tags)
+        self.kill_yarn_zombie_jobs()
         return self.run_bash(command).ok
 
 
@@ -1004,8 +999,7 @@ class ContextualizedTasksInfra(object):
                     repos=','.join(final_repositories)
                    )
 
-        yarn_application_tags = extract_yarn_application_tags(app_name)
-        command += ' --conf spark.yarn.tags={} '.format(yarn_application_tags)
+        command += ' --conf spark.yarn.tags={} '.format(self.yarn_application_tags)
         if queue:
             command += ' --queue {}'.format(queue)
         if jars:
@@ -1029,7 +1023,7 @@ class ContextualizedTasksInfra(object):
             raise ValueError("must receive either main-py-file or main-class and main-jar")
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-        self.kill_yarn_zombie_jobs(yarn_application_tags)
+        self.kill_yarn_zombie_jobs()
         return self.run_bash(command).ok
 
     def run_sw_pyspark(self,
@@ -1219,7 +1213,7 @@ class ContextualizedTasksInfra(object):
                                                                                determine_partitions_by_output,
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-        yarn_application_tags = extract_yarn_application_tags(app_name)
+         
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark2-submit' \
@@ -1250,13 +1244,13 @@ class ContextualizedTasksInfra(object):
                           (repositories if repositories is not None else []) + self.get_sw_repos()),
                       'main_class': main_class,
                       'jar': jar,
-                      'yarn_application_tags': yarn_application_tags
+                      'yarn_application_tags': self.yarn_application_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params,
                                                 value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
 
-        self.kill_yarn_zombie_jobs(yarn_application_tags)
+        self.kill_yarn_zombie_jobs()
         return self.run_bash(command).ok
 
     # module is either 'mobile' or 'analytics'
@@ -1286,7 +1280,7 @@ class ContextualizedTasksInfra(object):
                                                                                determine_partitions_by_output,
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-        yarn_application_tags = extract_yarn_application_tags(app_name)
+         
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark-submit' \
@@ -1314,11 +1308,11 @@ class ContextualizedTasksInfra(object):
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'main_class': main_class,
                       'jar': jar,
-                      'yarn_application_tags': yarn_application_tags
+                      'yarn_application_tags': self.yarn_application_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-        self.kill_yarn_zombie_jobs(yarn_application_tags)
+        self.kill_yarn_zombie_jobs()
         return self.run_bash(command).ok
 
     @staticmethod
@@ -1449,7 +1443,7 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-        yarn_application_tags = extract_yarn_application_tags(app_name)
+         
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'spark2-submit' \
@@ -1481,9 +1475,9 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': exec_py_file,
-                      'yarn_application_tags': yarn_application_tags
+                      'yarn_application_tags': self.yarn_application_tags
                   }
-        self.kill_yarn_zombie_jobs(yarn_application_tags)
+        self.kill_yarn_zombie_jobs()
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
@@ -1562,7 +1556,7 @@ class ContextualizedTasksInfra(object):
             py_files_cmd = ' '
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
-        yarn_application_tags = extract_yarn_application_tags(app_name)
+         
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'spark-submit' \
@@ -1591,12 +1585,12 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': exec_py_file,
-                      'yarn_application_tags': yarn_application_tags
+                      'yarn_application_tags': self.yarn_application_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
 
-        self.kill_yarn_zombie_jobs(yarn_application_tags)
+        self.kill_yarn_zombie_jobs()
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
             os.remove(artifact_path)
@@ -1825,19 +1819,15 @@ class ContextualizedTasksInfra(object):
         for key, value in dict.items():
             print("-%s %s" % (key, value))
 
-    def kill_yarn_zombie_jobs(self , yarn_application_tags):
-        kill_tag = parse_yarn_tags_to_dict(yarn_application_tags).get('kill_tag', None)
+    def kill_yarn_zombie_jobs(self ):
+        kill_tag = parse_yarn_tags_to_dict(self.yarn_application_tags).get('kill_tag', None)
         assert kill_tag and len(kill_tag) > 0, "yarn's kill_tag cannot be empty"
         app_tags = 'kill_tag:{kill_tag}'.format(kill_tag=kill_tag)
+        rm_host = SnowflakeConfig().get_service_name(service_name="active.yarn-rm")
         if self.dry_run or self.checks_only:
-            logger.info("Will Kill zombie-jobs with tags: {app_tags}".format(app_tags=app_tags))
+            ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags, handling_mode=ZombieJobKiller.ZombieHandleMode.alert)
         else:
-            rm_host = SnowflakeConfig().get_service_name(service_name="active.yarn-rm")
-            try:
-                ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags)
-            except:
-                logger.exception('Error killing jobs on %s' % rm_host)
-                raise
+            ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags)
         return
 
     @property
