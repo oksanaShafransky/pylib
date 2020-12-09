@@ -90,6 +90,9 @@ class InputDataArtifact(DataArtifact):
             raise Exception("InputDataArtifact Failure no datasource located")
 
 
+
+
+
 if __name__ == '__main__':
     # da = InputDataArtifact('path')
     da = InputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=07', required_size=10000, required_marker=True)

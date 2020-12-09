@@ -45,12 +45,20 @@ class OutputDataArtifact(DataArtifact):
                 reporter.report_lineage('output',
                                         {self.locate_data_source.get_full_uri(): self.locate_data_source.effective_size})
 
+    @property
+    def resolved_path(self):
+        if self.locate_data_source:
+            return self.locate_data_source.get_full_uri()
+        else:
+            raise Exception("OutputDataArtifact Failure no datasource located")
+
 
 if __name__ == '__main__':
     # da = InputDataArtifact('path')
-    da = OutputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=30', required_size=10000, required_marker=True)
-    print(da.get_full_uri())
+    override = [{"type": "s3", "name": "similargroup-backup-retention", "prefix": "/mrp"}]
+    da = OutputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=30', required_size=10000, required_marker=True, override_data_sources=override)
+    print(da.resolved_path)
     da.assert_output_validity()
-    print(da.get_full_uri())
+    print(da.resolved_path)
 
 

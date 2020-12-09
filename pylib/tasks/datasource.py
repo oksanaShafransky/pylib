@@ -71,10 +71,6 @@ class DataSource(object):
         """Method documentation"""
         return
 
-    @abc.abstractmethod
-    def get_full_uri(self):
-        """Method documentation"""
-        return
 
     @abc.abstractmethod
     def is_dir_exist(self):
@@ -83,6 +79,11 @@ class DataSource(object):
 
     @abc.abstractmethod
     def resolved_path(self):
+        """Method documentation"""
+        return
+
+    @abc.abstractmethod
+    def get_full_uri(self):
         """Method documentation"""
         return
 
@@ -154,6 +155,7 @@ class S3DataSource(DataSource):
         else:
             raise Exception("DataArtifact Failure chosen datasource doesn't have valid path")
 
+    # Get full URI without constrains.
     def get_full_uri(self):
         return self.full_uri
 
@@ -233,6 +235,7 @@ class HDFSDataSource(DataSource):
         else:
             raise Exception("DataArtifact Failure chosen datasource doesn't have valid path")
 
+    # Get full URI without constrains.
     def get_full_uri(self):
         return self.full_uri
 

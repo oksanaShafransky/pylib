@@ -74,7 +74,7 @@ class AppsPathResolver(object):
             return self.full_base_path
 
         def get_full_path(self):
-            return self.get_data_artifact().get_full_uri()
+            return path_join(self.get_base_path(), self.__get_date_suffix_by_type())
 
         def assert_output_validity(self):
             return self.ti.assert_output_validity(self.get_full_path(), min_size_bytes=self.required_size,
