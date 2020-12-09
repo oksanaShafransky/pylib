@@ -18,11 +18,15 @@ import sys
 import time
 import numpy as np
 from dateutil.relativedelta import relativedelta
+
+# Adjust log level
 from pylib.sw_jobs.kill_zombie_jobs import ZombieJobKiller
+
 from pylib.sw_jobs.job_utils import extract_yarn_application_tags, parse_yarn_tags_to_dict
+
 from pylib.common.date_utils import get_dates_range
 from pylib.tasks.data import DataArtifact
-# Adjust log level
+
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('requests').setLevel(logging.WARNING)
 
@@ -43,7 +47,6 @@ from pylib.config.SnowflakeConfig import SnowflakeConfig
 
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
-
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
 
@@ -103,9 +106,8 @@ class TasksInfra(object):
         else:
             return 'year=%s/month=%s' % (year_str, actual_month.month)
 
-
     @staticmethod
-    def year_previous_month(date,  zero_padding=True):
+    def year_previous_month(date, zero_padding=True):
         return TasksInfra.year_months_before(date, 1, zero_padding)
 
     @staticmethod
@@ -121,7 +123,7 @@ class TasksInfra(object):
             return 'year=%s/month=%s/day=%s' % (year_str, previous_day.month, previous_day.day)
 
     @staticmethod
-    def year_month_before_day(date, delta=1,  zero_padding=True):
+    def year_month_before_day(date, delta=1, zero_padding=True):
         if date is None:
             raise AttributeError("date wasn't passed")
         previous_day = date - datetime.timedelta(days=delta)
@@ -158,7 +160,7 @@ class TasksInfra(object):
             return
         elif mode_type.startswith('last-'):
             last_days = int(mode_type[len('last-'):])
-            start_date = end_date - datetime.timedelta(days=last_days-1)
+            start_date = end_date - datetime.timedelta(days=last_days - 1)
         elif mode_type == 'monthly':
             # get last day in month
             last = calendar.monthrange(end_date.year, end_date.month)[1]
@@ -177,10 +179,12 @@ class TasksInfra(object):
             return [(directory + TasksInfra.year_month(date, zero_padding=zero_padding), date) for date in dates_range]
         elif mode == 'window':
             dates_range = get_dates_range(end_date, lookback or 28)
-            return [(directory + TasksInfra.year_month_day(date, zero_padding=zero_padding), date) for date in dates_range]
+            return [(directory + TasksInfra.year_month_day(date, zero_padding=zero_padding), date) for date in
+                    dates_range]
         else:
             dates_range = get_dates_range(end_date, lookback or 150)
-            return [(directory + TasksInfra.year_month_day(date, zero_padding=zero_padding), date) for date in dates_range]
+            return [(directory + TasksInfra.year_month_day(date, zero_padding=zero_padding), date) for date in
+                    dates_range]
 
     EXEC_WRAPPERS = {
         'python': '"',
@@ -198,7 +202,6 @@ class TasksInfra(object):
             return ''
         else:
             return '_%s_%s' % (mode_type, date.strftime('%y_%m_%d'))
-
 
     @staticmethod
     def add_command_params(command, command_params, value_wrap='', *positional):
@@ -233,7 +236,6 @@ class TasksInfra(object):
     SMTP_PORT = 587
     SMTP_USER = 'AKIAJTAT2USDRQ5Y5QHA'
     SMTP_PASS = 'AubJwLhz8uhPfBF4/Kz7KI9HezfMMvi7hWuqurUZV5lr'
-
 
     @staticmethod
     def send_mail(mail_from, mail_to, mail_subject, content, format='plain', image_attachment=None):
@@ -320,7 +322,6 @@ class TasksInfra(object):
         last_app = sorted(apps, cmp=cmp_ts)[0]
         return last_app
 
-
     @staticmethod
     def handle_bad_input(mail_recipients=None, report_name=None, remove_last_line=False, app_id=None):
         """
@@ -361,10 +362,9 @@ class TasksInfra(object):
                 mail_from = 'dr.file@similarweb.com'
                 mail_to = [mail_recipients] if isinstance(mail_recipients, basestring) else mail_recipients
                 subject = 'Corrupt Files Report %s' % (report_name or task_id)
-                message = '''
-Corrupt Files Detected:
-%(file_listing)s
-All have been repaired. Original Corrupt Files are present on HDFS at %(eviction)s
+                message = '''Corrupt Files Detected:
+                %(file_listing)s
+                All have been repaired. Original Corrupt Files are present on HDFS at %(eviction)s
                     ''' % {
                     'file_listing': '\n'.join(files_to_treat),
                     'eviction': quarantine_dir
@@ -411,7 +411,6 @@ class ContextualizedTasksInfra(object):
         self.redis = None
         self.jvm_opts = {}
         self.hadoop_configs = {}
-        self.yarn_application_tags = extract_yarn_application_tags()
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -608,7 +607,8 @@ class ContextualizedTasksInfra(object):
             split_path = '/' + split_path[-1]
         else:
             split_path = split_path[-1]
-        assert split_path.count('/') > 4, "can't delete programmatically folders this close to root. are you sure you intended to delete %s" % path
+        assert split_path.count(
+            '/') > 4, "can't delete programmatically folders this close to root. are you sure you intended to delete %s" % path
 
     def run_distcp(self, source, target, mappers=20, overwrite=True):
         if overwrite:
@@ -621,6 +621,7 @@ class ContextualizedTasksInfra(object):
         curr_jvm_opts = copy(self.jvm_opts)
         curr_jvm_opts.update(self.hadoop_configs)
         jvm_opts = TasksInfra.add_jvm_options(job_name_property, curr_jvm_opts)
+
         distcp_opts = "-m {mappers}".format(mappers=mappers)
         cmd = 'hadoop distcp {jvm_opts} {distcp_opts} {source_path} {target_path}'.format(
             jvm_opts=jvm_opts,
@@ -628,8 +629,8 @@ class ContextualizedTasksInfra(object):
             source_path=source,
             target_path=target
         )
-        cmd = TasksInfra.add_jvm_options(cmd, {'mapreduce.job.tags': self.yarn_application_tags})
-        self.kill_yarn_zombie_jobs()
+        yarn_application_tags = extract_yarn_application_tags(cmd)
+        self.kill_yarn_zombie_jobs(yarn_application_tags)
         self.run_bash(cmd)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False,
@@ -658,13 +659,19 @@ class ContextualizedTasksInfra(object):
         curr_jvm_opts = copy(self.jvm_opts)
         curr_jvm_opts.update(jvm_opts)
         curr_jvm_opts.update(self.hadoop_configs)
-
+        app_name = 'hadoopexec.{jar_path}.{jar_name}.{main_class}.{date}'.format(
+            jar_path=jar_path,
+            jar_name=jar_name,
+            main_class=main_class,
+            date=self.date_title
+        )
+        yarn_application_tags = extract_yarn_application_tags(app_name)
         command = TasksInfra.add_jvm_options(command, curr_jvm_opts)
-        command = TasksInfra.add_jvm_options(command, {'mapreduce.job.tags': self.yarn_application_tags})
+        command = TasksInfra.add_jvm_options(command, {'mapreduce.job.tags': yarn_application_tags})
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
         if self.rerun:
             command = self.__with_rerun_root_queue(command)
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_jobs(yarn_application_tags)
         return self.run_bash(command).ok
 
 
@@ -740,7 +747,8 @@ class ContextualizedTasksInfra(object):
                                default_num_reducers=default_num_reducers,
                                jvm_opts=jvm_opts)
 
-    def run_analytics_hadoop(self, command_params, main_class, determine_reduces_by_output=False, default_num_reducers=200, jvm_opts=None):
+    def run_analytics_hadoop(self, command_params, main_class, determine_reduces_by_output=False,
+                             default_num_reducers=200, jvm_opts=None):
         return self.run_hadoop(
             jar_path='analytics',
             jar_name='analytics.jar',
@@ -779,7 +787,8 @@ class ContextualizedTasksInfra(object):
     def dates_range_paths(self, directory, lookback=None):
         return TasksInfra.dates_range_paths(directory, self.mode, self.date, lookback)
 
-    def latest_success_size_for_path(self, directory, mode=None, start_date=None, lookback=None, min_size_bytes=None, sub_dir=""):
+    def latest_success_size_for_path(self, directory, mode=None, start_date=None, lookback=None, min_size_bytes=None,
+                                     sub_dir=""):
 
         self.set_s3_keys()
 
@@ -787,16 +796,15 @@ class ContextualizedTasksInfra(object):
         start_date = self.date if start_date is None else start_date
         print("mode: " + mode)
         for path, date in reversed(TasksInfra.dates_range_paths(directory, mode, start_date, lookback)):
-                final_path = path + sub_dir
-                print("Try to find latest success in: " + final_path)
-                path_data_artifact = DataArtifact(final_path, required_size=min_size_bytes or 1)
-                check_size = path_data_artifact.check_size()
-                if check_size:
-                    print("latest success date for %s is %s" % (directory, date))
-                    return path_data_artifact.resolved_path, path_data_artifact.actual_size, date
+            final_path = path + sub_dir
+            print("Try to find latest success in: " + final_path)
+            path_data_artifact = DataArtifact(final_path, required_size=min_size_bytes or 1)
+            check_size = path_data_artifact.check_size()
+            if check_size:
+                print("latest success date for %s is %s" % (directory, date))
+                return path_data_artifact.resolved_path, path_data_artifact.actual_size, date
         print("No latest success date found for %s" % directory)
         return None, None, None
-
 
     def latest_daily_success_date(self, directory, month_lookback, date=None):
         """
@@ -866,7 +874,6 @@ class ContextualizedTasksInfra(object):
         else:
             mark_success(directory)
 
-
     # --- path partitions ----
     def full_partition_path(self):
         return TasksInfra.full_partition_path(self.__get_common_args()['mode'], self.__get_common_args()['mode_type'],
@@ -895,13 +902,13 @@ class ContextualizedTasksInfra(object):
                                              zero_padding=zero_padding)
 
     def country_year_month_day(self, country, date=False, zero_padding=True):
-        if date==False:
+        if date == False:
             date = self.__get_common_args()['date']
         return TasksInfra.country_year_month_day(date, country,
                                                  zero_padding=zero_padding)
 
     def country_year_month(self, country, date=False, zero_padding=True):
-        if date==False:
+        if date == False:
             date = self.__get_common_args()['date']
         return TasksInfra.country_year_month(date, country,
                                              zero_padding=zero_padding)
@@ -924,7 +931,7 @@ class ContextualizedTasksInfra(object):
 
     def year_month_before_day(self, delta=1, zero_padding=True):
         return TasksInfra.year_month_before_day(self.__get_common_args()['date'], delta=delta,
-        zero_padding = zero_padding)
+                                                zero_padding=zero_padding)
 
     def year_month_next_day(self, zero_padding=True):
         return TasksInfra.year_month_next_day(self.__get_common_args()['date'],
@@ -987,16 +994,15 @@ class ContextualizedTasksInfra(object):
                   ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
                   ' {spark_confs}' \
                   ' --repositories {repos}' \
-            .format(
-                    execution_dir=self.execution_dir,
+            .format(execution_dir=self.execution_dir,
                     spark_submit_script=spark_submit_script,
                     app_name=app_name,
                     snowflake_env=os.environ.get('SNOWFLAKE_ENV'),
                     spark_confs=additional_configs,
-                    repos=','.join(final_repositories)
-                   )
+                    repos=','.join(final_repositories))
 
-        command += ' --conf spark.yarn.tags={} '.format(self.yarn_application_tags)
+        yarn_application_tags = extract_yarn_application_tags(app_name)
+        command += ' --conf spark.yarn.tags={} '.format(yarn_application_tags)
         if queue:
             command += ' --queue {}'.format(queue)
         if jars:
@@ -1020,7 +1026,7 @@ class ContextualizedTasksInfra(object):
             raise ValueError("must receive either main-py-file or main-class and main-jar")
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_jobs(yarn_application_tags)
         return self.run_bash(command).ok
 
     def run_sw_pyspark(self,
@@ -1210,7 +1216,7 @@ class ContextualizedTasksInfra(object):
                                                                                determine_partitions_by_output,
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-         
+        yarn_application_tags = extract_yarn_application_tags(app_name)
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark2-submit' \
@@ -1241,13 +1247,13 @@ class ContextualizedTasksInfra(object):
                           (repositories if repositories is not None else []) + self.get_sw_repos()),
                       'main_class': main_class,
                       'jar': jar,
-                      'yarn_application_tags': self.yarn_application_tags
+                      'yarn_application_tags': yarn_application_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params,
                                                 value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
 
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_jobs(yarn_application_tags)
         return self.run_bash(command).ok
 
     # module is either 'mobile' or 'analytics'
@@ -1277,7 +1283,7 @@ class ContextualizedTasksInfra(object):
                                                                                determine_partitions_by_output,
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-         
+        yarn_application_tags = extract_yarn_application_tags(app_name)
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark-submit' \
@@ -1305,11 +1311,10 @@ class ContextualizedTasksInfra(object):
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'main_class': main_class,
                       'jar': jar,
-                      'yarn_application_tags': self.yarn_application_tags
+                      'yarn_application_tags': yarn_application_tags
                   }
-
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_jobs(yarn_application_tags)
         return self.run_bash(command).ok
 
     @staticmethod
@@ -1367,26 +1372,26 @@ class ContextualizedTasksInfra(object):
         return jars
 
     def run_py_spark2(self,
-                     main_py_file,
-                     app_name=None,
-                     command_params=None,
-                     files=None,
-                     include_main_jar=True,
-                     jars_from_lib=None,
-                     module='mobile',
-                     named_spark_args=None,
-                     packages=None,
-                     repositories=None,
-                     py_files=None,
-                     py_modules=None,
-                     spark_configs=None,
-                     use_bigdata_defaults=False,
-                     queue=None,
-                     determine_partitions_by_output=False,
-                     managed_output_dirs=None,
-                     additional_artifacts=None,
-                     python_env=None
-                     ):
+                      main_py_file,
+                      app_name=None,
+                      command_params=None,
+                      files=None,
+                      include_main_jar=True,
+                      jars_from_lib=None,
+                      module='mobile',
+                      named_spark_args=None,
+                      packages=None,
+                      repositories=None,
+                      py_files=None,
+                      py_modules=None,
+                      spark_configs=None,
+                      use_bigdata_defaults=False,
+                      queue=None,
+                      determine_partitions_by_output=False,
+                      managed_output_dirs=None,
+                      additional_artifacts=None,
+                      python_env=None
+                      ):
 
         logging.warn("run_py_spark2 is a deprecated method. Use run_sw_pyspark instead.")
 
@@ -1404,7 +1409,8 @@ class ContextualizedTasksInfra(object):
         final_py_files = py_files or []
 
         module_dir = self.execution_dir + '/' + module
-        exec_py_file = 'python/sw_%s/%s' % (module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
+        exec_py_file = 'python/sw_%s/%s' % (
+        module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
 
         py_modules = py_modules or []
         if use_bigdata_defaults:
@@ -1417,7 +1423,7 @@ class ContextualizedTasksInfra(object):
             req_mod_dir = self.execution_dir + '/' + requested_module
             egg_files = glob('%s/*.egg' % req_mod_dir)
             final_py_files.extend(egg_files)
-            #todo change to assert
+            # todo change to assert
             if len(egg_files) == 0:
                 print('failed finding egg file for requested python module %s. skipping' % requested_module)
 
@@ -1439,9 +1445,8 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-         
+        yarn_application_tags = extract_yarn_application_tags(app_name)
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
-
         command = 'spark2-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -1471,9 +1476,9 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': exec_py_file,
-                      'yarn_application_tags': self.yarn_application_tags
+                      'yarn_application_tags': yarn_application_tags
                   }
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_jobs(yarn_application_tags)
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
@@ -1506,7 +1511,9 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params,
+                                                                               determine_partitions_by_output,
+                                                                               spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         if python_env is not None:
@@ -1515,7 +1522,8 @@ class ContextualizedTasksInfra(object):
         final_py_files = py_files or []
 
         module_dir = self.execution_dir + '/' + module
-        exec_py_file = 'python/sw_%s/%s' % (module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
+        exec_py_file = 'python/sw_%s/%s' % (
+        module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
 
         py_modules = py_modules or []
         if use_bigdata_defaults:
@@ -1528,7 +1536,7 @@ class ContextualizedTasksInfra(object):
             req_mod_dir = self.execution_dir + '/' + requested_module
             egg_files = glob('%s/*.egg' % req_mod_dir)
             final_py_files.extend(egg_files)
-            #todo change to assert
+            # todo change to assert
             if len(egg_files) == 0:
                 print('failed finding egg file for requested python module %s. skipping' % requested_module)
 
@@ -1549,7 +1557,7 @@ class ContextualizedTasksInfra(object):
             py_files_cmd = ' '
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
-         
+        yarn_application_tags = extract_yarn_application_tags(app_name)
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'spark-submit' \
@@ -1578,12 +1586,12 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': exec_py_file,
-                      'yarn_application_tags': self.yarn_application_tags
+                      'yarn_application_tags': yarn_application_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
 
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_jobs(yarn_application_tags)
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
             os.remove(artifact_path)
@@ -1602,7 +1610,8 @@ class ContextualizedTasksInfra(object):
         print("Number of desired partitions for %s is %d" % (path, num_partitions))
         return num_partitions
 
-    def determine_mr_output_partitions(self, command_params, determine_reduces_by_output, jvm_opts, default_num_reducers=200):
+    def determine_mr_output_partitions(self, command_params, determine_reduces_by_output, jvm_opts,
+                                       default_num_reducers=200):
         base_partition_output_key = 'base_partition_output'
         reducers_config_key = TasksInfra.get_mr_partitions_config_key()
 
@@ -1658,10 +1667,12 @@ class ContextualizedTasksInfra(object):
     @staticmethod
     def _set_python_env(python_env, env_path='s3a://similargroup-research/deploy/envs'):
         spark_configs = ''
-        spark_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,python_env)
-        spark_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,python_env)
-        spark_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,python_env)
-        spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip#{}"'.format(env_path, python_env, python_env, python_env)
+        spark_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,
+                                                                                                    python_env)
+        spark_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env, python_env)
+        spark_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env, python_env)
+        spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip#{}"'.format(env_path, python_env, python_env,
+                                                                                     python_env)
         return spark_configs
 
     def set_hdfs_replication_factor(self, replication_factor):
@@ -1769,7 +1780,8 @@ class ContextualizedTasksInfra(object):
         if set_env_variables:
             os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
 
-    def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
+    def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE,
+                                 dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
         bucket_name = bucket_name.replace("/", "")
         bucket = s3_conn.get_bucket(bucket_name)
@@ -1782,7 +1794,8 @@ class ContextualizedTasksInfra(object):
         ans = ans and is_s3_folder_big_enough(s3_conn=s3_conn, bucket_name=bucket_name, path=path, min_size=min_size)
         assert ans is True, 'Input is not valid, given bucket is %s and path is %s' % (bucket_name, path)
 
-    def assert_s3_output_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
+    def assert_s3_output_validity(self, bucket_name, path, min_size=0, validate_marker=False,
+                                  profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
         bucket_name = bucket_name.replace("/", "")
         bucket = s3_conn.get_bucket(bucket_name)
@@ -1796,31 +1809,36 @@ class ContextualizedTasksInfra(object):
         assert ans is True, 'Output is not valid, given bucket is %s and path is %s' % (bucket_name, path)
 
     def get_dynamic_min_dir_size(self, s3_conn, bucket_name, path, min_std=3, time_delta=10):
-        path = path.split('year')[0] # removing the date suffix
+        path = path.split('year')[0]  # removing the date suffix
         sizes_list = []
-        for i in range(1, time_delta+1):
-            sizes_list.append(get_s3_folder_size(s3_conn=s3_conn, bucket_name=bucket_name, path=path + self.year_month_before_day(i)))
+        for i in range(1, time_delta + 1):
+            sizes_list.append(
+                get_s3_folder_size(s3_conn=s3_conn, bucket_name=bucket_name, path=path + self.year_month_before_day(i)))
         sizes_list = [a for a in sizes_list if a != 0]
-        if len(sizes_list)>0:
+        if len(sizes_list) > 0:
             min_size = np.mean(sizes_list) - (min_std * np.std(sizes_list))
         else:
             min_size = 0
-        return max(0,min_size)
+        return max(0, min_size)
 
     def print_job_input_dict(self, dict):
         print("Job input params: ")
         for key, value in dict.items():
             print("-%s %s" % (key, value))
 
-    def kill_yarn_zombie_jobs(self ):
-        kill_tag = parse_yarn_tags_to_dict(self.yarn_application_tags).get('kill_tag', None)
+    def kill_yarn_zombie_jobs(self , yarn_application_tags):
+        kill_tag = parse_yarn_tags_to_dict(yarn_application_tags).get('kill_tag', None)
         assert kill_tag and len(kill_tag) > 0, "yarn's kill_tag cannot be empty"
         app_tags = 'kill_tag:{kill_tag}'.format(kill_tag=kill_tag)
-        rm_host = SnowflakeConfig().get_service_name(service_name="active.yarn-rm")
         if self.dry_run or self.checks_only:
-            ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags, handling_mode=ZombieJobKiller.ZombieHandleMode.alert)
+            logger.info("Will Kill zombie-jobs with tags: {app_tags}".format(app_tags=app_tags))
         else:
-            ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags)
+            rm_host = SnowflakeConfig().get_service_name(service_name="active.yarn-rm")
+            try:
+                ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags)
+            except:
+                logger.exception('Error killing jobs on %s' % rm_host)
+                raise
         return
 
     @property
