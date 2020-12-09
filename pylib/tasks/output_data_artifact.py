@@ -1,10 +1,6 @@
 import logging
-import json
-from pylib.config.SnowflakeConfig import SnowflakeConfig
-from datasource import HDFSDataSource, S3DataSource, DatasourceTypes
 from data_artifact import DataArtifact
 
-import os
 
 SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
@@ -15,8 +11,8 @@ logger = logging.getLogger('data_artifact')
 
 class OutputDataArtifact(DataArtifact):
 
-    def __init__(self, path, required_size=0, required_marker=True, override_data_sources=None, ti=None):
-        super(OutputDataArtifact, self).__init__(path, required_size, required_marker, override_data_sources, ti)
+    def __init__(self, path, ti, required_size=0, required_marker=True, override_data_sources=None):
+        super(OutputDataArtifact, self).__init__(path, ti, required_size, required_marker, override_data_sources)
         # Take first data_source available from the list. This is our output data source
         self.locate_data_source = self.data_sources[0]
 
@@ -56,7 +52,8 @@ class OutputDataArtifact(DataArtifact):
 if __name__ == '__main__':
     # da = InputDataArtifact('path')
     override = [{"type": "s3", "name": "similargroup-backup-retention", "prefix": "/mrp"}]
-    da = OutputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=30', required_size=10000, required_marker=True, override_data_sources=override)
+    da = OutputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=30',
+                            required_size=10000, required_marker=True, override_data_sources=override)
     print(da.resolved_path)
     da.assert_output_validity()
     print(da.resolved_path)

@@ -1,9 +1,6 @@
 import logging
-import json
-from pylib.config.SnowflakeConfig import SnowflakeConfig
 from datasource import HDFSDataSource, S3DataSource, DatasourceTypes
 
-import os
 
 SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
@@ -11,19 +8,17 @@ DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
 logger = logging.getLogger('data_artifact')
 
-# Extract default data sources, it's here because we want it to run once.
-default_data_sources_json = json.loads(SnowflakeConfig().get_service_name(service_name="da-data-sources"))
-
 
 class DataArtifact(object):
 
-    def __init__(self, path, required_size=0, required_marker=True, override_data_sources=None, ti=None):
+    def __init__(self, path, ti, required_size=0, required_marker=True, override_data_sources=None):
         self.raw_path = path
         self.min_required_size = required_size
         self.check_marker = required_marker
+        self.ti = ti
 
-        # Decide on datasources - This section still need redesign after we will enable datasource changes through ti.
-        self.raw_data_sources_list = override_data_sources if override_data_sources else default_data_sources_json
+        # Decide on datasources
+        self.raw_data_sources_list = override_data_sources or self.ti.da_data_sources
 
         # Create DataSources Hirechy
         self.data_sources = []
@@ -31,12 +26,13 @@ class DataArtifact(object):
             d_type = d.get('type')
             if d_type == DatasourceTypes.HDFS.value:
                 self.data_sources.append(HDFSDataSource(self.raw_path, self.min_required_size,
-                                                   self.check_marker, d.get("name"), d.get("prefix")))
+                                                        self.check_marker, d.get("name"), d.get("prefix")))
             elif d_type == DatasourceTypes.S3.value:
                 self.data_sources.append(S3DataSource(self.raw_path, self.min_required_size,
-                                                   self.check_marker, d.get("name"), d.get("prefix")))
+                                                      self.check_marker, d.get("name"), d.get("prefix")))
             else:
-                raise Exception("DataArtifact: unknown data source:%s options - %s" % (d_type, {d.name: d.value for d in DatasourceTypes}))
+                raise Exception("DataArtifact: unknown data source:%s options - %s"
+                                % (d_type, {d.name: d.value for d in DatasourceTypes}))
 
         # Will be filled by the implementations.
         self.locate_data_source = None
