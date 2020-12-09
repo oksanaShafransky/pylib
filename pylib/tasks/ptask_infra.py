@@ -18,15 +18,11 @@ import sys
 import time
 import numpy as np
 from dateutil.relativedelta import relativedelta
-
-# Adjust log level
 from pylib.sw_jobs.kill_zombie_jobs import ZombieJobKiller
-
 from pylib.sw_jobs.job_utils import extract_yarn_application_tags, parse_yarn_tags_to_dict
-
 from pylib.common.date_utils import get_dates_range
 from pylib.tasks.data import DataArtifact
-
+# Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('requests').setLevel(logging.WARNING)
 
@@ -47,6 +43,7 @@ from pylib.config.SnowflakeConfig import SnowflakeConfig
 
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
+
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
 
@@ -1510,9 +1507,7 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        command_params, spark_configs = self.determine_spark_output_partitions(command_params,
-                                                                               determine_partitions_by_output,
-                                                                               spark_configs)
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         if python_env is not None:
@@ -1521,8 +1516,7 @@ class ContextualizedTasksInfra(object):
         final_py_files = py_files or []
 
         module_dir = self.execution_dir + '/' + module
-        exec_py_file = 'python/sw_%s/%s' % (
-        module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
+        exec_py_file = 'python/sw_%s/%s' % (module.replace('-', '_'), main_py_file) if use_bigdata_defaults else main_py_file
 
         py_modules = py_modules or []
         if use_bigdata_defaults:
