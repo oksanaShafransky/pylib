@@ -7,6 +7,7 @@ import shutil
 import smtplib
 import urllib
 import uuid
+import json
 from copy import copy
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -1812,7 +1813,7 @@ class ContextualizedTasksInfra(object):
     # This is for caching purpose
     def get_default_da_data_sources(self):
         if self.default_da_data_sources is None:
-            self.default_da_data_sources = SnowflakeConfig().get_service_name(service_name='da-data-sources')
+            self.default_da_data_sources = json.loads(SnowflakeConfig().get_service_name(service_name='da-data-sources'))
         return self.default_da_data_sources
 
     @property
