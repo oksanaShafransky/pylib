@@ -1656,7 +1656,11 @@ class ContextualizedTasksInfra(object):
         for key, value in self.hadoop_configs.items():
             additional_configs += ' --conf spark.hadoop.%s=%s' % (key, value)
 
-        spark_conf = {self.spark_configs.copy().update(override_spark_configs)} if override_spark_configs else self.spark_configs
+        if override_spark_configs:
+            spark_conf = self.spark_configs.copy()
+            spark_conf.update(override_spark_configs)
+        else:
+            spark_conf = self.spark_configs
         for key, value in spark_conf.items():
             additional_configs += ' --conf %s=%s' % (key, value)
 
@@ -1833,12 +1837,16 @@ class ContextualizedTasksInfra(object):
         return self.default_da_data_sources
 
     def set_spark_output_split_size(self, output_size_in_bytes):
-        partitions_config_key = TasksInfra.get_spark_partitions_config_key()
-        self.spark_configs[partitions_config_key] = calc_desired_partitions(output_size_in_bytes)
+        num_of_partitions = calc_desired_partitions(output_size_in_bytes)
+        print("Setting number of spark output split partitions to %s for output size %s" %
+              (num_of_partitions, output_size_in_bytes))
+        self.spark_configs[TasksInfra.get_spark_partitions_config_key()] = num_of_partitions
 
     def set_mr_output_split_size(self, output_size_in_bytes):
-        partitions_config_key = TasksInfra.get_mr_partitions_config_key()
-        self.jvm_opts[partitions_config_key] = calc_desired_partitions(output_size_in_bytes)
+        num_of_partitions = calc_desired_partitions(output_size_in_bytes)
+        print("Setting number of mr output split partitions to %s for output size %s" %
+              (num_of_partitions, output_size_in_bytes))
+        self.jvm_opts[TasksInfra.get_mr_partitions_config_key()] = num_of_partitions
 
     @property
     def base_dir(self):
