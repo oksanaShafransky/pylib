@@ -1651,18 +1651,19 @@ class ContextualizedTasksInfra(object):
             del command_params[base_partition_output_key]
         return command_params, spark_configs
 
-    def build_spark_additional_configs(self, named_spark_args, additional_spark_configs):
+    def build_spark_additional_configs(self, named_spark_args, override_spark_configs):
         additional_configs = ''
         for key, value in self.hadoop_configs.items():
             additional_configs += ' --conf spark.hadoop.%s=%s' % (key, value)
-        for key, value in self.spark_configs.items():
+
+        spark_conf = {self.spark_configs.copy().update(override_spark_configs)} if override_spark_configs else self.spark_configs
+        for key, value in spark_conf.items():
             additional_configs += ' --conf %s=%s' % (key, value)
-        if additional_spark_configs:
-            for key, value in additional_spark_configs.items():
-                additional_configs += ' --conf %s=%s' % (key, value)
+
         if named_spark_args:
             for key, value in named_spark_args.items():
                 additional_configs += ' --%s %s' % (key, value)
+
         if self.should_profile:
             additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
             additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
