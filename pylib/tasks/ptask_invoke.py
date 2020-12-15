@@ -48,7 +48,7 @@ class PtaskInvoker(Program):
             Argument(names=('execution_dir', 'ex'), help="The path of the execution dir", optional=False),
             Argument(names=('base_dir', 'bd'), help="The HDFS base directory for the task's input", optional=True),
             Argument(names=('calc_dir', 'cd'), help="The HDFS base directory for the task's output", optional=True),
-            Argument(names=('da_data_sources', 'dis'), help="DataArtifact data sources", optional=True),
+            Argument(names=('da_data_sources', 'dds'), help="DataArtifact data sources", optional=True),
             Argument(names=('mode', 'm'), help="Run mode (snapshot/window/daily)", optional=True),
             Argument(names=('mode_type', 'mt'), help="Run mode type (monthly/window/daily)", optional=True),
             Argument(names=('dont_force', 'df'), kind=bool,
