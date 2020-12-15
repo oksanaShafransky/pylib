@@ -413,6 +413,7 @@ class ContextualizedTasksInfra(object):
         self.redis = None
         self.jvm_opts = {}
         self.hadoop_configs = {}
+        self.spark_configs = {}
         self.default_da_data_sources = None
 
     def __compose_infra_command(self, command):
@@ -965,6 +966,7 @@ class ContextualizedTasksInfra(object):
                       named_spark_args=None,
                       py_files=None,
                       determine_partitions_by_output=False,
+                      determine_partitions_by_output_size=None,
                       managed_output_dirs=None,
                       spark_submit_script=None,
                       python_env=None
@@ -976,6 +978,9 @@ class ContextualizedTasksInfra(object):
             command_params, spark_configs = self.determine_spark_output_partitions(command_params,
                                                                                    determine_partitions_by_output,
                                                                                    spark_configs)
+        if determine_partitions_by_output_size:
+            partitions_config_key = TasksInfra.get_spark_partitions_config_key()
+            spark_configs[partitions_config_key] = calc_desired_partitions(determine_partitions_by_output_size)
 
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
         if python_env is not None:
@@ -1039,6 +1044,7 @@ class ContextualizedTasksInfra(object):
                        spark_configs=None,
                        named_spark_args=None,
                        determine_partitions_by_output=False,
+                       determine_partitions_by_output_size=None,
                        managed_output_dirs=None,
                        spark_submit_script='spark2-submit',
                        py_files=None,
@@ -1076,6 +1082,8 @@ class ContextualizedTasksInfra(object):
         :type named_spark_args: dict[str, str]
         :param determine_partitions_by_output: use the spark partition calculator to determine output split size
         :type determine_partitions_by_output: bool
+        :param determine_partitions_by_output_size: calculates output split size according to this given output size in bytes
+        :type determine_partitions_by_output_size: int
         :param managed_output_dirs: output directory to delete on job initialization
         :type managed_output_dirs: list[str]
         :param spark_submit_script: spark submit script to use (spark1x: spark-submit, spark2x: spark2-submit)
@@ -1109,6 +1117,7 @@ class ContextualizedTasksInfra(object):
                                   named_spark_args=named_spark_args,
                                   py_files=py_files,
                                   determine_partitions_by_output=determine_partitions_by_output,
+                                  determine_partitions_by_output_size=determine_partitions_by_output_size,
                                   managed_output_dirs=managed_output_dirs,
                                   spark_submit_script=spark_submit_script,
                                   python_env=python_env)
@@ -1126,6 +1135,7 @@ class ContextualizedTasksInfra(object):
                      spark_configs=None,
                      named_spark_args=None,
                      determine_partitions_by_output=None,
+                     determine_partitions_by_output_size=None,
                      managed_output_dirs=None,
                      spark_submit_script='spark2-submit'
                      ):
@@ -1159,6 +1169,8 @@ class ContextualizedTasksInfra(object):
         :type named_spark_args: dict[str, str]
         :param determine_partitions_by_output: use the spark partition calculator to determine output split size
         :type determine_partitions_by_output: bool
+        :param determine_partitions_by_output_size: calculates output split size according to this given output size in bytes
+        :type determine_partitions_by_output_size: int
         :param managed_output_dirs: output directory to delete on job initialization
         :type managed_output_dirs: list[str]
         :param spark_submit_script: spark submit script to use (spark1x: spark-submit, spark2x: spark2-submit)
@@ -1177,6 +1189,7 @@ class ContextualizedTasksInfra(object):
                                   spark_configs=spark_configs,
                                   named_spark_args=named_spark_args,
                                   determine_partitions_by_output=determine_partitions_by_output,
+                                  determine_partitions_by_output_size=determine_partitions_by_output_size,
                                   managed_output_dirs=managed_output_dirs,
                                   spark_submit_script=spark_submit_script)
 
@@ -1638,12 +1651,14 @@ class ContextualizedTasksInfra(object):
             del command_params[base_partition_output_key]
         return command_params, spark_configs
 
-    def build_spark_additional_configs(self, named_spark_args, spark_configs):
+    def build_spark_additional_configs(self, named_spark_args, additional_spark_configs):
         additional_configs = ''
         for key, value in self.hadoop_configs.items():
             additional_configs += ' --conf spark.hadoop.%s=%s' % (key, value)
-        if spark_configs:
-            for key, value in spark_configs.items():
+        for key, value in self.spark_configs.items():
+            additional_configs += ' --conf %s=%s' % (key, value)
+        if additional_spark_configs:
+            for key, value in additional_spark_configs.items():
                 additional_configs += ' --conf %s=%s' % (key, value)
         if named_spark_args:
             for key, value in named_spark_args.items():
@@ -1815,6 +1830,14 @@ class ContextualizedTasksInfra(object):
         if self.default_da_data_sources is None:
             self.default_da_data_sources = json.loads(SnowflakeConfig().get_service_name(service_name='da-data-sources'))
         return self.default_da_data_sources
+
+    def set_spark_output_split_size(self, output_size_in_bytes):
+        partitions_config_key = TasksInfra.get_spark_partitions_config_key()
+        self.spark_configs[partitions_config_key] = calc_desired_partitions(output_size_in_bytes)
+
+    def set_mr_output_split_size(self, output_size_in_bytes):
+        partitions_config_key = TasksInfra.get_mr_partitions_config_key()
+        self.jvm_opts[partitions_config_key] = calc_desired_partitions(output_size_in_bytes)
 
     @property
     def base_dir(self):
