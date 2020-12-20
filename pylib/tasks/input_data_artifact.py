@@ -19,8 +19,8 @@ class InputRangedDataArtifact(object):
         self.ti = ti
         # Create list of dataartifacts
         self.ranged_data_artifact = [
-            InputDataArtifact(os.path.join(self.collection_path, d.strftime(self.suffix_format)),
-                              self.ti, *args, **kwargs)
+            InputDataArtifact(self.ti, os.path.join(self.collection_path, d.strftime(self.suffix_format)),
+                               *args, **kwargs)
             for d in self.dates
         ]
 
