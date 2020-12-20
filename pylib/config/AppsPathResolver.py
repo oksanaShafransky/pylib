@@ -54,11 +54,11 @@ class AppsPathResolver(object):
         def get_data_artifact(self, date_suffix=None):
             date_suffix = date_suffix if date_suffix else self.__get_date_suffix_by_type()
             if self.in_or_out == 'in':
-                return InputDataArtifact(path_join(self.full_base_path, date_suffix, self.path_suffix),
+                return InputDataArtifact(self.ti, path_join(self.full_base_path, date_suffix, self.path_suffix),
                                          required_size=self.required_size,
                                          required_marker=self.required_marker)
             else:
-                return OutputDataArtifact(path_join(self.full_base_path, date_suffix, self.path_suffix),
+                return OutputDataArtifact(self.ti, path_join(self.full_base_path, date_suffix, self.path_suffix),
                                          required_size=self.required_size,
                                          required_marker=self.required_marker)
 

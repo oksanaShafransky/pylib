@@ -1,7 +1,4 @@
 import logging
-import json
-from pylib.config.SnowflakeConfig import SnowflakeConfig
-from datasource import HDFSDataSource, S3DataSource, DatasourceTypes
 from data_artifact import DataArtifact
 
 import os
@@ -13,16 +10,17 @@ DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 logger = logging.getLogger('data_artifact')
 
 
-
 class InputRangedDataArtifact(object):
 
-    def __init__(self, collection_path, dates, suffix_format=DEFAULT_SUFFIX_FORMAT, *args, **kwargs):
+    def __init__(self, collection_path, dates, ti, suffix_format=DEFAULT_SUFFIX_FORMAT, *args, **kwargs):
         self.collection_path = collection_path
         self.dates = dates
         self.suffix_format = suffix_format
+        self.ti = ti
         # Create list of dataartifacts
         self.ranged_data_artifact = [
-            InputDataArtifact(os.path.join(self.collection_path, d.strftime(self.suffix_format)), *args, **kwargs)
+            InputDataArtifact(os.path.join(self.collection_path, d.strftime(self.suffix_format)),
+                              self.ti, *args, **kwargs)
             for d in self.dates
         ]
 
@@ -41,37 +39,34 @@ class InputRangedDataArtifact(object):
         return item_delimiter.join([tuple_delimiter.join(tup) for tup in tuples])
 
 
-
-
-
 class InputDataArtifact(DataArtifact):
 
-    def __init__(self, path, required_size=0, required_marker=True, override_data_sources=None, ti=None):
-        super(InputDataArtifact, self).__init__(path, required_size, required_marker, override_data_sources, ti)
+    def __init__(self, path, ti, required_size=0, required_marker=True, override_data_sources=None):
+        super(InputDataArtifact, self).__init__(path, ti, required_size, required_marker, override_data_sources)
 
-        #Search in datasource one by one break if we found one.
+        # Search in datasource one by one break if we found one.
         for d in self.data_sources:
-            #Checking current datasource
+            # Checking current datasource
             logger.info("Checking datasource: " + repr(d))
-            logger.info("InputDataArtifact: Datasource check if dir exsits on collection: " + self.raw_path)
+            logger.info("InputDataArtifact: Datasource check if dir exists on collection: " + self.raw_path)
             if d.is_dir_exist():
-                #From here if something breaks datasource will throw exception
+                # From here if something breaks datasource will throw exception
                 logger.info("InputDataArtifact: Datasource validate marker, required_marker: " + str(self.check_marker))
                 d.assert_marker()
                 logger.info("InputDataArtifact: Datasource validate size, required_size: " + str(self.min_required_size))
                 d.assert_size()
 
             if d.is_exist and d.is_marker_validated and d.is_size_validated:
-                #We found a datasource
+                # We found a datasource
                 self.locate_data_source = d
                 self.locate_data_source.log_success()
                 return
             d.log_fail_to_find()
 
-        #If we got here we should fail Data artifact with no collection found
+        # If we got here we should fail Data artifact with no collection found
         raise Exception("InputDataArtifact - Couldn't locate collection: %s in any of the datasources" % self.raw_path)
 
-    # This function should be depcrecated we only allow it for backward compatibility
+    # This function should be deprecated we only allow it for backward compatibility
     def assert_input_validity(self, *reporters):
         if not self.locate_data_source:
             raise Exception("InputDataArtifact Failure no valid datasource was found")
@@ -81,7 +76,6 @@ class InputDataArtifact(DataArtifact):
                 reporter.report_lineage('input',
                                         {self.locate_data_source.prefixed_collection: self.locate_data_source.effective_size})
 
-
     @property
     def resolved_path(self):
         if self.locate_data_source:
@@ -90,12 +84,10 @@ class InputDataArtifact(DataArtifact):
             raise Exception("InputDataArtifact Failure no datasource located")
 
 
-
-
-
 if __name__ == '__main__':
     # da = InputDataArtifact('path')
-    da = InputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=07', required_size=10000, required_marker=True)
+    da = InputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=07',
+                           required_size=10000, required_marker=True)
     da.assert_input_validity()
     print(da.resolved_path)
 
