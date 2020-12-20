@@ -65,7 +65,7 @@ class AppsPathResolver(object):
         def get_ranged_data_artifact(self, dates):
             if self.in_or_out == 'out':
                 raise Exception("AppsPathSolver - Output doesn't have ranged data artifact")
-            return InputRangedDataArtifact(self.full_base_path, dates,
+            return InputRangedDataArtifact(self.ti, self.full_base_path, dates,
                                            required_size=self.required_size,
                                            required_marker=self.required_marker)
 

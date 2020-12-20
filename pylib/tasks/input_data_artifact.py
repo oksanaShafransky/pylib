@@ -12,7 +12,7 @@ logger = logging.getLogger('data_artifact')
 
 class InputRangedDataArtifact(object):
 
-    def __init__(self, collection_path, dates, ti, suffix_format=DEFAULT_SUFFIX_FORMAT, *args, **kwargs):
+    def __init__(self, ti, collection_path, dates, suffix_format=DEFAULT_SUFFIX_FORMAT, *args, **kwargs):
         self.collection_path = collection_path
         self.dates = dates
         self.suffix_format = suffix_format
@@ -41,7 +41,7 @@ class InputRangedDataArtifact(object):
 
 class InputDataArtifact(DataArtifact):
 
-    def __init__(self, path, ti, required_size=0, required_marker=True, override_data_sources=None):
+    def __init__(self, ti, path,  required_size=0, required_marker=True, override_data_sources=None):
         super(InputDataArtifact, self).__init__(path, ti, required_size, required_marker, override_data_sources)
 
         # Search in datasource one by one break if we found one.

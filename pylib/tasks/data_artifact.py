@@ -11,7 +11,7 @@ logger = logging.getLogger('data_artifact')
 
 class DataArtifact(object):
 
-    def __init__(self, path, ti, required_size=0, required_marker=True, override_data_sources=None):
+    def __init__(self, ti, path,  required_size=0, required_marker=True, override_data_sources=None):
         self.raw_path = path
         self.min_required_size = required_size
         self.check_marker = required_marker
