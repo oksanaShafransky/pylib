@@ -384,7 +384,7 @@ class AppsPathResolver(object):
 
             'system_apps': {
                 'main_path': "daily/system-apps",
-                'size': 150 * KB, 'marker': True,
+                'size': 30 * KB, 'marker': True,
                 'path_type': "daily"},
 
             'app_downloads_alph': {
