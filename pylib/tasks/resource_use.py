@@ -59,7 +59,9 @@ def aggregate_resources(applications):
 
 def store_resources_used(task_name, resources, start_time=None, end_time=None):
     from pylib.config.SnowflakeConfig import SnowflakeConfig
+    print ("store_resources_usedTask name=%s" % task_name)
     task_fields = task_name.split('.')
+
     dag_id, task_id, execution_id = task_fields[1:4]
     execution_date = execution_id.split('_')[0]
     run_date = datetime.now().strftime('%Y-%m-%d')
