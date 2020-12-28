@@ -3,7 +3,6 @@ from datetime import datetime
 from pylib.sw_config.bigdata_kv import get_kv, Purposes
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 
-kv = get_kv(purpose=Purposes.BigData, snowflake_env=SnowflakeConfig().def_env)
 
 DEFAULT_GB_HR_PRICE = 0.013
 DEFAULT_CORE_HR_PRICE = 0.035
@@ -12,11 +11,13 @@ DEFAULT_CORE_HR_PRICE = 0.035
 # The extra safety layer in the following 2 functions looks weird, but kv may return a legitimate None value if failing
 
 def gb_hour_price():
+    kv = get_kv(purpose=Purposes.BigData, snowflake_env=SnowflakeConfig().def_env)
     kv_gb_hour_price = kv.get_or_default('resource_cost/gb_hours', DEFAULT_GB_HR_PRICE)
     return float(kv_gb_hour_price) if kv_gb_hour_price is not None else DEFAULT_GB_HR_PRICE
 
 
 def core_hour_price():
+    kv = get_kv(purpose=Purposes.BigData, snowflake_env=SnowflakeConfig().def_env)
     kv_core_hour_price = kv.get_or_default('resource_cost/core_hours', DEFAULT_CORE_HR_PRICE)
     return float(kv_core_hour_price) if kv_core_hour_price is not None else DEFAULT_CORE_HR_PRICE
 

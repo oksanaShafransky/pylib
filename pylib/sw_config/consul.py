@@ -1,4 +1,4 @@
-from pylib.sw_config.kv import KeyValueProxy
+from kv import KeyValueProxy
 
 import logging
 import consulate
