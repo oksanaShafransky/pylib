@@ -7,6 +7,7 @@ import shutil
 import smtplib
 import urllib
 import uuid
+import json
 from copy import copy
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -412,6 +413,8 @@ class ContextualizedTasksInfra(object):
         self.jvm_opts = {}
         self.hadoop_configs = {}
         self.yarn_application_tags = extract_yarn_application_tags()
+        self.spark_configs = {}
+        self.default_da_data_sources = None
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -796,6 +799,7 @@ class ContextualizedTasksInfra(object):
                     return path_data_artifact.resolved_path, path_data_artifact.actual_size, date
         print("No latest success date found for %s" % directory)
         return None, None, None
+
 
     def latest_daily_success_date(self, directory, month_lookback, date=None):
         """
@@ -1272,9 +1276,7 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        command_params, spark_configs = self.determine_spark_output_partitions(command_params,
-                                                                               determine_partitions_by_output,
-                                                                               spark_configs)
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
          
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
@@ -1391,9 +1393,7 @@ class ContextualizedTasksInfra(object):
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
-        command_params, spark_configs = self.determine_spark_output_partitions(command_params,
-                                                                               determine_partitions_by_output,
-                                                                               spark_configs)
+        command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         if python_env is not None:
@@ -1637,16 +1637,23 @@ class ContextualizedTasksInfra(object):
             del command_params[base_partition_output_key]
         return command_params, spark_configs
 
-    def build_spark_additional_configs(self, named_spark_args, spark_configs):
+    def build_spark_additional_configs(self, named_spark_args, override_spark_configs):
         additional_configs = ''
         for key, value in self.hadoop_configs.items():
             additional_configs += ' --conf spark.hadoop.%s=%s' % (key, value)
-        if spark_configs:
-            for key, value in spark_configs.items():
-                additional_configs += ' --conf %s=%s' % (key, value)
+
+        if override_spark_configs:
+            spark_conf = self.spark_configs.copy()
+            spark_conf.update(override_spark_configs)
+        else:
+            spark_conf = self.spark_configs
+        for key, value in spark_conf.items():
+            additional_configs += ' --conf %s=%s' % (key, value)
+
         if named_spark_args:
             for key, value in named_spark_args.items():
                 additional_configs += ' --%s %s' % (key, value)
+
         if self.should_profile:
             additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
             additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
@@ -1809,6 +1816,24 @@ class ContextualizedTasksInfra(object):
         for key, value in dict.items():
             print("-%s %s" % (key, value))
 
+    # This is for caching purpose
+    def get_default_da_data_sources(self):
+        if self.default_da_data_sources is None:
+            self.default_da_data_sources = json.loads(SnowflakeConfig().get_service_name(service_name='da-data-sources'))
+        return self.default_da_data_sources
+
+    def set_spark_output_split_size(self, output_size_in_bytes):
+        num_of_partitions = calc_desired_partitions(output_size_in_bytes)
+        print("Setting number of spark output split partitions to %s for output size %s" %
+              (num_of_partitions, output_size_in_bytes))
+        self.spark_configs[TasksInfra.get_spark_partitions_config_key()] = num_of_partitions
+
+    def set_mr_output_split_size(self, output_size_in_bytes):
+        num_of_partitions = calc_desired_partitions(output_size_in_bytes)
+        print("Setting number of mr output split partitions to %s for output size %s" %
+              (num_of_partitions, output_size_in_bytes))
+        self.jvm_opts[TasksInfra.get_mr_partitions_config_key()] = num_of_partitions
+
     def kill_yarn_zombie_jobs(self ):
         user = os.environ['USER_NAME'] if 'USER_NAME' in os.environ else ''
         if user != 'airflow':
@@ -1831,6 +1856,10 @@ class ContextualizedTasksInfra(object):
     @property
     def calc_dir(self):
         return self.__get_common_args().get('calc_dir', self.base_dir)
+
+    @property
+    def da_data_sources(self):
+        return self.__get_common_args().get('da_data_sources', self.get_default_da_data_sources())
 
     @property
     def production_base_dir(self):
