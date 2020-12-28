@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from sw_jobs.mw_conf import MobileWebConfig
+from pylib.sw_jobs.mw_conf import MobileWebConfig
 
 
 class TestMobileWebConfig(TestCase):
