@@ -21,8 +21,11 @@ def find_applications_by_tag(rm_host, rm_port, tag):
 
 def extract_yarn_application_tags():
     user = os.environ['USER_NAME'] if 'USER_NAME' in os.environ else ''
-    task_id = os.environ['TASK_ID'] if 'TASK_ID' in os.environ else None
-    assert task_id, "yarn application must have a task-id ('TASK_ID' env var)"
+    task_id = os.environ['TASK_ID'] if 'TASK_ID' in os.environ else  None
+
+    if not task_id:
+        logger.warning("yarn application must have a task-id ('TASK_ID' env var)")
+        return ""
     # generates a kill_tag that matches only jobs submitted by the same user - we may decide to change it
     # Use base64 and not HexDigits because 128bits in Hex its 32 digits and in base64 its only 24 digits
     kill_tag = base64.b64encode(hashlib.md5(user + task_id).digest())
