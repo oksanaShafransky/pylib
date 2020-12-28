@@ -20,6 +20,7 @@ def find_applications_by_tag(rm_host, rm_port, tag):
 
 
 def extract_yarn_application_tags():
+    # returns string of comma-separated tags: "tag1:value1,tag2:value2,..."
     user = os.environ['USER_NAME'] if 'USER_NAME' in os.environ else ''
     task_id = os.environ['TASK_ID'] if 'TASK_ID' in os.environ else None
     assert task_id, "yarn application must have a task-id ('TASK_ID' env var)"
@@ -45,5 +46,5 @@ def extract_yarn_application_tags():
 
 def parse_yarn_tags_to_dict(yarn_application_tags):
     # input string of comma-separated tags: "tag1:value1,tag2:value2,..."
-    # output - a lookup dict fot the tags { 'tag1': 'value1' , 'tag2' : 'value2' }
+    # returns a lookup k-v dict for the tags { 'tag1': 'value1' , 'tag2' : 'value2' }
     return {t.split(":")[0]: t.split(":")[1] for t in yarn_application_tags.split(",")}
