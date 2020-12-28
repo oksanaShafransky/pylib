@@ -1,15 +1,19 @@
 import json
 
+from pylib.sw_config.kv import KeyValueProxy
+
 from pylib.sw_config.composite_kv import PrefixedConfigurationProxy
 from pylib.sw_config.dict_change_simulator import DictProxy
 from pylib.sw_config.kv_tools import kv_to_tree, load_kv, kv_diff, KeyValueTree
 from pylib.sw_config.types import Purposes
+import unittest
 
 import pylib.sw_config.consul
 
 
-class ConsulProxyMock(object):
+class ConsulProxyMock(KeyValueProxy):
     def __init__(self, server, token, dc):
+        super(ConsulProxyMock, self).__init__()
         self.server = server
         self.token = token
         self.dc = dc
@@ -18,7 +22,7 @@ class ConsulProxyMock(object):
 pylib.sw_config.consul.ConsulProxy = ConsulProxyMock
 
 
-class TestTools(object):
+class TestTools(unittest.TestCase):
     def test_list(self):
         example_dict = {
             '/a': 12, '/b': 6, '/c': 19
@@ -158,7 +162,7 @@ class TestPrefixedConfiguration(object):
         assert proxy.get(original_key)
 
 
-class TestGetKV(object):
+class TestGetKV(unittest.TestCase):
     def test_kv_with_token(self):
         class SnowflakeConfigMock(object):
             def __init__(self, env):
@@ -357,3 +361,7 @@ class TestKeyValueTree(object):
 
         tree = kv_to_tree(MockKv())
         assert len(tree) == 1
+
+
+if __name__ == '__main__':
+    unittest.main()
