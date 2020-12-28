@@ -631,8 +631,8 @@ class ContextualizedTasksInfra(object):
             source_path=source,
             target_path=target
         )
-        cmd = TasksInfra.add_jvm_options(cmd, {'mapreduce.job.tags': self.yarn_application_tags})
-        self.kill_yarn_zombie_jobs()
+        # cmd = TasksInfra.add_jvm_options(cmd, {'mapreduce.job.tags': self.yarn_application_tags})
+        # self.kill_yarn_zombie_jobs()
         self.run_bash(cmd)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False,
@@ -663,11 +663,11 @@ class ContextualizedTasksInfra(object):
         curr_jvm_opts.update(self.hadoop_configs)
 
         command = TasksInfra.add_jvm_options(command, curr_jvm_opts)
-        command = TasksInfra.add_jvm_options(command, {'mapreduce.job.tags': self.yarn_application_tags})
+        # command = TasksInfra.add_jvm_options(command, {'mapreduce.job.tags': self.yarn_application_tags})
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
         if self.rerun:
             command = self.__with_rerun_root_queue(command)
-        self.kill_yarn_zombie_jobs()
+        # self.kill_yarn_zombie_jobs()
         return self.run_bash(command).ok
 
 

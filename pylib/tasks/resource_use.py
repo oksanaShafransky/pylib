@@ -60,9 +60,8 @@ def aggregate_resources(applications):
 def store_resources_used(task_name, resources, start_time=None, end_time=None):
     from pylib.config.SnowflakeConfig import SnowflakeConfig
     print ("store_resources_used Task name=%s\n" % task_name)
-    task_fields = task_name.split('.')
-    try :
-        dag_id, task_id, execution_id = task_fields[1:4]
+    try:
+        dag_id, task_id, execution_id = task_name.split('.')[1:4]
         execution_date = execution_id.split('_')[0]
         run_date = datetime.now().strftime('%Y-%m-%d')
         # TODO retrieve connection string from snowflake
@@ -83,8 +82,8 @@ def store_resources_used(task_name, resources, start_time=None, end_time=None):
                            end_time.strftime('%H:%M:%S') if end_time is not None else '00:00:00',
                            resources.dollar_price)
                     )
-    except Exception as e:
-        print ("ERROR - cant store used-resources\n")
+    except:
+        print ("ERROR - cant store used-resources for %s \n" % task_name)
         import traceback
         track = traceback.format_exc()
         print(track)
