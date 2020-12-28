@@ -1810,6 +1810,10 @@ class ContextualizedTasksInfra(object):
             print("-%s %s" % (key, value))
 
     def kill_yarn_zombie_jobs(self ):
+        user = os.environ['USER_NAME'] if 'USER_NAME' in os.environ else ''
+        if user != 'airflow':
+            logger.info("Not submitted by airflow's user - skipping Zombie-Job-Killer")
+            return
         kill_tag = parse_yarn_tags_to_dict(self.yarn_application_tags).get('kill_tag', None)
         assert kill_tag and len(kill_tag) > 0, "yarn's kill_tag cannot be empty"
         app_tags = 'kill_tag:{kill_tag}'.format(kill_tag=kill_tag)
