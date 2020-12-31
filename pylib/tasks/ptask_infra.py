@@ -1821,7 +1821,7 @@ class ContextualizedTasksInfra(object):
     # This is for caching purpose
     def get_default_da_data_sources(self):
         if self.default_da_data_sources is None:
-            self.default_da_data_sources = json.loads(SnowflakeConfig().get_service_name(service_name='da-data-sources'))
+            self.default_da_data_sources = SnowflakeConfig().get_service_name(service_name='da-data-sources')
         return self.default_da_data_sources
 
     def set_spark_output_split_size(self, output_size_in_bytes):
@@ -1846,7 +1846,7 @@ class ContextualizedTasksInfra(object):
 
     @property
     def da_data_sources(self):
-        return self.__get_common_args().get('da_data_sources', self.get_default_da_data_sources())
+        return json.loads(self.__get_common_args().get('da_data_sources', self.get_default_da_data_sources()))
 
     @property
     def production_base_dir(self):
