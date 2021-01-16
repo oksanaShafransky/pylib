@@ -135,7 +135,7 @@ class AppsPathResolver(object):
                                     'marker': True, 'path_type': "daily"},
 
             'sqs_calc':{'main_path': "daily/dau/pre-estimate/sqs-calc-weights",
-                        'size': 2 * GB,
+                        'size': 1.5 * GB,
                         'marker': True, 'path_type': "daily"},
 
             'dau_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
@@ -278,7 +278,7 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 300 * MB,
+            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 200 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
 
