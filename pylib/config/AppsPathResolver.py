@@ -85,7 +85,7 @@ class AppsPathResolver(object):
     def __init__(self, ti):
         self.ti = ti
         self.apps_paths = {
-            # MAU
+            #MAU
             'mau_feature2_agg': {
                 'main_path': "monthly/mau/aggregations/aggkey=Feature2Key",
                 'size': 1 * KB, #TODO change
@@ -689,8 +689,7 @@ class AppsPathResolver(object):
 
     def get_est_app_country_source_days_back(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['est_app_country_source_days_back'], path_suffix,
-                                             in_or_out)
+                                             self.apps_paths['est_app_country_source_days_back'], path_suffix, in_or_out)
 
     def get_pre_estimate_1009_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
