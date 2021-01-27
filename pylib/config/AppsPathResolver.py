@@ -59,8 +59,8 @@ class AppsPathResolver(object):
                                          required_marker=self.required_marker)
             else:
                 return OutputDataArtifact(self.ti, path_join(self.full_base_path, date_suffix, self.path_suffix),
-                                         required_size=self.required_size,
-                                         required_marker=self.required_marker)
+                                          required_size=self.required_size,
+                                          required_marker=self.required_marker)
 
         def get_ranged_data_artifact(self, dates):
             if self.in_or_out == 'out':
@@ -85,7 +85,7 @@ class AppsPathResolver(object):
     def __init__(self, ti):
         self.ti = ti
         self.apps_paths = {
-            #MAU
+            # MAU
             'mau_feature2_agg': {
                 'main_path': "monthly/mau/aggregations/aggkey=Feature2Key",
                 'size': 1 * KB, #TODO change
@@ -258,6 +258,24 @@ class AppsPathResolver(object):
             'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 50 * MB,
                                'marker': True, 'path_type': "daily"},
 
+            'extractor_bobble1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobble1001",
+                                     'size': 500 * MB, 'marker': True, 'path_type': "daily"},
+
+            'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobble1008",
+                                     'size': 1 * GB, 'marker': True, 'path_type': "daily"},
+
+            'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfour1008",
+                                    'size': 20 * MB, 'marker': True, 'path_type': "daily"},
+
+            'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 15 * GB,
+                                      'marker': False, 'path_type': "daily"},
+
+            'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 5 * GB,
+                                     'marker': False, 'path_type': "daily"},
+
+            'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 100 * MB,
+                                    'marker': False, 'path_type': "daily"},
+
             'embee_app_session': {'main_path': "raw-stats-embee/app_session", 'size': 10 * MB,
                                   'marker': True, 'path_type': "daily"},
 
@@ -365,7 +383,6 @@ class AppsPathResolver(object):
             'app_engagement_estimation': {'main_path': "daily/estimate/app-engagement/estkey=AppCountryKey",
                                           'size': 90 * MB, 'marker': True,
                                           'path_type': "daily"},
-
 
             'real_numbers_adjustments_by_new_users': {
                 'main_path': "monthly/android-real-numbers-v2/by-new-users/adjustments",
@@ -545,6 +562,30 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1111'], path_suffix, in_or_out)
 
+    def get_extractor_bobble1001(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_bobble1001'], path_suffix, in_or_out)
+
+    def get_extractor_bobble1008(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_bobble1008'], path_suffix, in_or_out)
+
+    def get_extractor_mfour1008(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_mfour1008'], path_suffix, in_or_out)
+
+    def get_bobble_installed_apps(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['bobble_installed_apps'], path_suffix, in_or_out)
+
+    def get_bobble_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['bobble_apps_sessions'], path_suffix, in_or_out)
+
+    def get_bobble_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['mfour_apps_sessions'], path_suffix, in_or_out)
+
     def get_embee_app_session(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['embee_app_session'], path_suffix, in_or_out)
@@ -648,7 +689,8 @@ class AppsPathResolver(object):
 
     def get_est_app_country_source_days_back(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['est_app_country_source_days_back'], path_suffix, in_or_out)
+                                             self.apps_paths['est_app_country_source_days_back'], path_suffix,
+                                             in_or_out)
 
     def get_pre_estimate_1009_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
