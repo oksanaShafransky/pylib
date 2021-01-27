@@ -582,7 +582,7 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['bobble_apps_sessions'], path_suffix, in_or_out)
 
-    def get_bobble_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_mfour_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['mfour_apps_sessions'], path_suffix, in_or_out)
 
