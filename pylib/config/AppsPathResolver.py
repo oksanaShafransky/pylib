@@ -273,7 +273,7 @@ class AppsPathResolver(object):
             'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 5 * GB,
                                      'marker': False, 'path_type': "daily"},
 
-            'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 100 * MB,
+            'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 80 * MB,
                                     'marker': False, 'path_type': "daily"},
 
             'embee_app_session': {'main_path': "raw-stats-embee/app_session", 'size': 10 * MB,
