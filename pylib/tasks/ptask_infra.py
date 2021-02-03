@@ -1668,7 +1668,7 @@ class ContextualizedTasksInfra(object):
     def _set_python_env(python_env, env_path='s3a://similargroup-research/deploy/envs'):
         spark_configs = ''
         spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip#{}"'.format(env_path, python_env, python_env, python_env)
-        spark_configs += ' --conf "spark.pyspark.python={}/{}/{}.zip#{}"'.format(env_path, python_env, python_env, python_env)
+        spark_configs += ' --conf "spark.pyspark.python={}/{}/bin/python"'.format(env_path, python_env, python_env, python_env)
         return spark_configs
 
     def set_hdfs_replication_factor(self, replication_factor):
