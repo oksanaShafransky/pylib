@@ -192,7 +192,7 @@ class AppsPathResolver(object):
 
             'ww_store_download_panel_country_share_est': {
                 'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/estKey=AppCountryKey",
-                'size': 400 * MB,
+                'size': 395 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_download_app_delta': {
