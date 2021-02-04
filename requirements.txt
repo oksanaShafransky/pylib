@@ -4,3 +4,5 @@ twine==1.11.0
 requests==2.14.2
 path.py==11.5.0
 jaraco.windows==4.0
+pycountry==18.12.8 # latest for python 2.7
+idna==2.10

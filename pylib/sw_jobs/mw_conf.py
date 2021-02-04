@@ -22,11 +22,11 @@ class MobileWebConfig(object):
             # TODO check that all of the envs. updated to pycountry version 18.12.8 and remove this check
             #  REMOVE THE LOG!
             if hasattr(pycountry.countries.get(numeric='840'), 'alpha2'):
-                print('\nusing pycountry v==1.2\n')
+                print('using pycountry v==1.2\n')
                 self._countries = dict([(country_code, pycountry.countries.get(numeric='%s' % country_code.zfill(3)).alpha2)
                                         for country_code in self.conf.get('%s/countries' % self.root).split(',')])
             else:
-                print('\nusing pycountry v==18.12.8\n')
+                print('using pycountry v==18.12.8\n')
                 self._countries = dict([(country_code, pycountry.countries.get(numeric='%s' % country_code.zfill(3)).alpha_2)
                                         for country_code in self.conf.get('%s/countries' % self.root).split(',')])
 

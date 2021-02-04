@@ -159,7 +159,7 @@ class MetadatumsClient(object):
         ret = self.sns_client.publish(TopicArn=self.sns_topic, Message=json.dumps(message))
         print("deleted partition via sns (message id: {message_id})".format(message_id=ret['MessageId']))
 
-    def delete_hbase_partition(self, table_name, branch, partition, skip_sns=False):
+    def delete_hbase_partition(self, table_name, branch, partition, skip_sns=False, check_deletion=True):
         """
         deletes a metadatums record for hbase table
 
@@ -169,6 +169,7 @@ class MetadatumsClient(object):
             partition: the collection's partition - represents the date (example: top_lists_last-28_19_07_14)
             skip_sns: default is False. if set to true, will post directly to metadatums service, bypassing the sns topic.
             posting through sns is important when deploying production partitions. skip this step only if you know what you are doing
+            check_deletion: default is true. If set to true, will wait 10 seconds and check that the partition was
         """
         current_res = self.get_hbase_table_name(table_name, branch, partition)
 
@@ -183,11 +184,12 @@ class MetadatumsClient(object):
                 self._delete_hbase_partition_sns(table_name, branch, partition)
 
             # wait for the deletion
-            wait_start_time = time.time()
-            while current_res is not None:
-                assert time.time() - wait_start_time < METADATUMS_UPDATE_WAIT_TIME, "timeout while waiting for metadatums to update"
-                time.sleep(10)
-                current_res = self.get_hbase_table_name(table_name, branch, partition)
-                print("waiting for the partition to be deleted from metadatums. (current respons: {})".format(current_res))
-            print("update complete")
+            if check_deletion:
+                wait_start_time = time.time()
+                while current_res is not None:
+                    assert time.time() - wait_start_time < METADATUMS_UPDATE_WAIT_TIME, "timeout while waiting for metadatums to update"
+                    time.sleep(10)
+                    current_res = self.get_hbase_table_name(table_name, branch, partition)
+                    print("waiting for the partition to be deleted from metadatums. (current respons: {})".format(current_res))
+                print("update complete")
 

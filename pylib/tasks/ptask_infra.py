@@ -7,6 +7,7 @@ import shutil
 import smtplib
 import urllib
 import uuid
+import json
 from copy import copy
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
@@ -18,12 +19,11 @@ import sys
 import time
 import numpy as np
 from dateutil.relativedelta import relativedelta
-
-# Adjust log level
+from pylib.sw_jobs.kill_zombie_jobs import ZombieJobKiller
+from pylib.sw_jobs.job_utils import extract_yarn_application_tags, parse_yarn_tags_to_dict
 from pylib.common.date_utils import get_dates_range
 from pylib.tasks.data import DataArtifact
-
-
+# Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('requests').setLevel(logging.WARNING)
 
@@ -412,6 +412,9 @@ class ContextualizedTasksInfra(object):
         self.redis = None
         self.jvm_opts = {}
         self.hadoop_configs = {}
+        self.yarn_application_tags = extract_yarn_application_tags()
+        self.spark_configs = {}
+        self.default_da_data_sources = None
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -420,33 +423,6 @@ class ContextualizedTasksInfra(object):
     def __with_rerun_root_queue(self, command):
         return 'source %s/scripts/common.sh && setRootQueue reruns && %s' % (self.execution_dir, command)
 
-    def __compose_hadoop_runner_command(self, jar_path, jar_name, main_class, command_params, override_jvm_opts=None,
-                                        rerun_root_queue=False):
-        command = self.__compose_infra_command(
-            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
-            {
-                'base_dir': self.execution_dir,
-                'jar_relative_path': jar_path,
-                'jar': jar_name,
-                'class': main_class
-            }
-        )
-
-        if override_jvm_opts is None:
-            override_jvm_opts = {}
-
-        if self.should_profile:
-            override_jvm_opts['mapreduce.reduce.java.opts'] = JAVA_PROFILER
-            override_jvm_opts['mapreduce.map.java.opts'] = JAVA_PROFILER
-
-        curr_jvm_opts = copy(self.jvm_opts)
-        curr_jvm_opts.update(override_jvm_opts)
-        curr_jvm_opts.update(self.hadoop_configs)
-        command = TasksInfra.add_jvm_options(command, curr_jvm_opts)
-        command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
-        if rerun_root_queue:
-            command = self.__with_rerun_root_queue(command)
-        return command
 
     def __is_hdfs_collection_valid(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
         ans = True
@@ -648,6 +624,7 @@ class ContextualizedTasksInfra(object):
         curr_jvm_opts = copy(self.jvm_opts)
         curr_jvm_opts.update(self.hadoop_configs)
         jvm_opts = TasksInfra.add_jvm_options(job_name_property, curr_jvm_opts)
+        jvm_opts = TasksInfra.add_jvm_options(jvm_opts, {'mapreduce.job.tags': self.yarn_application_tags})
         distcp_opts = "-m {mappers}".format(mappers=mappers)
         cmd = 'hadoop distcp {jvm_opts} {distcp_opts} {source_path} {target_path}'.format(
             jvm_opts=jvm_opts,
@@ -655,20 +632,44 @@ class ContextualizedTasksInfra(object):
             source_path=source,
             target_path=target
         )
-
+        self.kill_yarn_zombie_jobs()
         self.run_bash(cmd)
 
-    def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False, jvm_opts=None, default_num_reducers=200):
-        command_params, jvm_opts = self.determine_mr_output_partitions(command_params, determine_reduces_by_output, jvm_opts, default_num_reducers)
-        return self.run_bash(
-            self.__compose_hadoop_runner_command(
-                jar_path=jar_path,
-                jar_name=jar_name,
-                main_class=main_class,
-                command_params=command_params,
-                override_jvm_opts=jvm_opts,
-                rerun_root_queue=self.rerun)
-        ).ok
+    def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False,
+                   jvm_opts=None, default_num_reducers=200):
+        command_params, jvm_opts = self.determine_mr_output_partitions(command_params, determine_reduces_by_output,
+                                                                       jvm_opts, default_num_reducers)
+
+        command = self.__compose_infra_command(
+            'execute hadoopexec %(base_dir)s/%(jar_relative_path)s %(jar)s %(class)s' %
+            {
+                'base_dir': self.execution_dir,
+                'jar_relative_path': jar_path,
+                'jar': jar_name,
+                'class': main_class
+            }
+        )
+
+
+        if jvm_opts is None:
+            jvm_opts = {}
+
+        if self.should_profile:
+            jvm_opts['mapreduce.reduce.java.opts'] = JAVA_PROFILER
+            jvm_opts['mapreduce.map.java.opts'] = JAVA_PROFILER
+
+        curr_jvm_opts = copy(self.jvm_opts)
+        curr_jvm_opts.update(jvm_opts)
+        curr_jvm_opts.update(self.hadoop_configs)
+
+        command = TasksInfra.add_jvm_options(command, curr_jvm_opts)
+        command = TasksInfra.add_jvm_options(command, {'mapreduce.job.tags': self.yarn_application_tags})
+        command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
+        if self.rerun:
+            command = self.__with_rerun_root_queue(command)
+        self.kill_yarn_zombie_jobs()
+        return self.run_bash(command).ok
+
 
     # managed_output_dirs - dirs to be deleted on start and then marked upon a successful conclusion
     def run_hive(self, query, hive_params=HiveParamBuilder(), query_name='query', partitions=32, query_name_suffix=None,
@@ -965,7 +966,8 @@ class ContextualizedTasksInfra(object):
                       determine_partitions_by_output=False,
                       managed_output_dirs=None,
                       spark_submit_script=None,
-                      python_env=None
+                      python_env=None,
+                      env_path=None
                       ):
 
         self.clear_output_dirs(managed_output_dirs)
@@ -977,7 +979,7 @@ class ContextualizedTasksInfra(object):
 
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
         if python_env is not None:
-            additional_configs += self._set_python_env(python_env)
+            additional_configs += self._set_python_env(python_env, env_path) if env_path else self._set_python_env(python_env)
 
         final_repositories = (repositories if repositories else []) + self.get_sw_repos()
 
@@ -998,10 +1000,9 @@ class ContextualizedTasksInfra(object):
                     repos=','.join(final_repositories)
                    )
 
+        command += ' --conf spark.yarn.tags={} '.format(self.yarn_application_tags)
         if queue:
             command += ' --queue {}'.format(queue)
-        if 'YARN_TAGS' in os.environ:
-            command += ' --conf "spark.yarn.tags={}"'.format(os.environ['YARN_TAGS'])
         if jars:
             command += ' --jars "{}"'.format(','.join(jars))
         if files:
@@ -1023,6 +1024,7 @@ class ContextualizedTasksInfra(object):
             raise ValueError("must receive either main-py-file or main-class and main-jar")
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
+        self.kill_yarn_zombie_jobs()
         return self.run_bash(command).ok
 
     def run_sw_pyspark(self,
@@ -1040,7 +1042,8 @@ class ContextualizedTasksInfra(object):
                        managed_output_dirs=None,
                        spark_submit_script='spark2-submit',
                        py_files=None,
-                       python_env=None
+                       python_env=None,
+                       env_path=None
                        ):
         """
         Run a pyspark job. The spark-submit script is executed in the execution
@@ -1081,7 +1084,9 @@ class ContextualizedTasksInfra(object):
         :param py_files: list of paths of .zip, .egg or .py files to place on the PYTHONPATH
         :type py_files: list[str]
         :param python_env: name of external Python environment on s3 to use as driver and executor Python executable
-        :type python_env:
+        :type python_env: str
+        :param env_path: path to Python enviroment or default if None
+        :type env_path: str
         :return:
         """
 
@@ -1109,7 +1114,8 @@ class ContextualizedTasksInfra(object):
                                   determine_partitions_by_output=determine_partitions_by_output,
                                   managed_output_dirs=managed_output_dirs,
                                   spark_submit_script=spark_submit_script,
-                                  python_env=python_env)
+                                  python_env=python_env,
+                                  env_path=env_path)
 
     def run_sw_spark(self,
                      main_class,
@@ -1212,15 +1218,14 @@ class ContextualizedTasksInfra(object):
                                                                                determine_partitions_by_output,
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-
-        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+         
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark2-submit' \
                   ' --queue %(queue)s' \
                   ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
+                  ' --conf spark.yarn.tags=%(yarn_application_tags)s' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' --deploy-mode cluster' \
@@ -1240,14 +1245,17 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
-                      'extra_repo_cmd': ' --repositories %s' % ','.join((repositories if repositories is not None else []) + self.get_sw_repos()),
+                      'extra_repo_cmd': ' --repositories %s' % ','.join(
+                          (repositories if repositories is not None else []) + self.get_sw_repos()),
                       'main_class': main_class,
                       'jar': jar,
-                      'yarn_application_tags': yarn_tags
+                      'yarn_application_tags': self.yarn_application_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params,
                                                 value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
+
+        self.kill_yarn_zombie_jobs()
         return self.run_bash(command).ok
 
     # module is either 'mobile' or 'analytics'
@@ -1275,15 +1283,14 @@ class ContextualizedTasksInfra(object):
 
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-
-        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
+         
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
                   ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
+                  ' --conf spark.yarn.tags=%(yarn_application_tags)s' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' --deploy-mode cluster' \
@@ -1304,10 +1311,10 @@ class ContextualizedTasksInfra(object):
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'main_class': main_class,
                       'jar': jar,
-                      'yarn_application_tags': yarn_tags
+                      'yarn_application_tags': self.yarn_application_tags
                   }
-
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
+        self.kill_yarn_zombie_jobs()
         return self.run_bash(command).ok
 
     @staticmethod
@@ -1435,17 +1442,15 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
-
+         
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
-
         command = 'spark2-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
                   ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
+                  ' --conf spark.yarn.tags=%(yarn_application_tags)s ' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
@@ -1462,14 +1467,15 @@ class ContextualizedTasksInfra(object):
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
-                      'extra_repo_cmd': ' --repositories %s' % ','.join((repositories if repositories is not None else []) + self.get_sw_repos()),
+                      'extra_repo_cmd': ' --repositories %s' % ','.join(
+                          (repositories if repositories is not None else []) + self.get_sw_repos()),
                       'spark-confs': additional_configs,
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': exec_py_file,
-                      'yarn_application_tags': yarn_tags
+                      'yarn_application_tags': self.yarn_application_tags
                   }
-
+        self.kill_yarn_zombie_jobs()
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
@@ -1545,9 +1551,7 @@ class ContextualizedTasksInfra(object):
             py_files_cmd = ' '
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
-
-        yarn_tags = os.environ['YARN_TAGS'] if 'YARN_TAGS' in os.environ else ''
-
+         
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'spark-submit' \
@@ -1556,7 +1560,7 @@ class ContextualizedTasksInfra(object):
                   ' %(queue)s' \
                   ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.yarn.tags=%(yarn_application_tags)s"' \
+                  ' --conf spark.yarn.tags=%(yarn_application_tags)s ' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
                   ' --files "%(files)s"' \
@@ -1576,10 +1580,12 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': exec_py_file,
-                      'yarn_application_tags': yarn_tags
+                      'yarn_application_tags': self.yarn_application_tags
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
+
+        self.kill_yarn_zombie_jobs()
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
             os.remove(artifact_path)
@@ -1636,16 +1642,23 @@ class ContextualizedTasksInfra(object):
             del command_params[base_partition_output_key]
         return command_params, spark_configs
 
-    def build_spark_additional_configs(self, named_spark_args, spark_configs):
+    def build_spark_additional_configs(self, named_spark_args, override_spark_configs):
         additional_configs = ''
         for key, value in self.hadoop_configs.items():
             additional_configs += ' --conf spark.hadoop.%s=%s' % (key, value)
-        if spark_configs:
-            for key, value in spark_configs.items():
-                additional_configs += ' --conf %s=%s' % (key, value)
+
+        if override_spark_configs:
+            spark_conf = self.spark_configs.copy()
+            spark_conf.update(override_spark_configs)
+        else:
+            spark_conf = self.spark_configs
+        for key, value in spark_conf.items():
+            additional_configs += ' --conf %s=%s' % (key, value)
+
         if named_spark_args:
             for key, value in named_spark_args.items():
                 additional_configs += ' --%s %s' % (key, value)
+
         if self.should_profile:
             additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
             additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
@@ -1654,10 +1667,8 @@ class ContextualizedTasksInfra(object):
     @staticmethod
     def _set_python_env(python_env, env_path='s3a://similargroup-research/deploy/envs'):
         spark_configs = ''
-        spark_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,python_env)
-        spark_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,python_env)
-        spark_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,python_env)
         spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip#{}"'.format(env_path, python_env, python_env, python_env)
+        spark_configs += ' --conf "spark.pyspark.python={}/{}/bin/python"'.format(env_path, python_env, python_env, python_env)
         return spark_configs
 
     def set_hdfs_replication_factor(self, replication_factor):
@@ -1808,6 +1819,39 @@ class ContextualizedTasksInfra(object):
         for key, value in dict.items():
             print("-%s %s" % (key, value))
 
+    # This is for caching purpose
+    def get_default_da_data_sources(self):
+        if self.default_da_data_sources is None:
+            self.default_da_data_sources = SnowflakeConfig().get_service_name(service_name='da-data-sources')
+        return self.default_da_data_sources
+
+    def set_spark_output_split_size(self, output_size_in_bytes):
+        num_of_partitions = calc_desired_partitions(output_size_in_bytes)
+        print("Setting number of spark output split partitions to %s for output size %s" %
+              (num_of_partitions, output_size_in_bytes))
+        self.spark_configs[TasksInfra.get_spark_partitions_config_key()] = num_of_partitions
+
+    def set_mr_output_split_size(self, output_size_in_bytes):
+        num_of_partitions = calc_desired_partitions(output_size_in_bytes)
+        print("Setting number of mr output split partitions to %s for output size %s" %
+              (num_of_partitions, output_size_in_bytes))
+        self.jvm_opts[TasksInfra.get_mr_partitions_config_key()] = num_of_partitions
+
+    def kill_yarn_zombie_jobs(self ):
+        user = os.environ['USER_NAME'] if 'USER_NAME' in os.environ else ''
+        if user != 'airflow':
+            logger.info("Not submitted by airflow's user - skipping Zombie-Job-Killer")
+            return
+        kill_tag = parse_yarn_tags_to_dict(self.yarn_application_tags).get('kill_tag', None)
+        assert kill_tag and len(kill_tag) > 0, "yarn's kill_tag cannot be empty"
+        app_tags = 'kill_tag:{kill_tag}'.format(kill_tag=kill_tag)
+        rm_host = SnowflakeConfig().get_service_name(service_name="active.yarn-rm")
+        if self.dry_run or self.checks_only:
+            ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags, handling_mode=ZombieJobKiller.ZombieHandleMode.alert)
+        else:
+            ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags)
+        return
+
     @property
     def base_dir(self):
         return self.__get_common_args()['base_dir']
@@ -1815,6 +1859,10 @@ class ContextualizedTasksInfra(object):
     @property
     def calc_dir(self):
         return self.__get_common_args().get('calc_dir', self.base_dir)
+
+    @property
+    def da_data_sources(self):
+        return json.loads(self.__get_common_args().get('da_data_sources', self.get_default_da_data_sources()))
 
     @property
     def production_base_dir(self):
