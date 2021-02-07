@@ -149,13 +149,13 @@ class PtaskInvoker(Program):
             sys.exit(1)
 
         finally:
+            import getpass
+            user = getpass.getuser()
             end_time = time.time()
             execution_time_delta = datetime.timedelta(seconds=(end_time - start_time))
-            if 'TASK_ID' in os.environ and task_name is not None:
+            if 'TASK_ID' in os.environ and task_name is not None and user == 'airflow':
                 launched_apps = get_applications_by_tag(task_name, start_time=int(start_time) * 1000)
             else:
-                import getpass
-                user = getpass.getuser()
                 launched_apps = get_applications_by_user_and_time(user, int(start_time) * 1000, int(end_time) * 1000)
 
             total_resources = aggregate_resources(launched_apps)
