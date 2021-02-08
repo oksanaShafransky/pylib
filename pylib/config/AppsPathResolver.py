@@ -126,6 +126,10 @@ class AppsPathResolver(object):
                                        'size': 200 * KB,
                                        'marker': True, 'path_type': "daily"},
 
+            'emr_dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
+                                       'size': 80 * KB,
+                                       'marker': True, 'path_type': "daily"},
+
             'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
                              'size': 1 * GB,
                              'marker': True, 'path_type': "daily"},
@@ -884,10 +888,14 @@ class AppsPathResolver(object):
     def get_dau_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_app_country_source_agg'], path_suffix, in_or_out)
-
+    #TODO: remove when we are moving to EMR
     def get_dau_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_country_source_agg'], path_suffix, in_or_out)
+
+    def get_emr_dau_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['emr_dau_country_source_agg'], path_suffix, in_or_out)
 
     def get_dau_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
