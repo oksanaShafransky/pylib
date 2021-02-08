@@ -966,7 +966,8 @@ class ContextualizedTasksInfra(object):
                       determine_partitions_by_output=False,
                       managed_output_dirs=None,
                       spark_submit_script=None,
-                      python_env=None
+                      python_env=None,
+                      env_path=None
                       ):
 
         self.clear_output_dirs(managed_output_dirs)
@@ -978,7 +979,7 @@ class ContextualizedTasksInfra(object):
 
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
         if python_env is not None:
-            additional_configs += self._set_python_env(python_env)
+            additional_configs += self._set_python_env(python_env, env_path) if env_path else self._set_python_env(python_env)
 
         final_repositories = (repositories if repositories else []) + self.get_sw_repos()
 
@@ -1041,7 +1042,8 @@ class ContextualizedTasksInfra(object):
                        managed_output_dirs=None,
                        spark_submit_script='spark2-submit',
                        py_files=None,
-                       python_env=None
+                       python_env=None,
+                       env_path=None
                        ):
         """
         Run a pyspark job. The spark-submit script is executed in the execution
@@ -1082,7 +1084,9 @@ class ContextualizedTasksInfra(object):
         :param py_files: list of paths of .zip, .egg or .py files to place on the PYTHONPATH
         :type py_files: list[str]
         :param python_env: name of external Python environment on s3 to use as driver and executor Python executable
-        :type python_env:
+        :type python_env: str
+        :param env_path: path to Python enviroment or default if None
+        :type env_path: str
         :return:
         """
 
@@ -1110,7 +1114,8 @@ class ContextualizedTasksInfra(object):
                                   determine_partitions_by_output=determine_partitions_by_output,
                                   managed_output_dirs=managed_output_dirs,
                                   spark_submit_script=spark_submit_script,
-                                  python_env=python_env)
+                                  python_env=python_env,
+                                  env_path=env_path)
 
     def run_sw_spark(self,
                      main_class,
@@ -1662,10 +1667,8 @@ class ContextualizedTasksInfra(object):
     @staticmethod
     def _set_python_env(python_env, env_path='s3a://similargroup-research/deploy/envs'):
         spark_configs = ''
-        spark_configs += ' --conf "spark.yarn.appMasterEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,python_env)
-        spark_configs += ' --conf "spark.driverEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,python_env)
-        spark_configs += ' --conf "spark.executorEnv.PYSPARK_PYTHON={}/{}/bin/python"'.format(python_env,python_env)
         spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip#{}"'.format(env_path, python_env, python_env, python_env)
+        spark_configs += ' --conf "spark.pyspark.python={}/{}/bin/python"'.format(python_env, python_env)
         return spark_configs
 
     def set_hdfs_replication_factor(self, replication_factor):

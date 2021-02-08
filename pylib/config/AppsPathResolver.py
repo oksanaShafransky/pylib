@@ -205,7 +205,7 @@ class AppsPathResolver(object):
 
             'ww_store_download_panel_country_share_est': {
                 'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/estKey=AppCountryKey",
-                'size': 400 * MB,
+                'size': 375 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_download_app_delta': {
@@ -262,13 +262,13 @@ class AppsPathResolver(object):
             'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 50 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_bobble1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobble1001",
+            'extractor_bobble1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1001",
                                      'size': 500 * MB, 'marker': True, 'path_type': "daily"},
 
-            'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobble1008",
+            'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
                                      'size': 1 * GB, 'marker': True, 'path_type': "daily"},
 
-            'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfour1008",
+            'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfourR1008",
                                     'size': 20 * MB, 'marker': True, 'path_type': "daily"},
 
             'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 15 * GB,
@@ -277,7 +277,7 @@ class AppsPathResolver(object):
             'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 5 * GB,
                                      'marker': False, 'path_type': "daily"},
 
-            'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 100 * MB,
+            'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 80 * MB,
                                     'marker': False, 'path_type': "daily"},
 
             'embee_app_session': {'main_path': "raw-stats-embee/app_session", 'size': 10 * MB,
