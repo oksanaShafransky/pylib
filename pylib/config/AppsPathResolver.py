@@ -277,8 +277,11 @@ class AppsPathResolver(object):
             'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 5 * GB,
                                      'marker': False, 'path_type': "daily"},
 
-            'extractor_ga_daily': {'main_path': 'raw-s2s/extractor_ga_daily', 'size': 2 * MB,
-                                     'marker': False, 'path_type': "daily"},
+            'extractor_ga_daily': {'main_path': 'raw-s2s/extractor_ga_daily', 'size': 10 * MB,
+                                   'marker': False, 'path_type': "daily"},
+
+            'extractor_kwh_daily': {'main_path': 'raw-s2s/extractor_kwh_daily', 'size': 10 * MB,
+                                    'marker': False, 'path_type': "daily"},
 
             'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 80 * MB,
                                     'marker': False, 'path_type': "daily"},
@@ -592,6 +595,10 @@ class AppsPathResolver(object):
     def get_extractor_ga_daily(self, in_or_out, path_prefix=None, path_suffix=None):
             return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                                  self.apps_paths['extractor_ga_daily'], path_suffix, in_or_out)
+
+    def get_extractor_kwh_daily(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_kwh_daily'], path_suffix, in_or_out)
 
     def get_mfour_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
