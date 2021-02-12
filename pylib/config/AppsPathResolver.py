@@ -101,7 +101,7 @@ class AppsPathResolver(object):
                              'marker': True, 'path_type': "daily"},#We Can't track size here in a good way.
 
             'downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryCountrySourceKey",
-                                                         'size': 6 * GB,
+                                                         'size': 5.75 * GB,
                                                          'marker': True, 'path_type': "daily"},
 
             'downloads_app_country_delta_key_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryDeltaKey",
@@ -143,7 +143,7 @@ class AppsPathResolver(object):
                         'marker': True, 'path_type': "daily"},
 
             'dau_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
-                         'size': 500 * MB,
+                         'size': 490 * MB,
                          'marker': True, 'path_type': "daily"},
 
             'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
