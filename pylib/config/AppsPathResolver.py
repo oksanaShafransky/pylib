@@ -265,6 +265,9 @@ class AppsPathResolver(object):
             'extractor_bobble1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1001",
                                      'size': 500 * MB, 'marker': True, 'path_type': "daily"},
 
+            'extractor_bobble1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1005",
+                                     'size': 5 * MB, 'marker': True, 'path_type': "daily"}, # todo decide size
+
             'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
                                      'size': 1 * GB, 'marker': True, 'path_type': "daily"},
 
@@ -575,6 +578,10 @@ class AppsPathResolver(object):
     def get_extractor_bobble1001(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_bobble1001'], path_suffix, in_or_out)
+
+    def get_extractor_bobble1005(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_bobble1005'], path_suffix, in_or_out)
 
     def get_extractor_bobble1008(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
