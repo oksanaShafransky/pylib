@@ -238,11 +238,11 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005new", 'size': 200 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005_new': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
-                               'marker': True, 'path_type': "daily"},
+            'extractor_1005_new': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005new", 'size': 20 * MB,
+                               'marker': True, 'path_type': "daily"}, # TODO update real size
 
             'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 100 * MB,
                                'marker': True, 'path_type': "daily"}, # TODO update real size
