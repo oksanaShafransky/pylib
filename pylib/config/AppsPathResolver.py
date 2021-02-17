@@ -238,7 +238,10 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005new", 'size': 200 * MB,
+                               'marker': True, 'path_type': "daily"},
+
+            'extractor_1005_new': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 100 * MB,
@@ -266,7 +269,7 @@ class AppsPathResolver(object):
                                      'size': 500 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1005",
-                                     'size': 5 * MB, 'marker': True, 'path_type': "daily"}, # todo decide size
+                                     'size': 10 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
                                      'size': 1 * GB, 'marker': True, 'path_type': "daily"},
@@ -552,6 +555,10 @@ class AppsPathResolver(object):
     def get_extractor_1005(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1005'], path_suffix, in_or_out)
+
+    def get_extractor_1005_new(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_1005_new'], path_suffix, in_or_out)
 
     def get_extractor_5555(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
