@@ -286,7 +286,7 @@ class AppsPathResolver(object):
             'extractor_ga_daily': {'main_path': 'raw-s2s/extractor_ga_daily', 'size': 10 * MB,
                                    'marker': False, 'path_type': "monthly"},
 
-            'extractor_ga_monthly': {'main_path': 'raw-s2s/extractor_ga_monthly', 'size': 10 * MB,
+            'extractor_ga_monthly': {'main_path': 'raw-s2s/extractor_ga_monthly', 'size': 8 * MB,
                                      'marker': False, 'path_type': "monthly"},
 
             'extractor_kwh_daily': {'main_path': 'raw-s2s/extractor_kwh_daily', 'size': 3 * MB,
