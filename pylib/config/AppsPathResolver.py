@@ -431,6 +431,11 @@ class AppsPathResolver(object):
                 'size': 40 * MB, 'marker': True,
                 'path_type': "daily"},
 
+            'os_share_1001': {
+                'main_path': "daily/os_share/based=1001",
+                'size': 1 * KB, 'marker': True,
+                'path_type': "daily"},
+
             'app_engagement_realnumbers': {
                 'main_path': "daily/estimate/app-engagement-realnumbers-tsv/estkey=AppCountryKey",
                 'size': 900 * MB, 'marker': True,
@@ -772,6 +777,10 @@ class AppsPathResolver(object):
     def get_app_downloads_alph(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_downloads_alph'], path_suffix, in_or_out)
+
+    def get_os_share_1001(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['os_share_1001'], path_suffix, in_or_out)
 
     def get_app_engagement_realnumbers(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
