@@ -779,7 +779,7 @@ class AppsPathResolver(object):
                                              self.apps_paths['app_downloads_alph'], path_suffix, in_or_out)
 
     def get_os_share_1001(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['os_share_1001'], path_suffix, in_or_out)
 
     def get_app_engagement_realnumbers(self, in_or_out, path_prefix=None, path_suffix=None):
