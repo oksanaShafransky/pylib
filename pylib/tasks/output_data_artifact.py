@@ -31,15 +31,15 @@ class OutputDataArtifact(DataArtifact):
 
         if self.locate_data_source.is_exist and self.locate_data_source.is_marker_validated and self.locate_data_source.is_size_validated:
             # We found a datasource
+            self.report_lineage('output', self.ti)
+            if len(reporters) > 0:
+                logger.warn("The usage of reporters is no longer supported. "
+                            "linage is automatically reported to ti. "
+                            "use report_lineage if you have more reporters")
             self.locate_data_source.log_success()
             return
 
         self.locate_data_source.log_fail_to_find()
-
-        if self.locate_data_source.is_exist and self.locate_data_source.is_size_validated and self.locate_data_source.is_marker_validated:
-            for reporter in reporters:
-                reporter.report_lineage('output',
-                                        {self.locate_data_source.get_full_uri(): self.locate_data_source.effective_size})
 
     @property
     def resolved_path(self):

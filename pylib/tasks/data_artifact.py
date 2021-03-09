@@ -41,3 +41,11 @@ class DataArtifact(object):
         if not self.locate_data_source:
             raise Exception("DataArtifact - Can't call full uri when data_source is not located.")
         return self.locate_data_source.get_full_uri()
+
+    def report_lineage(self, report_type, *reporters):
+        for reporter in reporters:
+            reporter.report_lineage(report_type,
+                                    {self.locate_data_source.prefixed_collection: self.locate_data_source.effective_size})
+
+    def get_size_check_threshold(self):
+        return self.min_required_size

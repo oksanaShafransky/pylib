@@ -59,6 +59,7 @@ class InputDataArtifact(DataArtifact):
             if d.is_exist and d.is_marker_validated and d.is_size_validated:
                 # We found a datasource
                 self.locate_data_source = d
+                self.report_lineage('input', self.ti)
                 self.locate_data_source.log_success()
                 return
             d.log_fail_to_find()
@@ -66,15 +67,11 @@ class InputDataArtifact(DataArtifact):
         # If we got here we should fail Data artifact with no collection found
         raise Exception("InputDataArtifact - Couldn't locate collection: %s in any of the datasources" % self.raw_path)
 
-    # This function should be deprecated we only allow it for backward compatibility
+    # This function is deprecated
     def assert_input_validity(self, *reporters):
-        if not self.locate_data_source:
-            raise Exception("InputDataArtifact Failure no valid datasource was found")
-
-        if self.locate_data_source.is_exist and self.locate_data_source.is_size_validated and self.locate_data_source.is_marker_validated:
-            for reporter in reporters:
-                reporter.report_lineage('input',
-                                        {self.locate_data_source.prefixed_collection: self.locate_data_source.effective_size})
+        logger.warn("This function is deprecated. Input validation is done in the init phase."
+                    "Linage is automatically reported to ti. "
+                    "Use report_lineage if you have more reporters")
 
     @property
     def resolved_path(self):
