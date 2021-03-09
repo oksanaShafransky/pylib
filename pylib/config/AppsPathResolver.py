@@ -318,16 +318,28 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 200 * MB,
+            'grouping_1001_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1001", 'size': 20 * GB,
                                              'marker': True,
+                                             'path_type': "daily"},
+
+            'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 200 * MB,
+                                             'marker': False,
                                              'path_type': "daily"},
 
             'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 400 * MB,
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 400 * MB,
+                                             'marker': False,
+                                             'path_type': "daily"},
+
             'grouping_1008_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1008", 'size': 50 * MB,
                                              'marker': True,
+                                             'path_type': "daily"},
+
+            'grouping_1008_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1008", 'size': 50 * MB,
+                                             'marker': False,
                                              'path_type': "daily"},
 
             'grouping_1009_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1009", 'size': 700 * MB,
@@ -657,6 +669,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1001_report_parquet'], path_suffix, in_or_out)
 
+    def get_grouping_1001_report_parquet_upsolver(self, in_or_out, path_prefix=None, path_suffix="is_valid=true"):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['grouping_1001_report_parquet_upsolver'], path_suffix, in_or_out)
+
     def get_grouping_1003_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1003_report_parquet'], path_suffix, in_or_out)
@@ -665,9 +681,17 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1005_report_parquet'], path_suffix, in_or_out)
 
+    def get_grouping_1005_report_parquet_upsolver(self, in_or_out, path_prefix=None, path_suffix="is_valid=true"):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['grouping_1005_report_parquet_upsolver'], path_suffix, in_or_out)
+
     def get_grouping_1008_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1008_report_parquet'], path_suffix, in_or_out)
+
+    def get_grouping_1008_report_parquet_upsolver(self, in_or_out, path_prefix=None, path_suffix="is_valid=true"):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['grouping_1008_report_parquet_upsolver'], path_suffix, in_or_out)
 
     def get_grouping_1009_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
