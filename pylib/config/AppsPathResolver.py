@@ -123,7 +123,7 @@ class AppsPathResolver(object):
 
             #dau
             'dau_android_11_factor': {'main_path': "daily/dau/android_11_factor",
-                                           'size': 1 * KB,
+                                           'size': 10 * MB,
                                            'marker': True, 'path_type': "daily"},
 
             'dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceKey",
