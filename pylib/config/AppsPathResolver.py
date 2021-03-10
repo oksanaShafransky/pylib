@@ -319,7 +319,7 @@ class AppsPathResolver(object):
                                              'path_type': "daily"},
 
             'grouping_1001_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1001", 'size': 20 * GB,
-                                             'marker': True,
+                                             'marker': False,
                                              'path_type': "daily"},
 
             'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 200 * MB,
