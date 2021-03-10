@@ -101,7 +101,7 @@ class AppsPathResolver(object):
                 'marker': True, 'path_type': "daily"},
 
             'new_users_db': {'main_path': "daily/downloads/new_users/new_users_db", 'size': 1 * KB,
-                             'marker': True, 'path_type': "base_path"},#We Can't track size here in a good way.
+                             'marker': False, 'path_type': "base_path"},#We Can't track size here in a good way.
 
             'downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryCountrySourceKey",
                                                          'size': 5.8 * GB,
