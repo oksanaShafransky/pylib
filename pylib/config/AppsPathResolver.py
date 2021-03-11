@@ -287,16 +287,16 @@ class AppsPathResolver(object):
                                      'marker': False, 'path_type': "daily"},
 
             'extractor_ga_daily': {'main_path': 'raw-s2s/extractor_ga_daily', 'size': 10 * MB,
-                                   'marker': False, 'path_type': "monthly"},
+                                   'marker': True, 'path_type': "monthly"},
 
             'extractor_ga_monthly': {'main_path': 'raw-s2s/extractor_ga_monthly', 'size': 750 * KB,
-                                     'marker': False, 'path_type': "monthly"},
+                                     'marker': True, 'path_type': "monthly"},
 
             'extractor_kwh_daily': {'main_path': 'raw-s2s/extractor_kwh_daily', 'size': 3 * MB,
-                                    'marker': False, 'path_type': "monthly"},
+                                    'marker': True, 'path_type': "monthly"},
 
             'extractor_kwh_monthly': {'main_path': 'raw-s2s/extractor_kwh_monthly', 'size': 900 * KB,
-                                      'marker': False, 'path_type': "monthly"},
+                                      'marker': True, 'path_type': "monthly"},
 
             'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 80 * MB,
                                     'marker': False, 'path_type': "daily"},
