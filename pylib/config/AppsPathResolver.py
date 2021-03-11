@@ -122,6 +122,10 @@ class AppsPathResolver(object):
                 'marker': True, 'path_type': "daily"},
 
             #dau
+            'dau_android_11_factor': {'main_path': "daily/dau/android_11_factor",
+                                           'size': 10 * MB,
+                                           'marker': True, 'path_type': "daily"},
+
             'dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceKey",
                                            'size': 600 * MB,
                                            'marker': True, 'path_type': "daily"},
@@ -972,6 +976,10 @@ class AppsPathResolver(object):
                                              self.apps_paths['downloads_prior'], path_suffix, in_or_out)
 
     #dau
+    def get_dau_android_11_factor(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_android_11_factor'], path_suffix, in_or_out)
+
     def get_dau_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_app_country_source_agg'], path_suffix, in_or_out)
