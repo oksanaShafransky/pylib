@@ -180,7 +180,7 @@ class AppsPathResolver(object):
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 100 * MB,
                                         'marker': True, 'path_type': "daily"},
 
-            'apps_datapool': {'main_path': "daily/apps-lspool", 'size': 16 * GB,
+            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 16 * GB,
                               'marker': True, 'path_type': "daily"},
 
             'apps_lspool_daily': {'main_path': "daily/apps-lspool", 'size': 50 * GB,
