@@ -180,8 +180,14 @@ class AppsPathResolver(object):
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 100 * MB,
                                         'marker': True, 'path_type': "daily"},
 
-            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 16 * GB,
+            'apps_datapool': {'main_path': "daily/apps-lspool", 'size': 16 * GB,
                               'marker': True, 'path_type': "daily"},
+
+            'apps_lspool_daily': {'main_path': "daily/apps-lspool", 'size': 50 * GB,
+                                  'marker': True, 'path_type': "daily"},
+
+            'apps_lspool_monthly': {'main_path': "monthly/apps-lspool", 'size': 2 * MB,
+                                    'marker': True, 'path_type': "monthly"},
 
             'downloads_alpha_estimation': {'main_path': "daily/estimate/app-downloads-alph/estkey=AppCountryKey",
                                            'size': 10 * MB,
@@ -833,6 +839,14 @@ class AppsPathResolver(object):
     def get_apps_datapool(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['apps_datapool'], path_suffix, in_or_out)
+
+    def get_apps_lspool_daily(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['apps_lspool_daily'], path_suffix, in_or_out)
+
+    def get_apps_lspool_monthly(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['apps_lspool_monthly'], path_suffix, in_or_out)
 
     def get_usage_patterns_estimate(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
