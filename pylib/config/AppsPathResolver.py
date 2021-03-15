@@ -183,8 +183,9 @@ class AppsPathResolver(object):
             'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 16 * GB,
                               'marker': True, 'path_type': "daily"},
 
-            'apps_lspool_daily': {'main_path': "daily/apps-lspool", 'size': 50 * GB,
-                                  'marker': True, 'path_type': "daily"},
+            # lspool_daily is actually monthly data, and the job itself is responsible for the daily partition
+            'apps_lspool_daily': {'main_path': "daily/apps-lspool", 'size': 50 * MB,
+                                  'marker': True, 'path_type': "monthly"},
 
             'apps_lspool_monthly': {'main_path': "monthly/apps-lspool", 'size': 2 * MB,
                                     'marker': True, 'path_type': "monthly"},
