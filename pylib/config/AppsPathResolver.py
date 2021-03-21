@@ -158,11 +158,11 @@ class AppsPathResolver(object):
                              'marker': True, 'path_type': "daily"},
 
             'monitoring_dau_window': {'main_path': "daily/dau/monitoring/window",
-                             'size': 1 * KB, #todo
+                             'size': 0 * KB, #todo
                              'marker': True, 'path_type': "daily"},
 
             'monitoring_dau_prediction': {'main_path': "daily/dau/monitoring/prediction",
-                                          'size': 1 * KB, #todo
+                                          'size': 0 * KB, #todo
                                           'marker': True, 'path_type': "daily"},
 
             'monitoring_dau_anomalies': {'main_path': "daily/dau/monitoring/anomalies",
