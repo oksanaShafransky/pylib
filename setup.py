@@ -43,7 +43,7 @@ setup(
         'boto3==1.7.2',
         'retry==0.9.2',
         'idna==2.10',
-        'setuptools_scm==5.02'
+        'setuptools-scm==5.02'
     ],
     test_suite='tests',
     entry_points={
