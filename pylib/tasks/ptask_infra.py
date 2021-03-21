@@ -499,8 +499,9 @@ class ContextualizedTasksInfra(object):
         # Barak: this is not good we don't want to ignore lineage reporting
         try:
             self.get_redis_client().rpush(lineage_key, lineage_value)
-        except:
-            logger.error('failed reporting lineage')
+        except Exception as e:
+            logger.error('failed reporting lineage:$(lineage_value)s\nerror:%(err)s'
+                         .format(lineage_value=lineage_value, err=e.message))
 
     def log_linage_hbase(self, direction, table_name, column_families=None):
         linage_uuid_format = "%(table_name)s:%(column_family)s"
