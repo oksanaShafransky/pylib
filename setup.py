@@ -25,7 +25,8 @@ setup(
     ],
     setup_requires=[
         'setuptools-scm==5.0.2',
-        'pytest-runner==5.2',
+        #todo: restore pytest runner
+        # 'pytest-runner==5.2',
         'wheel==0.29.0',
     ],
     tests_require=[
