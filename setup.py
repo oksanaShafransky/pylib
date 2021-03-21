@@ -25,7 +25,8 @@ setup(
     ],
     setup_requires=[
         'pytest-runner==5.2',
-        'wheel==0.29.0'
+        'wheel==0.29.0',
+        'setuptools-scm==5.02'
     ],
     tests_require=[
         'pytest==3.1.3',
@@ -42,8 +43,7 @@ setup(
         'python-dateutil==2.8.0',
         'boto3==1.7.2',
         'retry==0.9.2',
-        'idna==2.10',
-        'setuptools-scm==5.02'
+        'idna==2.10'
     ],
     test_suite='tests',
     entry_points={
