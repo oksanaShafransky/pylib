@@ -279,22 +279,23 @@ class AppsPathResolver(object):
             'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 50 * MB,
                                'marker': True, 'path_type': "daily"},
 
+            #fix me - lowered all sizes for rerun
             'extractor_bobble1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1001",
-                                     'size': 500 * MB, 'marker': True, 'path_type': "daily"},
+                                     'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1005",
-                                     'size': 10 * MB, 'marker': True, 'path_type': "daily"},
+                                     'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
-                                     'size': 1 * GB, 'marker': True, 'path_type': "daily"},
+                                     'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfourR1008",
                                     'size': 20 * MB, 'marker': True, 'path_type': "daily"},
 
-            'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 15 * GB,
+            'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 0 * MB,  # 15 * GB,
                                       'marker': False, 'path_type': "daily"},
 
-            'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 5 * GB,
+            'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 0 * MB,  # 'size': 5 * GB,
                                      'marker': False, 'path_type': "daily"},
 
             'extractor_ga_daily': {'main_path': 'raw-s2s/extractor_ga_daily', 'size': 10 * MB,
