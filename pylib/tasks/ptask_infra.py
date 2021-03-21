@@ -473,7 +473,7 @@ class ContextualizedTasksInfra(object):
     def __get_common_args(self):
         return self.ctx.config.config['sw_common']
 
-    def log_lineage_hdfs(self, directories, direction):
+    def log_linage(self,direction, linage_type, linage_uuid):
         if self.dry_run or self.checks_only:
             sys.stdout.write('(*)')
             return
@@ -482,25 +482,39 @@ class ContextualizedTasksInfra(object):
         if self.execution_user != 'airflow':
             return
         lineage_value_template = \
-            '%(execution_user)s.%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction)s:hdfs::%(directory)s'
+            '%(execution_user)s.%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction)s:%(linage_type)s::%(linage_uuid)s'
 
         lineage_key = 'LINEAGE_%s' % datetime.date.today().strftime('%y-%m-%d')
 
+        lineage_value = lineage_value_template % {
+            'execution_user': self.execution_user,
+            'dag_id': self.dag_id,
+            'task_id': self.task_id,
+            'execution_dt': self.execution_dt,
+            'direction': direction,
+            'linage_type': linage_type,
+            'linage_uuid': linage_uuid
+        }
+
         # Barak: this is not good we don't want to ignore lineage reporting
         try:
-            if isinstance(directories, list):
-                for directory in directories:
-                    lineage_value = lineage_value_template % {
-                        'execution_user': self.execution_user,
-                        'dag_id': self.dag_id,
-                        'task_id': self.task_id,
-                        'execution_dt': self.execution_dt,
-                        'directory': directory,
-                        'direction': direction
-                    }
-                    self.get_redis_client().rpush(lineage_key, lineage_value)
+            self.get_redis_client().rpush(lineage_key, lineage_value)
         except:
             logger.error('failed reporting lineage')
+
+    def log_linage_hbase(self, direction, table_name, column_families=None):
+        linage_uuid_format = "%(table_name)s:%(column_family)s"
+        if column_families:
+            for column_family in column_families:
+                linage_uuid = linage_uuid_format.format(table_name=table_name,column_family=column_family )
+                self.log_linage(direction=direction, linage_type="hbase", linage_uuid=linage_uuid)
+        else:
+            linage_uuid = linage_uuid_format.format(table_name=table_name, column_family="*",)
+            self.log_linage(direction=direction, linage_type="hbase", linage_uuid=linage_uuid)
+
+    def log_lineage_hdfs(self, directories, direction):
+        for directory in directories:
+            self.log_linage(direction=direction, linage_type='hdfs', linage_uuid=directory)
 
     def get_redis_client(self):
         if self.redis is None:
@@ -526,14 +540,11 @@ class ContextualizedTasksInfra(object):
                 break
         return cnt
 
-    def report_lineage(self, direction, paths_sizes):
-        self.log_lineage_hdfs(paths_sizes.keys(), direction)
-
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
         if isinstance(directories, six.string_types):
             directories = [directories]
 
-        self.report_lineage('input', {directory: None for directory in directories})
+        self.log_lineage_hdfs(direction='input', directories=directories)
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
@@ -544,7 +555,7 @@ class ContextualizedTasksInfra(object):
         if isinstance(directories, six.string_types):
             directories = [directories]
 
-        self.report_lineage('output', {directory: None for directory in directories})
+        self.log_lineage_hdfs(direction='output', directories=directories)
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
@@ -563,7 +574,7 @@ class ContextualizedTasksInfra(object):
             return name + self.table_suffix
 
     def assert_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
-                                 cluster_name=None):
+                                 cluster_name=None, direction='output'):
         if self.dry_run:
             log_message = "Dry Run: would have checked that table '%s' has %d regions and %d keys per region" % (
                 table_name, minimum_regions_count, rows_per_region)
@@ -574,6 +585,7 @@ class ContextualizedTasksInfra(object):
             assert validate_records_per_region(table_name, columns, minimum_regions_count, rows_per_region,
                                                cluster_name), \
                 'hbase table content is not valid, table name: %s' % table_name
+            self.log_linage_hbase(direction=direction, table_name=table_name, column_families=columns)
 
     def assert_hbase_snapshot_exists(self, snapshot_name, hbase_root='/hbase', name_node=None):
         snapshot_params = {'snapshot_name': snapshot_name, 'hbase_root': hbase_root}
@@ -1218,7 +1230,7 @@ class ContextualizedTasksInfra(object):
                                                                                determine_partitions_by_output,
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-         
+
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark2-submit' \
@@ -1283,7 +1295,7 @@ class ContextualizedTasksInfra(object):
 
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-         
+
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark-submit' \
@@ -1442,7 +1454,7 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-         
+
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
         command = 'spark2-submit' \
                   ' --name "%(app_name)s"' \
@@ -1551,7 +1563,7 @@ class ContextualizedTasksInfra(object):
             py_files_cmd = ' '
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
-         
+
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'spark-submit' \
