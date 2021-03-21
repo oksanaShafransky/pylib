@@ -232,8 +232,8 @@ class TasksInfra(object):
 
     SMTP_SERVER = 'email-smtp.us-east-1.amazonaws.com'
     SMTP_PORT = 587
-    SMTP_USER = 'AKIAJTAT2USDRQ5Y5QHA'
-    SMTP_PASS = 'AubJwLhz8uhPfBF4/Kz7KI9HezfMMvi7hWuqurUZV5lr'
+    SMTP_USER = 'AKIA4GKBI5ERSCW6HRPG'
+    SMTP_PASS = 'BH+GoIHbV+/qBdV7ARCFbDLQOwrNcyz0cJShL4221m5O'
 
 
     @staticmethod
