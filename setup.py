@@ -26,7 +26,7 @@ setup(
     setup_requires=[
         'pytest-runner==5.2',
         'wheel==0.29.0',
-        'setuptools-scm==5.02'
+        'setuptools_scm==5.02'
     ],
     tests_require=[
         'pytest==3.1.3',
