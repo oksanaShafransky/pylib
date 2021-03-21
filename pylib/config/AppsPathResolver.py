@@ -157,6 +157,18 @@ class AppsPathResolver(object):
                              'size': 200 * MB,
                              'marker': True, 'path_type': "daily"},
 
+            'monitoring_dau_window': {'main_path': "daily/dau/monitoring/window",
+                             'size': 0 * KB, #todo
+                             'marker': True, 'path_type': "daily"},
+
+            'monitoring_dau_prediction': {'main_path': "daily/dau/monitoring/prediction",
+                                          'size': 0 * KB, #todo
+                                          'marker': True, 'path_type': "daily"},
+
+            'monitoring_dau_anomalies': {'main_path': "daily/dau/monitoring/anomalies",
+                                         'size': 0 * KB, #todo
+                                         'marker': True, 'path_type': "daily"},
+
             'mau_embee_estimate': {'main_path': "monthly/mau/estimate-embee/estKey=AppContryKey",
                                    'size': 0 * MB,
                                    'marker': True, 'path_type': "monthly"},
@@ -172,6 +184,7 @@ class AppsPathResolver(object):
             'mau_final_est': {'main_path': "snapshot/estimate/app-mau-adjusted-to-dau-dp/estkey=AppCountry",
                               'size': 0 * MB,
                               'marker': True, 'path_type': "monthly"},
+
 
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KB,
@@ -1065,3 +1078,14 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['ga'], path_suffix, in_or_out)
 
+    def get_monitoring_dau_window(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring_dau_window'], path_suffix, in_or_out)
+
+    def get_monitoring_dau_prediction(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring_dau_prediction'], path_suffix, in_or_out)
+
+    def get_monitoring_dau_anomalies(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring_dau_anomalies'], path_suffix, in_or_out)
