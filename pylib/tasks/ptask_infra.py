@@ -500,14 +500,14 @@ class ContextualizedTasksInfra(object):
         try:
             self.get_redis_client().rpush(lineage_key, lineage_value)
         except Exception as e:
-            logger.error('failed reporting lineage:$(lineage_value)s\nerror:%(err)s'
+            logger.error('failed reporting lineage:{lineage_value}\nerror:{err}'
                          .format(lineage_value=lineage_value, err=e.message))
 
     def log_linage_hbase(self, direction, table_name, column_families=None):
-        linage_uuid_format = "%(table_name)s:%(column_family)s"
+        linage_uuid_format = "{table_name}:{column_family}"
         if column_families:
             for column_family in column_families:
-                linage_uuid = linage_uuid_format.format(table_name=table_name,column_family=column_family )
+                linage_uuid = linage_uuid_format.format(table_nam2e=table_name, column_family=column_family)
                 self.log_linage(direction=direction, linage_type="hbase", linage_uuid=linage_uuid)
         else:
             linage_uuid = linage_uuid_format.format(table_name=table_name, column_family="*",)
