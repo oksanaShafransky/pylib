@@ -575,7 +575,7 @@ class ContextualizedTasksInfra(object):
             return name + self.table_suffix
 
     def assert_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
-                                 cluster_name=None, direction='output'):
+                                 cluster_name=None, direction=None):
         if self.dry_run:
             log_message = "Dry Run: would have checked that table '%s' has %d regions and %d keys per region" % (
                 table_name, minimum_regions_count, rows_per_region)
@@ -586,7 +586,20 @@ class ContextualizedTasksInfra(object):
             assert validate_records_per_region(table_name, columns, minimum_regions_count, rows_per_region,
                                                cluster_name), \
                 'hbase table content is not valid, table name: %s' % table_name
-            self.log_linage_hbase(direction=direction, table_name=table_name, column_families=columns)
+            if direction:
+                self.log_linage_hbase(direction=direction, table_name=table_name, column_families=columns)
+
+    def assert_output_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
+                                        cluster_name=None):
+        self.assert_hbase_table_valid(table_name=table_name, columns=columns,
+                                      minimum_regions_count=minimum_regions_count, rows_per_region=rows_per_region,
+                                      cluster_name=cluster_name, direction='output')
+
+    def assert_input_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
+                                       cluster_name=None):
+        self.assert_hbase_table_valid(table_name=table_name, columns=columns,
+                                      minimum_regions_count=minimum_regions_count, rows_per_region=rows_per_region,
+                                      cluster_name=cluster_name, direction='input')
 
     def assert_hbase_snapshot_exists(self, snapshot_name, hbase_root='/hbase', name_node=None):
         snapshot_params = {'snapshot_name': snapshot_name, 'hbase_root': hbase_root}

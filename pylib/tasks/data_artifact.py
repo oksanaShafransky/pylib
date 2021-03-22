@@ -46,7 +46,7 @@ class DataArtifact(object):
         for reporter in reporters:
             reporter.log_lineage_hdfs(
                 direction=report_type,
-                directories=self.locate_data_source.prefixed_collection
+                directories=[self.locate_data_source.prefixed_collection]
             )
 
     def get_size_check_threshold(self):
