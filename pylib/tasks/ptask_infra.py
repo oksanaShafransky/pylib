@@ -507,7 +507,7 @@ class ContextualizedTasksInfra(object):
         linage_uuid_format = "{table_name}:{column_family}"
         if column_families:
             for column_family in column_families:
-                linage_uuid = linage_uuid_format.format(table_nam2e=table_name, column_family=column_family)
+                linage_uuid = linage_uuid_format.format(table_name=table_name, column_family=column_family)
                 self.log_linage(direction=direction, linage_type="hbase", linage_uuid=linage_uuid)
         else:
             linage_uuid = linage_uuid_format.format(table_name=table_name, column_family="*",)
