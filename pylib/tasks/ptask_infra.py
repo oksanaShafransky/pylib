@@ -1111,7 +1111,9 @@ class ContextualizedTasksInfra(object):
         :type py_files: list[str]
         :param python_env: name of external Python environment on s3 to use as driver and executor Python executable
         :type python_env: str
-        :param env_path: path to Python enviroment or default if None
+        :param env_path: path that contains directory with Python enviroment or default if None. The python env zip needs to be in a directory
+        with the same name as the env. For example, if the python env zip is called py-env.zip, the file needs to be a dir called py-env and
+        env_path needs to point to the dir above py-env.
         :type env_path: str
         :return:
         """
