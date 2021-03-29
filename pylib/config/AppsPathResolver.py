@@ -158,15 +158,15 @@ class AppsPathResolver(object):
                              'marker': True, 'path_type': "daily"},
 
             'monitoring_dau_window': {'main_path': "daily/dau/monitoring/window",
-                             'size': 1 * MB, #todo
+                             'size': 0 * KB, #todo
                              'marker': True, 'path_type': "daily"},
 
             'monitoring_dau_prediction': {'main_path': "daily/dau/monitoring/prediction",
-                                          'size': 1 * MB, #todo
+                                          'size': 0 * KB, #todo
                                           'marker': True, 'path_type': "daily"},
 
             'monitoring_dau_anomalies': {'main_path': "daily/dau/monitoring/anomalies",
-                                         'size': 1 * MB, #todo
+                                         'size': 0 * KB, #todo
                                          'marker': True, 'path_type': "daily"},
 
             'mau_embee_estimate': {'main_path': "monthly/mau/estimate-embee/estKey=AppContryKey",

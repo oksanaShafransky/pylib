@@ -19,8 +19,8 @@ import sys
 import time
 import numpy as np
 from dateutil.relativedelta import relativedelta
-from pylib.sw_jobs.kill_zombie_jobs import ZombieJobKiller
-from pylib.sw_jobs.job_utils import extract_yarn_application_tags, parse_yarn_tags_to_dict
+from pylib.sw_jobs.job_utils import extract_yarn_application_tags_from_env, yarn_tags_dict_to_str, \
+    fetch_yarn_applications, kill_yarn_application
 from pylib.common.date_utils import get_dates_range
 from pylib.tasks.data import DataArtifact
 # Adjust log level
@@ -412,7 +412,7 @@ class ContextualizedTasksInfra(object):
         self.redis = None
         self.jvm_opts = {}
         self.hadoop_configs = {}
-        self.yarn_application_tags = extract_yarn_application_tags()
+        self.yarn_application_tags = extract_yarn_application_tags_from_env()
         self.spark_configs = {}
         self.default_da_data_sources = None
 
@@ -473,7 +473,7 @@ class ContextualizedTasksInfra(object):
     def __get_common_args(self):
         return self.ctx.config.config['sw_common']
 
-    def log_lineage_hdfs(self, directories, direction):
+    def log_linage(self,direction, linage_type, linage_uuid):
         if self.dry_run or self.checks_only:
             sys.stdout.write('(*)')
             return
@@ -482,25 +482,40 @@ class ContextualizedTasksInfra(object):
         if self.execution_user != 'airflow':
             return
         lineage_value_template = \
-            '%(execution_user)s.%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction)s:hdfs::%(directory)s'
+            '%(execution_user)s.%(dag_id)s.%(task_id)s.%(execution_dt)s::%(direction)s:%(linage_type)s::%(linage_uuid)s'
 
         lineage_key = 'LINEAGE_%s' % datetime.date.today().strftime('%y-%m-%d')
 
+        lineage_value = lineage_value_template % {
+            'execution_user': self.execution_user,
+            'dag_id': self.dag_id,
+            'task_id': self.task_id,
+            'execution_dt': self.execution_dt,
+            'direction': direction,
+            'linage_type': linage_type,
+            'linage_uuid': linage_uuid
+        }
+
         # Barak: this is not good we don't want to ignore lineage reporting
         try:
-            if isinstance(directories, list):
-                for directory in directories:
-                    lineage_value = lineage_value_template % {
-                        'execution_user': self.execution_user,
-                        'dag_id': self.dag_id,
-                        'task_id': self.task_id,
-                        'execution_dt': self.execution_dt,
-                        'directory': directory,
-                        'direction': direction
-                    }
-                    self.get_redis_client().rpush(lineage_key, lineage_value)
-        except:
-            logger.error('failed reporting lineage')
+            self.get_redis_client().rpush(lineage_key, lineage_value)
+        except Exception as e:
+            logger.error('failed reporting lineage:{lineage_value}\nerror:{err}'
+                         .format(lineage_value=lineage_value, err=e.message))
+
+    def log_linage_hbase(self, direction, table_name, column_families=None):
+        linage_uuid_format = "{table_name}:{column_family}"
+        if column_families:
+            for column_family in column_families:
+                linage_uuid = linage_uuid_format.format(table_name=table_name, column_family=column_family)
+                self.log_linage(direction=direction, linage_type="hbase", linage_uuid=linage_uuid)
+        else:
+            linage_uuid = linage_uuid_format.format(table_name=table_name, column_family="*",)
+            self.log_linage(direction=direction, linage_type="hbase", linage_uuid=linage_uuid)
+
+    def log_lineage_hdfs(self, directories, direction):
+        for directory in directories:
+            self.log_linage(direction=direction, linage_type='hdfs', linage_uuid=directory)
 
     def get_redis_client(self):
         if self.redis is None:
@@ -526,14 +541,11 @@ class ContextualizedTasksInfra(object):
                 break
         return cnt
 
-    def report_lineage(self, direction, paths_sizes):
-        self.log_lineage_hdfs(paths_sizes.keys(), direction)
-
     def assert_input_validity(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
         if isinstance(directories, six.string_types):
             directories = [directories]
 
-        self.report_lineage('input', {directory: None for directory in directories})
+        self.log_lineage_hdfs(direction='input', directories=directories)
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
@@ -544,7 +556,7 @@ class ContextualizedTasksInfra(object):
         if isinstance(directories, six.string_types):
             directories = [directories]
 
-        self.report_lineage('output', {directory: None for directory in directories})
+        self.log_lineage_hdfs(direction='output', directories=directories)
         assert self.__is_hdfs_collection_valid(directories,
                                                min_size_bytes=min_size_bytes,
                                                validate_marker=validate_marker,
@@ -563,7 +575,7 @@ class ContextualizedTasksInfra(object):
             return name + self.table_suffix
 
     def assert_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
-                                 cluster_name=None):
+                                 cluster_name=None, direction=None):
         if self.dry_run:
             log_message = "Dry Run: would have checked that table '%s' has %d regions and %d keys per region" % (
                 table_name, minimum_regions_count, rows_per_region)
@@ -574,6 +586,20 @@ class ContextualizedTasksInfra(object):
             assert validate_records_per_region(table_name, columns, minimum_regions_count, rows_per_region,
                                                cluster_name), \
                 'hbase table content is not valid, table name: %s' % table_name
+            if direction:
+                self.log_linage_hbase(direction=direction, table_name=table_name, column_families=columns)
+
+    def assert_output_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
+                                        cluster_name=None):
+        self.assert_hbase_table_valid(table_name=table_name, columns=columns,
+                                      minimum_regions_count=minimum_regions_count, rows_per_region=rows_per_region,
+                                      cluster_name=cluster_name, direction='output')
+
+    def assert_input_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
+                                       cluster_name=None):
+        self.assert_hbase_table_valid(table_name=table_name, columns=columns,
+                                      minimum_regions_count=minimum_regions_count, rows_per_region=rows_per_region,
+                                      cluster_name=cluster_name, direction='input')
 
     def assert_hbase_snapshot_exists(self, snapshot_name, hbase_root='/hbase', name_node=None):
         snapshot_params = {'snapshot_name': snapshot_name, 'hbase_root': hbase_root}
@@ -624,7 +650,8 @@ class ContextualizedTasksInfra(object):
         curr_jvm_opts = copy(self.jvm_opts)
         curr_jvm_opts.update(self.hadoop_configs)
         jvm_opts = TasksInfra.add_jvm_options(job_name_property, curr_jvm_opts)
-        jvm_opts = TasksInfra.add_jvm_options(jvm_opts, {'mapreduce.job.tags': self.yarn_application_tags})
+        jvm_opts = TasksInfra.add_jvm_options(jvm_opts,
+                                              {'mapreduce.job.tags': yarn_tags_dict_to_str(self.yarn_application_tags)})
         distcp_opts = "-m {mappers}".format(mappers=mappers)
         cmd = 'hadoop distcp {jvm_opts} {distcp_opts} {source_path} {target_path}'.format(
             jvm_opts=jvm_opts,
@@ -632,7 +659,7 @@ class ContextualizedTasksInfra(object):
             source_path=source,
             target_path=target
         )
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_applications()
         self.run_bash(cmd)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False,
@@ -663,11 +690,12 @@ class ContextualizedTasksInfra(object):
         curr_jvm_opts.update(self.hadoop_configs)
 
         command = TasksInfra.add_jvm_options(command, curr_jvm_opts)
-        command = TasksInfra.add_jvm_options(command, {'mapreduce.job.tags': self.yarn_application_tags})
+        command = TasksInfra.add_jvm_options(command,
+                                             {'mapreduce.job.tags': yarn_tags_dict_to_str(self.yarn_application_tags)})
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['java'])
         if self.rerun:
             command = self.__with_rerun_root_queue(command)
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_applications()
         return self.run_bash(command).ok
 
 
@@ -1000,7 +1028,7 @@ class ContextualizedTasksInfra(object):
                     repos=','.join(final_repositories)
                    )
 
-        command += ' --conf spark.yarn.tags={} '.format(self.yarn_application_tags)
+        command += ' --conf spark.yarn.tags={} '.format(yarn_tags_dict_to_str(self.yarn_application_tags))
         if queue:
             command += ' --queue {}'.format(queue)
         if jars:
@@ -1024,7 +1052,7 @@ class ContextualizedTasksInfra(object):
             raise ValueError("must receive either main-py-file or main-class and main-jar")
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_applications()
         return self.run_bash(command).ok
 
     def run_sw_pyspark(self,
@@ -1085,7 +1113,9 @@ class ContextualizedTasksInfra(object):
         :type py_files: list[str]
         :param python_env: name of external Python environment on s3 to use as driver and executor Python executable
         :type python_env: str
-        :param env_path: path to Python enviroment or default if None
+        :param env_path: path that contains directory with Python enviroment or default if None. The python env zip needs to be in a directory
+        with the same name as the env. For example, if the python env zip is called py-env.zip, the file needs to be a dir called py-env and
+        env_path needs to point to the dir above py-env.
         :type env_path: str
         :return:
         """
@@ -1218,7 +1248,7 @@ class ContextualizedTasksInfra(object):
                                                                                determine_partitions_by_output,
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-         
+
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark2-submit' \
@@ -1249,13 +1279,13 @@ class ContextualizedTasksInfra(object):
                           (repositories if repositories is not None else []) + self.get_sw_repos()),
                       'main_class': main_class,
                       'jar': jar,
-                      'yarn_application_tags': self.yarn_application_tags
+                      'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
 
         command = TasksInfra.add_command_params(command, command_params,
                                                 value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
 
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_applications()
         return self.run_bash(command).ok
 
     # module is either 'mobile' or 'analytics'
@@ -1283,7 +1313,7 @@ class ContextualizedTasksInfra(object):
 
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-         
+
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark-submit' \
@@ -1311,10 +1341,10 @@ class ContextualizedTasksInfra(object):
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
                       'main_class': main_class,
                       'jar': jar,
-                      'yarn_application_tags': self.yarn_application_tags
+                      'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_applications()
         return self.run_bash(command).ok
 
     @staticmethod
@@ -1442,7 +1472,7 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-         
+
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
         command = 'spark2-submit' \
                   ' --name "%(app_name)s"' \
@@ -1473,9 +1503,9 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': exec_py_file,
-                      'yarn_application_tags': self.yarn_application_tags
+                      'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_applications()
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
@@ -1551,7 +1581,7 @@ class ContextualizedTasksInfra(object):
             py_files_cmd = ' '
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
-         
+
         snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'spark-submit' \
@@ -1580,12 +1610,12 @@ class ContextualizedTasksInfra(object):
                       'jars': self.get_jars_list(module_dir, jars_from_lib) + (
                               ',%s/%s.jar' % (module_dir, module)) if include_main_jar else '',
                       'main_py': exec_py_file,
-                      'yarn_application_tags': self.yarn_application_tags
+                      'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
 
-        self.kill_yarn_zombie_jobs()
+        self.kill_yarn_zombie_applications()
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
             os.remove(artifact_path)
@@ -1837,19 +1867,31 @@ class ContextualizedTasksInfra(object):
               (num_of_partitions, output_size_in_bytes))
         self.jvm_opts[TasksInfra.get_mr_partitions_config_key()] = num_of_partitions
 
-    def kill_yarn_zombie_jobs(self ):
+    def kill_yarn_zombie_applications(self):
         user = os.environ['USER_NAME'] if 'USER_NAME' in os.environ else ''
         if user != 'airflow':
             logger.info("Not submitted by airflow's user - skipping Zombie-Job-Killer")
             return
-        kill_tag = parse_yarn_tags_to_dict(self.yarn_application_tags).get('kill_tag', None)
-        assert kill_tag and len(kill_tag) > 0, "yarn's kill_tag cannot be empty"
-        app_tags = 'kill_tag:{kill_tag}'.format(kill_tag=kill_tag)
-        rm_host = SnowflakeConfig().get_service_name(service_name="active.yarn-rm")
-        if self.dry_run or self.checks_only:
-            ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags, handling_mode=ZombieJobKiller.ZombieHandleMode.alert)
+        kill_tag_value = self.yarn_application_tags.get('kill_tag', None)
+        if not kill_tag_value:
+            logger.warning("cant check for zombie-yarn-applications, unknown 'kill_tag'")
+            return
+        assert len(kill_tag_value) > 0, "yarn's kill_tag cannot be empty"
+        rm_host, rm_port = SnowflakeConfig().get_service_name(service_name="active.yarn-rm"), 8088
+        zombie_apps = [app['id'] for app in fetch_yarn_applications(rm_host=rm_host, rm_port=rm_port,
+                                                                    tags={'kill_tag': kill_tag_value},
+                                                                    states=["SUBMITTED", "ACCEPTED", "RUNNING"])]
+        if len(zombie_apps) > 0:
+            logger.info("found yarn zombie-applications: %s" % zombie_apps)
         else:
-            ZombieJobKiller(rm_host).kill_zombie_jobs(app_tags)
+            logger.info("didn't find yarn zombie-applications matching kill_tag:%s" % kill_tag_value)
+
+        for zombie_app_id in zombie_apps:
+            if self.dry_run or self.checks_only:
+                logger.info("Dry-Run: Would kill zombie application: %s", zombie_app_id)
+            else:
+                logger.info("Killing zombie application: %s", zombie_app_id)
+                kill_yarn_application(rm_host=rm_host, rm_port=rm_port, application_id=zombie_app_id)
         return
 
     @property

@@ -24,11 +24,13 @@ setup(
         'numpy==1.12.0'
     ],
     setup_requires=[
-        'pytest-runner==5.2',
+        'setuptools-scm==5.0.2',
+        #todo: restore pytest runner
+        # 'pytest-runner==5.2',
         'wheel==0.29.0',
-        'setuptools_scm==5.02'
     ],
     tests_require=[
+        'setuptools-scm==5.0.2',
         'pytest==3.1.3',
         'ujson==1.33',
         'thriftpy==0.3.8',
