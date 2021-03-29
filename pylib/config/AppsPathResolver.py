@@ -268,7 +268,7 @@ class AppsPathResolver(object):
             'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005_new': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005new", 'size': 20 * MB,
+            'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MB,
                                'marker': True, 'path_type': "daily"}, # TODO update real size
 
             'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 100 * MB,
@@ -609,9 +609,9 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1005'], path_suffix, in_or_out)
 
-    def get_extractor_1005_new(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_extractor_1005_on_server_side(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1005_new'], path_suffix, in_or_out)
+                                             self.apps_paths['extractor_1005_on_server_side'], path_suffix, in_or_out)
 
     def get_extractor_5555(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
