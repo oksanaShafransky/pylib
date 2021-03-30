@@ -13,8 +13,8 @@ logging.basicConfig(stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
 
-def fetch_yarn_applications(rm_host, rm_port, tags=None, user=None, states=None):
-    job_url = 'http://%(host)s:%(port)s/ws/v1/cluster/apps?' % {'host': rm_host, 'port': rm_port}
+def fetch_yarn_applications(rm_host, rm_port, tags=None, user=None, states=None, finish_after=None, finish_before=None):
+    job_url = 'http://%(host)s:%(port)s/ws/v1/cluster/apps' % {'host': rm_host, 'port': rm_port}
     queries = []
     if tags:
         assert len(tags) > 0, "You must provide tags, got %s" % tags
@@ -25,8 +25,13 @@ def fetch_yarn_applications(rm_host, rm_port, tags=None, user=None, states=None)
         queries.append("user=%s" % user)
     if states:
         queries.append("states=" + ','.join(states))
+    if finish_after:
+        queries.append("finishedTimeBegin=%s" % finish_after)
+    if finish_before:
+        queries.append("finishedTimeEnd=%s" % finish_before)
     if len(queries) > 0:
         job_url = job_url + "?" + "&".join(queries)
+    logger.debug("querying url:%s " % job_url)
     r = requests.get(job_url, headers={"content-type": "application/json"})
     r.raise_for_status()
     apps = r.json()['apps']['app'] if r.json()['apps'] else []
