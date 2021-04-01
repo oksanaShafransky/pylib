@@ -92,5 +92,7 @@ def extract_yarn_application_tags_from_env():
 def parse_yarn_tags_str_to_dict(yarn_application_tags_str):
     # input string of comma-separated tags: "tag1:value1,tag2:value2,..."
     # output - a lookup dict fot the tags { 'tag1': 'value1' , 'tag2' : 'value2' }
+    if len(yarn_application_tags_str.strip()) == 0:
+        return dict()
     yarn_application_tags = [tag_str.split(":") for tag_str in yarn_application_tags_str.split(",")]
     return {tag[0]: tag[1] if len(tag) == 2 else None for tag in yarn_application_tags}
