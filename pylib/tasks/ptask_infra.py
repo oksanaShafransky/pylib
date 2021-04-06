@@ -1420,7 +1420,8 @@ class ContextualizedTasksInfra(object):
                      determine_partitions_by_output=False,
                      managed_output_dirs=None,
                      additional_artifacts=None,
-                     python_env=None
+                     python_env=None,
+                     env_path=None
                      ):
 
         logging.warn("run_py_spark2 is a deprecated method. Use run_sw_pyspark instead.")
@@ -1432,7 +1433,7 @@ class ContextualizedTasksInfra(object):
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         if python_env is not None:
-            additional_configs += self._set_python_env(python_env)
+            additional_configs += self._set_python_env(python_env, env_path) if env_path else self._set_python_env(python_env)
 
         final_py_files = py_files or []
 
@@ -1530,7 +1531,8 @@ class ContextualizedTasksInfra(object):
                      determine_partitions_by_output=False,
                      managed_output_dirs=None,
                      additional_artifacts=None,
-                     python_env=None
+                     python_env=None,
+                     env_path=None
                      ):
 
         logging.warn("run_py_spark is a deprecated method. Use run_sw_pyspark instead.")
@@ -1542,7 +1544,7 @@ class ContextualizedTasksInfra(object):
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
         if python_env is not None:
-            additional_configs += self._set_python_env(python_env)
+            additional_configs += self._set_python_env(python_env, env_path) if env_path else self._set_python_env(python_env)
 
         final_py_files = py_files or []
 
