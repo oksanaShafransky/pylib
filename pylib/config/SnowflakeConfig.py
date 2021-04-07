@@ -89,7 +89,7 @@ class SnowflakeConfig:
         r = requests.get(self.base_url + self.path_in_url, params=payload)
         if r.status_code != 200:
             # We got error from snowflake server
-            raise Exception("SnowflakeError: " + r.content + " code: " + str(r.status_code))
+            raise Exception("SnowflakeError: env="+env+" service_name="+service_name+" err:" + r.content + " code: " + str(r.status_code))
 
         return str(r.text)
 

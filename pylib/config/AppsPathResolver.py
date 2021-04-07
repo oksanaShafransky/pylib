@@ -157,6 +157,18 @@ class AppsPathResolver(object):
                              'size': 200 * MB,
                              'marker': True, 'path_type': "daily"},
 
+            'monitoring_dau_window': {'main_path': "daily/dau/monitoring/window",
+                             'size': 0 * KB, #todo
+                             'marker': True, 'path_type': "daily"},
+
+            'monitoring_dau_prediction': {'main_path': "daily/dau/monitoring/prediction",
+                                          'size': 0 * KB, #todo
+                                          'marker': True, 'path_type': "daily"},
+
+            'monitoring_dau_anomalies': {'main_path': "daily/dau/monitoring/anomalies",
+                                         'size': 0 * KB, #todo
+                                         'marker': True, 'path_type': "daily"},
+
             'mau_embee_estimate': {'main_path': "monthly/mau/estimate-embee/estKey=AppContryKey",
                                    'size': 0 * MB,
                                    'marker': True, 'path_type': "monthly"},
@@ -173,6 +185,7 @@ class AppsPathResolver(object):
                               'size': 0 * MB,
                               'marker': True, 'path_type': "monthly"},
 
+
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KB,
                     'marker': True, 'path_type': "daily"},
@@ -183,8 +196,9 @@ class AppsPathResolver(object):
             'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 16 * GB,
                               'marker': True, 'path_type': "daily"},
 
-            'apps_lspool_daily': {'main_path': "daily/apps-lspool", 'size': 50 * GB,
-                                  'marker': True, 'path_type': "daily"},
+            # lspool_daily is actually monthly data, and the job itself is responsible for the daily partition
+            'apps_lspool_daily': {'main_path': "daily/apps-lspool", 'size': 50 * MB,
+                                  'marker': True, 'path_type': "monthly"},
 
             'apps_lspool_monthly': {'main_path': "monthly/apps-lspool", 'size': 2 * MB,
                                     'marker': True, 'path_type': "monthly"},
@@ -254,7 +268,7 @@ class AppsPathResolver(object):
             'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005_new': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005new", 'size': 20 * MB,
+            'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MB,
                                'marker': True, 'path_type': "daily"}, # TODO update real size
 
             'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 100 * MB,
@@ -338,6 +352,10 @@ class AppsPathResolver(object):
             'grouping_1003_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1003", 'size': 200 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
+
+            'grouping_1003_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1003", 'size': 1 * MB,
+                                                      'marker': False,
+                                                      'path_type': "daily"},
 
             'grouping_1005_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1005", 'size': 400 * MB,
                                              'marker': False, #TODO revert to True.
@@ -596,9 +614,9 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_1005'], path_suffix, in_or_out)
 
-    def get_extractor_1005_new(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_extractor_1005_on_server_side(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['extractor_1005_new'], path_suffix, in_or_out)
+                                             self.apps_paths['extractor_1005_on_server_side'], path_suffix, in_or_out)
 
     def get_extractor_5555(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
@@ -704,6 +722,10 @@ class AppsPathResolver(object):
     def get_grouping_1003_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1003_report_parquet'], path_suffix, in_or_out)
+
+    def get_grouping_1003_report_parquet_upsolver(self, in_or_out, path_prefix=None, path_suffix="is_valid=true"):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['grouping_1003_report_parquet_upsolver'], path_suffix, in_or_out)
 
     def get_grouping_1005_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
@@ -1064,3 +1086,14 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['ga'], path_suffix, in_or_out)
 
+    def get_monitoring_dau_window(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring_dau_window'], path_suffix, in_or_out)
+
+    def get_monitoring_dau_prediction(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring_dau_prediction'], path_suffix, in_or_out)
+
+    def get_monitoring_dau_anomalies(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring_dau_anomalies'], path_suffix, in_or_out)
