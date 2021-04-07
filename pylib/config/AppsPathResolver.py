@@ -436,6 +436,11 @@ class AppsPathResolver(object):
                 'size': 1 * KB, 'marker': True,
                 'path_type': "monthly"},
 
+            'real_numbers_adjustments_for_mau': {
+                'main_path': "monthly/android-real-numbers-v2/for-mau/adjustments",
+                'size': 1 * KB, 'marker': True,
+                'path_type': "monthly"},
+
             'real_numbers_adjustments_by_active_users': {
                 'main_path': "monthly/android-real-numbers-v2/by-active-users/adjustments",
                 'size': 1 * KB, 'marker': True,
@@ -803,6 +808,10 @@ class AppsPathResolver(object):
     def get_real_numbers_adjustments_by_new_users(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['real_numbers_adjustments_by_new_users'], path_suffix, in_or_out)
+
+    def get_real_numbers_adjustments_for_mau(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['real_numbers_adjustments_for_mau'], path_suffix, in_or_out)
 
     def get_real_numbers_adjustments_by_active_users(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
