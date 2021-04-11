@@ -4,6 +4,8 @@ import pylib.hive.common as common
 from pylib.consistency.consistency_types import ConsistencyOutputType
 from pylib.consistency.paths import ConsistencyPaths
 from pylib.tasks.data import DataArtifact
+from pylib.tasks.input_data_artifact import InputDataArtifact
+from pylib.tasks.output_data_artifact import OutputDataArtifact
 
 
 class ConsistencyTestInfra(object):
@@ -222,8 +224,7 @@ class ConsistencyTestInfra(object):
         self.ti.set_s3_keys()
 
         def resolve_path(p):
-            da = DataArtifact(p, required_marker=False)
-            da.assert_input_validity(self.ti)
+            da = InputDataArtifact(self.ti, p, required_marker=False)
             return da.resolved_path
 
         base_model_path = ConsistencyPaths.gen_base_model_path(
@@ -359,8 +360,7 @@ class ConsistencyTestInfra(object):
         self.ti.set_s3_keys()
 
         def resolve_path(p):
-            da = DataArtifact(p, required_marker=False)
-            da.assert_input_validity(self.ti)
+            da = InputDataArtifact(self.ti, p, required_marker=False)
             return da.resolved_path
 
         # The model to use in the test
@@ -375,8 +375,7 @@ class ConsistencyTestInfra(object):
         base_model_path = ConsistencyPaths.gen_base_model_path(
             model_base_dir, test_name, model_date, date_type)
         for mp in model_paths:
-            mp_data_artifact = DataArtifact(mp, required_size=10, required_marker=True)
-            mp_data_artifact.assert_input_validity(self.ti)
+            mp_data_artifact = InputDataArtifact(self.ti, mp, required_size=10, required_marker=True)
             base_model_path = ConsistencyPaths.extract_model_base_path_from_country_path(mp_data_artifact.resolved_path)
 
         # the benchmark result to use in the test (for comparison)
@@ -386,11 +385,7 @@ class ConsistencyTestInfra(object):
             model_date=model_date,
             date_type=date_type
         )
-        benchmark_path_data_artifact = DataArtifact(benchmark_path, required_size=10, required_marker=True)
-        if not benchmark_mode:
-            # this is a regular run, not a benchmark run so we need to read the current benchmark data and
-            # compare with current test result
-            benchmark_path_data_artifact.assert_input_validity(self.ti)
+        benchmark_path_data_artifact = InputDataArtifact(benchmark_path, required_size=10, required_marker=True)
 
         # path for the model copy to save inside the test output
         model_for_test_base_path = ConsistencyPaths.gen_base_output_path(
@@ -401,6 +396,8 @@ class ConsistencyTestInfra(object):
             date_type=date_type
         )
 
+        model_for_test_base_da = OutputDataArtifact(self.ti, model_for_test_base_path, required_marker=False)
+
         country_result_base_path = ConsistencyPaths.gen_base_output_path(
             base_dir=self.ti.calc_dir,
             name=test_name,
@@ -409,6 +406,8 @@ class ConsistencyTestInfra(object):
             date_type=date_type
         )
 
+        country_result_base_da = OutputDataArtifact(self.ti, country_result_base_path, required_marker=False)
+
         total_results_path = ConsistencyPaths.gen_output_path(
             base_dir=self.ti.calc_dir,
             name=test_name,
@@ -416,6 +415,8 @@ class ConsistencyTestInfra(object):
             path_type=ConsistencyOutputType.Total,
             date_type=date_type
         )
+
+        total_results_da = OutputDataArtifact(self.ti, total_results_path, required_marker=False)
 
         # benchmark paths clarification:
         # If this is not a benchmark mode run (meaning - a regular consistency test) then the benchmark data should be
@@ -429,9 +430,9 @@ class ConsistencyTestInfra(object):
             countries_list=countries_list,
             email_to=email_to,
             base_model_path=base_model_path,
-            model_for_test_base_path=model_for_test_base_path,
-            country_result_base_path=country_result_base_path,
-            total_results_path=total_results_path if not benchmark_mode else benchmark_path,
+            model_for_test_base_path=model_for_test_base_da.resolved_path,
+            country_result_base_path=country_result_base_da.resolved_path,
+            total_results_path=total_results_da.resolved_path if not benchmark_mode else benchmark_path,
             benchmark_path=benchmark_path_data_artifact.resolved_path if not benchmark_mode else None,
             cp_threshold=cp_threshold,
             std_cp=std_cp,
