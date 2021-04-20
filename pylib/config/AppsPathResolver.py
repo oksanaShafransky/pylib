@@ -373,6 +373,10 @@ class AppsPathResolver(object):
                                              'marker': False,
                                              'path_type': "daily"},
 
+            'grouping_1009_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1009", 'size': 700 * MB,
+                                             'marker': True,
+                                             'path_type': "daily"},
+
             'grouping_1009_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1009", 'size': 700 * MB,
                                              'marker': True,
                                              'path_type': "daily"},
@@ -742,6 +746,10 @@ class AppsPathResolver(object):
     def get_grouping_1008_report_parquet_upsolver(self, in_or_out, path_prefix=None, path_suffix="is_valid=true"):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1008_report_parquet_upsolver'], path_suffix, in_or_out)
+
+    def get_grouping_1009_report_parquet_upsolver(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['grouping_1009_report_parquet_upsolver'], path_suffix, in_or_out)
 
     def get_grouping_1009_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
