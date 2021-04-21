@@ -385,7 +385,7 @@ class ConsistencyTestInfra(object):
             model_date=model_date,
             date_type=date_type
         )
-        benchmark_path_data_artifact = InputDataArtifact(benchmark_path, required_size=10, required_marker=True)
+        benchmark_path_data_artifact = InputDataArtifact(self.ti, benchmark_path, required_size=10, required_marker=True)
 
         # path for the model copy to save inside the test output
         model_for_test_base_path = ConsistencyPaths.gen_base_output_path(
