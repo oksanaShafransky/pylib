@@ -59,10 +59,11 @@ def validate_records_per_region(table_name, columns=None, minimum_regions_count=
 
     if not columns:
         logger.info("checking any column-family")
-        rows = scan_hbase_table(table_name=table_name, cluster_name=cluster_name, limit=min_rows)
-        if len(rows) < min_rows:
-            logger.info("table: %s, to few keys (%d < %d)" % (table_name, len(rows), min_rows))
-            return False
+        if min_rows > 0:
+            rows = scan_hbase_table(table_name=table_name, cluster_name=cluster_name, limit=min_rows)
+            if len(rows) < min_rows:
+                logger.info("table: %s, to few keys (%d < %d)" % (table_name, len(rows), min_rows))
+                return False
         if min_rows_per_region:
             for r_index, region in enumerate(regions):
                 logger.info("checking region: %s " % region)
@@ -79,10 +80,11 @@ def validate_records_per_region(table_name, columns=None, minimum_regions_count=
     else:
         for column in columns:
             logger.info("checking column-family: %s " % column)
-            rows = scan_hbase_table(table_name=table_name, cluster_name=cluster_name, columns=[column], limit=min_rows)
-            if len(rows) < min_rows:
-                logger.info("table: %s, column: %s, to few keys (%d < %d)" % (table_name, column, len(rows), min_rows))
-                return False
+            if min_rows > 0:
+                rows = scan_hbase_table(table_name=table_name, cluster_name=cluster_name, columns=[column], limit=min_rows)
+                if len(rows) < min_rows:
+                    logger.info("table: %s, column: %s, to few keys (%d < %d)" % (table_name, column, len(rows), min_rows))
+                    return False
             if min_rows_per_region:
                 for r_index, region in enumerate(regions):
                     logger.info("checking region: %s " % region)
