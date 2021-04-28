@@ -1,6 +1,5 @@
 from pylib.tasks.input_data_artifact import InputDataArtifact, InputRangedDataArtifact
 from pylib.tasks.output_data_artifact import OutputDataArtifact
-from enum import Enum
 
 GB = 1024 ** 3
 MB = 1024 ** 2
@@ -142,7 +141,7 @@ class AppsPathResolver(object):
                              'marker': True, 'path_type': "daily"},
 
             'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
-                                    'size': 6 * GB,
+                                    'size': 5.5 * GB,
                                     'marker': True, 'path_type': "daily"},
 
             'sqs_calc':{'main_path': "daily/dau/pre-estimate/sqs-calc-weights",
