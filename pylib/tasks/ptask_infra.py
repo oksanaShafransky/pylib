@@ -990,6 +990,7 @@ class ContextualizedTasksInfra(object):
                       repositories=None,
                       spark_configs=None,
                       named_spark_args=None,
+                      master='yarn-cluster',
                       py_files=None,
                       determine_partitions_by_output=False,
                       managed_output_dirs=None,
@@ -1013,7 +1014,7 @@ class ContextualizedTasksInfra(object):
 
         command = 'cd {execution_dir}; {spark_submit_script}' \
                   ' --name "{app_name}"' \
-                  ' --master yarn-cluster' \
+                  ' --master {master}' \
                   ' --deploy-mode cluster' \
                   ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
                   ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
@@ -1021,6 +1022,7 @@ class ContextualizedTasksInfra(object):
                   ' --repositories {repos}' \
             .format(
                     execution_dir=self.execution_dir,
+                    master=master,
                     spark_submit_script=spark_submit_script,
                     app_name=app_name,
                     snowflake_env=os.environ.get('SNOWFLAKE_ENV'),
@@ -1153,6 +1155,7 @@ class ContextualizedTasksInfra(object):
                      app_name,
                      queue,
                      command_params,
+                     master=None,
                      jars=None,
                      files=None,
                      packages=None,
@@ -1207,6 +1210,7 @@ class ContextualizedTasksInfra(object):
                                   jars=jars,
                                   files=files,
                                   packages=packages,
+                                  master=master,
                                   repositories=repositories,
                                   spark_configs=spark_configs,
                                   named_spark_args=named_spark_args,
