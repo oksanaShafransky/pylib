@@ -978,7 +978,7 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.days_in_range(end_date, mode_type)
 
     def get_sw_repos(self):
-        # Similarweb default repositories
+        # Similarweb default  repositories
         return ["https://nexus.similarweb.io/repository/similar-bigdata/"]
 
     def _spark_submit(self,
