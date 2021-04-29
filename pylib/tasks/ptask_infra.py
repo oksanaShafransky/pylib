@@ -994,7 +994,7 @@ class ContextualizedTasksInfra(object):
                       repositories=None,
                       spark_configs=None,
                       named_spark_args=None,
-                      master='yarn-cluster',
+                      master=None,
                       py_files=None,
                       determine_partitions_by_output=False,
                       managed_output_dirs=None,
@@ -1015,6 +1015,9 @@ class ContextualizedTasksInfra(object):
             additional_configs += self._set_python_env(python_env, env_path) if env_path else self._set_python_env(python_env)
 
         final_repositories = (repositories if repositories else []) + self.get_sw_repos()
+
+        if master is None:
+            master = 'yarn-cluster'
 
         command = 'cd {execution_dir}; {spark_submit_script}' \
                   ' --name "{app_name}"' \
