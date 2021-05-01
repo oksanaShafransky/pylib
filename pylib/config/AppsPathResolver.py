@@ -140,6 +140,10 @@ class AppsPathResolver(object):
                              'size': 1 * GB,
                              'marker': True, 'path_type': "daily"},
 
+            'dau_for_ptft': {'main_path': "daily/dau/pre-estimate/dau-for-ptft",
+                                    'size': 1 * MB, #TODO Fix size
+                                    'marker': True, 'path_type': "daily"},
+
             'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
                                     'size': 5.5 * GB,
                                     'marker': True, 'path_type': "daily"},
@@ -1051,6 +1055,10 @@ class AppsPathResolver(object):
     def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_sqs_preliminary'], path_suffix, in_or_out)
+
+    def get_dau_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_for_ptft'], path_suffix, in_or_out)
 
     def get_sqs_calc(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
