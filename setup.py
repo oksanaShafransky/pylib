@@ -24,10 +24,6 @@ setup(
         'numpy==1.12.0'
     ],
     setup_requires=[
-        # todo: understand what this does
-        # 'setuptools-scm==5.0.2',
-        #todo: restore pytest runner
-        # 'pytest-runner==5.2',
         'wheel==0.29.0',
     ],
     tests_require=[
