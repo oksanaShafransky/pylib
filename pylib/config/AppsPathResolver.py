@@ -153,7 +153,7 @@ class AppsPathResolver(object):
                         'marker': True, 'path_type': "daily"},
 
             'dau_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
-                         'size': 490 * MB,
+                         'size': 200 * MB,
                          'marker': True, 'path_type': "daily"},
 
             'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
