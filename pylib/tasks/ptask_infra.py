@@ -41,6 +41,7 @@ from pylib.hbase.hbase_utils import validate_records_per_region
 from pylib.aws.data_checks import is_s3_folder_big_enough, validate_success, get_s3_folder_size
 from pylib.aws.s3 import s3_connection
 from pylib.config.SnowflakeConfig import SnowflakeConfig
+from os import environ
 
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
@@ -1016,8 +1017,16 @@ class ContextualizedTasksInfra(object):
 
         final_repositories = (repositories if repositories else []) + self.get_sw_repos()
 
-        if master is None:
-            master = 'yarn-cluster'
+        if environ['EMR_VERSION'] == '6':  #TODO: consider on any EMR stop using spark2-submit
+            if master is None:
+                master = 'yarn'
+            if spark_submit_script is None:
+                spark_submit_script = 'spark-submit'
+        else:
+            if master is None:
+                master = 'yarn-cluster'
+            if spark_submit_script is None:
+                spark_submit_script = 'spark2-submit'
 
         command = 'cd {execution_dir}; {spark_submit_script}' \
                   ' --name "{app_name}"' \
@@ -1077,7 +1086,7 @@ class ContextualizedTasksInfra(object):
                        named_spark_args=None,
                        determine_partitions_by_output=False,
                        managed_output_dirs=None,
-                       spark_submit_script='spark2-submit',
+                       spark_submit_script=None,
                        py_files=None,
                        python_env=None,
                        env_path=None
@@ -1171,7 +1180,7 @@ class ContextualizedTasksInfra(object):
                      named_spark_args=None,
                      determine_partitions_by_output=None,
                      managed_output_dirs=None,
-                     spark_submit_script='spark2-submit'
+                     spark_submit_script=None
                      ):
         """
         Run a spark job. The spark-submit script is executed in the execution
