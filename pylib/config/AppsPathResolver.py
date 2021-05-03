@@ -157,7 +157,7 @@ class AppsPathResolver(object):
                          'marker': True, 'path_type': "daily"},
 
             'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
-                             'size': 200 * MB,
+                             'size': 100 * MB,
                              'marker': True, 'path_type': "daily"},
 
             'monitoring_dau_window': {'main_path': "daily/dau/monitoring/window",
