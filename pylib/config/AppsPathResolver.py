@@ -53,16 +53,18 @@ class AppsPathResolver(object):
             else:
                 raise Exception("AppsPathResolver: unknown path type.")
 
-        def get_data_artifact(self, date_suffix=None):
+        def get_data_artifact(self, date_suffix=None, **kwargs):
             date_suffix = date_suffix if date_suffix else self.__get_date_suffix_by_type()
             if self.in_or_out == 'in':
                 return InputDataArtifact(self.ti, path_join(self.full_base_path, date_suffix, self.path_suffix),
                                          required_size=self.required_size,
-                                         required_marker=self.required_marker)
+                                         required_marker=self.required_marker,
+                                         **kwargs)
             else:
                 return OutputDataArtifact(self.ti, path_join(self.full_base_path, date_suffix, self.path_suffix),
                                           required_size=self.required_size,
-                                          required_marker=self.required_marker)
+                                          required_marker=self.required_marker,
+                                          **kwargs)
 
         def get_ranged_data_artifact(self, dates):
             if self.in_or_out == 'out':
