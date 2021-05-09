@@ -461,7 +461,7 @@ class ContextualizedTasksInfra(object):
                     sys.stdout.write("Dry Run: would delete output folder: %s\n" % dir)
 
     def is_valid_input_exists(self, directories, min_size_bytes=0, validate_marker=False):
-        self.log_lineage_hdfs(directories, 'input')
+        self.log_lineage_hdfs(directories=directories, direction='input')
         return self.__is_hdfs_collection_valid(directories, min_size_bytes, validate_marker)
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):

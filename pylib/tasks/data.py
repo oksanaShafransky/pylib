@@ -130,7 +130,7 @@ class DataArtifact(object):
 
         for reporter in reporters:
             # TODO decide how to treat the distinction of data found on hdfs/s3
-            reporter.log_lineage_hdfs('input', [self.raw_path])
+            reporter.log_lineage_hdfs(direction='input', directories=[self.raw_path])
 
         resolved_path = self.resolved_path
         if not effective_size >= self.min_required_size:
