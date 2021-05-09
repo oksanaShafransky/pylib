@@ -1017,7 +1017,7 @@ class ContextualizedTasksInfra(object):
 
         final_repositories = (repositories if repositories else []) + self.get_sw_repos()
 
-        if environ['EMR_VERSION'] == '6':  #TODO: consider on any EMR stop using spark2-submit
+        if environ.get('EMR_VERSION') == '6':  #TODO: consider on any EMR stop using spark2-submit
             if master is None:
                 master = 'yarn'
             if spark_submit_script is None:
