@@ -276,7 +276,7 @@ class AppsPathResolver(object):
 
             'reach_estimation': {
                 'main_path': "daily/downloads/installed-apps/estimation/reach/estkey=AppCountryKey",
-                'size': 700 * MB,
+                'size': 600 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_downloads_fetch': {
