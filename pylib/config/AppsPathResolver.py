@@ -116,11 +116,11 @@ class AppsPathResolver(object):
                                                          'size': 5.8 * GB,
                                                          'marker': True, 'path_type': "daily"},
 
-            'copy_downloads_app_country_country_source_agg': {'main_path': "daily/copy/downloads/aggregations/aggKey=AppCountryCountrySourceKey",
+            'copy_downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/copied/aggKey=AppCountryCountrySourceKey",
                                                               'size': 5.8 * GB,
                                                               'marker': True, 'path_type': "daily"},
 
-            'calc_downloads_app_country_country_source_agg': {'main_path': "daily/calc/downloads/aggregations/aggKey=AppCountryCountrySourceKey",
+            'calc_downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/new_calc/aggKey=AppCountryCountrySourceKey",
                                                          'size': 5.8 * GB,
                                                          'marker': True, 'path_type': "daily"},
 
@@ -129,11 +129,11 @@ class AppsPathResolver(object):
                                                     'size': 60 * MB,
                                                     'marker': True, 'path_type': "daily"},
 
-            'copy_downloads_app_country_delta_key_agg': {'main_path': "daily/copy/downloads/aggregations/aggKey=AppCountryDeltaKey",
+            'copy_downloads_app_country_delta_key_agg': {'main_path': "/daily/downloads/aggregations/copied/aggKey=AppCountryDeltaKey",
                                                     'size': 60 * MB,
                                                     'marker': True, 'path_type': "daily"},
 
-            'calc_downloads_app_country_delta_key_agg': {'main_path': "daily/calc/downloads/aggregations/aggKey=AppCountryDeltaKey",
+            'calc_downloads_app_country_delta_key_agg': {'main_path': "daily/downloads/aggregations/new_calc/aggKey=AppCountryDeltaKey/",
                                                     'size': 60 * MB,
                                                     'marker': True, 'path_type': "daily"},
 
@@ -144,12 +144,12 @@ class AppsPathResolver(object):
                 'marker': True, 'path_type': "daily"},
 
             'copy_downloads_country_delta_key_agg': {
-                'main_path': "daily/copy/downloads/aggregations/aggKey=CountryDeltaKey",
+                'main_path': "daily/downloads/aggregations/copied/aggKey=CountryDeltaKey",
                 'size': 85 * KB,
                 'marker': True, 'path_type': "daily"},
 
             'calc_downloads_country_delta_key_agg': {
-                'main_path': "daily/calc/downloads/aggregations/aggKey=CountryDeltaKey",
+                'main_path': "daily/downloads/aggregations/new_calc/aggKey=CountryDeltaKey",
                 'size': 85 * KB,
                 'marker': True, 'path_type': "daily"},
 
@@ -172,11 +172,11 @@ class AppsPathResolver(object):
                                            'marker': True, 'path_type': "daily"},
 
 
-            'copy_dau_app_country_source_agg': {'main_path': "daily/copy/dau/aggregations/aggKey=AppCountrySourceKey",
+            'copy_dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/copied/aggKey=AppCountrySourceKey",
                                                 'size': 600 * MB,
                                                 'marker': True, 'path_type': "daily"},
 
-            'calc_dau_app_country_source_agg': {'main_path': "daily/calc/dau/aggregations/aggKey=AppCountrySourceKey",
+            'calc_dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceKey",
                                                 'size': 600 * MB,
                                                 'marker': True, 'path_type': "daily"},
 
@@ -184,11 +184,11 @@ class AppsPathResolver(object):
                                        'size': 10 * KB,
                                        'marker': True, 'path_type': "daily"},
 
-            'copy_dau_country_source_agg': {'main_path': "daily/copy/dau/aggregations/aggKey=CountrySourceKey",
+            'copy_dau_country_source_agg': {'main_path': "daily/dau/aggregations/copied/aggKey=CountrySourceKey",
                                             'size': 80 * KB,
                                             'marker': True, 'path_type': "daily"},
 
-            'calc_dau_country_source_agg': {'main_path': "daily/calc/dau/aggregations/aggKey=CountrySourceKey",
+            'calc_dau_country_source_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=CountrySourceKey",
                                             'size': 80 * KB,
                                             'marker': True, 'path_type': "daily"},
 
