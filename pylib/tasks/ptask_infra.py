@@ -41,6 +41,7 @@ from pylib.hbase.hbase_utils import validate_records_per_region
 from pylib.aws.data_checks import is_s3_folder_big_enough, validate_success, get_s3_folder_size
 from pylib.aws.s3 import s3_connection
 from pylib.config.SnowflakeConfig import SnowflakeConfig
+from os import environ
 
 logger = logging.getLogger('ptask')
 logger.addHandler(logging.StreamHandler())
@@ -232,8 +233,8 @@ class TasksInfra(object):
 
     SMTP_SERVER = 'email-smtp.us-east-1.amazonaws.com'
     SMTP_PORT = 587
-    SMTP_USER = 'AKIAJTAT2USDRQ5Y5QHA'
-    SMTP_PASS = 'AubJwLhz8uhPfBF4/Kz7KI9HezfMMvi7hWuqurUZV5lr'
+    SMTP_USER = 'AKIA4GKBI5ERSCW6HRPG'
+    SMTP_PASS = 'BH+GoIHbV+/qBdV7ARCFbDLQOwrNcyz0cJShL4221m5O'
 
 
     @staticmethod
@@ -461,7 +462,7 @@ class ContextualizedTasksInfra(object):
                     sys.stdout.write("Dry Run: would delete output folder: %s\n" % dir)
 
     def is_valid_input_exists(self, directories, min_size_bytes=0, validate_marker=False):
-        self.log_lineage_hdfs(directories, 'input')
+        self.log_lineage_hdfs(directories=directories, direction='input')
         return self.__is_hdfs_collection_valid(directories, min_size_bytes, validate_marker)
 
     def __compose_python_runner_command(self, python_executable, command_params, *positional):
@@ -574,8 +575,8 @@ class ContextualizedTasksInfra(object):
         else:
             return name + self.table_suffix
 
-    def assert_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
-                                 cluster_name=None, direction=None):
+    def assert_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=None,
+                                 min_rows=10000, cluster_name=None, direction=None):
         if self.dry_run:
             log_message = "Dry Run: would have checked that table '%s' has %d regions and %d keys per region" % (
                 table_name, minimum_regions_count, rows_per_region)
@@ -583,23 +584,27 @@ class ContextualizedTasksInfra(object):
             log_message += '\n'
             sys.stdout.write(log_message)
         else:
-            assert validate_records_per_region(table_name, columns, minimum_regions_count, rows_per_region,
-                                               cluster_name), \
+            assert validate_records_per_region(table_name=table_name,
+                                               columns=columns,
+                                               minimum_regions_count=minimum_regions_count,
+                                               min_rows_per_region=rows_per_region,
+                                               min_rows=min_rows,
+                                               cluster_name=cluster_name),\
                 'hbase table content is not valid, table name: %s' % table_name
             if direction:
                 self.log_linage_hbase(direction=direction, table_name=table_name, column_families=columns)
 
-    def assert_output_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
-                                        cluster_name=None):
+    def assert_output_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=None,
+                                        min_rows=10000, cluster_name=None):
         self.assert_hbase_table_valid(table_name=table_name, columns=columns,
                                       minimum_regions_count=minimum_regions_count, rows_per_region=rows_per_region,
-                                      cluster_name=cluster_name, direction='output')
+                                      min_rows=min_rows, cluster_name=cluster_name, direction='output')
 
-    def assert_input_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=50,
-                                       cluster_name=None):
+    def assert_input_hbase_table_valid(self, table_name, columns=None, minimum_regions_count=30, rows_per_region=None,
+                                       min_rows=10000, cluster_name=None):
         self.assert_hbase_table_valid(table_name=table_name, columns=columns,
                                       minimum_regions_count=minimum_regions_count, rows_per_region=rows_per_region,
-                                      cluster_name=cluster_name, direction='input')
+                                      min_rows=min_rows, cluster_name=cluster_name, direction='input')
 
     def assert_hbase_snapshot_exists(self, snapshot_name, hbase_root='/hbase', name_node=None):
         snapshot_params = {'snapshot_name': snapshot_name, 'hbase_root': hbase_root}
@@ -974,7 +979,7 @@ class ContextualizedTasksInfra(object):
         return TasksInfra.days_in_range(end_date, mode_type)
 
     def get_sw_repos(self):
-        # Similarweb default repositories
+        # Similarweb default  repositories
         return ["https://nexus.similarweb.io/repository/similar-bigdata/"]
 
     def _spark_submit(self,
@@ -990,6 +995,7 @@ class ContextualizedTasksInfra(object):
                       repositories=None,
                       spark_configs=None,
                       named_spark_args=None,
+                      master=None,
                       py_files=None,
                       determine_partitions_by_output=False,
                       managed_output_dirs=None,
@@ -1011,9 +1017,20 @@ class ContextualizedTasksInfra(object):
 
         final_repositories = (repositories if repositories else []) + self.get_sw_repos()
 
+        if environ.get('EMR_VERSION') == '6':  #TODO: consider on any EMR stop using spark2-submit
+            if master is None:
+                master = 'yarn'
+            if spark_submit_script is None:
+                spark_submit_script = 'spark-submit'
+        else:
+            if master is None:
+                master = 'yarn-cluster'
+            if spark_submit_script is None:
+                spark_submit_script = 'spark2-submit'
+
         command = 'cd {execution_dir}; {spark_submit_script}' \
                   ' --name "{app_name}"' \
-                  ' --master yarn-cluster' \
+                  ' --master {master}' \
                   ' --deploy-mode cluster' \
                   ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
                   ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
@@ -1021,6 +1038,7 @@ class ContextualizedTasksInfra(object):
                   ' --repositories {repos}' \
             .format(
                     execution_dir=self.execution_dir,
+                    master=master,
                     spark_submit_script=spark_submit_script,
                     app_name=app_name,
                     snowflake_env=os.environ.get('SNOWFLAKE_ENV'),
@@ -1068,7 +1086,7 @@ class ContextualizedTasksInfra(object):
                        named_spark_args=None,
                        determine_partitions_by_output=False,
                        managed_output_dirs=None,
-                       spark_submit_script='spark2-submit',
+                       spark_submit_script=None,
                        py_files=None,
                        python_env=None,
                        env_path=None
@@ -1153,6 +1171,7 @@ class ContextualizedTasksInfra(object):
                      app_name,
                      queue,
                      command_params,
+                     master=None,
                      jars=None,
                      files=None,
                      packages=None,
@@ -1161,7 +1180,7 @@ class ContextualizedTasksInfra(object):
                      named_spark_args=None,
                      determine_partitions_by_output=None,
                      managed_output_dirs=None,
-                     spark_submit_script='spark2-submit'
+                     spark_submit_script=None
                      ):
         """
         Run a spark job. The spark-submit script is executed in the execution
@@ -1207,6 +1226,7 @@ class ContextualizedTasksInfra(object):
                                   jars=jars,
                                   files=files,
                                   packages=packages,
+                                  master=master,
                                   repositories=repositories,
                                   spark_configs=spark_configs,
                                   named_spark_args=named_spark_args,

@@ -1,6 +1,5 @@
 from pylib.tasks.input_data_artifact import InputDataArtifact, InputRangedDataArtifact
 from pylib.tasks.output_data_artifact import OutputDataArtifact
-from enum import Enum
 
 GB = 1024 ** 3
 MB = 1024 ** 2
@@ -54,16 +53,18 @@ class AppsPathResolver(object):
             else:
                 raise Exception("AppsPathResolver: unknown path type.")
 
-        def get_data_artifact(self, date_suffix=None):
+        def get_data_artifact(self, date_suffix=None, **kwargs):
             date_suffix = date_suffix if date_suffix else self.__get_date_suffix_by_type()
             if self.in_or_out == 'in':
                 return InputDataArtifact(self.ti, path_join(self.full_base_path, date_suffix, self.path_suffix),
                                          required_size=self.required_size,
-                                         required_marker=self.required_marker)
+                                         required_marker=self.required_marker,
+                                         **kwargs)
             else:
                 return OutputDataArtifact(self.ti, path_join(self.full_base_path, date_suffix, self.path_suffix),
                                           required_size=self.required_size,
-                                          required_marker=self.required_marker)
+                                          required_marker=self.required_marker,
+                                          **kwargs)
 
         def get_ranged_data_artifact(self, dates):
             if self.in_or_out == 'out':
@@ -88,6 +89,9 @@ class AppsPathResolver(object):
     def __init__(self, ti):
         self.ti = ti
         self.apps_paths = {
+            'countries-conf': {'main_path': "daily/countries-conf",
+                                'size': 1,
+                                'marker': True, 'path_type': "daily"},
             #MAU
             'mau_feature2_agg': {
                 'main_path': "monthly/mau/aggregations/aggkey=Feature2Key",
@@ -103,17 +107,50 @@ class AppsPathResolver(object):
             'new_users_db': {'main_path': "daily/downloads/new_users/new_users_db", 'size': 1 * KB,
                              'marker': False, 'path_type': "base_path"},#We Can't track size here in a good way.
 
+
+            'downloads_sources_for_analyze': {'main_path': "daily/downloads/downloads-sources-for-analyze",
+                                              'size': 1 * KB,
+                                              'marker': True, 'path_type': "daily"},
+
             'downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryCountrySourceKey",
                                                          'size': 5.8 * GB,
                                                          'marker': True, 'path_type': "daily"},
 
+            'copy_downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/copied/aggKey=AppCountryCountrySourceKey",
+                                                              'size': 5.8 * GB,
+                                                              'marker': True, 'path_type': "daily"},
+
+            'calc_downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/new_calc/aggKey=AppCountryCountrySourceKey",
+                                                         'size': 5.8 * GB,
+                                                         'marker': True, 'path_type': "daily"},
+
+
             'downloads_app_country_delta_key_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryDeltaKey",
-                                                    'size': 1 * GB,
+                                                    'size': 60 * MB,
                                                     'marker': True, 'path_type': "daily"},
+
+            'copy_downloads_app_country_delta_key_agg': {'main_path': "/daily/downloads/aggregations/copied/aggKey=AppCountryDeltaKey",
+                                                    'size': 60 * MB,
+                                                    'marker': True, 'path_type': "daily"},
+
+            'calc_downloads_app_country_delta_key_agg': {'main_path': "daily/downloads/aggregations/new_calc/aggKey=AppCountryDeltaKey/",
+                                                    'size': 60 * MB,
+                                                    'marker': True, 'path_type': "daily"},
+
 
             'downloads_country_delta_key_agg': {
                 'main_path': "daily/downloads/aggregations/aggKey=CountryDeltaKey",
-                'size': 150 * KB,
+                'size': 85 * KB,
+                'marker': True, 'path_type': "daily"},
+
+            'copy_downloads_country_delta_key_agg': {
+                'main_path': "daily/downloads/aggregations/copied/aggKey=CountryDeltaKey",
+                'size': 85 * KB,
+                'marker': True, 'path_type': "daily"},
+
+            'calc_downloads_country_delta_key_agg': {
+                'main_path': "daily/downloads/aggregations/new_calc/aggKey=CountryDeltaKey",
+                'size': 85 * KB,
                 'marker': True, 'path_type': "daily"},
 
             'downloads_prior': {
@@ -122,6 +159,10 @@ class AppsPathResolver(object):
                 'marker': True, 'path_type': "daily"},
 
             #dau
+            'dau_sources_for_analyze': {'main_path': "daily/dau/dau-sources-for-analyze",
+                                        'size': 1 * KB,
+                                        'marker': True, 'path_type': "daily"},
+
             'dau_android_11_factor': {'main_path': "daily/dau/android_11_factor",
                                            'size': 10 * MB,
                                            'marker': True, 'path_type': "daily"},
@@ -129,32 +170,50 @@ class AppsPathResolver(object):
             'dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceKey",
                                            'size': 600 * MB,
                                            'marker': True, 'path_type': "daily"},
+
+
+            'copy_dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/copied/aggKey=AppCountrySourceKey",
+                                                'size': 600 * MB,
+                                                'marker': True, 'path_type': "daily"},
+
+            'calc_dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceKey",
+                                                'size': 600 * MB,
+                                                'marker': True, 'path_type': "daily"},
+
             'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
-                                       'size': 200 * KB,
+                                       'size': 10 * KB,
                                        'marker': True, 'path_type': "daily"},
 
-            'emr_dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
-                                       'size': 80 * KB,
-                                       'marker': True, 'path_type': "daily"},
+            'copy_dau_country_source_agg': {'main_path': "daily/dau/aggregations/copied/aggKey=CountrySourceKey",
+                                            'size': 80 * KB,
+                                            'marker': True, 'path_type': "daily"},
+
+            'calc_dau_country_source_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=CountrySourceKey",
+                                            'size': 80 * KB,
+                                            'marker': True, 'path_type': "daily"},
 
             'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
                              'size': 1 * GB,
                              'marker': True, 'path_type': "daily"},
 
-            'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
-                                    'size': 6 * GB,
+            'dau_for_ptft': {'main_path': "daily/dau/pre-estimate/dau-for-ptft",
+                                    'size': 1 * MB, #TODO Fix size
                                     'marker': True, 'path_type': "daily"},
 
-            'sqs_calc':{'main_path': "daily/dau/pre-estimate/sqs-calc-weights",
-                        'size': 1.3 * GB,
+            'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
+                                    'size': 200 * MB,
+                                    'marker': True, 'path_type': "daily"},
+
+            'sqs_calc': {'main_path': "daily/dau/pre-estimate/sqs-calc-weights",
+                        'size': 250 * MB,
                         'marker': True, 'path_type': "daily"},
 
-            'dau_prior':{'main_path': "daily/dau/pre-estimate/engagement-prior",
-                         'size': 490 * MB,
+            'dau_prior': {'main_path': "daily/dau/pre-estimate/engagement-prior",
+                         'size': 200 * MB,
                          'marker': True, 'path_type': "daily"},
 
             'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
-                             'size': 200 * MB,
+                             'size': 100 * MB,
                              'marker': True, 'path_type': "daily"},
 
             'monitoring_dau_window': {'main_path': "daily/dau/monitoring/window",
@@ -217,7 +276,7 @@ class AppsPathResolver(object):
 
             'reach_estimation': {
                 'main_path': "daily/downloads/installed-apps/estimation/reach/estkey=AppCountryKey",
-                'size': 700 * MB,
+                'size': 600 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_downloads_fetch': {
@@ -1021,23 +1080,62 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['new_users_db'], path_suffix, in_or_out)
 
+    def get_downloads_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['downloads_sources_for_analyze'], path_suffix, in_or_out)
+
     def get_downloads_app_country_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_app_country_country_source_agg'], path_suffix, in_or_out)
+
+    def get_downloads_copy_app_country_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                                 self.apps_paths['copy_downloads_app_country_country_source_agg'], path_suffix, in_or_out)
+
+    def get_downloads_calc_app_country_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['calc_downloads_app_country_country_source_agg'], path_suffix, in_or_out)
+
 
     def get_downloads_app_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_app_country_delta_key_agg'], path_suffix, in_or_out)
 
+    def get_downloads_copy_app_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['copy_downloads_app_country_delta_key_agg'], path_suffix, in_or_out)
+
+    def get_downloads_calc_app_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['calc_downloads_app_country_delta_key_agg'], path_suffix, in_or_out)
+
+
     def get_downloads_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_country_delta_key_agg'], path_suffix, in_or_out)
+
+    def get_downloads_copy_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['copy_downloads_country_delta_key_agg'], path_suffix, in_or_out)
+
+    def get_downloads_calc_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['calc_downloads_country_delta_key_agg'], path_suffix, in_or_out)
+
 
     def get_downloads_prior(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_prior'], path_suffix, in_or_out)
 
+
+    def get_countries_conf(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['countries-conf'], path_suffix, in_or_out)
     #dau
+    def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_sources_for_analyze'], path_suffix, in_or_out)
+
     def get_dau_android_11_factor(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_android_11_factor'], path_suffix, in_or_out)
@@ -1045,14 +1143,26 @@ class AppsPathResolver(object):
     def get_dau_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_app_country_source_agg'], path_suffix, in_or_out)
-    #TODO: remove when we are moving to EMR
+
+    def get_dau_copy_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['copy_dau_app_country_source_agg'], path_suffix, in_or_out)
+
+    def get_dau_calc_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['calc_dau_app_country_source_agg'], path_suffix, in_or_out)
+
     def get_dau_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_country_source_agg'], path_suffix, in_or_out)
 
-    def get_emr_dau_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_dau_calc_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['emr_dau_country_source_agg'], path_suffix, in_or_out)
+                                             self.apps_paths['calc_dau_country_source_agg'], path_suffix, in_or_out)
+
+    def get_dau_copy_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['copy_dau_country_source_agg'], path_suffix, in_or_out)
 
     def get_dau_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
@@ -1061,6 +1171,10 @@ class AppsPathResolver(object):
     def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_sqs_preliminary'], path_suffix, in_or_out)
+
+    def get_dau_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_for_ptft'], path_suffix, in_or_out)
 
     def get_sqs_calc(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
