@@ -200,6 +200,18 @@ class AppsPathResolver(object):
                                     'size': 1 * MB, #TODO Fix size
                                     'marker': True, 'path_type': "daily"},
 
+            'new_users_for_ptft': {'main_path': "daily/dau/pre-estimate/new-users-for-ptft",
+                                    'size': 1 * MB, #TODO Fix size
+                                    'marker': True, 'path_type': "daily"},
+
+            'reach_for_ptft': {'main_path': "daily/dau/pre-estimate/reach-for-ptft",
+                                    'size': 1 * MB, #TODO Fix size
+                                    'marker': True, 'path_type': "daily"},
+
+            'installs_for_ptft': {'main_path': "daily/dau/pre-estimate/installs-for-ptft",
+                                    'size': 1 * MB, #TODO Fix size
+                                    'marker': True, 'path_type': "daily"},
+
             'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
                                     'size': 200 * MB,
                                     'marker': True, 'path_type': "daily"},
@@ -1175,6 +1187,18 @@ class AppsPathResolver(object):
     def get_dau_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_for_ptft'], path_suffix, in_or_out)
+
+    def get_reach_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['reach_for_ptft'], path_suffix, in_or_out)
+
+    def get_new_users_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['new_users_for_ptft'], path_suffix, in_or_out)
+
+    def get_installs_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['installs_for_ptft'], path_suffix, in_or_out)
 
     def get_sqs_calc(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
