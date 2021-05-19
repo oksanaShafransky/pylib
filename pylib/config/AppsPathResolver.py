@@ -155,7 +155,7 @@ class AppsPathResolver(object):
 
             'downloads_prior': {
                 'main_path': "daily/downloads/downloads-prior/aggKey=AppCountry",
-                'size': 900 * MB,
+                'size': 600 * MB,
                 'marker': True, 'path_type': "daily"},
 
             #dau
