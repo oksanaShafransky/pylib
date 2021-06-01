@@ -155,7 +155,7 @@ class AppsPathResolver(object):
 
             'downloads_prior': {
                 'main_path': "daily/downloads/downloads-prior/aggKey=AppCountry",
-                'size': 900 * MB,
+                'size': 600 * MB,
                 'marker': True, 'path_type': "daily"},
 
             #dau
@@ -177,7 +177,7 @@ class AppsPathResolver(object):
                                                 'marker': True, 'path_type': "daily"},
 
             'calc_dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceKey",
-                                                'size': 600 * MB,
+                                                'size': 540 * MB,
                                                 'marker': True, 'path_type': "daily"},
 
             'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
@@ -197,6 +197,18 @@ class AppsPathResolver(object):
                              'marker': True, 'path_type': "daily"},
 
             'dau_for_ptft': {'main_path': "daily/dau/pre-estimate/dau-for-ptft",
+                                    'size': 1 * MB, #TODO Fix size
+                                    'marker': True, 'path_type': "daily"},
+
+            'new_users_for_ptft': {'main_path': "daily/dau/pre-estimate/new-users-for-ptft",
+                                    'size': 1 * MB, #TODO Fix size
+                                    'marker': True, 'path_type': "daily"},
+
+            'reach_for_ptft': {'main_path': "daily/dau/pre-estimate/reach-for-ptft",
+                                    'size': 1 * MB, #TODO Fix size
+                                    'marker': True, 'path_type': "daily"},
+
+            'installs_for_ptft': {'main_path': "daily/dau/pre-estimate/installs-for-ptft",
                                     'size': 1 * MB, #TODO Fix size
                                     'marker': True, 'path_type': "daily"},
 
@@ -267,11 +279,11 @@ class AppsPathResolver(object):
                                            'marker': True, 'path_type': "daily"},#TODO Delete After 1.12.2020 release
 
             'new_user_alpha_estimation': {'main_path': "daily/downloads/new_users/estimation/app-downloads-alph/estkey=AppCountryKey",
-                                          'size': 350 * MB,
+                                          'size': 150 * MB,
                                           'marker': True, 'path_type': "daily"},
             'installs_alpha_estimation': {
                 'main_path': "daily/downloads/installs/estimation/app-downloads-alph/estkey=AppCountryKey",
-                'size': 350 * MB,
+                'size': 150 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'reach_estimation': {
@@ -291,7 +303,7 @@ class AppsPathResolver(object):
 
             'ww_store_download_panel_country_share_est': {
                 'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/estKey=AppCountryKey",
-                'size': 375 * MB,
+                'size': 120 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_download_app_delta': {
@@ -318,7 +330,7 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 15 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 11 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MB,
@@ -330,8 +342,8 @@ class AppsPathResolver(object):
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MB,
                                'marker': True, 'path_type': "daily"}, # TODO update real size
 
-            'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 100 * MB,
-                               'marker': True, 'path_type': "daily"}, # TODO update real size
+            'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 50 * MB,
+                               'marker': True, 'path_type': "daily"},
 
             'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 15 * MB,
                                'marker': True, 'path_type': "daily"},
@@ -1175,6 +1187,18 @@ class AppsPathResolver(object):
     def get_dau_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_for_ptft'], path_suffix, in_or_out)
+
+    def get_reach_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['reach_for_ptft'], path_suffix, in_or_out)
+
+    def get_new_users_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['new_users_for_ptft'], path_suffix, in_or_out)
+
+    def get_installs_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['installs_for_ptft'], path_suffix, in_or_out)
 
     def get_sqs_calc(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
