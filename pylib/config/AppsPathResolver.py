@@ -1184,6 +1184,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_join_agg'], path_suffix, in_or_out)
 
+    def get_dau_calc_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_calc_join_agg'], path_suffix, in_or_out)
+
     def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_sqs_preliminary'], path_suffix, in_or_out)
