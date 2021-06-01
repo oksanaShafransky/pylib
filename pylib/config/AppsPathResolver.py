@@ -361,7 +361,7 @@ class AppsPathResolver(object):
                                      'size': 1 * GB, 'marker': True, 'path_type': "daily"},
 
             'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfourR1008",
-                                    'size': 20 * MB, 'marker': True, 'path_type': "daily"},
+                                    'size': 18 * MB, 'marker': True, 'path_type': "daily"},
 
             'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 15 * GB,
                                       'marker': False, 'path_type': "daily"},
