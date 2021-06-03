@@ -92,6 +92,10 @@ class AppsPathResolver(object):
             'countries-conf': {'main_path': "daily/countries-conf",
                                 'size': 1,
                                 'marker': True, 'path_type': "daily"},
+            #APPS MATCHING
+            'sanitized-app-info': {'main_path': "apps-matching/sanitized",
+                                   'size': 1,
+                                   'marker': True, 'path_type': "daily"},
             #MAU
             'mau_feature2_agg': {
                 'main_path': "monthly/mau/aggregations/aggkey=Feature2Key",
@@ -1143,6 +1147,12 @@ class AppsPathResolver(object):
     def get_countries_conf(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['countries-conf'], path_suffix, in_or_out)
+
+    #apps matching
+    def get_sanitized_app_info(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['sanitized-app-info'], path_suffix, in_or_out)
+
     #dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
