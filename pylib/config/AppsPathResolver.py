@@ -103,6 +103,21 @@ class AppsPathResolver(object):
             'matching-learning-set': {'main_path': "apps-matching/ls",
                                       'size': 100 * MB,
                                       'marker': True, 'path_type': "daily"},
+            'matching-training-data': {'main_path': "apps-matching/train-data",
+                                      'size': 100 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-image-features': {'main_path': "apps-matching/image-features",
+                                      'size': 100 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-train-model': {'main_path': "apps-matching/train-model",
+                                      'size': 100 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-merge-predict': {'main_path': "apps-matching/merge-predict",
+                                     'size': 100 * MB,
+                                     'marker': True, 'path_type': "daily"},
+            'matching-tests': {'main_path': "apps-matching/tests",
+                                     'size': 100 * MB,
+                                     'marker': True, 'path_type': "daily"},
 
             #MAU
             'mau_feature2_agg': {
@@ -189,7 +204,7 @@ class AppsPathResolver(object):
                                                 'marker': True, 'path_type': "daily"},
 
             'calc_dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceKey",
-                                                'size': 540 * MB,
+                                                'size': 530 * MB,
                                                 'marker': True, 'path_type': "daily"},
 
             'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
@@ -1170,6 +1185,21 @@ class AppsPathResolver(object):
     def get_matching_learning_set(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-learning-set'], path_suffix, in_or_out)
+    def get_matching_training_data(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-training-data'], path_suffix, in_or_out)
+    def get_matching_image_features(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-image-features'], path_suffix, in_or_out)
+    def get_matching_train_model(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-train-model'], path_suffix, in_or_out)
+    def get_matching_merge_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-merge-predict'], path_suffix, in_or_out)
+    def get_matching_tests(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-tests'], path_suffix, in_or_out)
 
     #dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
