@@ -92,10 +92,18 @@ class AppsPathResolver(object):
             'countries-conf': {'main_path': "daily/countries-conf",
                                 'size': 1,
                                 'marker': True, 'path_type': "daily"},
+
             #APPS MATCHING
             'sanitized-app-info': {'main_path': "apps-matching/sanitized",
-                                   'size': 1,
+                                   'size': 1.3 * GB,
                                    'marker': True, 'path_type': "daily"},
+            'matching-candidates': {'main_path': "apps-matching/candidates",
+                                    'size': 20 * MB,
+                                    'marker': True, 'path_type': "daily"},
+            'matching-learning-set': {'main_path': "apps-matching/ls",
+                                      'size': 100 * MB,
+                                      'marker': True, 'path_type': "daily"},
+
             #MAU
             'mau_feature2_agg': {
                 'main_path': "monthly/mau/aggregations/aggkey=Feature2Key",
@@ -338,7 +346,7 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 11 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 10 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MB,
@@ -1156,6 +1164,12 @@ class AppsPathResolver(object):
     def get_sanitized_app_info(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['sanitized-app-info'], path_suffix, in_or_out)
+    def get_matching_candidates(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-candidates'], path_suffix, in_or_out)
+    def get_matching_learning_set(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-learning-set'], path_suffix, in_or_out)
 
     #dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
