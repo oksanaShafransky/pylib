@@ -92,6 +92,33 @@ class AppsPathResolver(object):
             'countries-conf': {'main_path': "daily/countries-conf",
                                 'size': 1,
                                 'marker': True, 'path_type': "daily"},
+
+            #APPS MATCHING
+            'sanitized-app-info': {'main_path': "apps-matching/sanitized",
+                                   'size': 800 * MB,
+                                   'marker': True, 'path_type': "daily"},
+            'matching-candidates': {'main_path': "apps-matching/candidates",
+                                    'size': 20 * MB,
+                                    'marker': True, 'path_type': "daily"},
+            'matching-learning-set': {'main_path': "apps-matching/ls",
+                                      'size': 100 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-training-data': {'main_path': "apps-matching/train-data",
+                                      'size': 100 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-image-features': {'main_path': "apps-matching/image-features",
+                                      'size': 100 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-train-model': {'main_path': "apps-matching/train-model",
+                                      'size': 100 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-merge-predict': {'main_path': "apps-matching/merge-predict",
+                                     'size': 100 * MB,
+                                     'marker': True, 'path_type': "daily"},
+            'matching-tests': {'main_path': "apps-matching/tests",
+                                     'size': 100 * MB,
+                                     'marker': True, 'path_type': "daily"},
+
             #MAU
             'mau_feature2_agg': {
                 'main_path': "monthly/mau/aggregations/aggkey=Feature2Key",
@@ -177,7 +204,7 @@ class AppsPathResolver(object):
                                                 'marker': True, 'path_type': "daily"},
 
             'calc_dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceKey",
-                                                'size': 550 * MB,
+                                                'size': 530 * MB,
                                                 'marker': True, 'path_type': "daily"},
 
             'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
@@ -193,6 +220,10 @@ class AppsPathResolver(object):
                                             'marker': True, 'path_type': "daily"},
 
             'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
+                             'size': 1 * GB,
+                             'marker': True, 'path_type': "daily"},
+
+            'dau_calc_join_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceJoinedKey",
                              'size': 1 * GB,
                              'marker': True, 'path_type': "daily"},
 
@@ -330,7 +361,7 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 12 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 10 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MB,
@@ -373,7 +404,7 @@ class AppsPathResolver(object):
                                      'size': 1 * GB, 'marker': True, 'path_type': "daily"},
 
             'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfourR1008",
-                                    'size': 20 * MB, 'marker': True, 'path_type': "daily"},
+                                    'size': 18 * MB, 'marker': True, 'path_type': "daily"},
 
             'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 15 * GB,
                                       'marker': False, 'path_type': "daily"},
@@ -1143,6 +1174,33 @@ class AppsPathResolver(object):
     def get_countries_conf(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['countries-conf'], path_suffix, in_or_out)
+
+    #apps matching
+    def get_sanitized_app_info(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['sanitized-app-info'], path_suffix, in_or_out)
+    def get_matching_candidates(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-candidates'], path_suffix, in_or_out)
+    def get_matching_learning_set(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-learning-set'], path_suffix, in_or_out)
+    def get_matching_training_data(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-training-data'], path_suffix, in_or_out)
+    def get_matching_image_features(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-image-features'], path_suffix, in_or_out)
+    def get_matching_train_model(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-train-model'], path_suffix, in_or_out)
+    def get_matching_merge_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-merge-predict'], path_suffix, in_or_out)
+    def get_matching_tests(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-tests'], path_suffix, in_or_out)
+
     #dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
@@ -1179,6 +1237,10 @@ class AppsPathResolver(object):
     def get_dau_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_join_agg'], path_suffix, in_or_out)
+
+    def get_dau_calc_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_calc_join_agg'], path_suffix, in_or_out)
 
     def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
