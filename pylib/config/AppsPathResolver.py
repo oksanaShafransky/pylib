@@ -95,7 +95,7 @@ class AppsPathResolver(object):
 
             #APPS MATCHING
             'sanitized-app-info': {'main_path': "apps-matching/sanitized",
-                                   'size': 1.3 * GB,
+                                   'size': 0.9 * GB,
                                    'marker': True, 'path_type': "daily"},
             'matching-candidates': {'main_path': "apps-matching/candidates",
                                     'size': 20 * MB,
