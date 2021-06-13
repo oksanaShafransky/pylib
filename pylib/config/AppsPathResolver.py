@@ -5,6 +5,7 @@ GB = 1024 ** 3
 MB = 1024 ** 2
 KB = 1024
 EMPTY_STRING = ""
+SCRAPING_BASE_DIR = "/similargroup/scraping"
 
 
 def path_join(path, *paths):
@@ -690,6 +691,11 @@ class AppsPathResolver(object):
             'ga': {'main_path': "ga/app-engagement/",
                    'size': 1 * KB, 'marker': True,
                    'path_type': "daily"},  # TODO fix
+
+            #SCRAPING
+            'app_info': {'main_path': "mobile/app-info",
+                                   'size': 15 * GB, 'marker': True,
+                                   'path_type': "daily"},
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -703,6 +709,11 @@ class AppsPathResolver(object):
     def __get_mobile_analytics_base(self, in_or_out, path_prefix):
         base_dir = self.__get_base_dir(in_or_out, path_prefix)
         return path_join(base_dir, "mobile-analytics")
+
+    def __get_scraping_base(self, path_prefix):
+        #Only similagroup/data dirs working with ti base and calc dir.
+        base_dir = SCRAPING_BASE_DIR
+        return base_dir if not path_prefix else path_join(path_prefix, base_dir)
 
     def __create_app_path_object(self, base_dir, path_details, *args, **kwargs):
         return AppsPathResolver.AppPath(self.ti, base_dir, path_details['main_path'], path_details['size'],
@@ -1314,3 +1325,11 @@ class AppsPathResolver(object):
     def get_monitoring_dau_anomalies(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring_dau_anomalies'], path_suffix, in_or_out)
+    #SCRAPING
+    def get_android_app_info(self, in_or_out, path_prefix=None, path_suffix="store=0"):
+        return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
+                                             self.apps_paths['app_info'], path_suffix, in_or_out)
+
+    def get_ios_app_info(self, in_or_out, path_prefix=None, path_suffix="store=1"):
+        return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
+                                             self.apps_paths['app_info'], path_suffix, in_or_out)
