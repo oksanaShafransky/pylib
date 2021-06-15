@@ -296,7 +296,7 @@ class AppsPathResolver(object):
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 100 * MB,
                                         'marker': True, 'path_type': "daily"},
 
-            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 15 * GB,
+            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 10 * GB,
                               'marker': True, 'path_type': "daily"},
 
             # lspool_daily is actually monthly data, and the job itself is responsible for the daily partition
