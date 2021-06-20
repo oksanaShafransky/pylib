@@ -333,6 +333,11 @@ class AppsPathResolver(object):
                 'size': 2 * KB,
                 'marker': True, 'path_type': "daily"},
 
+            'ww_store_download_panel_country_share_est_pre_factor': {
+                'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/pre-factor",
+                'size': 120 * MB,
+                'marker': True, 'path_type': "daily"},
+
             'ww_store_download_panel_country_share_est': {
                 'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/estKey=AppCountryKey",
                 'size': 120 * MB,
@@ -1036,6 +1041,10 @@ class AppsPathResolver(object):
     def get_ww_store_download_country_population(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ww_store_download_country_population'], path_suffix, in_or_out)
+
+    def get_ww_store_download_panel_country_share_est_pre_factor(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_store_download_panel_country_share_est_pre_factor'], path_suffix, in_or_out)
 
     def get_ww_store_download_panel_country_share_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
