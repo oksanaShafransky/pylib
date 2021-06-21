@@ -694,7 +694,7 @@ class AppsPathResolver(object):
                                           'path_type': "daily"},  # TODO fix
 
             'ga': {'main_path': "daily/apps-lspool",
-                   'size': 1 * KB, 'marker': True,
+                   'size': 1 * KB, 'marker': False,
                    'path_type': "daily"},  # TODO fix
 
             #SCRAPING
