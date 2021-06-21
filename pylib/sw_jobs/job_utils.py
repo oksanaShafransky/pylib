@@ -57,34 +57,31 @@ def yarn_tags_dict_to_str(yarn_tags):
 def extract_yarn_application_tags_from_env():
     user = os.environ['USER_NAME'] if 'USER_NAME' in os.environ else ''
     task_id = os.environ['TASK_ID'] if 'TASK_ID' in os.environ else None
+    yarn_tags = {}
 
-    if not task_id:
+    if task_id:
+        # generates a kill_tag that matches only jobs submitted by the same user - we may decide to change it
+        # Use base64 and not HexDigits because 128bits in Hex its 32 digits and in base64 its only 24 digits
+        kill_tag = base64.b64encode(hashlib.md5(user + task_id).digest())
+        yarn_tags["kill_tag"] = kill_tag
+        yarn_tags["task_id"] = task_id
+        if user == 'airflow':
+            # parse airflow's tags from TASK_ID
+            # TASK_ID = airflow.{DAG-ID}.{TASK-ID}.{EXECUTION-DATE}
+            airflow_task_info = task_id.split(".")
+            if len(airflow_task_info) == 4:
+                yarn_tags.update({
+                    "airflow_dag_id": airflow_task_info[1],
+                    "airflow_task_id": airflow_task_info[2],
+                    "airflow_execution_date": airflow_task_info[3],
+                })
+            else:
+                logger.warning("Cant parse airflow's tags from TASK_ID {task_id}".format(task_id=task_id))
+    else:
         logger.warning("yarn application should have a task-id ('TASK_ID' env var)")
-        return dict()
-    # generates a kill_tag that matches only jobs submitted by the same user - we may decide to change it
-    # Use base64 and not HexDigits because 128bits in Hex its 32 digits and in base64 its only 24 digits
-    kill_tag = base64.b64encode(hashlib.md5(user + task_id).digest())
-    yarn_tags = {
-        "kill_tag": kill_tag,
-        "task_id": task_id,
-    }
 
-    snowflake_env = os.environ.get("SNOWFLAKE_ENV", None)
-    if snowflake_env:
-        yarn_tags["snowflake_env"] = snowflake_env
-
-    if user == 'airflow':
-        # parse airflow's tags from TASK_ID
-        # TASK_ID = airflow.{DAG-ID}.{TASK-ID}.{EXECUTION-DATE}
-        airflow_task_info = task_id.split(".")
-        if len(airflow_task_info) == 4:
-            yarn_tags.update({
-                "airflow_dag_id": airflow_task_info[1],
-                "airflow_task_id": airflow_task_info[2],
-                "airflow_execution_date": airflow_task_info[3],
-            })
-        else:
-            logger.warning("Cant parse airflow's tags from TASK_ID {task_id}".format(task_id=task_id))
+    if os.environ.get("SNOWFLAKE_ENV", None):
+        yarn_tags["snowflake_env"] = os.environ.get("SNOWFLAKE_ENV")
 
     # JOBFLOW_ID and JOBFLOW_GROUP env vars are assigned by EMR gateway container during the 'init-container' script
     if os.environ.get("JOBFLOW_ID", None):
