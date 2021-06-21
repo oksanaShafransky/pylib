@@ -5,6 +5,7 @@ GB = 1024 ** 3
 MB = 1024 ** 2
 KB = 1024
 EMPTY_STRING = ""
+SCRAPING_BASE_DIR = "/similargroup/scraping"
 
 
 def path_join(path, *paths):
@@ -92,6 +93,33 @@ class AppsPathResolver(object):
             'countries-conf': {'main_path': "daily/countries-conf",
                                 'size': 1,
                                 'marker': True, 'path_type': "daily"},
+
+            #APPS MATCHING
+            'sanitized-app-info': {'main_path': "apps-matching/sanitized",
+                                   'size': 800 * MB,
+                                   'marker': True, 'path_type': "daily"},
+            'matching-candidates': {'main_path': "apps-matching/candidates",
+                                    'size': 20 * MB,
+                                    'marker': True, 'path_type': "daily"},
+            'matching-learning-set': {'main_path': "apps-matching/ls",
+                                      'size': 4 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-training-data': {'main_path': "apps-matching/train-data",
+                                      'size': 5 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-image-features': {'main_path': "apps-matching/image-features",
+                                      'size': 10 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-train-model': {'main_path': "apps-matching/train-model",
+                                      'size': 100 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'matching-merge-predict': {'main_path': "apps-matching/merge-predict",
+                                     'size': 100 * MB,
+                                     'marker': True, 'path_type': "daily"},
+            'matching-tests': {'main_path': "apps-matching/tests",
+                                     'size': 100 * MB,
+                                     'marker': True, 'path_type': "daily"},
+
             #MAU
             'mau_feature2_agg': {
                 'main_path': "monthly/mau/aggregations/aggkey=Feature2Key",
@@ -121,8 +149,8 @@ class AppsPathResolver(object):
                                                               'marker': True, 'path_type': "daily"},
 
             'calc_downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/new_calc/aggKey=AppCountryCountrySourceKey",
-                                                         'size': 5.8 * GB,
-                                                         'marker': True, 'path_type': "daily"},
+                                                              'size': 5.8 * GB,
+                                                              'marker': True, 'path_type': "daily"},
 
 
             'downloads_app_country_delta_key_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryDeltaKey",
@@ -155,7 +183,7 @@ class AppsPathResolver(object):
 
             'downloads_prior': {
                 'main_path': "daily/downloads/downloads-prior/aggKey=AppCountry",
-                'size': 900 * MB,
+                'size': 600 * MB,
                 'marker': True, 'path_type': "daily"},
 
             #dau
@@ -177,7 +205,7 @@ class AppsPathResolver(object):
                                                 'marker': True, 'path_type': "daily"},
 
             'calc_dau_app_country_source_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceKey",
-                                                'size': 550 * MB,
+                                                'size': 300 * MB,
                                                 'marker': True, 'path_type': "daily"},
 
             'dau_country_source_agg': {'main_path': "daily/dau/aggregations/aggKey=CountrySourceKey",
@@ -193,6 +221,10 @@ class AppsPathResolver(object):
                                             'marker': True, 'path_type': "daily"},
 
             'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
+                             'size': 1 * GB,
+                             'marker': True, 'path_type': "daily"},
+
+            'dau_calc_join_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceJoinedKey",
                              'size': 1 * GB,
                              'marker': True, 'path_type': "daily"},
 
@@ -264,7 +296,7 @@ class AppsPathResolver(object):
             'usage_patterns_estimate': {'main_path': "daily/estimate/usage-patterns", 'size': 100 * MB,
                                         'marker': True, 'path_type': "daily"},
 
-            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 16 * GB,
+            'apps_datapool': {'main_path': "daily/apps-datapool", 'size': 10 * GB,
                               'marker': True, 'path_type': "daily"},
 
             # lspool_daily is actually monthly data, and the job itself is responsible for the daily partition
@@ -279,11 +311,11 @@ class AppsPathResolver(object):
                                            'marker': True, 'path_type': "daily"},#TODO Delete After 1.12.2020 release
 
             'new_user_alpha_estimation': {'main_path': "daily/downloads/new_users/estimation/app-downloads-alph/estkey=AppCountryKey",
-                                          'size': 350 * MB,
+                                          'size': 150 * MB,
                                           'marker': True, 'path_type': "daily"},
             'installs_alpha_estimation': {
                 'main_path': "daily/downloads/installs/estimation/app-downloads-alph/estkey=AppCountryKey",
-                'size': 350 * MB,
+                'size': 150 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'reach_estimation': {
@@ -301,9 +333,14 @@ class AppsPathResolver(object):
                 'size': 2 * KB,
                 'marker': True, 'path_type': "daily"},
 
+            'ww_store_download_panel_country_share_est_pre_factor': {
+                'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/pre-factor",
+                'size': 120 * MB,
+                'marker': True, 'path_type': "daily"},
+
             'ww_store_download_panel_country_share_est': {
                 'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/estKey=AppCountryKey",
-                'size': 375 * MB,
+                'size': 120 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_download_app_delta': {
@@ -330,7 +367,7 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 15 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 9 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MB,
@@ -342,8 +379,8 @@ class AppsPathResolver(object):
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MB,
                                'marker': True, 'path_type': "daily"}, # TODO update real size
 
-            'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 100 * MB,
-                               'marker': True, 'path_type': "daily"}, # TODO update real size
+            'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 50 * MB,
+                               'marker': True, 'path_type': "daily"},
 
             'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 15 * MB,
                                'marker': True, 'path_type': "daily"},
@@ -373,7 +410,7 @@ class AppsPathResolver(object):
                                      'size': 1 * GB, 'marker': True, 'path_type': "daily"},
 
             'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfourR1008",
-                                    'size': 20 * MB, 'marker': True, 'path_type': "daily"},
+                                    'size': 18 * MB, 'marker': True, 'path_type': "daily"},
 
             'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 15 * GB,
                                       'marker': False, 'path_type': "daily"},
@@ -416,7 +453,7 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1001_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1001", 'size': 20 * GB,
+            'grouping_1001_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1001", 'size': 19 * GB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -659,6 +696,11 @@ class AppsPathResolver(object):
             'ga': {'main_path': "daily/apps-lspool",
                    'size': 1 * KB, 'marker': True,
                    'path_type': "daily"},  # TODO fix
+
+            #SCRAPING
+            'app_info': {'main_path': "mobile/app-info",
+                                   'size': 15 * GB, 'marker': True,
+                                   'path_type': "daily"},
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -672,6 +714,11 @@ class AppsPathResolver(object):
     def __get_mobile_analytics_base(self, in_or_out, path_prefix):
         base_dir = self.__get_base_dir(in_or_out, path_prefix)
         return path_join(base_dir, "mobile-analytics")
+
+    def __get_scraping_base(self, path_prefix):
+        #Only similagroup/data dirs working with ti base and calc dir.
+        base_dir = SCRAPING_BASE_DIR
+        return base_dir if not path_prefix else path_join(path_prefix, base_dir)
 
     def __create_app_path_object(self, base_dir, path_details, *args, **kwargs):
         return AppsPathResolver.AppPath(self.ti, base_dir, path_details['main_path'], path_details['size'],
@@ -995,6 +1042,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ww_store_download_country_population'], path_suffix, in_or_out)
 
+    def get_ww_store_download_panel_country_share_est_pre_factor(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_store_download_panel_country_share_est_pre_factor'], path_suffix, in_or_out)
+
     def get_ww_store_download_panel_country_share_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ww_store_download_panel_country_share_est'], path_suffix, in_or_out)
@@ -1143,6 +1194,33 @@ class AppsPathResolver(object):
     def get_countries_conf(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['countries-conf'], path_suffix, in_or_out)
+
+    #apps matching
+    def get_sanitized_app_info(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['sanitized-app-info'], path_suffix, in_or_out)
+    def get_matching_candidates(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-candidates'], path_suffix, in_or_out)
+    def get_matching_learning_set(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-learning-set'], path_suffix, in_or_out)
+    def get_matching_training_data(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-training-data'], path_suffix, in_or_out)
+    def get_matching_image_features(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-image-features'], path_suffix, in_or_out)
+    def get_matching_train_model(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-train-model'], path_suffix, in_or_out)
+    def get_matching_merge_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-merge-predict'], path_suffix, in_or_out)
+    def get_matching_tests(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-tests'], path_suffix, in_or_out)
+
     #dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
@@ -1179,6 +1257,10 @@ class AppsPathResolver(object):
     def get_dau_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_join_agg'], path_suffix, in_or_out)
+
+    def get_dau_calc_app_country_source_join_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_calc_join_agg'], path_suffix, in_or_out)
 
     def get_sqs_preliminary(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
@@ -1252,3 +1334,11 @@ class AppsPathResolver(object):
     def get_monitoring_dau_anomalies(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring_dau_anomalies'], path_suffix, in_or_out)
+    #SCRAPING
+    def get_android_app_info(self, in_or_out, path_prefix=None, path_suffix="store=0"):
+        return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
+                                             self.apps_paths['app_info'], path_suffix, in_or_out)
+
+    def get_ios_app_info(self, in_or_out, path_prefix=None, path_suffix="store=1"):
+        return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
+                                             self.apps_paths['app_info'], path_suffix, in_or_out)

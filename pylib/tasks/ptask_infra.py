@@ -644,6 +644,26 @@ class ContextualizedTasksInfra(object):
             split_path = split_path[-1]
         assert split_path.count('/') > 4, "can't delete programmatically folders this close to root. are you sure you intended to delete %s" % path
 
+    def create_dir_common_fs(self, path):
+        mkdir_cmd = 'hadoop fs {jvm_opts} -mkdir -p {target_path}'.format(
+            jvm_opts=TasksInfra.add_jvm_options("", self.hadoop_configs),
+            target_path=path)
+        if self.dry_run:
+            print('Would have created {}'.format(path))
+        else:
+            self.run_bash(mkdir_cmd)
+
+    def create_file_common_fs(self, path, text):
+        jvm_ops = " -D'fs.s3a.fast.upload=true' -D'fs.s3a.buffer.dir=/tmp' "
+        create_cmd = 'echo {text} | hadoop fs {jvm_opts} -put - {target_path}'.format(
+            jvm_opts=TasksInfra.add_jvm_options(jvm_ops, self.hadoop_configs),
+            target_path=path,
+            text=text)
+        if self.dry_run:
+            print('Would have created {} with text {}'.format(path, text))
+        else:
+            self.run_bash(create_cmd)
+
     def run_distcp(self, source, target, mappers=20, overwrite=True):
         if overwrite:
             # Delete dir - support both hdfs and s3.
@@ -1717,10 +1737,10 @@ class ContextualizedTasksInfra(object):
         return additional_configs
 
     @staticmethod
-    def _set_python_env(python_env, env_path='s3a://similargroup-research/deploy/envs'):
+    def _set_python_env(python_env, env_path='s3a://sw-dag-python-envs/production'):
         spark_configs = ''
-        spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.zip#{}"'.format(env_path, python_env, python_env, python_env)
-        spark_configs += ' --conf "spark.pyspark.python={}/{}/bin/python"'.format(python_env, python_env)
+        spark_configs += ' --conf "spark.yarn.dist.archives={}/{}/{}.tar.gz#{}"'.format(env_path, python_env, python_env, python_env)
+        spark_configs += ' --conf "spark.pyspark.python={}/bin/python"'.format(python_env)
         return spark_configs
 
     def set_hdfs_replication_factor(self, replication_factor):
