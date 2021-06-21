@@ -656,7 +656,7 @@ class AppsPathResolver(object):
                                           'size': 1 * KB, 'marker': True,
                                           'path_type': "daily"},  # TODO fix
 
-            'ga': {'main_path': "ga/app-engagement/",
+            'ga': {'main_path': "daily/apps-lspool",
                    'size': 1 * KB, 'marker': True,
                    'path_type': "daily"},  # TODO fix
         }
@@ -1238,7 +1238,7 @@ class AppsPathResolver(object):
     #dau
 
     def get_ga(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ga'], path_suffix, in_or_out)
 
     def get_monitoring_dau_window(self, in_or_out, path_prefix=None, path_suffix=None):
