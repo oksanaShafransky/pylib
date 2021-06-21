@@ -85,6 +85,13 @@ def extract_yarn_application_tags_from_env():
             })
         else:
             logger.warning("Cant parse airflow's tags from TASK_ID {task_id}".format(task_id=task_id))
+
+    # JOBFLOW_ID and JOBFLOW_GROUP env vars are assigned by EMR gateway container during the 'init-container' script
+    if os.environ.get("JOBFLOW_ID", None):
+        yarn_tags["jobflow-id"] = os.environ.get("JOBFLOW_ID")
+    if os.environ.get("JOBFLOW_GROUP", None):
+        yarn_tags["jobflow-group"] = os.environ.get("JOBFLOW_GROUP")
+
     # yarn will modify the characters to the lower-form - do it here to be explicit
     return {key.lower(): value.lower() for key, value in yarn_tags.items()}
 
