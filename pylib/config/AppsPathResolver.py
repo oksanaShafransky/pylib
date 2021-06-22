@@ -318,6 +318,10 @@ class AppsPathResolver(object):
                                           'size': 150 * MB,
                                           'marker': True, 'path_type': "daily"},
 
+            'new_user_learning_set': {'main_path': "daily/downloads/new_users/learning_set",
+                                          'size': 150 * MB,
+                                          'marker': True, 'path_type': "daily"},
+
             'installs_alpha_estimation': {
                 'main_path': "daily/downloads/installs/estimation/app-downloads-alph/estkey=AppCountryKey",
                 'size': 150 * MB,
@@ -1034,6 +1038,10 @@ class AppsPathResolver(object):
     def get_new_users_features(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['new_user_features'], path_suffix, in_or_out)
+
+    def get_new_users_learning_set(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['new_user_learning_set'], path_suffix, in_or_out)
 
     def get_installs_alpha_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
