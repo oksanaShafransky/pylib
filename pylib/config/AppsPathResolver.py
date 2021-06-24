@@ -236,7 +236,7 @@ class AppsPathResolver(object):
                                     'size': 1 * MB, #TODO Fix size
                                     'marker': True, 'path_type': "daily"},
 
-            'reach_for_ptft': {'main_path': "daily/v/pre-estimate/reach-for-ptft",
+            'reach_for_ptft': {'main_path': "daily/downloads/pre-estimate/reach-for-ptft",
                                     'size': 1 * MB, #TODO Fix size
                                     'marker': True, 'path_type': "daily"},
 
