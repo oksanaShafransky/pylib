@@ -232,15 +232,15 @@ class AppsPathResolver(object):
                                     'size': 1 * MB, #TODO Fix size
                                     'marker': True, 'path_type': "daily"},
 
-            'new_users_for_ptft': {'main_path': "daily/dau/pre-estimate/new-users-for-ptft",
+            'new_users_for_ptft': {'main_path': "daily/downloads/pre-estimate/new-users-for-ptft",
                                     'size': 1 * MB, #TODO Fix size
                                     'marker': True, 'path_type': "daily"},
 
-            'reach_for_ptft': {'main_path': "daily/dau/pre-estimate/reach-for-ptft",
+            'reach_for_ptft': {'main_path': "daily/v/pre-estimate/reach-for-ptft",
                                     'size': 1 * MB, #TODO Fix size
                                     'marker': True, 'path_type': "daily"},
 
-            'installs_for_ptft': {'main_path': "daily/dau/pre-estimate/installs-for-ptft",
+            'installs_for_ptft': {'main_path': "daily/downloads/pre-estimate/installs-for-ptft",
                                     'size': 1 * MB, #TODO Fix size
                                     'marker': True, 'path_type': "daily"},
 
