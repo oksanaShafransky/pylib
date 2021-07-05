@@ -108,8 +108,11 @@ class AppsPathResolver(object):
                                       'size': 5 * MB,
                                       'marker': True, 'path_type': "daily"},
             'matching-image-features': {'main_path': "apps-matching/image-features",
-                                      'size': 7 * MB,
-                                      'marker': True, 'path_type': "daily"},
+                                        'size': 7 * MB,
+                                        'marker': True, 'path_type': "daily"},
+            'matching-image-features-candidates': {'main_path': "apps-matching/image-features-candidates",
+                                        'size': 40 * MB,
+                                        'marker': True, 'path_type': "daily"},
             'matching-predict': {'main_path': "apps-matching/predict",
                                      'size': 5 * MB,
                                      'marker': True, 'path_type': "daily"},
@@ -1225,6 +1228,9 @@ class AppsPathResolver(object):
     def get_matching_image_features(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-image-features'], path_suffix, in_or_out)
+    def get_matching_image_features_candidates(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                            self.apps_paths['matching-image-features-candidates'], path_suffix, in_or_out)
     def get_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-predict'], path_suffix, in_or_out)
