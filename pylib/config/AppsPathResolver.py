@@ -110,14 +110,11 @@ class AppsPathResolver(object):
             'matching-image-features': {'main_path': "apps-matching/image-features",
                                       'size': 7 * MB,
                                       'marker': True, 'path_type': "daily"},
-            'matching-train-model': {'main_path': "apps-matching/train-model",
-                                      'size': 100 * MB,
-                                      'marker': True, 'path_type': "daily"},
-            'matching-merge-predict': {'main_path': "apps-matching/merge-predict",
-                                     'size': 100 * MB,
+            'matching-predict': {'main_path': "apps-matching/predict",
+                                     'size': 5 * MB,
                                      'marker': True, 'path_type': "daily"},
             'matching-tests': {'main_path': "apps-matching/tests",
-                                     'size': 100 * MB,
+                                     'size': 5 * MB,
                                      'marker': True, 'path_type': "daily"},
 
             #MAU
@@ -1228,12 +1225,9 @@ class AppsPathResolver(object):
     def get_matching_image_features(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-image-features'], path_suffix, in_or_out)
-    def get_matching_train_model(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['matching-train-model'], path_suffix, in_or_out)
-    def get_matching_merge_predict(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['matching-merge-predict'], path_suffix, in_or_out)
+                                             self.apps_paths['matching-predict'], path_suffix, in_or_out)
     def get_matching_tests(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-tests'], path_suffix, in_or_out)
