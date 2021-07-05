@@ -1023,6 +1023,7 @@ class ContextualizedTasksInfra(object):
                       python_env=None,
                       env_path=None
                       ):
+        self.kill_yarn_zombie_applications()
 
         self.clear_output_dirs(managed_output_dirs)
 
@@ -1090,7 +1091,6 @@ class ContextualizedTasksInfra(object):
             raise ValueError("must receive either main-py-file or main-class and main-jar")
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-        self.kill_yarn_zombie_applications()
         return self.run_bash(command).ok
 
     def run_sw_pyspark(self,
@@ -1280,7 +1280,7 @@ class ContextualizedTasksInfra(object):
         if not spark_submit_opts:
             spark_submit_opts = ""
         os.environ["SPARK_SUBMIT_OPTS"] = spark_submit_opts + " " + java_opts
-
+        self.kill_yarn_zombie_applications()
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
@@ -1325,7 +1325,7 @@ class ContextualizedTasksInfra(object):
         command = TasksInfra.add_command_params(command, command_params,
                                                 value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
 
-        self.kill_yarn_zombie_applications()
+
         return self.run_bash(command).ok
 
     # module is either 'mobile' or 'analytics'
@@ -1348,6 +1348,7 @@ class ContextualizedTasksInfra(object):
         jar = './%s.jar' % module
         jar_path = '%s/%s' % (self.execution_dir, module)
 
+        self.kill_yarn_zombie_applications()
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
 
@@ -1384,7 +1385,6 @@ class ContextualizedTasksInfra(object):
                       'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-        self.kill_yarn_zombie_applications()
         return self.run_bash(command).ok
 
     @staticmethod
@@ -1465,6 +1465,7 @@ class ContextualizedTasksInfra(object):
                      ):
 
         logging.warn("run_py_spark2 is a deprecated method. Use run_sw_pyspark instead.")
+        self.kill_yarn_zombie_applications()
 
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
@@ -1546,7 +1547,6 @@ class ContextualizedTasksInfra(object):
                       'main_py': exec_py_file,
                       'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
-        self.kill_yarn_zombie_applications()
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
@@ -1576,6 +1576,7 @@ class ContextualizedTasksInfra(object):
                      ):
 
         logging.warn("run_py_spark is a deprecated method. Use run_sw_pyspark instead.")
+        self.kill_yarn_zombie_applications()
 
         # delete output on start
         self.clear_output_dirs(managed_output_dirs)
@@ -1657,7 +1658,6 @@ class ContextualizedTasksInfra(object):
 
         command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['python'])
 
-        self.kill_yarn_zombie_applications()
         res = self.run_bash(command).ok
         for artifact_path in additional_artifacts_paths:
             os.remove(artifact_path)
