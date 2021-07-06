@@ -108,7 +108,7 @@ class AppsPathResolver(object):
                                       'size': 4 * MB,
                                       'marker': True, 'path_type': "daily"},
             'matching-image-features': {'main_path': "apps-matching/image-features",
-                                        'size': 7 * MB,
+                                        'size': 5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'matching-image-features-candidates': {'main_path': "apps-matching/image-features-candidates",
                                         'size': 40 * MB,
