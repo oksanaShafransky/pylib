@@ -104,15 +104,18 @@ class AppsPathResolver(object):
             'matching-learning-set': {'main_path': "apps-matching/ls",
                                       'size': 4 * MB,
                                       'marker': True, 'path_type': "daily"},
-            'matching-training-data': {'main_path': "apps-matching/train-data",
-                                      'size': 4 * MB,
-                                      'marker': True, 'path_type': "daily"},
             'matching-image-features-ios': {'main_path': "apps-matching/image-features-ios",
                                             'size': 20 * MB,
                                             'marker': True, 'path_type': "daily"},
             'matching-image-features-android': {'main_path': "apps-matching/image-features-android",
                                             'size': 20 * MB,
                                             'marker': True, 'path_type': "daily"},
+            'matching-training-data': {'main_path': "apps-matching/train-data",
+                                       'size': 4 * MB,
+                                       'marker': True, 'path_type': "daily"},
+            'matching-classification-data': {'main_path': "apps-matching/classification-data",
+                                       'size': 30 * MB,
+                                       'marker': True, 'path_type': "daily"},
             'matching-model': {'main_path': "apps-matching/model",
                                'size': 1 * KB,
                                'marker': False, 'path_type': "daily"},
@@ -1234,6 +1237,9 @@ class AppsPathResolver(object):
     def get_matching_training_data(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-training-data'], path_suffix, in_or_out)
+    def get_matching_classification_data(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-classification-data'], path_suffix, in_or_out)
     def get_matching_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-model'], path_suffix, in_or_out)
