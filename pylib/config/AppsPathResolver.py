@@ -716,6 +716,11 @@ class AppsPathResolver(object):
             'app_info': {'main_path': "mobile/app-info",
                                    'size': 15 * GB, 'marker': True,
                                    'path_type': "daily"},
+
+            # store-analysis
+            'google_play_version_db': {'main_path': "google-play/app_version_db",
+                         'size': 100 * MB, 'marker': False,
+                         'path_type': "base_path"},
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -725,6 +730,10 @@ class AppsPathResolver(object):
     def __get_android_apps_analytics_base(self, in_or_out, path_prefix):
         base_dir = self.__get_base_dir(in_or_out, path_prefix)
         return path_join(base_dir, "android-apps-analytics")
+
+    def __get_store_analytics_base(self, in_or_out, path_prefix):
+        base_dir = self.__get_base_dir(in_or_out, path_prefix)
+        return path_join(base_dir, "store-analytics")
 
     def __get_mobile_analytics_base(self, in_or_out, path_prefix):
         base_dir = self.__get_base_dir(in_or_out, path_prefix)
@@ -1371,3 +1380,10 @@ class AppsPathResolver(object):
     def get_ios_app_info(self, in_or_out, path_prefix=None, path_suffix="store=1"):
         return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
                                              self.apps_paths['app_info'], path_suffix, in_or_out)
+
+    #Store analysis
+    def get_google_play_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['google_play_version_db'], path_suffix, in_or_out)
+
+
