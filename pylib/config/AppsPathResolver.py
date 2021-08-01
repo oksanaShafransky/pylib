@@ -107,7 +107,7 @@ class AppsPathResolver(object):
             'matching_manual_pairs': {
                 'main_path': "static/apps-matching/manual-pairs_2021_08_01",
                 'size': 1 * KB,
-                'marker': True, 'path_type': "daily"},
+                'marker': True, 'path_type': "base_path"},
             'matching-image-features-ios': {'main_path': "apps-matching/image-features-ios",
                                             'size': 20 * MB,
                                             'marker': True, 'path_type': "daily"},
