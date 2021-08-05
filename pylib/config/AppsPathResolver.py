@@ -104,6 +104,10 @@ class AppsPathResolver(object):
             'matching-learning-set': {'main_path': "apps-matching/ls",
                                       'size': 4 * MB,
                                       'marker': True, 'path_type': "daily"},
+            'matching_manual_pairs': {
+                'main_path': "static/apps-matching/manual-pairs_2021_08_01",
+                'size': 1 * KB,
+                'marker': True, 'path_type': "base_path"},
             'matching-image-features-ios': {'main_path': "apps-matching/image-features-ios",
                                             'size': 20 * MB,
                                             'marker': True, 'path_type': "daily"},
@@ -348,7 +352,7 @@ class AppsPathResolver(object):
                 'size': 2 * KB,
                 'marker': True, 'path_type': "daily"},
 
-            'ww_store_download_panel_country_share_est_pre_factor': {
+             'ww_store_download_panel_country_share_est_pre_factor': {
                 'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/pre-factor",
                 'size': 120 * MB,
                 'marker': True, 'path_type': "daily"},
@@ -388,7 +392,7 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 170 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 160 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MB,
@@ -484,7 +488,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 375 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 345 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -1246,6 +1250,9 @@ class AppsPathResolver(object):
     def get_matching_learning_set(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-learning-set'], path_suffix, in_or_out)
+    def get_matching_manual_pairs(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching_manual_pairs'], path_suffix, in_or_out)
     def get_matching_image_features_ios(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-image-features-ios'], path_suffix, in_or_out)
