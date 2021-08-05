@@ -41,8 +41,8 @@ def validate_records_per_region(table_name, columns=None, minimum_regions_count=
     regions = tbl.regions()
 
     if len(regions) < minimum_regions_count:
-        logger.info('table: %s too few regions in table (%d < %d)' % (table_name, len(regions), minimum_regions_count))
-        return 'ERROR: table: %s too few regions in table (%d < %d)' % (table_name, len(regions), minimum_regions_count)
+        logger.error('table: %s too few regions in table (%d < %d)' % (table_name, len(regions), minimum_regions_count))
+        return False
 
     if len(regions) > 1:
 
