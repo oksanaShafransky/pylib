@@ -718,7 +718,7 @@ class AppsPathResolver(object):
 
             #SCRAPING
             'app_info': {'main_path': "mobile/app-info",
-                                   'size': 5 * GB, 'marker': True,
+                                   'size': 1 * GB, 'marker': True,
                                    'path_type': "daily"},
 
             # store-analysis
