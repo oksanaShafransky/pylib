@@ -120,6 +120,9 @@ class AppsPathResolver(object):
             'matching-classification-data': {'main_path': "apps-matching/classification-data",
                                        'size': 30 * MB,
                                        'marker': True, 'path_type': "daily"},
+            'matching-predict': {'main_path': "apps-matching/test-predict",
+                                 'size': 1 * MB,
+                                 'marker': True, 'path_type': "daily"},
             'matching-model': {'main_path': "apps-matching/model",
                                'size': 1 * KB,
                                'marker': False, 'path_type': "daily"},
@@ -1261,6 +1264,9 @@ class AppsPathResolver(object):
     def get_matching_classification_data(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-classification-data'], path_suffix, in_or_out)
+    def get_matching_test_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-test-predict'], path_suffix, in_or_out)
     def get_matching_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-model'], path_suffix, in_or_out)
