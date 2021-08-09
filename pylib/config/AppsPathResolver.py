@@ -527,8 +527,8 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'agg_app_country_source_days_back':{'main_path': "daily/aggregations/aggKey=AppCountrySourceDaysbackKey",
-                                                'size': 150 * MB,
+            'agg_app_country_source_days_back':{'main_path': "daily/retention/aggregations/aggKey=AppCountrySourceDaysbackKey",
+                                                'size': 50 * MB,
                                                 'marker': True, 'path_type': "daily"},
 
             'agg_app_country_delta_key': {'main_path': "daily/aggregations/aggKey=AppCountryDeltaKey",
@@ -721,13 +721,17 @@ class AppsPathResolver(object):
 
             #SCRAPING
             'app_info': {'main_path': "mobile/app-info",
-                                   'size': 5 * GB, 'marker': True,
+                                   'size': 1 * GB, 'marker': True,
                                    'path_type': "daily"},
 
             # store-analysis
             'google_play_version_db': {'main_path': "google-play/app_version_db",
                          'size': 100 * MB, 'marker': False,
                          'path_type': "base_path"},
+
+            'ios_app_store_version_db': {'main_path': "iOS-app-store/app_version_db",
+                                       'size': 100 * MB, 'marker': False,
+                                       'path_type': "base_path"},
 
             #Static paths
             'countries_full_names': {'main_path': "resources/country-codes-dict",
@@ -1403,6 +1407,11 @@ class AppsPathResolver(object):
     def get_google_play_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['google_play_version_db'], path_suffix, in_or_out)
+    
+    def get_ios_app_store_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_app_store_version_db'], path_suffix, in_or_out)
+
 
     #Static Paths
     def get_countries_full_names(self, in_or_out, path_prefix=None, path_suffix=None):
