@@ -120,7 +120,7 @@ class AppsPathResolver(object):
             'matching-classification-data': {'main_path': "apps-matching/classification-data",
                                        'size': 30 * MB,
                                        'marker': True, 'path_type': "daily"},
-            'matching-predict': {'main_path': "apps-matching/test-predict",
+            'matching-test-predict': {'main_path': "apps-matching/test-predict",
                                  'size': 1 * MB,
                                  'marker': True, 'path_type': "daily"},
             'matching-model': {'main_path': "apps-matching/model",
