@@ -266,7 +266,11 @@ class AppsPathResolver(object):
                          'size': 200 * MB,
                          'marker': True, 'path_type': "daily"},
 
-            'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
+            'dau_pre_ww_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
+                                    'size': 150 * MB,
+                                    'marker': True, 'path_type': "daily"},
+
+            'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppCountryKey",
                              'size': 150 * MB,
                              'marker': True, 'path_type': "daily"},
 
@@ -1346,7 +1350,12 @@ class AppsPathResolver(object):
 
     def get_dau_final_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_pre_ww_estimate'], path_suffix, in_or_out)
+
+    def get_dau_est(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_estimate'], path_suffix, in_or_out)
+
     #MAU
     def get_mau_user_app_country_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
