@@ -343,7 +343,7 @@ class AppsPathResolver(object):
 
             'installs_alpha_estimation_ww': {
                 'main_path': "daily/downloads/installs/estimation/app-downloads-alph_ww/estkey=AppCountryKey",
-                'size': 300 * MB,
+                'size': 100 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'reach_estimation': {
@@ -353,7 +353,7 @@ class AppsPathResolver(object):
 
             'reach_estimation_ww': {
                 'main_path': "daily/downloads/installed-apps/estimation/reach-ww/estkey=AppCountryKey",
-                'size': 600 * MB,
+                'size': 100 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_downloads_fetch': {
