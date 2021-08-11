@@ -341,8 +341,18 @@ class AppsPathResolver(object):
                 'size': 300 * MB,
                 'marker': True, 'path_type': "daily"},
 
+            'installs_alpha_estimation_ww': {
+                'main_path': "daily/downloads/installs/estimation/app-downloads-alph_ww/estkey=AppCountryKey",
+                'size': 300 * MB,
+                'marker': True, 'path_type': "daily"},
+
             'reach_estimation': {
                 'main_path': "daily/downloads/installed-apps/estimation/reach/estkey=AppCountryKey",
+                'size': 600 * MB,
+                'marker': True, 'path_type': "daily"},
+
+            'reach_estimation_ww': {
+                'main_path': "daily/downloads/installed-apps/estimation/reach-ww/estkey=AppCountryKey",
                 'size': 600 * MB,
                 'marker': True, 'path_type': "daily"},
 
@@ -1079,9 +1089,17 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['installs_alpha_estimation'], path_suffix, in_or_out)
 
+    def get_installs_alpha_estimation_ww(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['installs_alpha_estimation_ww'], path_suffix, in_or_out)
+
     def get_reach_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['reach_estimation'], path_suffix, in_or_out)
+
+    def get_reach_estimation_ww(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['reach_estimation_ww'], path_suffix, in_or_out)
 
     def get_ww_store_downloads_fetch(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
