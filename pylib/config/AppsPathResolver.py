@@ -351,6 +351,11 @@ class AppsPathResolver(object):
                 'size': 600 * MB,
                 'marker': True, 'path_type': "daily"},
 
+            'reach_and_downloads': {
+                'main_path': "daily/downloads/installs/estimation/reach_and_downloads/estkey=AppCountryKey",
+                'size': 100 * MB,
+                'marker': True, 'path_type': "daily"},
+
             'reach_estimation_ww': {
                 'main_path': "daily/downloads/installed-apps/estimation/reach-ww/estkey=AppCountryKey",
                 'size': 100 * MB,
@@ -1096,6 +1101,10 @@ class AppsPathResolver(object):
     def get_reach_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['reach_estimation'], path_suffix, in_or_out)
+
+    def get_reach_and_downloads(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['reach_and_downloads'], path_suffix, in_or_out)
 
     def get_reach_estimation_ww(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
