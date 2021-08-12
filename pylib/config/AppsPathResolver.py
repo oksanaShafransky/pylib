@@ -453,7 +453,7 @@ class AppsPathResolver(object):
             'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 15 * GB,
                                       'marker': False, 'path_type': "daily"},
 
-            'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 5 * GB,
+            'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 4 * GB,
                                      'marker': False, 'path_type': "daily"},
 
             'extractor_ga_daily': {'main_path': 'raw-s2s/extractor_ga_daily', 'size': 10 * MB,
