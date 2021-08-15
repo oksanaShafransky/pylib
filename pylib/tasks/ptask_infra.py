@@ -416,6 +416,7 @@ class ContextualizedTasksInfra(object):
         self.yarn_application_tags = extract_yarn_application_tags_from_env()
         self.spark_configs = {}
         self.default_da_data_sources = None
+        self.env_vars_to_pass = ["SNOWFLAKE_ENV", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_DEFAULT_REGION"]
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -1049,12 +1050,14 @@ class ContextualizedTasksInfra(object):
             if spark_submit_script is None:
                 spark_submit_script = 'spark2-submit'
 
+        env_vars = {k: os.environ.get(k) for k in self.env_vars_to_pass if k in os.environ}
+        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} --conf spark.executorEnv.{key}={value}'.format(key=key, value=value) for key, value in env_vars])
+
         command = 'cd {execution_dir}; {spark_submit_script}' \
                   ' --name "{app_name}"' \
                   ' --master {master}' \
                   ' --deploy-mode cluster' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
+                  ' {spark_env_vars} ' \
                   ' {spark_confs}' \
                   ' --repositories {repos}' \
             .format(
@@ -1062,7 +1065,7 @@ class ContextualizedTasksInfra(object):
                     master=master,
                     spark_submit_script=spark_submit_script,
                     app_name=app_name,
-                    snowflake_env=os.environ.get('SNOWFLAKE_ENV'),
+                    spark_env_vars=spark_env_vars,
                     spark_confs=additional_configs,
                     repos=','.join(final_repositories)
                    )
@@ -1289,12 +1292,12 @@ class ContextualizedTasksInfra(object):
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
+        env_vars = {k: os.environ.get(k) for k in self.env_vars_to_pass if k in os.environ}
+        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} --conf spark.executorEnv.{key}={value}'.format(key=key, value=value) for key, value in env_vars])
 
         command = 'cd %(jar_path)s;spark2-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' {spark_env_vars} ' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -1311,7 +1314,7 @@ class ContextualizedTasksInfra(object):
                       'queue': queue,
                       'app_name': app_name,
                       'add_opts': additional_configs,
-                      'snowflake_env': snowflake_cur_env,
+                      'spark_env_vars': spark_env_vars,
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1355,12 +1358,12 @@ class ContextualizedTasksInfra(object):
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
+        env_vars = {k: os.environ.get(k) for k in self.env_vars_to_pass if k in os.environ}
+        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} --conf spark.executorEnv.{key}={value}'.format(key=key, value=value) for key, value in env_vars])
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' {spark_env_vars} ' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -1376,7 +1379,7 @@ class ContextualizedTasksInfra(object):
                       'queue': queue,
                       'app_name': app_name,
                       'add_opts': additional_configs,
-                      'snowflake_env': snowflake_cur_env,
+                      'spark_env_vars': spark_env_vars,
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1514,14 +1517,14 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
+        env_vars = {k: os.environ.get(k) for k in self.env_vars_to_pass if k in os.environ}
+        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} --conf spark.executorEnv.{key}={value}'.format(key=key, value=value) for key, value in env_vars])
 
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
         command = 'spark2-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' {spark_env_vars} ' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s ' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
@@ -1535,7 +1538,7 @@ class ContextualizedTasksInfra(object):
                       'app_name': app_name if app_name else os.path.basename(main_py_file),
                       'execution_dir': module_dir,
                       'queue': '--queue %s' % queue if queue else '',
-                      'snowflake_env': snowflake_cur_env,
+                      'spark_env_vars': spark_env_vars,
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1625,14 +1628,14 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
+        env_vars = {k: os.environ.get(k) for k in self.env_vars_to_pass if k in os.environ}
+        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} --conf spark.executorEnv.{key}={value}'.format(key=key, value=value) for key, value in env_vars])
 
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
+                  ' {spark_env_vars} ' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s ' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
@@ -1645,7 +1648,7 @@ class ContextualizedTasksInfra(object):
                       'app_name': app_name if app_name else os.path.basename(main_py_file),
                       'execution_dir': module_dir,
                       'queue': '--queue %s' % queue if queue else '',
-                      'snowflake_env': snowflake_cur_env,
+                      'spark_env_vars': spark_env_vars,
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
