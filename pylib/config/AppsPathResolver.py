@@ -239,19 +239,19 @@ class AppsPathResolver(object):
                              'marker': True, 'path_type': "daily"},
 
             'dau_for_ptft': {'main_path': "daily/dau/pre-estimate/dau-for-ptft",
-                                    'size': 1 * MB, #TODO Fix size
+                                    'size': 250 * MB,
                                     'marker': True, 'path_type': "daily"},
 
             'new_users_for_ptft': {'main_path': "daily/downloads/pre-estimate/new-users-for-ptft",
-                                    'size': 1 * MB, #TODO Fix size
+                                    'size': 370 * MB,
                                     'marker': True, 'path_type': "daily"},
 
             'reach_for_ptft': {'main_path': "daily/downloads/pre-estimate/reach-for-ptft",
-                                    'size': 1 * MB, #TODO Fix size
+                                    'size': 900 * MB,
                                     'marker': True, 'path_type': "daily"},
 
             'installs_for_ptft': {'main_path': "daily/downloads/pre-estimate/installs-for-ptft",
-                                    'size': 1 * MB, #TODO Fix size
+                                    'size': 370 * MB,
                                     'marker': True, 'path_type': "daily"},
 
             'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
@@ -266,11 +266,11 @@ class AppsPathResolver(object):
                          'size': 200 * MB,
                          'marker': True, 'path_type': "daily"},
 
-            'dau_pre_ww_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
+            'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppContryKey",
                                     'size': 150 * MB,
                                     'marker': True, 'path_type': "daily"},
 
-            'dau_estimate': {'main_path': "daily/dau/estimate/estKey=AppCountryKey",
+            'dau_with_ww_estimate': {'main_path': "daily/dau-with-ww/estimate/estKey=AppCountryKey",
                              'size': 150 * MB,
                              'marker': True, 'path_type': "daily"},
 
@@ -342,7 +342,7 @@ class AppsPathResolver(object):
                 'marker': True, 'path_type': "daily"},
 
             'installs_alpha_estimation_ww': {
-                'main_path': "daily/downloads/installs/estimation/app-downloads-alph_ww/estkey=AppCountryKey",
+                'main_path': "daily/downloads/installs/estimation/app-downloads-alpha-ww/estkey=AppCountryKey",
                 'size': 100 * MB,
                 'marker': True, 'path_type': "daily"},
 
@@ -1377,11 +1377,11 @@ class AppsPathResolver(object):
 
     def get_dau_final_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['dau_pre_ww_estimate'], path_suffix, in_or_out)
-
-    def get_dau_est(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_estimate'], path_suffix, in_or_out)
+
+    def get_dau_with_ww_est(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['dau_with_ww_estimate'], path_suffix, in_or_out)
 
     #MAU
     def get_mau_user_app_country_agg(self, in_or_out, path_prefix=None, path_suffix=None):
