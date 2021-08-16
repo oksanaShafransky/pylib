@@ -1875,12 +1875,14 @@ class ContextualizedTasksInfra(object):
                 'aws.accessKeyId': aws_access_key_id,
                 'aws.secretKey': aws_secret_access_key,
             })
-            # TODO - We need it? - is it safe? (those creds stay in the general env)
-            self.ctx.run("aws configure set aws_access_key_id {};"
-                         "aws configure set aws_secret_access_key {}".format(aws_access_key_id, aws_secret_access_key))
 
             os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key_id
             os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_access_key
+
+            # TODO - We need it? - is it safe? (those creds stay in the general env)
+            # self.ctx.run("aws configure set aws_access_key_id {};"
+            #              "aws configure set aws_secret_access_key {}".format(aws_access_key_id, aws_secret_access_key))
+
         else:
             self.hadoop_configs.update({
                 "fs.s3a.bucket.%s.access.key" % bucket: aws_access_key_id,
@@ -1890,8 +1892,9 @@ class ContextualizedTasksInfra(object):
         if region and not bucket:
             self.job_env_vars.update({"AWS_DEFAULT_REGION": region})
             self.jvm_opts.update({'aws.region': region})
-            self.ctx.run("aws configure set region {}".format(region))
             os.environ["AWS_DEFAULT_REGION"] = region
+            # self.ctx.run("aws configure set region {}".format(region))
+
 
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
