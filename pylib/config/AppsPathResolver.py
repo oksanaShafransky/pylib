@@ -243,7 +243,7 @@ class AppsPathResolver(object):
                                     'marker': True, 'path_type': "daily"},
 
             'new_users_for_ptft': {'main_path': "daily/downloads/pre-estimate/new-users-for-ptft",
-                                    'size': 370 * MB,
+                                    'size': 325 * MB,
                                     'marker': True, 'path_type': "daily"},
 
             'reach_for_ptft': {'main_path': "daily/downloads/pre-estimate/reach-for-ptft",
@@ -251,7 +251,7 @@ class AppsPathResolver(object):
                                     'marker': True, 'path_type': "daily"},
 
             'installs_for_ptft': {'main_path': "daily/downloads/pre-estimate/installs-for-ptft",
-                                    'size': 370 * MB,
+                                    'size': 325 * MB,
                                     'marker': True, 'path_type': "daily"},
 
             'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
