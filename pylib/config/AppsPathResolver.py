@@ -130,7 +130,18 @@ class AppsPathResolver(object):
                                      'size': 5 * MB,
                                      'marker': True, 'path_type': "daily"},
 
-            #MAU
+            # MONITORING
+            'monitoring-window': {'main_path': "apps-monitoring/window",
+                                  'size': 5 * MB,
+                                  'marker': True, 'path_type': "daily"},
+            'monitoring-predict': {'main_path': "apps-monitoring/predict",
+                                  'size': 5 * MB,
+                                  'marker': True, 'path_type': "daily"},
+            'monitoring-anomal': {'main_path': "apps-monitoring/anomal",
+                                  'size': 5 * MB,
+                                  'marker': True, 'path_type': "daily"},
+
+            # MAU
             'mau_feature2_agg': {
                 'main_path': "monthly/mau/aggregations/aggkey=Feature2Key",
                 'size': 1 * KB, #TODO change
@@ -1271,7 +1282,7 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['countries-conf'], path_suffix, in_or_out)
 
-    #apps matching
+    # apps matching
     def get_sanitized_app_info(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['sanitized-app-info'], path_suffix, in_or_out)
@@ -1306,7 +1317,18 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-tests'], path_suffix, in_or_out)
 
-    #dau
+    # apps monitoring
+    def get_monitoring_window(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-window'], path_suffix, in_or_out)
+    def get_monitoring_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-predict'], path_suffix, in_or_out)
+    def get_monitoring_anomal(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-anomal'], path_suffix, in_or_out)
+
+    # dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_sources_for_analyze'], path_suffix, in_or_out)
