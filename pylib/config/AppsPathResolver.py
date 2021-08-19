@@ -132,13 +132,13 @@ class AppsPathResolver(object):
 
             # MONITORING
             'monitoring-window': {'main_path': "apps-monitoring/window",
-                                  'size': 5 * MB,
+                                  'size': 1 * MB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-predict': {'main_path': "apps-monitoring/predict",
-                                  'size': 5 * MB,
+                                  'size': 1 * MB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-anomal': {'main_path': "apps-monitoring/anomal",
-                                  'size': 5 * MB,
+                                  'size': 100 * KB,
                                   'marker': True, 'path_type': "daily"},
 
             # MAU
