@@ -1392,7 +1392,8 @@ class ContextualizedTasksInfra(object):
                       'jar': jar,
                       'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
-
+        command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
+        return self.run_bash(command).ok
 
     @staticmethod
     def match_jar(jar, jars_in_dir):
@@ -1848,9 +1849,9 @@ class ContextualizedTasksInfra(object):
     def set_aws_credentials(self, profile=DEFAULT_S3_PROFILE, aws_access_key_id=None, aws_secret_access_key=None):
         """
         Set AWS Credentials in the context hadoop-configurations, java-options, environment variables
-        :param profile:
-        :param aws_access_key_id:
-        :param aws_secret_access_key:
+        :param profile: AWS profile name
+        :param aws_access_key_id: optional, by default it will be taken from the AWS profile
+        :param aws_secret_access_key: optional, by default it will be taken from the AWS profile
         :return:
         """
         aws_access_key_id = aws_access_key_id \
