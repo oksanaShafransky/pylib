@@ -1004,8 +1004,8 @@ class ContextualizedTasksInfra(object):
 
     def _spark_submit(self,
                       app_name,
-                      queue,
                       command_params,
+                      queue=None,
                       main_class=None,
                       main_jar=None,
                       main_py_file=None,
