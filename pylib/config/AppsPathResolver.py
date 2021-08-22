@@ -680,7 +680,7 @@ class AppsPathResolver(object):
                 'size': 1 * MB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "monthly"},
 
-            'app_affinity': {'main_path': "%s/estimate/app-affinity/type=%s" % (self.ti.mode, self.ti.mode_type),
+            'app_affinity': {'main_path': "%s/estimate/app-affinity-ww/type=%s" % (self.ti.mode, self.ti.mode_type),
                              'size': 90 * MB, 'marker': True,
                              'path_type': "monthly"},
 
