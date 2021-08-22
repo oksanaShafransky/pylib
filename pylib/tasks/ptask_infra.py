@@ -416,9 +416,9 @@ class ContextualizedTasksInfra(object):
         self.yarn_application_tags = extract_yarn_application_tags_from_env()
         self.spark_configs = {}
         self.default_da_data_sources = None
-        self.job_env_vars = {
-            "SNOWFLAKE_ENV": os.environ["SNOWFLAKE_ENV"]
-        }
+        # take some environment variables from os to the job
+        # non-empty AWS_DEFAULT_REGION/AWS_REGION is required by Glue
+        self.job_env_vars = {k:  os.environ[k] for k in ["SNOWFLAKE_ENV", "AWS_DEFAULT_REGION", "AWS_REGION"] if k in os.environ}
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -426,6 +426,7 @@ class ContextualizedTasksInfra(object):
 
     def __with_rerun_root_queue(self, command):
         return 'source %s/scripts/common.sh && setRootQueue reruns && %s' % (self.execution_dir, command)
+
 
     def __is_hdfs_collection_valid(self, directories, min_size_bytes=0, validate_marker=False, is_strict=False):
         ans = True
@@ -1391,8 +1392,7 @@ class ContextualizedTasksInfra(object):
                       'jar': jar,
                       'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
-        command = TasksInfra.add_command_params(command, command_params, value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-        return self.run_bash(command).ok
+
 
     @staticmethod
     def match_jar(jar, jars_in_dir):
@@ -1830,6 +1830,12 @@ class ContextualizedTasksInfra(object):
     DEFAULT_S3_PROFILE = 'research-safe'
 
     def read_s3_configuration(self, property_key, section=DEFAULT_S3_PROFILE):
+        logger.warning("read_s3_configuration is deprecated, use get_secret instead")
+        return self.get_secret(key="{}/{}".format(section, property_key))
+
+    def get_secret(self, key):
+        # get secret - takes from a local file - we will change it to take from Vault
+        section, property_key = key.split(r"/")
         import boto
         config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
         return config.get(section, property_key)
@@ -1837,64 +1843,43 @@ class ContextualizedTasksInfra(object):
     def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
         # DEPRECATED
         logger.warning("set_s3_keys is deprecated, use set_aws_credentials instead")
-        self.set_aws_credentials(profile=section, aws_access_key_id=access, aws_secret_access_key=secret, region=None)
+        self.set_aws_credentials(profile=section, aws_access_key_id=access, aws_secret_access_key=secret)
 
-    def set_aws_credentials(self, profile=DEFAULT_S3_PROFILE, aws_access_key_id=None, aws_secret_access_key=None, region=None, bucket=None):
+    def set_aws_credentials(self, profile=DEFAULT_S3_PROFILE, aws_access_key_id=None, aws_secret_access_key=None):
         """
         Set AWS Credentials in the context hadoop-configurations, java-options, environment variables
         :param profile:
         :param aws_access_key_id:
         :param aws_secret_access_key:
-        :param region: optional, set AWS_DEFAULT_REGION
-        :param bucket: if mention, will set the credentials only for the specific bucket via hadoop-conf
         :return:
         """
         aws_access_key_id = aws_access_key_id \
-                            or self.read_s3_configuration('access_key', section=profile) \
-                            or self.read_s3_configuration('aws_access_key_id', section=profile)
+                            or self.get_secret('{}/access_key'.format(profile)) \
+                            or self.get_secret('{}/aws_access_key_id'.format(profile))
 
         aws_secret_access_key = aws_secret_access_key \
-                                or self.read_s3_configuration('secret_key', section=profile) \
-                                or self.read_s3_configuration('aws_secret_access_key', section=profile)
+                                or self.get_secret('{}/secret_key'.format(profile)) \
+                                or self.get_secret('{}/aws_secret_access_key'.format(profile))
 
-        region = region or self.read_s3_configuration('region', section=profile)
-        logger.info("Setting aws credentials AWS_ACCESS_KEY_ID {} , AWS_SECRET_ACCESS_KEY {} , REGION {}"
-                    .format(aws_access_key_id, ''.join(["*" for _ in range(len(aws_secret_access_key))]), region))
-        if not bucket:
-            self.job_env_vars.update({
-                "AWS_ACCESS_KEY_ID": aws_access_key_id,
-                "AWS_SECRET_ACCESS_KEY": aws_secret_access_key,
-            })
+        logger.info("Setting aws credentials AWS_ACCESS_KEY_ID {} ,AWS_SECRET_ACCESS_KEY {}"
+                    .format(aws_access_key_id, ''.join(["*" for _ in range(len(aws_secret_access_key))])))
 
-            self.hadoop_configs.update({
-                'fs.s3a.access.key': aws_access_key_id,
-                'fs.s3a.secret.key': aws_secret_access_key,
-            })
-
-            self.jvm_opts.update({
-                'aws.accessKeyId': aws_access_key_id,
-                'aws.secretKey': aws_secret_access_key,
-            })
-
-            os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key_id
-            os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_access_key
-
-            # TODO - We need it? - is it safe? (those creds stay in the general env)
-            # self.ctx.run("aws configure set aws_access_key_id {};"
-            #              "aws configure set aws_secret_access_key {}".format(aws_access_key_id, aws_secret_access_key))
-
-        else:
-            self.hadoop_configs.update({
-                "fs.s3a.bucket.%s.access.key" % bucket: aws_access_key_id,
-                "fs.s3a.bucket.%s.secret.key" % bucket: aws_secret_access_key,
-            })
-
-        if region and not bucket:
-            self.job_env_vars.update({"AWS_DEFAULT_REGION": region})
-            self.jvm_opts.update({'aws.region': region})
-            os.environ["AWS_DEFAULT_REGION"] = region
-            # self.ctx.run("aws configure set region {}".format(region))
-
+        self.job_env_vars.update({
+            "AWS_ACCESS_KEY_ID": aws_access_key_id,
+            "AWS_SECRET_ACCESS_KEY": aws_secret_access_key,
+        })
+        self.hadoop_configs.update({
+            'fs.s3a.access.key': aws_access_key_id,
+            'fs.s3a.secret.key': aws_secret_access_key,
+            'fs.s3.awsAccessKeyId': aws_access_key_id,  # for EMRFS
+            'fs.s3.awsSecretAccessKey': aws_secret_access_key  # for EMRFS
+        })
+        self.jvm_opts.update({
+            'aws.accessKeyId': aws_access_key_id,
+            'aws.secretKey': aws_secret_access_key,
+        })
+        os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key_id
+        os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_access_key
 
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
