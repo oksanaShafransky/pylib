@@ -1052,10 +1052,6 @@ class ContextualizedTasksInfra(object):
             if spark_submit_script is None:
                 spark_submit_script = 'spark2-submit'
 
-        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
-        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
-
-
         command = 'cd {execution_dir}; {spark_submit_script}' \
                   ' --name "{app_name}"' \
                   ' --master {master}' \
@@ -1293,9 +1289,6 @@ class ContextualizedTasksInfra(object):
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
-        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
-        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
-
         command = 'cd %(jar_path)s;spark2-submit' \
                   ' --queue %(queue)s' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s' \
@@ -1353,9 +1346,6 @@ class ContextualizedTasksInfra(object):
 
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
-
-        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
-        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
 
 
         command = 'cd %(jar_path)s;spark-submit' \
@@ -1512,10 +1502,6 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
-        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
-
-
         command = 'spark2-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -1622,10 +1608,6 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
-        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
-
-
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -1712,8 +1694,11 @@ class ContextualizedTasksInfra(object):
 
     def build_spark_additional_configs(self, named_spark_args, override_spark_configs):
         additional_configs = ''
+
         for key, value in self.hadoop_configs.items():
             additional_configs += ' --conf spark.hadoop.%s=%s' % (key, value)
+
+
 
         if override_spark_configs:
             spark_conf = self.spark_configs.copy()
@@ -1730,6 +1715,12 @@ class ContextualizedTasksInfra(object):
         if self.should_profile:
             additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
             additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
+
+        # add environment vars:
+        for key, value in self.job_env_vars.items():
+            additional_configs += ' --conf spark.yarn.appMasterEnv.%s=%s' % (key, value)
+            additional_configs += ' --conf spark.executorEnv.%s=%s' % (key, value)
+
         return additional_configs
 
     @staticmethod
