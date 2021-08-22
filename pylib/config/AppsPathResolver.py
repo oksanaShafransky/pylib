@@ -669,6 +669,21 @@ class AppsPathResolver(object):
                 'size': 900 * MB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
+
+            'app_panel': {
+                'main_path': "%s/estimate/app-panel/type=%s" % (self.ti.mode, self.ti.mode_type),
+                'size': 1 * MB, 'marker': True,  # Size close for both window ,and snapshot
+                'path_type': "monthly"},
+
+            'country_panel': {
+                'main_path': "%s/estimate/country-panel/type=%s" % (self.ti.mode, self.ti.mode_type),
+                'size': 1 * MB, 'marker': True,  # Size close for both window ,and snapshot
+                'path_type': "monthly"},
+
+            'app_affinity': {'main_path': "%s/estimate/app-affinity/type=%s" % (self.ti.mode, self.ti.mode_type),
+                             'size': 90 * MB, 'marker': True,
+                             'path_type': "monthly"},
+
             #NSM TO OSM
             'preprocessed_1010': {'main_path': "daily/osm/preprocessed-1010",
                                   'size': 80 * GB, 'marker': True,
@@ -1470,4 +1485,14 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['countries_full_names'], path_suffix, in_or_out)
 
+    def get_app_panel(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['app_panel'], path_suffix, in_or_out)
 
+    def get_country_panel(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['country_panel'], path_suffix, in_or_out)
+
+    def get_app_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['app_affinity'], path_suffix, in_or_out)
