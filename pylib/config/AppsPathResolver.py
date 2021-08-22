@@ -1486,13 +1486,13 @@ class AppsPathResolver(object):
                                              self.apps_paths['countries_full_names'], path_suffix, in_or_out)
 
     def get_app_panel(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_panel'], path_suffix, in_or_out)
 
     def get_country_panel(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['country_panel'], path_suffix, in_or_out)
 
     def get_app_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_affinity'], path_suffix, in_or_out)
