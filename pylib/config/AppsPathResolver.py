@@ -672,12 +672,12 @@ class AppsPathResolver(object):
 
             'app_panel': {
                 'main_path': "%s/estimate/app-panel/type=%s" % (self.ti.mode, self.ti.mode_type),
-                'size': 1 * MB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 1 * KB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "monthly"},
 
             'country_panel': {
                 'main_path': "%s/estimate/country-panel/type=%s" % (self.ti.mode, self.ti.mode_type),
-                'size': 1 * MB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 1 * KB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "monthly"},
 
             'app_affinity': {'main_path': "%s/estimate/app-affinity-ww/type=%s" % (self.ti.mode, self.ti.mode_type),
