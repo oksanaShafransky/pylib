@@ -1052,15 +1052,14 @@ class ContextualizedTasksInfra(object):
             if spark_submit_script is None:
                 spark_submit_script = 'spark2-submit'
 
-        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} '
-                                   '--conf spark.executorEnv.{key}={value}'
-                                  .format(key=key, value=value) for key, value in self.job_env_vars.items()])
+        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
+        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
+
 
         command = 'cd {execution_dir}; {spark_submit_script}' \
                   ' --name "{app_name}"' \
                   ' --master {master}' \
                   ' --deploy-mode cluster' \
-                  ' {spark_env_vars} ' \
                   ' {spark_confs}' \
                   ' --repositories {repos}' \
             .format(
@@ -1068,7 +1067,6 @@ class ContextualizedTasksInfra(object):
                     master=master,
                     spark_submit_script=spark_submit_script,
                     app_name=app_name,
-                    spark_env_vars=spark_env_vars,
                     spark_confs=additional_configs,
                     repos=','.join(final_repositories)
                    )
@@ -1295,13 +1293,11 @@ class ContextualizedTasksInfra(object):
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
-        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} '
-                                   '--conf spark.executorEnv.{key}={value}'
-                                  .format(key=key, value=value) for key, value in self.job_env_vars.items()])
+        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
+        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
 
         command = 'cd %(jar_path)s;spark2-submit' \
                   ' --queue %(queue)s' \
-                  ' {spark_env_vars} ' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -1318,7 +1314,6 @@ class ContextualizedTasksInfra(object):
                       'queue': queue,
                       'app_name': app_name,
                       'add_opts': additional_configs,
-                      'spark_env_vars': spark_env_vars,
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1329,10 +1324,7 @@ class ContextualizedTasksInfra(object):
                       'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
 
-        command = TasksInfra.add_command_params(command, command_params,
-                                                value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-
-
+        command = TasksInfra.add_command_params(command, command_params,  value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
         return self.run_bash(command).ok
 
     # module is either 'mobile' or 'analytics'
@@ -1362,13 +1354,12 @@ class ContextualizedTasksInfra(object):
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
-        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} '
-                                   '--conf spark.executorEnv.{key}={value}'
-                                  .format(key=key, value=value) for key, value in self.job_env_vars.items()])
+        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
+        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
+
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
-                  ' {spark_env_vars} ' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -1384,7 +1375,6 @@ class ContextualizedTasksInfra(object):
                       'queue': queue,
                       'app_name': app_name,
                       'add_opts': additional_configs,
-                      'spark_env_vars': spark_env_vars,
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1522,15 +1512,14 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} '
-                                   '--conf spark.executorEnv.{key}={value}'
-                                  .format(key=key, value=value) for key, value in self.job_env_vars.items()])
+        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
+        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
+
 
         command = 'spark2-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' {spark_env_vars} ' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s ' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
@@ -1544,7 +1533,6 @@ class ContextualizedTasksInfra(object):
                       'app_name': app_name if app_name else os.path.basename(main_py_file),
                       'execution_dir': module_dir,
                       'queue': '--queue %s' % queue if queue else '',
-                      'spark_env_vars': spark_env_vars,
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1634,15 +1622,14 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-        spark_env_vars = " ".join(['--conf spark.yarn.appMasterEnv.{key}={value} '
-                                   '--conf spark.executorEnv.{key}={value}'
-                                  .format(key=key, value=value) for key, value in self.job_env_vars.items()])
+        spark_configs.update({'spark.yarn.appMasterEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
+        spark_configs.update({'spark.yarn.executorEnv.{k}'.format(k=k): v for k, v in self.job_env_vars.items()})
+
 
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' {spark_env_vars} ' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s ' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
@@ -1655,7 +1642,6 @@ class ContextualizedTasksInfra(object):
                       'app_name': app_name if app_name else os.path.basename(main_py_file),
                       'execution_dir': module_dir,
                       'queue': '--queue %s' % queue if queue else '',
-                      'spark_env_vars': spark_env_vars,
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
