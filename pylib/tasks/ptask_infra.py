@@ -1698,8 +1698,6 @@ class ContextualizedTasksInfra(object):
         for key, value in self.hadoop_configs.items():
             additional_configs += ' --conf spark.hadoop.%s=%s' % (key, value)
 
-
-
         if override_spark_configs:
             spark_conf = self.spark_configs.copy()
             spark_conf.update(override_spark_configs)
@@ -1714,7 +1712,7 @@ class ContextualizedTasksInfra(object):
 
         if self.should_profile:
             additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
-            additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
+            additional_configs += ' --conf "spark.executor.extraJavaOptions=%s"' % JAVA_PROFILER
 
         # add environment vars:
         for key, value in self.job_env_vars.items():
