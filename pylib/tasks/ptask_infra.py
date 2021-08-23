@@ -688,7 +688,7 @@ class ContextualizedTasksInfra(object):
             target_path=target
         )
         self.kill_yarn_zombie_applications()
-        self.run_bash(cmd)
+        return self.run_bash(cmd)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False,
                    jvm_opts=None, default_num_reducers=200):
