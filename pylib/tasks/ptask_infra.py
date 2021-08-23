@@ -1821,43 +1821,43 @@ class ContextualizedTasksInfra(object):
     def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
         # DEPRECATED
         logger.warning("set_s3_keys is deprecated, use set_aws_credentials instead")
-        self.set_aws_credentials(profile=section, aws_access_key_id=access, aws_secret_access_key=secret)
+        self.set_aws_credentials(profile=section, access_key_id=access, secret_access_key=secret)
 
-    def set_aws_credentials(self, profile=DEFAULT_S3_PROFILE, aws_access_key_id=None, aws_secret_access_key=None):
+    def set_aws_credentials(self, profile=DEFAULT_S3_PROFILE, access_key_id=None, secret_access_key=None):
         """
         Set AWS Credentials in the context hadoop-configurations, java-options, environment variables
         :param profile: AWS profile name
-        :param aws_access_key_id: optional, by default it will be taken from the AWS profile
-        :param aws_secret_access_key: optional, by default it will be taken from the AWS profile
+        :param access_key_id: optional, by default it will be taken from the AWS profile
+        :param secret_access_key: optional, by default it will be taken from the AWS profile
         :return:
         """
-        aws_access_key_id = aws_access_key_id \
-                            or self.get_secret('{}/access_key'.format(profile)) \
-                            or self.get_secret('{}/aws_access_key_id'.format(profile))
+        access_key_id = access_key_id \
+                        or self.get_secret('{}/access_key'.format(profile)) \
+                        or self.get_secret('{}/aws_access_key_id'.format(profile))
 
-        aws_secret_access_key = aws_secret_access_key \
-                                or self.get_secret('{}/secret_key'.format(profile)) \
-                                or self.get_secret('{}/aws_secret_access_key'.format(profile))
+        secret_access_key = secret_access_key \
+                            or self.get_secret('{}/secret_key'.format(profile)) \
+                            or self.get_secret('{}/aws_secret_access_key'.format(profile))
 
-        logger.info("Setting aws credentials AWS_ACCESS_KEY_ID {} ,AWS_SECRET_ACCESS_KEY {}"
-                    .format(aws_access_key_id, ''.join(["*" for _ in range(len(aws_secret_access_key))])))
+        logger.info("Setting aws credentials {} AWS_ACCESS_KEY_ID {} ,AWS_SECRET_ACCESS_KEY {}"
+                    .format('Profile {} ,'.format(profile) if profile else '',access_key_id, ''.join([secret_access_key[:len(secret_access_key) / 4]] + ["*" for _ in secret_access_key[len(secret_access_key) / 4:]])))
 
         self.job_env_vars.update({
-            "AWS_ACCESS_KEY_ID": aws_access_key_id,
-            "AWS_SECRET_ACCESS_KEY": aws_secret_access_key,
+            "AWS_ACCESS_KEY_ID": access_key_id,
+            "AWS_SECRET_ACCESS_KEY": secret_access_key,
         })
         self.hadoop_configs.update({
-            'fs.s3a.access.key': aws_access_key_id,
-            'fs.s3a.secret.key': aws_secret_access_key,
-            'fs.s3.awsAccessKeyId': aws_access_key_id,  # for EMRFS
-            'fs.s3.awsSecretAccessKey': aws_secret_access_key  # for EMRFS
+            'fs.s3a.access.key': access_key_id,
+            'fs.s3a.secret.key': secret_access_key,
+            'fs.s3.awsAccessKeyId': access_key_id,  # for EMRFS
+            'fs.s3.awsSecretAccessKey': secret_access_key  # for EMRFS
         })
         self.jvm_opts.update({
-            'aws.accessKeyId': aws_access_key_id,
-            'aws.secretKey': aws_secret_access_key,
+            'aws.accessKeyId': access_key_id,
+            'aws.secretKey': secret_access_key,
         })
-        os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key_id
-        os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_access_key
+        os.environ["AWS_ACCESS_KEY_ID"] = access_key_id
+        os.environ["AWS_SECRET_ACCESS_KEY"] = secret_access_key
 
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
