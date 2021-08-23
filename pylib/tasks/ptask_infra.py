@@ -405,6 +405,14 @@ All have been repaired. Original Corrupt Files are present on HDFS at %(eviction
 
 
 class ContextualizedTasksInfra(object):
+    local_env_vars_whitelist = ["SNOWFLAKE_ENV", "AWS_DEFAULT_REGION", "AWS_REGION"]  # non-empty AWS_DEFAULT_REGION/AWS_REGION is required by Glue
+    default_spark_configs = {
+        # default executor profile 1.5G per core
+        'spark.driver.memory': "6g",
+        'spark.executor.memory': '6g',
+        'spark.executor.cores': '4'
+    }
+
     def __init__(self, ctx):
         """
         :param ctx: invoke.context.Context
@@ -414,11 +422,10 @@ class ContextualizedTasksInfra(object):
         self.jvm_opts = {}
         self.hadoop_configs = {}
         self.yarn_application_tags = extract_yarn_application_tags_from_env()
-        self.spark_configs = {}
+        self.spark_configs = ContextualizedTasksInfra.default_spark_configs
         self.default_da_data_sources = None
         # take some environment variables from os to the job
-        # non-empty AWS_DEFAULT_REGION/AWS_REGION is required by Glue
-        self.job_env_vars = {k:  os.environ[k] for k in ["SNOWFLAKE_ENV", "AWS_DEFAULT_REGION", "AWS_REGION"] if k in os.environ}
+        self.job_env_vars = {k:  os.environ[k] for k in ContextualizedTasksInfra.local_env_vars_whitelist if k in os.environ}
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
