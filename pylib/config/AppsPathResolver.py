@@ -1483,14 +1483,13 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_version_db'], path_suffix, in_or_out)
 
-    def get_z_norm_dist(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['z_norm_dist'], path_suffix, in_or_out)
-
     # Static Paths
     def get_countries_full_names(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['countries_full_names'], path_suffix, in_or_out)
+    def get_z_norm_dist(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['z_norm_dist'], path_suffix, in_or_out)
 
     def get_app_panel(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
