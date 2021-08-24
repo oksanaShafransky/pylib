@@ -4,6 +4,9 @@ from pylib.tasks.output_data_artifact import OutputDataArtifact
 GB = 1024 ** 3
 MB = 1024 ** 2
 KB = 1024
+
+MiB = 2 ** 20
+
 EMPTY_STRING = ""
 SCRAPING_BASE_DIR = "/similargroup/scraping"
 
@@ -132,10 +135,10 @@ class AppsPathResolver(object):
 
             # MONITORING
             'monitoring-window': {'main_path': "apps-monitoring/window",
-                                  'size': 10 * MB,
+                                  'size': 6 * MiB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-predict': {'main_path': "apps-monitoring/predict",
-                                  'size': 20 * MB,
+                                  'size': 10 * MiB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-anomal': {'main_path': "apps-monitoring/anomal",
                                   'size': 100 * KB,
