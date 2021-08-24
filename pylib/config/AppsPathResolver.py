@@ -132,10 +132,10 @@ class AppsPathResolver(object):
 
             # MONITORING
             'monitoring-window': {'main_path': "apps-monitoring/window",
-                                  'size': 1 * MB,
+                                  'size': 10 * MB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-predict': {'main_path': "apps-monitoring/predict",
-                                  'size': 1 * MB,
+                                  'size': 20 * MB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-anomal': {'main_path': "apps-monitoring/anomal",
                                   'size': 100 * KB,
@@ -775,10 +775,14 @@ class AppsPathResolver(object):
                                        'size': 100 * MB, 'marker': False,
                                        'path_type': "base_path"},
 
-            #Static paths
+            # Static paths
             'countries_full_names': {'main_path': "resources/country-codes-dict",
                                        'size': 1 * KB, 'marker': False,
                                        'path_type': "base_path"},
+            'z_norm_dist': {'main_path': "static/norm_dist",
+                                     'size': 1 * KB, 'marker': True,
+                                     'path_type': "base_path"},
+
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -1479,8 +1483,11 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_version_db'], path_suffix, in_or_out)
 
+    def get_z_norm_dist(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['z_norm_dist'], path_suffix, in_or_out)
 
-    #Static Paths
+    # Static Paths
     def get_countries_full_names(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['countries_full_names'], path_suffix, in_or_out)
