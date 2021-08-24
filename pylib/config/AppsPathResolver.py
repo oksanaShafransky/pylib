@@ -5,7 +5,7 @@ GB = 1024 ** 3
 MB = 1024 ** 2
 KB = 1024
 
-MiB = 2 ** 20
+MiB = 1.04858 * MB
 
 EMPTY_STRING = ""
 SCRAPING_BASE_DIR = "/similargroup/scraping"
@@ -138,7 +138,7 @@ class AppsPathResolver(object):
                                   'size': 5 * MiB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-predict': {'main_path': "apps-monitoring/predict",
-                                  'size': 10 * MiB,
+                                  'size': 8 * MiB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-anomal-zscores': {'main_path': "apps-monitoring/anomal/zScores",
                                           'size': 100 * KB,
