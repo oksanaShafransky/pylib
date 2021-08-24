@@ -135,14 +135,17 @@ class AppsPathResolver(object):
 
             # MONITORING
             'monitoring-window': {'main_path': "apps-monitoring/window",
-                                  'size': 6 * MiB,
+                                  'size': 5 * MiB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-predict': {'main_path': "apps-monitoring/predict",
                                   'size': 10 * MiB,
                                   'marker': True, 'path_type': "daily"},
-            'monitoring-anomal': {'main_path': "apps-monitoring/anomal",
-                                  'size': 100 * KB,
-                                  'marker': True, 'path_type': "daily"},
+            'monitoring-anomal-zscores': {'main_path': "apps-monitoring/anomal/zScores",
+                                          'size': 100 * KB,
+                                          'marker': True, 'path_type': "daily"},
+            'monitoring-anomal-stats': {'main_path': "apps-monitoring/anomal/stats",
+                                          'size': 100 * KB,
+                                          'marker': True, 'path_type': "daily"},
 
             # MAU
             'mau_feature2_agg': {
@@ -287,18 +290,6 @@ class AppsPathResolver(object):
             'dau_with_ww_estimate': {'main_path': "daily/dau-with-ww/estimate/estKey=AppCountryKey",
                              'size': 150 * MB,
                              'marker': True, 'path_type': "daily"},
-
-            'monitoring_dau_window': {'main_path': "daily/dau/monitoring/window",
-                             'size': 0 * KB, #todo
-                             'marker': True, 'path_type': "daily"},
-
-            'monitoring_dau_prediction': {'main_path': "daily/dau/monitoring/prediction",
-                                          'size': 0 * KB, #todo
-                                          'marker': True, 'path_type': "daily"},
-
-            'monitoring_dau_anomalies': {'main_path': "daily/dau/monitoring/anomalies",
-                                         'size': 0 * KB, #todo
-                                         'marker': True, 'path_type': "daily"},
 
             'mau_embee_estimate': {'main_path': "monthly/mau/estimate-embee/estKey=AppContryKey",
                                    'size': 0 * MB,
@@ -1346,9 +1337,12 @@ class AppsPathResolver(object):
     def get_monitoring_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-predict'], path_suffix, in_or_out)
-    def get_monitoring_anomal(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-anomal'], path_suffix, in_or_out)
+                                             self.apps_paths['monitoring-anomal-zscores'], path_suffix, in_or_out)
+    def get_monitoring_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-anomal-stats'], path_suffix, in_or_out)
 
     # dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -1457,17 +1451,6 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ga'], path_suffix, in_or_out)
 
-    def get_monitoring_dau_window(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring_dau_window'], path_suffix, in_or_out)
-
-    def get_monitoring_dau_prediction(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring_dau_prediction'], path_suffix, in_or_out)
-
-    def get_monitoring_dau_anomalies(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring_dau_anomalies'], path_suffix, in_or_out)
     #SCRAPING
     def get_android_app_info(self, in_or_out, path_prefix=None, path_suffix="store=0"):
         return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
@@ -1477,7 +1460,7 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
                                              self.apps_paths['app_info'], path_suffix, in_or_out)
 
-    #Store analysis
+    # Store analysis
     def get_google_play_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['google_play_version_db'], path_suffix, in_or_out)
