@@ -5,7 +5,7 @@ GiB = 1024 ** 3
 MiB = 1024 ** 2
 KiB = 1024
 
-MB = 1000 * 2
+MB = 1000 ** 2
 
 EMPTY_STRING = ""
 SCRAPING_BASE_DIR = "/similargroup/scraping"
