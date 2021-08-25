@@ -408,7 +408,7 @@ class ContextualizedTasksInfra(object):
     local_env_vars_whitelist = ["SNOWFLAKE_ENV", "AWS_DEFAULT_REGION", "AWS_REGION"]  # non-empty AWS_DEFAULT_REGION/AWS_REGION is required by Glue
     default_spark_configs = {
         # default executor profile 1.5G per core
-        'spark.driver.memory': "6g",
+        'spark.driver.memory': "4g",
         'spark.executor.memory': '6g',
         'spark.executor.cores': '4'
     }
