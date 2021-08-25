@@ -138,7 +138,7 @@ class AppsPathResolver(object):
                                   'size': 5 * MB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-predict': {'main_path': "apps-monitoring/predict",
-                                  'size': 9 * MB,
+                                  'size': 7 * MB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-anomal-zscores': {'main_path': "apps-monitoring/anomal/zScores",
                                           'size': 100 * KiB,
