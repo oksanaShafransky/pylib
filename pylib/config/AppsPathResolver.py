@@ -136,18 +136,30 @@ class AppsPathResolver(object):
                                      'marker': True, 'path_type': "daily"},
 
             # MONITORING
-            'monitoring-window': {'main_path': "apps-monitoring/window",
+            'monitoring-dau-window': {'main_path': "apps-monitoring/dau/window",
                                   'size': 5 * MB,
                                   'marker': True, 'path_type': "daily"},
-            'monitoring-predict': {'main_path': "apps-monitoring/predict",
+            'monitoring-dau-predict': {'main_path': "apps-monitoring/dau/predict",
                                   'size': 7 * MB,
                                   'marker': True, 'path_type': "daily"},
-            'monitoring-anomal-zscores': {'main_path': "apps-monitoring/anomal/zScores",
+            'monitoring-dau-anomal-zscores': {'main_path': "apps-monitoring/dau/anomal/zScores",
                                           'size': 100 * KB,
                                           'marker': True, 'path_type': "daily"},
-            'monitoring-anomal-stats': {'main_path': "apps-monitoring/anomal/stats",
+            'monitoring-dau-anomal-stats': {'main_path': "apps-monitoring/dau/anomal/stats",
                                           'size': 20 * KB,
                                           'marker': True, 'path_type': "daily"},
+            'monitoring-reach-window': {'main_path': "apps-monitoring/reach/window",
+                                      'size': 5 * MB,
+                                      'marker': True, 'path_type': "daily"},
+            'monitoring-reach-predict': {'main_path': "apps-monitoring/reach/predict",
+                                       'size': 7 * MB,
+                                       'marker': True, 'path_type': "daily"},
+            'monitoring-reach-anomal-zscores': {'main_path': "apps-monitoring/reach/anomal/zScores",
+                                              'size': 100 * KB,
+                                              'marker': True, 'path_type': "daily"},
+            'monitoring-reach-anomal-stats': {'main_path': "apps-monitoring/reach/anomal/stats",
+                                            'size': 20 * KB,
+                                            'marker': True, 'path_type': "daily"},
 
             # MAU
             'mau_feature2_agg': {
@@ -1333,18 +1345,30 @@ class AppsPathResolver(object):
                                              self.apps_paths['matching-tests'], path_suffix, in_or_out)
 
     # apps monitoring
-    def get_monitoring_window(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_dau_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-window'], path_suffix, in_or_out)
-    def get_monitoring_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+                                             self.apps_paths['monitoring-dau-window'], path_suffix, in_or_out)
+    def get_monitoring_dau_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-predict'], path_suffix, in_or_out)
-    def get_monitoring_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
+                                             self.apps_paths['monitoring-dau-predict'], path_suffix, in_or_out)
+    def get_monitoring_dau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+                                             self.apps_paths['monitoring-dau-anomal-zscores'], path_suffix, in_or_out)
+    def get_monitoring_dau_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-anomal-stats'], path_suffix, in_or_out)
+                                             self.apps_paths['monitoring-dau-anomal-stats'], path_suffix, in_or_out)
+    def get_monitoring_reach_window(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-reach-window'], path_suffix, in_or_out)
+    def get_monitoring_reach_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-reach-predict'], path_suffix, in_or_out)
+    def get_monitoring_reach_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-reach-anomal-zscores'], path_suffix, in_or_out)
+    def get_monitoring_reach_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-reach-anomal-stats'], path_suffix, in_or_out)
 
     # dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
