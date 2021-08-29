@@ -7,6 +7,7 @@ KiB = 1024
 
 KB = 1000
 MB = KB ** 2
+GB = KB ** 3
 
 EMPTY_STRING = ""
 SCRAPING_BASE_DIR = "/similargroup/scraping"
@@ -177,7 +178,7 @@ class AppsPathResolver(object):
                                                               'marker': True, 'path_type': "daily"},
 
             'calc_downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/new_calc/aggKey=AppCountryCountrySourceKey",
-                                                              'size': 5.8 * GiB,
+                                                              'size': 6 * GB,
                                                               'marker': True, 'path_type': "daily"},
 
 
