@@ -372,7 +372,7 @@ class AppsPathResolver(object):
 
             'reach_and_downloads': {
                 'main_path': "daily/downloads/installs/estimation/reach_and_downloads/estkey=AppCountryKey",
-                'size': 100 * MiB,
+                'size': 10 * MiB,
                 'marker': True, 'path_type': "daily"},
 
             'reach_estimation_ww': {
