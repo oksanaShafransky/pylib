@@ -140,7 +140,7 @@ class AppsPathResolver(object):
                                   'size': 5 * MB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-downloads-window': {'main_path': "apps-monitoring/downloads/window",
-                                        'size': 5 * MB,
+                                        'size': 70 * KB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-reach-window': {'main_path': "apps-monitoring/reach/window",
                                         'size': 5 * MB,
