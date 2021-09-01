@@ -374,7 +374,7 @@ class AppsPathResolver(object):
 
             'installs_alpha_estimation_ww': {
                 'main_path': "daily/downloads/installs/estimation/app-downloads-alpha-ww/estkey=AppCountryKey",
-                'size': 100 * MiB,
+                'size': 1 * MiB,
                 'marker': True, 'path_type': "daily"},
 
             'reach_estimation': {
@@ -384,7 +384,7 @@ class AppsPathResolver(object):
 
             'reach_and_downloads': {
                 'main_path': "daily/downloads/installs/estimation/reach_and_downloads/estkey=AppCountryKey",
-                'size': 100 * MiB,
+                'size': 1 * MiB,
                 'marker': True, 'path_type': "daily"},
 
             'reach_estimation_ww': {
@@ -1538,3 +1538,7 @@ class AppsPathResolver(object):
     def get_app_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_affinity'], path_suffix, in_or_out)
+
+    def get_app_scores(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['app_scores'], path_suffix, in_or_out)
