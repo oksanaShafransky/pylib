@@ -161,7 +161,7 @@ class AppsPathResolver(object):
                                           'size': 20 * KB,
                                           'marker': True, 'path_type': "daily"},
             'monitoring-downloads-anomal-zscores': {'main_path': "apps-monitoring/downloads/anomal/zScores",
-                                                'size': 40 * KB,
+                                                'size': 35 * KB,
                                                 'marker': True, 'path_type': "daily"},
             'monitoring-downloads-anomal-stats': {'main_path': "apps-monitoring/downloads/anomal/stats",
                                               'size': 5 * KB,
