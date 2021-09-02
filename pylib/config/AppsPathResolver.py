@@ -1,4 +1,4 @@
-from pylib.tasks.input_data_artifact import InputDataArtifact, InputRangedDataArtifact
+from pylib.tasks.input_data_artifact import InputDataArtifact, InputRangedDataArtifact, DEFAULT_SUFFIX_FORMAT
 from pylib.tasks.output_data_artifact import OutputDataArtifact
 
 GiB = 1024 ** 3
@@ -72,10 +72,10 @@ class AppsPathResolver(object):
                                           required_marker=self.required_marker,
                                           **kwargs)
 
-        def get_ranged_data_artifact(self, dates):
+        def get_ranged_data_artifact(self, dates, suffix_format=DEFAULT_SUFFIX_FORMAT):
             if self.in_or_out == 'out':
                 raise Exception("AppsPathSolver - Output doesn't have ranged data artifact")
-            return InputRangedDataArtifact(self.ti, self.full_base_path, dates,
+            return InputRangedDataArtifact(self.ti, self.full_base_path, dates, suffix_format,
                                            required_size=self.required_size,
                                            required_marker=self.required_marker)
 
