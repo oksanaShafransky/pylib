@@ -172,6 +172,18 @@ class AppsPathResolver(object):
             'monitoring-reach-anomal-stats': {'main_path': "apps-monitoring/reach/anomal/stats",
                                               'size': 20 * KB,
                                               'marker': True, 'path_type': "daily"},
+            'monitoring-mau-window': {'main_path': "apps-monitoring/mau/window",
+                                      'size': 5 * MB,
+                                      'marker': True, 'path_type': "monthly"},
+            'monitoring-mau-predict': {'main_path': "apps-monitoring/mau/predict",
+                                      'size': 6 * MB,
+                                      'marker': True, 'path_type': "monthly"},
+            'monitoring-mau-anomal-zscores': {'main_path': "apps-monitoring/mau/anomal/zScores",
+                                      'size': 100 * KB,
+                                      'marker': True, 'path_type': "monthly"},
+            'monitoring-mau-anomal-stats': {'main_path': "apps-monitoring/mau/anomal/stats",
+                                      'size': 20 * KB,
+                                      'marker': True, 'path_type': "monthly"},
 
             # MAU
             'mau_feature2_agg': {
@@ -1393,6 +1405,18 @@ class AppsPathResolver(object):
     def get_monitoring_reach_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-reach-anomal-stats'], path_suffix, in_or_out)
+    def get_monitoring_mau_window(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-mau-window'], path_suffix, in_or_out)
+    def get_monitoring_mau_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                         self.apps_paths['monitoring-mau-predict'], path_suffix, in_or_out)
+    def get_monitoring_mau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-mau-anomal-zscores'], path_suffix, in_or_out)
+    def get_monitoring_mau_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-mau-anomal-stats'], path_suffix, in_or_out)
 
     # dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
