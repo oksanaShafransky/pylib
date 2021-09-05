@@ -107,7 +107,7 @@ class AppsPathResolver(object):
                                     'size': 20 * MiB,
                                     'marker': True, 'path_type': "daily"},
             'matching-learning-set': {'main_path': "apps-matching/ls",
-                                      'size': 4 * MiB,
+                                      'size': 3 * MB,
                                       'marker': True, 'path_type': "daily"},
             'matching_manual_pairs': {
                 'main_path': "static/apps-matching/manual-pairs_2021_08_01",
