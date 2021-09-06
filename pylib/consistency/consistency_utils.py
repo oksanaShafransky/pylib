@@ -461,10 +461,12 @@ class ConsistencyTestInfra(object):
         if benchmark_mode:
             all_outputs = [benchmark_path]
 
+        output_paths = [output_da.resolved_path for output_da in all_outputs]
+
         self.run_consistency_py_spark(
             main_py_file='consistency_test_driver.py',
             command_params=command_params,
-            output_dirs=all_outputs,
+            output_dirs=output_paths,
             named_spark_args=named_spark_args,
             spark_configs=spark_configs,
             queue=spark_queue
