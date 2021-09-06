@@ -455,7 +455,8 @@ class ConsistencyTestInfra(object):
             name=test_name,
             test_date=self.ti.date,
             date_type=date_type,
-            countries=countries_list
+            countries=countries_list,
+            ti=self.ti
         )
         if benchmark_mode:
             all_outputs = [benchmark_path]
@@ -470,4 +471,5 @@ class ConsistencyTestInfra(object):
         )
 
         # output checks
-        self.ti.assert_output_validity(all_outputs, min_size_bytes=10, validate_marker=True)
+        for output_da in all_outputs:
+            output_da.assert_output_validity()
