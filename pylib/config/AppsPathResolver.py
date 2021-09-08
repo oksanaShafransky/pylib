@@ -182,7 +182,7 @@ class AppsPathResolver(object):
                                       'size': 0.5 * KB,
                                       'marker': True, 'path_type': "monthly"},
             'monitoring-mau-anomal-stats': {'main_path': "apps-monitoring/mau/anomal/stats",
-                                      'size': 20 * KB,
+                                      'size': 0.5 * KB,
                                       'marker': True, 'path_type': "monthly"},
 
             # MAU
