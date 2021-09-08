@@ -137,7 +137,7 @@ class AppsPathResolver(object):
 
             # MONITORING
             'monitoring-dau-window': {'main_path': "apps-monitoring/dau/window",
-                                  'size': 5 * MB,
+                                  'size': 4 * MB,
                                   'marker': True, 'path_type': "daily"},
             'monitoring-downloads-window': {'main_path': "apps-monitoring/downloads/window",
                                         'size': 70 * KB,
