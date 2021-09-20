@@ -146,7 +146,7 @@ class AppsPathResolver(object):
                                         'size': 5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-dau-predict': {'main_path': "apps-monitoring/dau/predict",
-                                      'size': 6 * MB,
+                                      'size': 5.5 * MB,
                                       'marker': True, 'path_type': "daily"},
             'monitoring-downloads-predict': {'main_path': "apps-monitoring/downloads/predict",
                                          'size': 100 * KB,
