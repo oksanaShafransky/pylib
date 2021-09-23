@@ -345,6 +345,13 @@ class AppsPathResolver(object):
                               'size': 0 * MiB,
                               'marker': True, 'path_type': "monthly"},
 
+            # Usage
+            'usage_agg': {'main_path': "daily/usage/agg",
+                             'size': 150 * MB,
+                             'marker': True, 'path_type': "daily"},
+            'usage_est': {'main_path': "daily/usage/est",
+                             'size': 150 * MB,
+                             'marker': True, 'path_type': "daily"},
 
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KiB,
@@ -1494,6 +1501,15 @@ class AppsPathResolver(object):
     def get_dau_with_ww_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['dau_with_ww_estimate'], path_suffix, in_or_out)
+
+    # usage
+    def get_usage_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_agg'], path_suffix, in_or_out)
+    def get_usage_est(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                         self.apps_paths['usage_est'], path_suffix, in_or_out)
+
 
     #MAU
     def get_mau_user_app_country_agg(self, in_or_out, path_prefix=None, path_suffix=None):
