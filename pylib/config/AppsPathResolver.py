@@ -347,10 +347,10 @@ class AppsPathResolver(object):
 
             # Usage
             'usage_agg': {'main_path': "daily/usage/agg",
-                             'size': 150 * MB,
+                             'size': 350 * KB,
                              'marker': True, 'path_type': "daily"},
             'usage_est': {'main_path': "daily/usage/est",
-                             'size': 150 * MB,
+                             'size': 200 * KB,
                              'marker': True, 'path_type': "daily"},
 
             # Daily
