@@ -65,19 +65,19 @@ class TestInfra:
             required_path = '/base/dir/consistency/name1/output/year=12/month=03/day=05/type=countries/country=111'
             assert path == required_path
 
-        def test_all_output_path(self, countries):
-            countries_paths = ['/base/dir/consistency/name1/output/year=12/month=03/day=05/type=countries/country=%s' % country for country in countries]
-            model_path = ['/base/dir/consistency/name1/output/year=12/month=03/day=05/type=model/country=%s' % country for country in countries]
-            total_path = '/base/dir/consistency/name1/output/year=12/month=03/day=05/type=total'
-            all_paths = ConsistencyPaths.gen_all_output_paths('/base/dir', 'name1', date(2012, 3, 5), ConsistencyDateType.Day, countries)
-
-            for cp in countries_paths:
-                assert cp in all_paths
-
-            for mp in model_path:
-                assert mp in all_paths
-
-            assert total_path in all_paths
+        # def test_all_output_path(self, countries):
+        #     countries_paths = ['/base/dir/consistency/name1/output/year=12/month=03/day=05/type=countries/country=%s' % country for country in countries]
+        #     model_path = ['/base/dir/consistency/name1/output/year=12/month=03/day=05/type=model/country=%s' % country for country in countries]
+        #     total_path = '/base/dir/consistency/name1/output/year=12/month=03/day=05/type=total'
+        #     all_paths = ConsistencyPaths.gen_all_output_paths('/base/dir', 'name1', date(2012, 3, 5), ConsistencyDateType.Day, countries)
+        #
+        #     for cp in countries_paths:
+        #         assert cp in all_paths
+        #
+        #     for mp in model_path:
+        #         assert mp in all_paths
+        #
+        #     assert total_path in all_paths
 
     class TestGenInputPaths:
 
