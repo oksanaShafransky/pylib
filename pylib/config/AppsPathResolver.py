@@ -349,9 +349,12 @@ class AppsPathResolver(object):
             'usage_agg': {'main_path': "daily/usage/agg",
                              'size': 350 * KB,
                              'marker': True, 'path_type': "daily"},
+            'usage_filler': {'main_path': "daily/usage/filler",
+                          'size': 50 * KB,
+                          'marker': True, 'path_type': "daily"},
             'usage_est': {'main_path': "daily/usage/est",
-                             'size': 200 * KB,
-                             'marker': True, 'path_type': "daily"},
+                          'size': 200 * KB,
+                          'marker': True, 'path_type': "daily"},
 
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KiB,
@@ -1514,6 +1517,9 @@ class AppsPathResolver(object):
     def get_usage_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_agg'], path_suffix, in_or_out)
+    def get_usage_filler(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_filler'], path_suffix, in_or_out)
     def get_usage_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                          self.apps_paths['usage_est'], path_suffix, in_or_out)
