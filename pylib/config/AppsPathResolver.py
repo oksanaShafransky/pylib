@@ -173,7 +173,7 @@ class AppsPathResolver(object):
                                               'size': 20 * KB,
                                               'marker': True, 'path_type': "daily"},
             'monitoring-mau-window': {'main_path': "apps-monitoring/mau/window",
-                                      'size': 4 * MB,
+                                      'size': 3 * MB,
                                       'marker': True, 'path_type': "monthly"},
             'monitoring-mau-predict': {'main_path': "apps-monitoring/mau/predict",
                                       'size': 6 * MB,
@@ -354,6 +354,9 @@ class AppsPathResolver(object):
                           'marker': True, 'path_type': "daily"},
             'usage_est': {'main_path': "daily/usage/est",
                           'size': 200 * KB,
+                          'marker': True, 'path_type': "daily"},
+            'usage_final_est': {'main_path': "daily/usage/final",
+                          'size': 250 * KB,
                           'marker': True, 'path_type': "daily"},
 
             # Daily
@@ -1522,7 +1525,10 @@ class AppsPathResolver(object):
                                              self.apps_paths['usage_filler'], path_suffix, in_or_out)
     def get_usage_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                         self.apps_paths['usage_est'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_est'], path_suffix, in_or_out)
+    def get_usage_final_est(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_final_est'], path_suffix, in_or_out)
 
 
     #MAU
