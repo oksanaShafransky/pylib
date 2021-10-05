@@ -173,7 +173,7 @@ class AppsPathResolver(object):
                                               'size': 20 * KB,
                                               'marker': True, 'path_type': "daily"},
             'monitoring-mau-window': {'main_path': "apps-monitoring/mau/window",
-                                      'size': 4 * MB,
+                                      'size': 3 * MB,
                                       'marker': True, 'path_type': "monthly"},
             'monitoring-mau-predict': {'main_path': "apps-monitoring/mau/predict",
                                       'size': 6 * MB,
