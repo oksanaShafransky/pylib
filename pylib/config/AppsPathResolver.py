@@ -467,7 +467,7 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 130 * MiB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 110 * MiB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
@@ -726,7 +726,15 @@ class AppsPathResolver(object):
                 'path_type': "monthly"},
 
             'app_affinity': {'main_path': "%s/estimate/app-affinity-ww/type=%s" % (self.ti.mode, self.ti.mode_type),
-                             'size': 90 * MiB, 'marker': True,
+                             'size': 90 * GiB, 'marker': True,
+                             'path_type': "monthly"},
+
+            'app_affinity_pairs': {'main_path': "%s/estimate/app_affinity_pairs/type=%s" % (self.ti.mode, self.ti.mode_type),
+                             'size': 90 * GiB, 'marker': True,
+                             'path_type': "monthly"},
+
+            'app_affinity_features': {'main_path': "%s/estimate/app_affinity_features/type=%s" % (self.ti.mode, self.ti.mode_type),
+                             'size': 90 * GiB, 'marker': True,
                              'path_type': "monthly"},
 
             #NSM TO OSM
@@ -1607,6 +1615,14 @@ class AppsPathResolver(object):
     def get_app_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_affinity'], path_suffix, in_or_out)
+
+    def get_app_affinity_pairs(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['app_affinity_pairs'], path_suffix, in_or_out)
+
+    def get_app_affinity_features(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['app_affinity_features'], path_suffix, in_or_out)
 
     def get_app_scores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
