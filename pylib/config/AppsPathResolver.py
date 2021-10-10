@@ -726,7 +726,7 @@ class AppsPathResolver(object):
                 'path_type': "monthly"},
 
             'app_affinity': {'main_path': "%s/estimate/app-affinity-ww/type=%s" % (self.ti.mode, self.ti.mode_type),
-                             'size': 50 * GiB, 'marker': True,
+                             'size': 5 * GiB, 'marker': True,
                              'path_type': "monthly"},
 
             'app_affinity_pairs': {'main_path': "daily/aggregations/aggkey=AppPairCountryKey",
