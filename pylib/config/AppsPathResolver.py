@@ -726,7 +726,7 @@ class AppsPathResolver(object):
                 'path_type': "monthly"},
 
             'app_affinity': {'main_path': "%s/estimate/app-affinity-ww/type=%s" % (self.ti.mode, self.ti.mode_type),
-                             'size': 1 * GiB, 'marker': True,
+                             'size': 1 * KiB, 'marker': True,
                              'path_type': "monthly"},
 
             'app_affinity_pairs': {'main_path': "daily/aggregations/aggkey=AppPairCountryKey",
@@ -734,7 +734,7 @@ class AppsPathResolver(object):
                              'path_type': "daily"},
 
             'app_affinity_pairs_agg': {'main_path': "%s/estimate/app_affinity_pairs_agg/type=%s" % (self.ti.mode, self.ti.mode_type),
-                             'size': 1 * GiB, 'marker': True,
+                             'size': 1 * KiB, 'marker': True,
                              'path_type': "monthly"},
 
             #NSM TO OSM
