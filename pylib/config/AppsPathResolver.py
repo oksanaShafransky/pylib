@@ -733,9 +733,9 @@ class AppsPathResolver(object):
                              'size': 50 * GiB, 'marker': True,
                              'path_type': "daily"},
 
-            # 'app_affinity_features': {'main_path': "%s/estimate/app_affinity_features/type=%s" % (self.ti.mode, self.ti.mode_type),
-            #                  'size': 90 * GiB, 'marker': True,
-            #                  'path_type': "monthly"},
+            'app_affinity_pairs_agg': {'main_path': "%s/estimate/app_affinity_pairs_agg/type=%s" % (self.ti.mode, self.ti.mode_type),
+                             'size': 90 * GiB, 'marker': True,
+                             'path_type': "monthly"},
 
             #NSM TO OSM
             'preprocessed_1010': {'main_path': "daily/osm/preprocessed-1010",
@@ -1620,9 +1620,9 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_affinity_pairs'], path_suffix, in_or_out)
 
-    # def get_app_affinity_features(self, in_or_out, path_prefix=None, path_suffix=None):
-    #     return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-    #                                          self.apps_paths['app_affinity_features'], path_suffix, in_or_out)
+    def get_app_affinity_pairs_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['app_affinity_pairs_agg'], path_suffix, in_or_out)
 
     def get_app_scores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
