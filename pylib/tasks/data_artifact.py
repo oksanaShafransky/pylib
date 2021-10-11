@@ -1,4 +1,4 @@
-import logging
+
 from datasource import HDFSDataSource, S3DataSource, DatasourceTypes
 
 
@@ -6,14 +6,11 @@ SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
 
-logger = logging.getLogger('data_artifact')
-
-
 class DataArtifact(object):
 
     def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_size=1):
         self.raw_path = path
-        self.min_required_size = required_size * buffer_size
+        self.min_required_size = self.set_size_check_threshold(required_size, buffer_size)
         self.check_marker = required_marker
         self.ti = ti
 
@@ -45,6 +42,14 @@ class DataArtifact(object):
     def report_lineage(self, report_type, *reporters):
         for reporter in reporters:
             reporter.log_lineage_hdfs(direction=report_type, directories=[self.locate_data_source.prefixed_collection])
+
+    def set_size_check_threshold(self, required_size, buffer_size):
+        if type(buffer_size) != float and type(buffer_size) != int:
+            raise Exception("DataArtifact - buffer size object not recognized, suppose to be an int or a float")
+        elif buffer_size < 0:
+            raise Exception("DataArtifact - buffer size must between 0 and 1")
+        else:
+            return required_size * buffer_size
 
     def get_size_check_threshold(self):
         return self.min_required_size

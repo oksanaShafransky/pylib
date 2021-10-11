@@ -1,8 +1,11 @@
+import logging
 from data_artifact import DataArtifact
 
 
 SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
+
+logger = logging.getLogger('data_artifact')
 
 
 class OutputDataArtifact(DataArtifact):

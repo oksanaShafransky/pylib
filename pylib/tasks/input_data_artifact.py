@@ -1,3 +1,4 @@
+import logging
 from data_artifact import DataArtifact
 
 import os
@@ -5,6 +6,7 @@ import os
 SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
+logger = logging.getLogger('data_artifact')
 
 class InputRangedDataArtifact(object):
 
@@ -82,6 +84,5 @@ if __name__ == '__main__':
     # da = InputDataArtifact('path')
     da = InputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=07',
                            required_size=10000, required_marker=True)
-    da.assert_input_validity()
     print(da.resolved_path)
 
