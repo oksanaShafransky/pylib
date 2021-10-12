@@ -39,7 +39,7 @@ class InputRangedDataArtifact(object):
 
 class InputDataArtifact(DataArtifact):
 
-    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_size=1):
+    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_size=None):
         super(InputDataArtifact, self).__init__(ti, path, required_size, required_marker, override_data_sources,
                                                 buffer_size)
 

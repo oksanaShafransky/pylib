@@ -48,7 +48,7 @@ logger.addHandler(logging.StreamHandler())
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
-
+DEFAULT_BUFFER = 1
 
 class TasksInfra(object):
     @staticmethod
@@ -424,6 +424,7 @@ class ContextualizedTasksInfra(object):
         self.yarn_application_tags = extract_yarn_application_tags_from_env()
         self.spark_configs = ContextualizedTasksInfra.default_spark_configs
         self.default_da_data_sources = None
+        self.default_buffer_size = DEFAULT_BUFFER
         # take some environment variables from os to the job
         self.job_env_vars = {k:  os.environ[k] for k in ContextualizedTasksInfra.local_env_vars_whitelist if k in os.environ}
 
@@ -1965,6 +1966,10 @@ class ContextualizedTasksInfra(object):
     @property
     def da_data_sources(self):
         return json.loads(self.__get_common_args().get('da_data_sources', self.get_default_da_data_sources()))
+
+    @property
+    def buffer_size(self):
+        return self.__get_common_args().get('buffer_size', self.default_buffer_size)
 
     @property
     def production_base_dir(self):

@@ -5,14 +5,17 @@ from datasource import HDFSDataSource, S3DataSource, DatasourceTypes
 SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
-
 class DataArtifact(object):
 
-    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_size=1):
+    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None,
+                 buffer_size=None):
         self.raw_path = path
-        self.min_required_size = self.set_size_check_threshold(required_size, buffer_size)
         self.check_marker = required_marker
         self.ti = ti
+
+        # Decide on buffer size
+        self.buffer_size = float(buffer_size or self.ti.buffer_size)
+        self.min_required_size = self.set_size_check_threshold(required_size)
 
         # Decide on datasources
         self.raw_data_sources_list = override_data_sources or self.ti.da_data_sources
@@ -43,13 +46,11 @@ class DataArtifact(object):
         for reporter in reporters:
             reporter.log_lineage_hdfs(direction=report_type, directories=[self.locate_data_source.prefixed_collection])
 
-    def set_size_check_threshold(self, required_size, buffer_size):
-        if type(buffer_size) != float and type(buffer_size) != int:
-            raise Exception("DataArtifact - buffer size object not recognized, suppose to be an int or a float")
-        elif buffer_size < 0:
+    def set_size_check_threshold(self, required_size):
+        if self.buffer_size < 0 or self.buffer_size > 1:
             raise Exception("DataArtifact - buffer size must between 0 and 1")
         else:
-            return required_size * buffer_size
+            return required_size * self.buffer_size
 
     def get_size_check_threshold(self):
         return self.min_required_size
