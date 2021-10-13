@@ -39,9 +39,9 @@ class InputRangedDataArtifact(object):
 
 class InputDataArtifact(DataArtifact):
 
-    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_size=None):
+    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_percent=None):
         super(InputDataArtifact, self).__init__(ti, path, required_size, required_marker, override_data_sources,
-                                                buffer_size)
+                                                buffer_percent)
 
         # Search in datasource one by one break if we found one.
         for d in self.data_sources:

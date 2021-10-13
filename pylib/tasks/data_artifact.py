@@ -8,13 +8,14 @@ DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 class DataArtifact(object):
 
     def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None,
-                 buffer_size=None):
+                 buffer_percent=None):
         self.raw_path = path
         self.check_marker = required_marker
         self.ti = ti
 
         # Decide on buffer size
-        self.buffer_size = float(buffer_size or self.ti.buffer_size)
+        self.buffer_size = self.get_buffer_size(float(buffer_percent or self.ti.buffer_percent))
+
         self.min_required_size = self.set_size_check_threshold(required_size)
 
         # Decide on datasources
@@ -48,9 +49,13 @@ class DataArtifact(object):
 
     def set_size_check_threshold(self, required_size):
         if self.buffer_size < 0 or self.buffer_size > 1:
-            raise Exception("DataArtifact - buffer size must between 0 and 1")
+            raise Exception("DataArtifact - buffer percent must between 0 and 100")
         else:
-            return required_size * self.buffer_size
+            return required_size * (1 - self.buffer_size)
 
     def get_size_check_threshold(self):
         return self.min_required_size
+
+    @staticmethod
+    def get_buffer_size(buffer_size):
+        return buffer_size / 100.0
