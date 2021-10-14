@@ -819,6 +819,10 @@ class AppsPathResolver(object):
                                    'size': 1 * GiB, 'marker': True,
                                    'path_type': "daily"},
 
+            'ww_downloads_to_scrape': {'main_path': "scraping/ww-downloads-to-scrape",
+                         'size': 6 * MiB, 'marker': True,
+                         'path_type': "daily"},
+
             # store-analysis
             'google_play_raw_reviews': {'main_path': "google-play/reviews/raw",
                                        'size': 1 * MiB, 'marker': True,
@@ -1326,7 +1330,6 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['calc_downloads_app_country_country_source_agg'], path_suffix, in_or_out)
 
-
     def get_downloads_app_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_app_country_delta_key_agg'], path_suffix, in_or_out)
@@ -1577,6 +1580,10 @@ class AppsPathResolver(object):
     def get_ios_app_info(self, in_or_out, path_prefix=None, path_suffix="store=1"):
         return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
                                              self.apps_paths['app_info'], path_suffix, in_or_out)
+
+    def get_android_apps_to_scrape(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_downloads_to_scrape'], path_suffix, in_or_out)
 
     # Store analysis
     def get_google_play_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
