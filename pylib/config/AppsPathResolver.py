@@ -715,7 +715,7 @@ class AppsPathResolver(object):
                 'path_type': "daily"},
 
             'app_scores_with_info': {
-                'main_path': "%(mode)s/app-scores-with-info" % {'mode': self.ti.mode},
+                'main_path': "%(mode)s/app-scores-with-info/type=%(mode_type)" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
                 'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
@@ -725,12 +725,12 @@ class AppsPathResolver(object):
                 'path_type': "daily"},
 
             'category-ranks-parquet': {
-                'main_path': "%(mode)s/category-ranks-parquet" % {'mode': self.ti.mode},
+                'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
                 'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'usage-climbing-apps': {
-                'main_path': "%(mode)s/usage-climbing-apps" % {'mode': self.ti.mode},
+                'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
                 'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
