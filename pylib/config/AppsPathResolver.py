@@ -710,7 +710,7 @@ class AppsPathResolver(object):
                 'path_type': "daily"},
             # Snapshot/WindowF
             'app_scores': {
-                'main_path': "%(mode)s/app-scores" % {'mode': self.ti.mode},
+                'main_path': "%(mode)s/app-scores/type=%(mode_type)" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
                 'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
@@ -720,7 +720,7 @@ class AppsPathResolver(object):
                 'path_type': "daily"},
 
             'category-ranks': {
-                'main_path': "%(mode)s/category-ranks" % {'mode': self.ti.mode},
+                'main_path': "%(mode)s/category-ranks/type=%(mode_type)" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
                 'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
