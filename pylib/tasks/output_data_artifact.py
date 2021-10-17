@@ -10,9 +10,10 @@ logger = logging.getLogger('data_artifact')
 
 class OutputDataArtifact(DataArtifact):
 
-    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_percent=None):
+    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_percent=None,
+                 email_list=[]):
         super(OutputDataArtifact, self).__init__(ti, path, required_size, required_marker, override_data_sources,
-                                                 buffer_percent)
+                                                 buffer_percent, email_list)
         # Take first data_source available from the list. This is our output data source
         self.locate_data_source = self.data_sources[0]
 

@@ -4,7 +4,7 @@ from enum import Enum
 import os
 from pylib.hadoop.hdfs_util import get_size as size_on_hdfs, file_exists as exists_hdfs, directory_exists as dir_exists_hdfs, create_client
 from pylib.aws.s3.inventory import get_size as size_on_s3, does_exist as exists_s3
-import enum
+from pylib.tasks.ptask_infra import TasksInfra
 
 
 logger = logging.getLogger('data_source')
@@ -39,11 +39,13 @@ def create_datasource_input_dict(type, name, prefix):
 class DataSource(object):
     __metaclass__ = abc.ABCMeta
 
-    def __init__(self, collection, prefix, required_size, required_marker):
+    def __init__(self, collection, prefix, required_size, required_marker, original_required_size, email_list):
         self.collection = collection
         self.prefix = prefix
         self.required_size = required_size
         self.required_marker = required_marker
+        self.original_required_size = original_required_size
+        self.email_list = email_list
         self.full_uri = None
         self.is_exist = None
         self.is_marker_validated = None
@@ -92,11 +94,23 @@ class DataSource(object):
         """Method documentation"""
         return
 
+    def send_mail(self):
+
+        mail_from = 'data.artifact@similarweb.com'
+        mail_to = self.email_list.split(",")
+        subject = 'Beware! actual size is lower than original size threshold'
+        message = "The path {} has the actual size {} when the original threshold was {}:"\
+            .format(self.full_uri, human_size(self.effective_size), human_size(self.original_required_size))
+
+        TasksInfra.send_mail(mail_from, mail_to, subject, message)
+
 
 class S3DataSource(DataSource):
 
-    def __init__(self, collection, required_size, required_marker, bucket_name, prefix):
-        super(S3DataSource, self).__init__(collection, prefix, required_size, required_marker)
+    def __init__(self, collection, required_size, required_marker, bucket_name, prefix, original_required_size,
+                 email_list):
+        super(S3DataSource, self).__init__(collection, prefix, required_size, required_marker, original_required_size,
+                                           email_list)
         self.bucket_name = bucket_name
         self.prefix = prefix
         self.prefixed_collection = "%s%s" % (self.prefix, self.collection)
@@ -116,6 +130,9 @@ class S3DataSource(DataSource):
             'Checking that dir %s on s3 is larger than %d...' % (self.prefixed_collection, self.required_size))
         assert self.effective_size >= self.required_size,\
             'Size test failed on %s required size: %d actual size: %d' % (self.prefixed_collection, self.required_size, self.effective_size)
+
+        if self.email_list and self.effective_size < self.original_required_size:
+            self.send_mail()
 
         logger.info("Size is valid: %s" % human_size(self.effective_size))
         self.is_size_validated = True
@@ -166,8 +183,9 @@ class S3DataSource(DataSource):
 
 class HDFSDataSource(DataSource):
 
-    def __init__(self, collection, required_size, required_marker, name, prefix):
-        super(HDFSDataSource, self).__init__(collection, prefix, required_size, required_marker)
+    def __init__(self, collection, required_size, required_marker, name, prefix, original_required_size, email_list):
+        super(HDFSDataSource, self).__init__(collection, prefix, required_size, required_marker, original_required_size,
+                                             email_list)
         self.name = name
         self.prefixed_collection = "%s%s" % (self.prefix, self.collection)
         self.full_uri = "hdfs://%s%s" % (self.name, self.prefixed_collection)
@@ -224,6 +242,9 @@ class HDFSDataSource(DataSource):
         logger.info(
             'Checking that dir %s on hdfs is larger than %d...' % (self.prefixed_collection, self.required_size))
         assert self.effective_size >= self.required_size, 'Size test failed on %s required size: %d actual size: %d'% (self.prefixed_collection, self.required_size, self.effective_size)
+
+        if self.email_list and self.effective_size < self.original_required_size:
+            self.send_mail()
 
         logger.info("Size is valid: %s" % human_size(self.effective_size))
         self.is_size_validated = True

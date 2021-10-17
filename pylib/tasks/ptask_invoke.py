@@ -50,6 +50,7 @@ class PtaskInvoker(Program):
             Argument(names=('calc_dir', 'cd'), help="The HDFS base directory for the task's output", optional=True),
             Argument(names=('da_data_sources', 'dds'), help="DataArtifact data sources", optional=True),
             Argument(names=('buffer_percent', 'bp'), help="DataArtifact buffer percent", optional=True),
+            Argument(names=('email_list', 'el'), help="Email list for the buffer threshold", optional=True),
             Argument(names=('mode', 'm'), help="Run mode (snapshot/window/daily)", optional=True),
             Argument(names=('mode_type', 'mt'), help="Run mode type (monthly/window/daily)", optional=True),
             Argument(names=('dont_force', 'df'), kind=bool,
@@ -85,6 +86,8 @@ class PtaskInvoker(Program):
             sw_tasks['da_data_sources'] = self.args.da_data_sources.value
         if self.args.buffer_percent.value:
             sw_tasks['buffer_percent'] = self.args.buffer_percent.value
+        if self.args.email_list.value:
+            sw_tasks['email_list'] = self.args.email_list.value
         if self.args.mode.value:
             assert (self.args.mode.value in known_modes)
             sw_tasks['mode'] = self.args.mode.value
