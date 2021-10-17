@@ -1,21 +1,22 @@
-import logging
+
 from datasource import HDFSDataSource, S3DataSource, DatasourceTypes
 
 
 SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
-
-logger = logging.getLogger('data_artifact')
-
-
 class DataArtifact(object):
 
-    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None):
+    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None,
+                 buffer_percent=None):
         self.raw_path = path
-        self.min_required_size = required_size
         self.check_marker = required_marker
         self.ti = ti
+
+        # Decide on buffer size
+        self.buffer_size = self.get_buffer_size(float(buffer_percent or self.ti.buffer_percent))
+
+        self.min_required_size = self.set_size_check_threshold(required_size)
 
         # Decide on datasources
         self.raw_data_sources_list = override_data_sources or self.ti.da_data_sources
@@ -46,5 +47,15 @@ class DataArtifact(object):
         for reporter in reporters:
             reporter.log_lineage_hdfs(direction=report_type, directories=[self.locate_data_source.prefixed_collection])
 
+    def set_size_check_threshold(self, required_size):
+        if self.buffer_size < 0 or self.buffer_size > 1:
+            raise Exception("DataArtifact - buffer percent must between 0 and 100")
+        else:
+            return required_size * (1 - self.buffer_size)
+
     def get_size_check_threshold(self):
         return self.min_required_size
+
+    @staticmethod
+    def get_buffer_size(buffer_size):
+        return buffer_size / 100.0

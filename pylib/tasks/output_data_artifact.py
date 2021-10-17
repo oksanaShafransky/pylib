@@ -5,14 +5,14 @@ from data_artifact import DataArtifact
 SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
-
 logger = logging.getLogger('data_artifact')
 
 
 class OutputDataArtifact(DataArtifact):
 
-    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None):
-        super(OutputDataArtifact, self).__init__(ti, path, required_size, required_marker, override_data_sources)
+    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_percent=None):
+        super(OutputDataArtifact, self).__init__(ti, path, required_size, required_marker, override_data_sources,
+                                                 buffer_percent)
         # Take first data_source available from the list. This is our output data source
         self.locate_data_source = self.data_sources[0]
 
@@ -21,7 +21,7 @@ class OutputDataArtifact(DataArtifact):
             raise Exception("InputDataArtifact Failure no valid datasource was found")
         # Checking current datasource
         logger.info("Checking datasource: " + repr(self.locate_data_source))
-        logger.info("OutputDataArtifact: Datasource check if dir exsits on collection: " + self.raw_path)
+        logger.info("OutputDataArtifact: Datasource check if dir exists on collection: " + self.raw_path)
         if self.locate_data_source.is_dir_exist():
             # From here if something breaks datasource will throw exception
             logger.info("OutputDataArtifact: Datasource validate marker, required_marker: " + str(self.check_marker))

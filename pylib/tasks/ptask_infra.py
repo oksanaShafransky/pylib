@@ -48,7 +48,7 @@ logger.addHandler(logging.StreamHandler())
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
-
+DEFAULT_BUFFER = 0
 
 class TasksInfra(object):
     @staticmethod
@@ -424,6 +424,7 @@ class ContextualizedTasksInfra(object):
         self.yarn_application_tags = extract_yarn_application_tags_from_env()
         self.spark_configs = ContextualizedTasksInfra.default_spark_configs
         self.default_da_data_sources = None
+        self.default_buffer_percent = DEFAULT_BUFFER
         # take some environment variables from os to the job
         self.job_env_vars = {k:  os.environ[k] for k in ContextualizedTasksInfra.local_env_vars_whitelist if k in os.environ}
 
@@ -1048,7 +1049,11 @@ class ContextualizedTasksInfra(object):
 
         final_repositories = (repositories if repositories else []) + self.get_sw_repos()
 
-        if environ.get('EMR_VERSION') == '6':  #TODO: consider on any EMR stop using spark2-submit
+        # TODO use spark/spark-submit version and not EMR_VERSION
+        emr_version = environ.get('EMR_VERSION', None)
+        emr_major_version = emr_version.split(".")[0] if emr_version else None
+
+        if emr_major_version == "6":  #TODO: consider on any EMR stop using spark2-submit
             if master is None:
                 master = 'yarn'
             if spark_submit_script is None:
@@ -1965,6 +1970,10 @@ class ContextualizedTasksInfra(object):
     @property
     def da_data_sources(self):
         return json.loads(self.__get_common_args().get('da_data_sources', self.get_default_da_data_sources()))
+
+    @property
+    def buffer_percent(self):
+        return self.__get_common_args().get('buffer_percent', self.default_buffer_percent)
 
     @property
     def production_base_dir(self):

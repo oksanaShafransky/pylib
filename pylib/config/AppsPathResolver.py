@@ -214,7 +214,7 @@ class AppsPathResolver(object):
                                                               'marker': True, 'path_type': "daily"},
 
             'calc_downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/new_calc/aggKey=AppCountryCountrySourceKey",
-                                                              'size': 5.9 * GB,
+                                                              'size': 5 * GB,
                                                               'marker': True, 'path_type': "daily"},
 
 
@@ -461,7 +461,7 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 7 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.9 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
@@ -547,7 +547,7 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1001_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1001", 'size': 15 * GiB,
+            'grouping_1001_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1001", 'size': 13 * GiB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -563,7 +563,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size':280 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size':260 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -818,6 +818,10 @@ class AppsPathResolver(object):
             'app_info': {'main_path': "mobile/app-info",
                                    'size': 1 * GiB, 'marker': True,
                                    'path_type': "daily"},
+
+            'ww_downloads_to_scrape': {'main_path': "scraping/ww-downloads-to-scrape",
+                         'size': 6 * MiB, 'marker': True,
+                         'path_type': "daily"},
 
             # store-analysis
             'google_play_raw_reviews': {'main_path': "google-play/reviews/raw",
@@ -1326,7 +1330,6 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['calc_downloads_app_country_country_source_agg'], path_suffix, in_or_out)
 
-
     def get_downloads_app_country_delta_key_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['downloads_app_country_delta_key_agg'], path_suffix, in_or_out)
@@ -1577,6 +1580,10 @@ class AppsPathResolver(object):
     def get_ios_app_info(self, in_or_out, path_prefix=None, path_suffix="store=1"):
         return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
                                              self.apps_paths['app_info'], path_suffix, in_or_out)
+
+    def get_android_apps_to_scrape(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_downloads_to_scrape'], path_suffix, in_or_out)
 
     # Store analysis
     def get_google_play_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
