@@ -425,6 +425,7 @@ class ContextualizedTasksInfra(object):
         self.spark_configs = ContextualizedTasksInfra.default_spark_configs
         self.default_da_data_sources = None
         self.default_buffer_percent = DEFAULT_BUFFER
+        self.default_email_list = []
         # take some environment variables from os to the job
         self.job_env_vars = {k:  os.environ[k] for k in ContextualizedTasksInfra.local_env_vars_whitelist if k in os.environ}
 
@@ -1970,6 +1971,10 @@ class ContextualizedTasksInfra(object):
     @property
     def buffer_percent(self):
         return self.__get_common_args().get('buffer_percent', self.default_buffer_percent)
+
+    @property
+    def email_list(self):
+        return self.__get_common_args().get('email_list', self.default_email_list)
 
     @property
     def production_base_dir(self):

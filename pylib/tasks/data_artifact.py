@@ -8,10 +8,13 @@ DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 class DataArtifact(object):
 
     def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None,
-                 buffer_percent=None):
+                 buffer_percent=None, email_list=[]):
         self.raw_path = path
         self.check_marker = required_marker
         self.ti = ti
+
+        self.email_list = email_list or self.ti.email_list
+        self.original_required_size = required_size
 
         # Decide on buffer size
         self.buffer_size = self.get_buffer_size(float(buffer_percent or self.ti.buffer_percent))
@@ -27,10 +30,12 @@ class DataArtifact(object):
             d_type = d.get('type')
             if d_type == DatasourceTypes.HDFS.value:
                 self.data_sources.append(HDFSDataSource(self.raw_path, self.min_required_size,
-                                                        self.check_marker, d.get("name"), d.get("prefix")))
+                                                        self.check_marker, d.get("name"), d.get("prefix"),
+                                                        self.original_required_size, self.email_list))
             elif d_type == DatasourceTypes.S3.value:
                 self.data_sources.append(S3DataSource(self.raw_path, self.min_required_size,
-                                                      self.check_marker, d.get("name"), d.get("prefix")))
+                                                      self.check_marker, d.get("name"), d.get("prefix"),
+                                                      self.original_required_size, self.email_list))
             else:
                 raise Exception("DataArtifact: unknown data source:%s options - %s"
                                 % (d_type, {d.name: d.value for d in DatasourceTypes}))
