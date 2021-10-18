@@ -710,7 +710,27 @@ class AppsPathResolver(object):
                 'path_type': "daily"},
             # Snapshot/WindowF
             'app_scores': {
-                'main_path': "%(mode)s/app-scores" % {'mode': self.ti.mode},
+                'main_path': "%(mode)s/app-scores/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'path_type': "daily"},
+
+            'app_scores_with_info': {
+                'main_path': "%(mode)s/app-scores-with-info/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'path_type': "daily"},
+
+            'category-ranks': {
+                'main_path': "%(mode)s/category-ranks/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'path_type': "daily"},
+
+            'category-ranks-parquet': {
+                'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'path_type': "daily"},
+
+            'usage-climbing-apps': {
+                'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
                 'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
@@ -1634,3 +1654,19 @@ class AppsPathResolver(object):
     def get_app_scores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_scores'], path_suffix, in_or_out)
+
+    def get_app_scores_with_info(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                                 self.apps_paths['app-scores-with-info'], path_suffix, in_or_out)
+
+    def get_category_ranks(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                                 self.apps_paths['category-ranks'], path_suffix, in_or_out)
+
+    def get_category_ranks_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                         self.apps_paths['category-ranks-parquet'], path_suffix, in_or_out)
+
+    def get_usage_climbing_apps(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage-climbing-apps'], path_suffix, in_or_out)
