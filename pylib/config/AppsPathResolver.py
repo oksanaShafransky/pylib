@@ -710,33 +710,38 @@ class AppsPathResolver(object):
                 'path_type': "daily"},
             # Snapshot/WindowF
             'app_scores': {
-                'main_path': "%(mode)s/app-scores/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'main_path': "%(mode)s/app-scores/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 100 * MiB, 'marker': False,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'app_scores_with_info': {
-                'main_path': "%(mode)s/app-scores-with-info/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'main_path': "%(mode)s/app-scores-with-info/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'category-ranks': {
-                'main_path': "%(mode)s/category-ranks/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'main_path': "%(mode)s/category-ranks/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 100 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
+            'trending-apps': {
+                'main_path': "%(mode)s/trending-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
+                'size': 26 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'path_type': "daily"},
+
             'category-ranks-parquet': {
-                'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'usage-climbing-apps': {
-                'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': self.required_size,
                 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'usage-slipping-apps': {
-                'main_path': "%(mode)s/usage-slipping-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'main_path': "%(mode)s/usage-slipping-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': self.required_size,
                 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
@@ -1667,6 +1672,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                          self.apps_paths['category-ranks-parquet'], path_suffix, in_or_out)
 
+    def get_trending_apps(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['trending-apps'], path_suffix, in_or_out)
+
     def get_usage_climbing_apps(self, in_or_out, path_prefix=None, path_suffix=None, td=None):
         self.required_size = self.get_usage_climbing_apps_required_size(td)
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
@@ -1677,7 +1686,7 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage-slipping-apps'], path_suffix, in_or_out)
 
-    def get_usage_climbing_apps_required_size(td = None):
+    def get_usage_climbing_apps_required_size(td):
         match td:
             case 7:
                 return 700 * KiB
@@ -1688,7 +1697,7 @@ class AppsPathResolver(object):
             case _:
                 return 0
 
-    def get_usage_slipping_apps_required_size(td = None):
+    def get_usage_slipping_apps_required_size(td):
         match td:
             case 7:
                 return 800 * KiB
