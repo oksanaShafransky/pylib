@@ -731,13 +731,13 @@ class AppsPathResolver(object):
 
             'usage-climbing-apps': {
                 'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
-                'size': self.get_usage_climbing_apps_required_size(self),
+                'size': self.required_size,
                 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'usage-slipping-apps': {
                 'main_path': "%(mode)s/usage-slipping-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
-                'size': self.get_usage_slipping_apps_required_size(self),
+                'size': self.required_size,
                 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
