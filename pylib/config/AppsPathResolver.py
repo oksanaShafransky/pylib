@@ -711,27 +711,27 @@ class AppsPathResolver(object):
             # Snapshot/WindowF
             'app_scores': {
                 'main_path': "%(mode)s/app-scores/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
-                'size': 900 * MiB, 'marker': False,  # Size close for both window ,and snapshot
+                'size': 100 * MiB, 'marker': False,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'app_scores_with_info': {
                 'main_path': "%(mode)s/app-scores-with-info/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
-                'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'category-ranks': {
                 'main_path': "%(mode)s/category-ranks/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
-                'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 100 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'category-ranks-parquet': {
                 'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
-                'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
             'usage-climbing-apps': {
                 'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
-                'size': 900 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 700 * KiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
 
