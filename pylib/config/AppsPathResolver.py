@@ -731,7 +731,14 @@ class AppsPathResolver(object):
 
             'usage-climbing-apps': {
                 'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
-                'size': 700 * KiB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': self.get_usage_climbing_apps_required_size(self),
+                'marker': True,  # Size close for both window ,and snapshot
+                'path_type': "daily"},
+
+            'usage-slipping-apps': {
+                'main_path': "%(mode)s/usage-slipping-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type':self.ti.mode_type},
+                'size': self.get_usage_slipping_apps_required_size(self),
+                'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
 
@@ -1649,17 +1656,46 @@ class AppsPathResolver(object):
                                              self.apps_paths['app_scores'], path_suffix, in_or_out)
 
     def get_app_scores_with_info(self, in_or_out, path_prefix=None, path_suffix=None):
-            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                                  self.apps_paths['app-scores-with-info'], path_suffix, in_or_out)
 
     def get_category_ranks(self, in_or_out, path_prefix=None, path_suffix=None):
-            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                                  self.apps_paths['category-ranks'], path_suffix, in_or_out)
 
     def get_category_ranks_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
-            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                          self.apps_paths['category-ranks-parquet'], path_suffix, in_or_out)
 
-    def get_usage_climbing_apps(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_climbing_apps(self, in_or_out, path_prefix=None, path_suffix=None, td=None):
+        self.required_size = self.get_usage_climbing_apps_required_size(td)
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage-climbing-apps'], path_suffix, in_or_out)
+
+    def get_usage_slipping_apps(self, in_or_out, path_prefix=None, path_suffix=None, td=None):
+        self.required_size = self.get_usage_slipping_apps_required_size(td)
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage-slipping-apps'], path_suffix, in_or_out)
+
+    def get_usage_climbing_apps_required_size(td = None):
+        match td:
+            case 7:
+                return 700 * KiB
+            case 28:
+                return 1.8 * MiB
+            case 30:
+                return 2.4 * MiB
+            case _:
+                return 0
+
+    def get_usage_slipping_apps_required_size(td = None):
+        match td:
+            case 7:
+                return 800 * KiB
+            case 28:
+                return 1.9 * MiB
+            case 30:
+                return 2.5 * MiB
+            case _:
+                return 0
+
