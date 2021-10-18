@@ -6,9 +6,7 @@ import os
 SUCCESS_MARKER = '_SUCCESS'
 DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
-
 logger = logging.getLogger('data_artifact')
-
 
 class InputRangedDataArtifact(object):
 
@@ -41,8 +39,10 @@ class InputRangedDataArtifact(object):
 
 class InputDataArtifact(DataArtifact):
 
-    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None):
-        super(InputDataArtifact, self).__init__(ti, path, required_size, required_marker, override_data_sources)
+    def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None, buffer_percent=None,
+                 email_list=""):
+        super(InputDataArtifact, self).__init__(ti, path, required_size, required_marker, override_data_sources,
+                                                buffer_percent, email_list)
 
         # Search in datasource one by one break if we found one.
         for d in self.data_sources:
@@ -85,6 +85,5 @@ if __name__ == '__main__':
     # da = InputDataArtifact('path')
     da = InputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=07',
                            required_size=10000, required_marker=True)
-    da.assert_input_validity()
     print(da.resolved_path)
 
