@@ -461,7 +461,7 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.9 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.8 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
@@ -563,7 +563,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size':260 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size':242 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
