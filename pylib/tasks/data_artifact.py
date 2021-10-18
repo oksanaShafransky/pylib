@@ -8,7 +8,7 @@ DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 class DataArtifact(object):
 
     def __init__(self, ti, path, required_size=0, required_marker=True, override_data_sources=None,
-                 buffer_percent=None, email_list=[]):
+                 buffer_percent=None, email_list=""):
         self.raw_path = path
         self.check_marker = required_marker
         self.ti = ti
