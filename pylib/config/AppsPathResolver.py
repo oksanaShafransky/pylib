@@ -1689,17 +1689,17 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['trending_apps'], path_suffix, in_or_out)
 
-    def get_usage_climbing_apps(self, in_or_out, path_prefix=None, path_suffix=None, td=None):
+    def get_usage_climbing_apps(self, in_or_out, path_prefix=None, path_suffix=None, td=0):
         self.apps_paths['usage_climbing_apps']['size'] = self.get_usage_climbing_apps_required_size(td)
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_climbing_apps'], path_suffix, in_or_out)
 
-    def get_usage_slipping_apps(self, in_or_out, path_prefix=None, path_suffix=None, td=None):
+    def get_usage_slipping_apps(self, in_or_out, path_prefix=None, path_suffix=None, td=0):
         self.apps_paths['usage_slipping_apps']['size'] = self.get_usage_slipping_apps_required_size(td)
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_slipping_apps'], path_suffix, in_or_out)
 
-    def get_usage_climbing_apps_required_size(td):
+    def get_usage_climbing_apps_required_size(self, td):
         sizes = {
             7: 700 * KB,
             28: 1.8 * MB,
@@ -1707,7 +1707,7 @@ class AppsPathResolver(object):
         }
         return sizes.get(td, 0)
 
-    def get_usage_slipping_apps_required_size(td):
+    def get_usage_slipping_apps_required_size(self, td):
         sizes = {
             7: 800 * KB,
             28: 1.9 * MB,
