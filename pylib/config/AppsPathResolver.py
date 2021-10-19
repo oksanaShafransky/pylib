@@ -740,13 +740,13 @@ class AppsPathResolver(object):
             'usage-climbing-apps': {
                 'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': self.required_size,
-                'marker': True,  # Size close for both window ,and snapshot
+                'marker': True,
                 'path_type': "daily"},
 
             'usage-slipping-apps': {
                 'main_path': "%(mode)s/usage-slipping-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': self.required_size,
-                'marker': True,  # Size close for both window ,and snapshot
+                'marker': True,
                 'path_type': "daily"},
 
 
@@ -1700,24 +1700,19 @@ class AppsPathResolver(object):
                                              self.apps_paths['usage-slipping-apps'], path_suffix, in_or_out)
 
     def get_usage_climbing_apps_required_size(td):
-        match td:
-            case 7:
-                return 700 * KiB
-            case 28:
-                return 1.8 * MiB
-            case 30:
-                return 2.4 * MiB
-            case _:
-                return 0
+        sizes = {
+            7: 700 * KB,
+            28: 1.8 * MB,
+            1: 2.4 * MB
+        }
+        return sizes.get(td, 0)
 
     def get_usage_slipping_apps_required_size(td):
-        match td:
-            case 7:
-                return 800 * KiB
-            case 28:
-                return 1.9 * MiB
-            case 30:
-                return 2.5 * MiB
-            case _:
-                return 0
+        sizes = {
+            7: 800 * KB,
+            28: 1.9 * MB,
+            1: 2.5 * MB
+        }
+        return sizes.get(td, 0)
+
 
