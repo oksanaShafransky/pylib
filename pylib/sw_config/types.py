@@ -7,6 +7,9 @@ class Purposes(object):
     Scraping = 'scraping'
     DI = 'di'
     DataFactory = 'df'
+    LiteEast = 'lite-east'
+    LiteWest = 'lite-west'
+
 
     @staticmethod
     def get_web_purpose(env):

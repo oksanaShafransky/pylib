@@ -11,7 +11,9 @@ snowflake_keys = {
     Purposes.WebStaging: 'web-staging-consul-kv',
     Purposes.WebLocal: 'web-local-consul-kv',
     Purposes.DI: 'di-consul-kv',
-    Purposes.DataFactory: 'df-consul-kv'
+    Purposes.DataFactory: 'df-consul-kv',
+    Purposes.LiteEast: 'lite-east-consul-kv',
+    Purposes.LiteWest: 'lite-west-consul-kv',
 }
 
 
