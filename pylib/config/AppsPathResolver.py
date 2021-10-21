@@ -737,8 +737,7 @@ class AppsPathResolver(object):
 
             'category_ranks_parquet': {
                 'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
-                'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
-                'path_type': "%(mode_type)s" % {'mode_type': self.ti.mode_type}
+                'size': 150 * MiB, 'marker': True  # Size close for both window ,and snapshot
             },
 
             'usage_climbing_apps': {
