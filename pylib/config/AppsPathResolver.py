@@ -714,26 +714,27 @@ class AppsPathResolver(object):
                 'main_path': "daily/estimate/app-engagement-realnumbers/estkey=AppCountryKey",
                 'size': 400 * MiB, 'marker': True,
                 'path_type': "daily"},
+
             # Snapshot/WindowF
             'app_scores': {
                 'main_path': "%(mode)s/app-scores/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 100 * MiB, 'marker': False,  # Size close for both window ,and snapshot
-                'path_type': "daily"},
+                'path_type': self.ti.mode_type},
 
             'app_scores_with_info': {
                 'main_path': "%(mode)s/app-scores-with-info/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
-                'path_type': "daily"},
+                'path_type': self.ti.mode_type},
 
             'category_ranks': {
                 'main_path': "%(mode)s/category-ranks/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 100 * MiB, 'marker': True,  # Size close for both window ,and snapshot
-                'path_type': "daily"},
+                'path_type': self.ti.mode_type},
 
             'trending_apps': {
                 'main_path': "%(mode)s/trending-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 26 * MiB, 'marker': True,  # Size close for both window ,and snapshot
-                'path_type': "daily"},
+                'path_type': self.ti.mode_type},
 
             'category_ranks_parquet': {
                 'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
@@ -744,13 +745,13 @@ class AppsPathResolver(object):
                 'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 2 * MiB,
                 'marker': True,
-                'path_type': "daily"},
+                'path_type': self.ti.mode_type},
 
             'usage_slipping_apps': {
                 'main_path': "%(mode)s/usage-slipping-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 2 * MiB,
                 'marker': True,
-                'path_type': "daily"},
+                'path_type': self.ti.mode_type},
 
 
             'app_panel': {
