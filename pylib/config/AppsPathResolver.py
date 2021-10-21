@@ -350,7 +350,7 @@ class AppsPathResolver(object):
                              'size': 350 * KB,
                              'marker': True, 'path_type': "daily"},
             'usage_filler': {'main_path': "daily/usage/filler",
-                          'size': 40 * KB,
+                          'size': 30 * KB,
                           'marker': True, 'path_type': "daily"},
             'usage_est': {'main_path': "daily/usage/est",
                           'size': 200 * KB,
