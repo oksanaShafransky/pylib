@@ -49,7 +49,7 @@ class AppsPathResolver(object):
             self.in_or_out = in_or_out
 
         def __get_date_suffix_by_type(self):
-            if self.path_type == "daily":
+            if self.path_type == "daily" or self.path_type == "last-28" :
                 return self.ti.year_month_day()
             elif self.path_type == "monthly":
                 return self.ti.year_month()
@@ -355,9 +355,12 @@ class AppsPathResolver(object):
             'usage_est': {'main_path': "daily/usage/est",
                           'size': 200 * KB,
                           'marker': True, 'path_type': "daily"},
+            'usage_prior': {'main_path': "daily/usage/prior",
+                            'size': 300 * KB,
+                            'marker': True, 'path_type': "daily"},
             'usage_estimation': {'main_path': "daily/usage/estimation",
-                          'size': 200 * KB,
-                          'marker': True, 'path_type': "daily"},
+                                 'size': 200 * KB,
+                                 'marker': True, 'path_type': "daily"},
             'usage_final_est': {'main_path': "daily/usage/final",
                           'size': 250 * KB,
                           'marker': True, 'path_type': "daily"},
@@ -732,10 +735,10 @@ class AppsPathResolver(object):
                 'size': 26 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': "daily"},
 
-            'category_ranks-parquet': {
+            'category_ranks_parquet': {
                 'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
-                'path_type': "daily"},
+                'path_type': self.ti.mode_type},
 
             'usage_climbing_apps': {
                 'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
@@ -1572,6 +1575,9 @@ class AppsPathResolver(object):
     def get_usage_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_est'], path_suffix, in_or_out)
+    def get_usage_prior(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_prior'], path_suffix, in_or_out)
     def get_usage_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_estimation'], path_suffix, in_or_out)
