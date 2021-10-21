@@ -49,7 +49,7 @@ class AppsPathResolver(object):
             self.in_or_out = in_or_out
 
         def __get_date_suffix_by_type(self):
-            if self.path_type == "daily":
+            if self.path_type == "daily" or self.path_type == "last-28" :
                 return self.ti.year_month_day()
             elif self.path_type == "monthly":
                 return self.ti.year_month()
@@ -738,7 +738,7 @@ class AppsPathResolver(object):
             'category_ranks_parquet': {
                 'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
-                'path_type': self.path_type},
+                'path_type': self.ti.mode_type},
 
             'usage_climbing_apps': {
                 'main_path': "%(mode)s/usage-climbing-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
