@@ -345,6 +345,10 @@ class AppsPathResolver(object):
                               'size': 0 * MiB,
                               'marker': True, 'path_type': "monthly"},
 
+            'mau_android_factors': {'main_path': "snapshot/estimate/app-mau-factors",
+                              'size': 1 * KB,
+                              'marker': True, 'path_type': "monthly"},
+
             # Usage
             'get_usage_agg_app_country': {'main_path': "daily/usage/agg",
                              'size': 16 * MB,
@@ -464,13 +468,13 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.7 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.5 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 109 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 100 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
@@ -566,7 +570,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size':242 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size':200 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -1596,6 +1600,10 @@ class AppsPathResolver(object):
     def get_mau_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_final_est'], path_suffix, in_or_out)
+
+    def get_mau_android_factors(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['mau_android_factors'], path_suffix, in_or_out)
 
     def get_mau_embee_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
