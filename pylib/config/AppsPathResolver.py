@@ -359,6 +359,9 @@ class AppsPathResolver(object):
             'usage_prior': {'main_path': "daily/usage/prior",
                             'size': 25 * MB,
                             'marker': True, 'path_type': "daily"},
+            'usage_prior_did': {'main_path': "daily/usage/prior-did",
+                            'size': 25 * MB,
+                            'marker': True, 'path_type': "daily"},
             'usage_estimation': {'main_path': "daily/usage/estimation",
                                  'size': 18 * MB,
                                  'marker': True, 'path_type': "daily"},
@@ -1583,6 +1586,9 @@ class AppsPathResolver(object):
     def get_usage_prior(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_prior'], path_suffix, in_or_out)
+    def get_usage_prior_did(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_prior_did'], path_suffix, in_or_out)
     def get_usage_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_estimation'], path_suffix, in_or_out)
