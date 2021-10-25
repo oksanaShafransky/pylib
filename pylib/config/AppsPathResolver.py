@@ -1580,6 +1580,9 @@ class AppsPathResolver(object):
     def get_usage_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_estimation'], path_suffix, in_or_out)
+    def get_usage_estimation_ww(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_estimation_ww'], path_suffix, in_or_out)
 
     #MAU
     def get_mau_user_app_country_agg(self, in_or_out, path_prefix=None, path_suffix=None):
