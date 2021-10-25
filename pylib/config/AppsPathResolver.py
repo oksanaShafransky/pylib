@@ -350,10 +350,10 @@ class AppsPathResolver(object):
                               'marker': True, 'path_type': "monthly"},
 
             # Usage
-            'get_usage_agg_app_country': {'main_path': "daily/usage/agg",
+            'usage_agg_app_country': {'main_path': "daily/usage/agg",
                              'size': 16 * MB,
                              'marker': True, 'path_type': "daily"},
-            'get_usage_agg_app_country_did': {'main_path': "daily/usage/agg-did",
+            'usage_agg_app_country_did': {'main_path': "daily/usage/agg-did",
                                               'size': 16 * MB,
                                               'marker': True, 'path_type': "daily"},
             'usage_prior': {'main_path': "daily/usage/prior",
@@ -1568,9 +1568,12 @@ class AppsPathResolver(object):
                                              self.apps_paths['dau_with_ww_estimate'], path_suffix, in_or_out)
 
     # usage
-    def get_usage_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_agg_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_agg'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_agg_app_country'], path_suffix, in_or_out)
+    def get_usage_agg_app_country_did(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_agg_app_country_did'], path_suffix, in_or_out)
     def get_usage_filler(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_filler'], path_suffix, in_or_out)
