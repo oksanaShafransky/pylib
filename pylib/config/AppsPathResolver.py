@@ -354,7 +354,7 @@ class AppsPathResolver(object):
                              'size': 16 * MB,
                              'marker': True, 'path_type': "daily"},
             'usage_agg_app_country_did': {'main_path': "daily/usage/agg-did",
-                                              'size': 16 * MB,
+                                              'size': 14 * MB,
                                               'marker': True, 'path_type': "daily"},
             'usage_prior': {'main_path': "daily/usage/prior",
                             'size': 25 * MB,
