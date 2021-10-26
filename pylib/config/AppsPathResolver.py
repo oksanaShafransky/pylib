@@ -345,6 +345,10 @@ class AppsPathResolver(object):
                               'size': 0 * MiB,
                               'marker': True, 'path_type': "monthly"},
 
+            'mau_predict_with_ww': {'main_path': "snapshot/estimate/app-mau-dau-with-ww/estkey=AppCountry",
+                              'size': 0 * MiB,
+                              'marker': True, 'path_type': "monthly"},
+
             'mau_android_factors': {'main_path': "snapshot/estimate/app-mau-factors",
                               'size': 1 * KB,
                               'marker': True, 'path_type': "monthly"},
@@ -1603,6 +1607,10 @@ class AppsPathResolver(object):
     def get_mau_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_final_est'], path_suffix, in_or_out)
+
+    def get_mau_predict_with_ww(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['mau_predict_with_ww'], path_suffix, in_or_out)
 
     def get_mau_android_factors(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
