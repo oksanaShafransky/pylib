@@ -1035,6 +1035,9 @@ class ContextualizedTasksInfra(object):
                       python_env=None,
                       env_path=None
                       ):
+
+        self.print_job_input_dict(command_params)
+
         self.kill_yarn_zombie_applications()
 
         self.clear_output_dirs(managed_output_dirs)

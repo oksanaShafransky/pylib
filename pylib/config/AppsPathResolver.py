@@ -354,24 +354,18 @@ class AppsPathResolver(object):
                               'marker': True, 'path_type': "monthly"},
 
             # Usage
-            'usage_agg': {'main_path': "daily/usage/agg",
-                             'size': 350 * KB,
+            'usage_agg_app_country': {'main_path': "daily/usage/agg",
+                             'size': 13.2 * MB,
                              'marker': True, 'path_type': "daily"},
-            'usage_filler': {'main_path': "daily/usage/filler",
-                          'size': 30 * KB,
-                          'marker': True, 'path_type': "daily"},
-            'usage_est': {'main_path': "daily/usage/est",
-                          'size': 200 * KB,
-                          'marker': True, 'path_type': "daily"},
             'usage_prior': {'main_path': "daily/usage/prior",
-                            'size': 300 * KB,
+                            'size': 25 * MB,
                             'marker': True, 'path_type': "daily"},
             'usage_estimation': {'main_path': "daily/usage/estimation",
-                                 'size': 200 * KB,
+                                 'size': 13 * MB,
                                  'marker': True, 'path_type': "daily"},
-            'usage_final_est': {'main_path': "daily/usage/final",
-                          'size': 250 * KB,
-                          'marker': True, 'path_type': "daily"},
+            'usage_estimation_ww': {'main_path': "daily/usage/ww",
+                                 'size': 19 * MB,
+                                 'marker': True, 'path_type': "daily"},
 
             # Daily
             'sfa': {'main_path': "daily/sources-for-analyze", 'size': 1 * KiB,
@@ -475,13 +469,13 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.7 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.5 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 109 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 100 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
@@ -577,7 +571,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size':242 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size':200 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -1575,9 +1569,9 @@ class AppsPathResolver(object):
                                              self.apps_paths['dau_with_ww_estimate'], path_suffix, in_or_out)
 
     # usage
-    def get_usage_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_agg_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_agg'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_agg_app_country'], path_suffix, in_or_out)
     def get_usage_filler(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_filler'], path_suffix, in_or_out)
@@ -1590,10 +1584,9 @@ class AppsPathResolver(object):
     def get_usage_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_estimation'], path_suffix, in_or_out)
-    def get_usage_final_est(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_estimation_ww(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_final_est'], path_suffix, in_or_out)
-
+                                             self.apps_paths['usage_estimation_ww'], path_suffix, in_or_out)
 
     #MAU
     def get_mau_user_app_country_agg(self, in_or_out, path_prefix=None, path_suffix=None):
