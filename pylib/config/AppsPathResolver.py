@@ -145,6 +145,12 @@ class AppsPathResolver(object):
             'monitoring-reach-window': {'main_path': "apps-monitoring/reach/window",
                                         'size': 5 * MB,
                                         'marker': True, 'path_type': "daily"},
+            'monitoring-sessions-window': {'main_path': "apps-monitoring/sessions/window",
+                                        'size': 5 * MB,
+                                        'marker': True, 'path_type': "daily"},
+            'monitoring-usagetime-window': {'main_path': "apps-monitoring/usagetime/window",
+                                        'size': 5 * MB,
+                                        'marker': True, 'path_type': "daily"},
             'monitoring-dau-predict': {'main_path': "apps-monitoring/dau/predict",
                                       'size': 5.25 * MB,
                                       'marker': True, 'path_type': "daily"},
@@ -152,6 +158,12 @@ class AppsPathResolver(object):
                                          'size': 100 * KB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-reach-predict': {'main_path': "apps-monitoring/reach/predict",
+                                         'size': 7 * MB,
+                                         'marker': True, 'path_type': "daily"},
+            'monitoring-sessions-predict': {'main_path': "apps-monitoring/sessions/predict",
+                                         'size': 7 * MB,
+                                         'marker': True, 'path_type': "daily"},
+            'monitoring-usagetime-predict': {'main_path': "apps-monitoring/usagetime/predict",
                                          'size': 7 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-dau-anomal-zscores': {'main_path': "apps-monitoring/dau/anomal/zScores",
@@ -170,6 +182,18 @@ class AppsPathResolver(object):
                                                 'size': 100 * KB,
                                                 'marker': True, 'path_type': "daily"},
             'monitoring-reach-anomal-stats': {'main_path': "apps-monitoring/reach/anomal/stats",
+                                              'size': 20 * KB,
+                                              'marker': True, 'path_type': "daily"},
+            'monitoring-sessions-anomal-zscores': {'main_path': "apps-monitoring/sessions/anomal/zScores",
+                                                'size': 100 * KB,
+                                                'marker': True, 'path_type': "daily"},
+            'monitoring-sessions-anomal-stats': {'main_path': "apps-monitoring/sessions/anomal/stats",
+                                              'size': 20 * KB,
+                                              'marker': True, 'path_type': "daily"},
+            'monitoring-usagetime-anomal-zscores': {'main_path': "apps-monitoring/usagetime/anomal/zScores",
+                                                'size': 100 * KB,
+                                                'marker': True, 'path_type': "daily"},
+            'monitoring-usagetime-anomal-stats': {'main_path': "apps-monitoring/usagetime/anomal/stats",
                                               'size': 20 * KB,
                                               'marker': True, 'path_type': "daily"},
             'monitoring-mau-window': {'main_path': "apps-monitoring/mau/window",
@@ -1451,6 +1475,12 @@ class AppsPathResolver(object):
     def get_monitoring_reach_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                          self.apps_paths['monitoring-reach-window'], path_suffix, in_or_out)
+    def get_monitoring_sessions_window(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-sessions-window'], path_suffix, in_or_out)
+    def get_monitoring_usagetime_window(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-usagetime-window'], path_suffix, in_or_out)
     def get_monitoring_dau_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-dau-predict'], path_suffix, in_or_out)
@@ -1460,6 +1490,12 @@ class AppsPathResolver(object):
     def get_monitoring_reach_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-reach-predict'], path_suffix, in_or_out)
+    def get_monitoring_sessions_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-sessions-predict'], path_suffix, in_or_out)
+    def get_monitoring_usagetime_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-usagetime-predict'], path_suffix, in_or_out)
     def get_monitoring_dau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-dau-anomal-zscores'], path_suffix, in_or_out)
@@ -1478,6 +1514,18 @@ class AppsPathResolver(object):
     def get_monitoring_reach_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-reach-anomal-stats'], path_suffix, in_or_out)
+    def get_monitoring_sessions_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-sessions-anomal-zscores'], path_suffix, in_or_out)
+    def get_monitoring_sessions_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-sessions-anomal-stats'], path_suffix, in_or_out)
+    def get_monitoring_usagetime_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-usagetime-anomal-zscores'], path_suffix, in_or_out)
+    def get_monitoring_usagetime_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-usagetime-anomal-stats'], path_suffix, in_or_out)
     def get_monitoring_mau_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-mau-window'], path_suffix, in_or_out)
