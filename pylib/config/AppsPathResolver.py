@@ -884,11 +884,11 @@ class AppsPathResolver(object):
                                        'path_type': "base_path"},
 
             'google_play_ratings_over_time': {'main_path': 'google-play/ratings',
-                                      'size': 350 * MB, 'marker': False,
+                                      'size': 350 * MB, 'marker': True,
                                       'path_type': 'daily'},
 
             'ios_app_store_ratings_over_time': {'main_path': 'iOS-app-store/ratings',
-                                      'size': 17 * MB, 'marker': False,
+                                      'size': 17 * MB, 'marker': True,
                                       'path_type': 'daily'},
 
             # Static paths
