@@ -194,8 +194,11 @@ class AppsPathResolver(object):
                                                 'size': 100 * KB,
                                                 'marker': True, 'path_type': "daily"},
             'monitoring-usagetime-anomal-stats': {'main_path': "apps-monitoring/usagetime/anomal/stats",
-                                              'size': 20 * KB,
-                                              'marker': True, 'path_type': "daily"},
+                                                  'size': 20 * KB,
+                                                  'marker': True, 'path_type': "daily"},
+            'monitoring-alerts': {'main_path': "apps-monitoring/alerts",
+                                                  'size': 0 * KB,
+                                                  'marker': False, 'path_type': "daily"},
             'monitoring-mau-window': {'main_path': "apps-monitoring/mau/window",
                                       'size': 3 * MB,
                                       'marker': True, 'path_type': "monthly"},
@@ -1526,6 +1529,9 @@ class AppsPathResolver(object):
     def get_monitoring_usagetime_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-usagetime-anomal-stats'], path_suffix, in_or_out)
+    def get_monitoring_alerts(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-alerts'], path_suffix, in_or_out)
     def get_monitoring_mau_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-mau-window'], path_suffix, in_or_out)
