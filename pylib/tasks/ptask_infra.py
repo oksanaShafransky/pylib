@@ -12,7 +12,6 @@ from copy import copy
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
 import datetime
 import six
 import sys
@@ -23,6 +22,7 @@ from pylib.sw_jobs.job_utils import extract_yarn_application_tags_from_env, yarn
     fetch_yarn_applications, kill_yarn_application
 from pylib.common.date_utils import get_dates_range
 from pylib.tasks.data import DataArtifact
+from pylib.jar.jar_utils import get_jar_classes, get_jar_manifest_attributes
 # Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('requests').setLevel(logging.WARNING)
@@ -1103,6 +1103,16 @@ class ContextualizedTasksInfra(object):
             # is scala/java spark
             command += ' --class {}'.format(main_class)
             command += ' {}'.format(main_jar)
+
+            main_jar_path = "{execution_dir}/{main_jar}".format(execution_dir=self.execution_dir, main_jar=main_jar)
+            if os.path.isfile(main_jar_path):
+                jar_classes = get_jar_classes(jar_path=main_jar_path)
+                if main_class not in jar_classes:
+                    logger.warn("Main-Class: {} not found in Jar: {}".format(main_class, main_jar))
+                manifest_attributes = get_jar_manifest_attributes(jar_path=main_jar_path)
+                logger.info("JAR manifest attributes:{}".format(manifest_attributes))
+            else:
+                logger.warn("Jar {} not found".format(main_jar_path))
         else:
             raise ValueError("must receive either main-py-file or main-class and main-jar")
 
