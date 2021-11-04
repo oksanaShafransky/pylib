@@ -908,6 +908,14 @@ class AppsPathResolver(object):
                                        'size': 100 * MiB, 'marker': False,
                                        'path_type': "base_path"},
 
+            'google_play_ratings_over_time': {'main_path': 'google-play/ratings',
+                                      'size': 350 * MB, 'marker': True,
+                                      'path_type': 'daily'},
+
+            'ios_app_store_ratings_over_time': {'main_path': 'iOS-app-store/ratings',
+                                      'size': 17 * MB, 'marker': True,
+                                      'path_type': 'daily'},
+
             # Static paths
             'countries_full_names': {'main_path': "resources/country-codes-dict",
                                        'size': 1 * KiB, 'marker': False,
@@ -1710,6 +1718,14 @@ class AppsPathResolver(object):
     def get_ios_app_store_raw_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_raw_reviews'], path_suffix, in_or_out)
+
+    def get_google_play_ratings_over_time(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['google_play_ratings_over_time'], path_suffix, in_or_out)
+
+    def get_ios_app_store_ratings_over_time(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_app_store_ratings_over_time'], path_suffix, in_or_out)
 
     # Static Paths
     def get_countries_full_names(self, in_or_out, path_prefix=None, path_suffix=None):
