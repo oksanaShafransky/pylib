@@ -884,7 +884,7 @@ class AppsPathResolver(object):
 
             #SCRAPING
             'app_info': {'main_path': "mobile/app-info",
-                                   'size': 1 * GiB, 'marker': True,
+                                   'size': 850 * MiB, 'marker': True,
                                    'path_type': "daily"},
 
             'ww_downloads_to_scrape': {'main_path': "scraping/ww-downloads-to-scrape",
@@ -909,11 +909,11 @@ class AppsPathResolver(object):
                                        'path_type': "base_path"},
 
             'google_play_ratings_over_time': {'main_path': 'google-play/ratings',
-                                      'size': 350 * MB, 'marker': True,
+                                      'size': 200 * MB, 'marker': True,
                                       'path_type': 'daily'},
 
             'ios_app_store_ratings_over_time': {'main_path': 'iOS-app-store/ratings',
-                                      'size': 17 * MB, 'marker': True,
+                                      'size': 10 * MB, 'marker': True,
                                       'path_type': 'daily'},
 
             # Static paths
