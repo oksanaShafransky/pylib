@@ -44,7 +44,7 @@ from pylib.config.SnowflakeConfig import SnowflakeConfig
 from os import environ
 
 logger = logging.getLogger('ptask')
-logger.addHandler(logging.StreamHandler())
+
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'

@@ -176,8 +176,6 @@ class PtaskInvoker(Program):
 def main():
     import logging
     logging.root.setLevel(logging.INFO)
-    ch = logging.StreamHandler(sys.stdout)
-    logging.root.addHandler(ch)
     ptask_invoker = PtaskInvoker(config_class=PtaskConfig)
     ptask_invoker.run()
 
