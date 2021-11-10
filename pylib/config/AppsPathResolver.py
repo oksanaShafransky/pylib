@@ -164,7 +164,7 @@ class AppsPathResolver(object):
                                          'size': 6.5 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-usagetime-predict': {'main_path': "apps-monitoring/usagetime/predict",
-                                         'size': 7 * MB,
+                                         'size': 6.5 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-dau-anomal-zscores': {'main_path': "apps-monitoring/dau/anomal/zScores",
                                           'size': 100 * KB,
