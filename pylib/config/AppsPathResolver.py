@@ -149,7 +149,7 @@ class AppsPathResolver(object):
                                         'size': 4.5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-usagetime-window': {'main_path': "apps-monitoring/usagetime/window",
-                                        'size': 5 * MB,
+                                        'size': 4.5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-dau-predict': {'main_path': "apps-monitoring/dau/predict",
                                       'size': 5.25 * MB,
