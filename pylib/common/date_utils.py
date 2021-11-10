@@ -68,7 +68,7 @@ def nth_day_of_month(dt, n):
 
 def last_day_of_month(dt):
     days_in_month = calendar.monthrange(dt.year, dt.month)[1]
-    return datetime(year=dt.year, month=dt.month, day=days_in_month)
+    return date(year=dt.year, month=dt.month, day=days_in_month)
 
 def last_months(dt, months, minimal_start_date = None):
     exec_date = first_day_of_month(dt)
