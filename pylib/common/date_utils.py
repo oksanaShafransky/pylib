@@ -71,7 +71,7 @@ def last_day_of_month(dt):
     return date(year=dt.year, month=dt.month, day=days_in_month)
 
 def last_months(dt, months, minimal_start_date = None):
-    exec_date = first_day_of_month(dt).date()
+    exec_date = first_day_of_month(dt)
     end_date = last_day_of_month(dt)
 
     start_date = exec_date - relativedelta(months=months)
