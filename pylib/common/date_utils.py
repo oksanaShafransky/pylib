@@ -71,6 +71,8 @@ def last_day_of_month(dt):
     return date(year=dt.year, month=dt.month, day=days_in_month)
 
 def last_months(dt, months, minimal_start_date = None):
+    if isinstance(minimal_start_date, datetime):
+        minimal_start_date=minimal_start_date.date()
     exec_date = first_day_of_month(dt)
     end_date = last_day_of_month(dt)
 
