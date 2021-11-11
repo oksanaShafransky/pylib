@@ -66,15 +66,12 @@ def first_day_of_month(dt):
 def nth_day_of_month(dt, n):
     return dt.replace(day=n)
 
-def last_day_of_month(dt):
-    days_in_month = calendar.monthrange(dt.year, dt.month)[1]
-    return date(year=dt.year, month=dt.month, day=days_in_month)
 
 def last_months(dt, months, minimal_start_date = None):
     if isinstance(minimal_start_date, datetime):
         minimal_start_date=minimal_start_date.date()
     exec_date = first_day_of_month(dt)
-    end_date = last_day_of_month(dt)
+    end_date = last_day_in_month(dt)
 
     start_date = exec_date - relativedelta(months=months)
     if minimal_start_date:
