@@ -146,7 +146,7 @@ class AppsPathResolver(object):
                                         'size': 5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-sessions-window': {'main_path': "apps-monitoring/sessions/window",
-                                        'size': 4.5 * MB,
+                                        'size': 4 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-usagetime-window': {'main_path': "apps-monitoring/usagetime/window",
                                         'size': 4.5 * MB,
