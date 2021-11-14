@@ -924,6 +924,18 @@ class AppsPathResolver(object):
                                      'size': 1 * KiB, 'marker': True,
                                      'path_type': "base_path"},
 
+            # retention
+            'preprocess_apps_retention': {'main_path': "retention/preprocess-retention",
+                                          'size': 6 * MiB, 'marker': True,
+                                          'path_type': "daily"},
+            'calc_apps_retention': {'main_path': "retention/calc-retention",
+                                    'size': 6 * MiB, 'marker': True,
+                                    'path_type': "daily"},
+
+            'calc_smoothed_apps_retention': {'main_path': "retention/calc-smoothed-retention",
+                                             'size': 6 * MiB, 'marker': True,
+                                             'path_type': "daily"},
+
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -1800,5 +1812,18 @@ class AppsPathResolver(object):
             1: 2.5 * MB
         }
         return sizes.get(td, 0)
+
+    def get_preprocess_apps_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['preprocess_apps_retention'], path_suffix, in_or_out)
+
+    def get_calc_apps_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['calc_apps_retention'], path_suffix, in_or_out)
+
+    def get_smoothed_apps_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['calc_smoothed_apps_retention'], path_suffix, in_or_out)
+
 
 
