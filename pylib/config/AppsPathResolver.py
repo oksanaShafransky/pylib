@@ -161,7 +161,7 @@ class AppsPathResolver(object):
                                          'size': 7 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-sessions-predict': {'main_path': "apps-monitoring/sessions/predict",
-                                         'size': 6.5 * MB,
+                                         'size': 6 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-usagetime-predict': {'main_path': "apps-monitoring/usagetime/predict",
                                          'size': 6.5 * MB,
