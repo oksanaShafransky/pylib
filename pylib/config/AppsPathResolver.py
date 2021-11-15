@@ -925,14 +925,15 @@ class AppsPathResolver(object):
                                      'path_type': "base_path"},
 
             # retention
-            'preprocess_apps_retention': {'main_path': "retention/preprocess-retention",
+            'preprocess_retention': {'main_path': "retention/preprocess-retention",
                                           'size': 6 * MiB, 'marker': True,
                                           'path_type': "daily"},
-            'calc_apps_retention': {'main_path': "retention/calc-retention",
+
+            'calc_retention': {'main_path': "retention/calc-retention",
                                     'size': 6 * MiB, 'marker': True,
                                     'path_type': "daily"},
 
-            'calc_smoothed_apps_retention': {'main_path': "retention/calc-smoothed-retention",
+            'estimated_retention': {'main_path': "retention/estimated-retention",
                                              'size': 6 * MiB, 'marker': True,
                                              'path_type': "daily"},
 
@@ -1813,17 +1814,17 @@ class AppsPathResolver(object):
         }
         return sizes.get(td, 0)
 
-    def get_preprocess_apps_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_preprocess_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['preprocess_apps_retention'], path_suffix, in_or_out)
+                                             self.apps_paths['preprocess_retention'], path_suffix, in_or_out)
 
-    def get_calc_apps_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_calc_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['calc_apps_retention'], path_suffix, in_or_out)
+                                             self.apps_paths['calc_retention'], path_suffix, in_or_out)
 
-    def get_smoothed_apps_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_estimated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['calc_smoothed_apps_retention'], path_suffix, in_or_out)
+                                             self.apps_paths['estimated_retention'], path_suffix, in_or_out)
 
 
 
