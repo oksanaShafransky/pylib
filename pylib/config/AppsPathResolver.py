@@ -925,17 +925,21 @@ class AppsPathResolver(object):
                                      'path_type': "base_path"},
 
             # retention
-            'preprocess_retention': {'main_path': "retention/preprocess-retention",
-                                          'size': 6 * MiB, 'marker': True,
-                                          'path_type': "daily"},
-
-            'calc_retention': {'main_path': "retention/calc-retention",
-                                    'size': 6 * MiB, 'marker': True,
+            'aggregated_retention':{'main_path': "retention/aggregated-retention",
+                                    'size': 50 * MiB, 'marker': True,
                                     'path_type': "daily"},
 
+            'preprocess_retention': {'main_path': "retention/preprocess-retention",
+                                     'size': 6 * MiB, 'marker': True,
+                                     'path_type': "daily"},
+
+            'calc_retention': {'main_path': "retention/calc-retention",
+                               'size': 6 * MiB, 'marker': True,
+                               'path_type': "daily"},
+
             'estimated_retention': {'main_path': "retention/estimated-retention",
-                                             'size': 6 * MiB, 'marker': True,
-                                             'path_type': "daily"},
+                                    'size': 6 * MiB, 'marker': True,
+                                    'path_type': "daily"},
 
         }
 
@@ -1813,6 +1817,11 @@ class AppsPathResolver(object):
             1: 2.5 * MB
         }
         return sizes.get(td, 0)
+
+    #retention
+    def get_aggregated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['aggregated_retention'], path_suffix, in_or_out)
 
     def get_preprocess_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
