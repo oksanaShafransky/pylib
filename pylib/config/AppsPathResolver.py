@@ -559,7 +559,7 @@ class AppsPathResolver(object):
             'extractor_kwh_monthly': {'main_path': 'raw-s2s/extractor_kwh_monthly', 'size': 250 * KiB,
                                       'marker': True, 'path_type': "monthly"},
 
-            'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 850 * KiB,
+            'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 650 * KiB,
                                         'marker': True, 'path_type': "monthly"},
 
             'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 80 * MiB,
