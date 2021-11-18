@@ -14,7 +14,9 @@ def __send_report(report, date, recipients):
     import smtplib
     from email.mime.text import MIMEText
 
-    smtp_srv = "mta01.sg.internal"
+    smtp_srv = "email-smtp.us-east-1.amazonaws.com"
+    smtp_user = 'AKIA4GKBI5ERSCW6HRPG'
+    smtp_pass = 'BH+GoIHbV+/qBdV7ARCFbDLQOwrNcyz0cJShL4221m5O'
     sender = 'reports@similarweb.com'
 
     msg = MIMEText(report)
@@ -23,6 +25,8 @@ def __send_report(report, date, recipients):
     msg['To'] = recipients
 
     send = smtplib.SMTP(smtp_srv)
+    send.starttls()
+    send.login(smtp_user, smtp_pass)
     send.sendmail(sender, recipients.split(','), str(msg))
     send.quit()
 
