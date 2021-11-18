@@ -941,7 +941,7 @@ class AppsPathResolver(object):
                                'path_type': "daily"},
 
             'estimated_retention': {'main_path': "retention/estimated-retention",
-                                    'size': 6 * MiB, 'marker': True,
+                                    'size': 100 * KB, 'marker': True,
                                     'path_type': "daily"},
 
         }
