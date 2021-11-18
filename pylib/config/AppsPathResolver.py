@@ -930,7 +930,7 @@ class AppsPathResolver(object):
                                     'path_type': "daily"},
 
             'preprocess_retention': {'main_path': "retention/preprocess-retention",
-                                     'size': 6 * MiB, 'marker': True,
+                                     'size': 1.5 * MiB, 'marker': True,
                                      'path_type': "daily"},
 
             'calc_retention': {'main_path': "retention/calc-retention",
