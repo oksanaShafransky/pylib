@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime, date
 from dateutil.relativedelta import relativedelta
 
 
@@ -58,4 +58,20 @@ def get_days_in_month(month_dt):
 def first_day_of_last_month(dt):
     return last_day_of_prev_month(dt).replace(day=1)
 
+def first_day_of_month(dt):
+    return nth_day_of_month(dt, 1)
 
+def nth_day_of_month(dt, n):
+    return dt.replace(day=n)
+
+
+def last_months(dt, months, minimal_start_date = None):
+    if isinstance(minimal_start_date, datetime):
+        minimal_start_date=minimal_start_date.date()
+    exec_date = first_day_of_month(dt)
+    end_date = last_day_in_month(dt)
+
+    start_date = exec_date - relativedelta(months=months)
+    if minimal_start_date:
+        start_date = max(minimal_start_date, start_date)
+    return get_dates_list(start=start_date, end=end_date)

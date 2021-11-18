@@ -455,19 +455,23 @@ class ConsistencyTestInfra(object):
             name=test_name,
             test_date=self.ti.date,
             date_type=date_type,
-            countries=countries_list
+            countries=countries_list,
+            ti=self.ti
         )
         if benchmark_mode:
             all_outputs = [benchmark_path]
 
+        output_paths = [output_da.resolved_path for output_da in all_outputs]
+
         self.run_consistency_py_spark(
             main_py_file='consistency_test_driver.py',
             command_params=command_params,
-            output_dirs=all_outputs,
+            output_dirs=output_paths,
             named_spark_args=named_spark_args,
             spark_configs=spark_configs,
             queue=spark_queue
         )
 
         # output checks
-        self.ti.assert_output_validity(all_outputs, min_size_bytes=10, validate_marker=True)
+        for output_da in all_outputs:
+            output_da.assert_output_validity()

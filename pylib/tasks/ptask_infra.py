@@ -12,7 +12,6 @@ from copy import copy
 from email.mime.image import MIMEImage
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
 import datetime
 import six
 import sys
@@ -23,6 +22,7 @@ from pylib.sw_jobs.job_utils import extract_yarn_application_tags_from_env, yarn
     fetch_yarn_applications, kill_yarn_application
 from pylib.common.date_utils import get_dates_range
 from pylib.tasks.data import DataArtifact
+from pylib.jar.jar_utils import get_jar_classes, get_jar_manifest_attributes
 # Adjust log level
 logging.getLogger('urllib3').setLevel(logging.WARNING)
 logging.getLogger('requests').setLevel(logging.WARNING)
@@ -44,11 +44,11 @@ from pylib.config.SnowflakeConfig import SnowflakeConfig
 from os import environ
 
 logger = logging.getLogger('ptask')
-logger.addHandler(logging.StreamHandler())
+
 
 
 JAVA_PROFILER = '-agentpath:/opt/yjp/bin/libyjpagent.so'
-
+DEFAULT_BUFFER = 0
 
 class TasksInfra(object):
     @staticmethod
@@ -405,6 +405,14 @@ All have been repaired. Original Corrupt Files are present on HDFS at %(eviction
 
 
 class ContextualizedTasksInfra(object):
+    local_env_vars_whitelist = ["SNOWFLAKE_ENV", "AWS_DEFAULT_REGION", "AWS_REGION"]  # non-empty AWS_DEFAULT_REGION/AWS_REGION is required by Glue
+    default_spark_configs = {
+        # default executor profile 1.5G per core
+        'spark.driver.memory': "4g",
+        'spark.executor.memory': '6g',
+        'spark.executor.cores': '4'
+    }
+
     def __init__(self, ctx):
         """
         :param ctx: invoke.context.Context
@@ -414,8 +422,12 @@ class ContextualizedTasksInfra(object):
         self.jvm_opts = {}
         self.hadoop_configs = {}
         self.yarn_application_tags = extract_yarn_application_tags_from_env()
-        self.spark_configs = {}
+        self.spark_configs = ContextualizedTasksInfra.default_spark_configs
         self.default_da_data_sources = None
+        self.default_buffer_percent = DEFAULT_BUFFER
+        self.default_email_list = ""
+        # take some environment variables from os to the job
+        self.job_env_vars = {k:  os.environ[k] for k in ContextualizedTasksInfra.local_env_vars_whitelist if k in os.environ}
 
     def __compose_infra_command(self, command):
         ans = 'source %s/scripts/common.sh && %s' % (self.execution_dir, command)
@@ -685,7 +697,7 @@ class ContextualizedTasksInfra(object):
             target_path=target
         )
         self.kill_yarn_zombie_applications()
-        self.run_bash(cmd)
+        return self.run_bash(cmd)
 
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False,
                    jvm_opts=None, default_num_reducers=200):
@@ -1004,8 +1016,8 @@ class ContextualizedTasksInfra(object):
 
     def _spark_submit(self,
                       app_name,
-                      queue,
                       command_params,
+                      queue=None,
                       main_class=None,
                       main_jar=None,
                       main_py_file=None,
@@ -1023,6 +1035,9 @@ class ContextualizedTasksInfra(object):
                       python_env=None,
                       env_path=None
                       ):
+
+        self.print_job_input_dict(command_params)
+
         self.kill_yarn_zombie_applications()
 
         self.clear_output_dirs(managed_output_dirs)
@@ -1038,7 +1053,11 @@ class ContextualizedTasksInfra(object):
 
         final_repositories = (repositories if repositories else []) + self.get_sw_repos()
 
-        if environ.get('EMR_VERSION') == '6':  #TODO: consider on any EMR stop using spark2-submit
+        # TODO use spark/spark-submit version and not EMR_VERSION
+        emr_version = environ.get('EMR_VERSION', None)
+        emr_major_version = emr_version.split(".")[0] if emr_version else None
+
+        if emr_major_version == "6":  #TODO: consider on any EMR stop using spark2-submit
             if master is None:
                 master = 'yarn'
             if spark_submit_script is None:
@@ -1053,8 +1072,6 @@ class ContextualizedTasksInfra(object):
                   ' --name "{app_name}"' \
                   ' --master {master}' \
                   ' --deploy-mode cluster' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV={snowflake_env}"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV={snowflake_env}"' \
                   ' {spark_confs}' \
                   ' --repositories {repos}' \
             .format(
@@ -1062,7 +1079,6 @@ class ContextualizedTasksInfra(object):
                     master=master,
                     spark_submit_script=spark_submit_script,
                     app_name=app_name,
-                    snowflake_env=os.environ.get('SNOWFLAKE_ENV'),
                     spark_confs=additional_configs,
                     repos=','.join(final_repositories)
                    )
@@ -1087,6 +1103,16 @@ class ContextualizedTasksInfra(object):
             # is scala/java spark
             command += ' --class {}'.format(main_class)
             command += ' {}'.format(main_jar)
+
+            main_jar_path = "{execution_dir}/{main_jar}".format(execution_dir=self.execution_dir, main_jar=main_jar)
+            if os.path.isfile(main_jar_path):
+                jar_classes = get_jar_classes(jar_path=main_jar_path)
+                if main_class not in jar_classes:
+                    logger.warn("Main-Class: {} not found in Jar: {}".format(main_class, main_jar))
+                manifest_attributes = get_jar_manifest_attributes(jar_path=main_jar_path)
+                logger.info("JAR manifest attributes:{}".format(manifest_attributes))
+            else:
+                logger.warn("Jar {} not found".format(main_jar_path))
         else:
             raise ValueError("must receive either main-py-file or main-class and main-jar")
 
@@ -1096,8 +1122,8 @@ class ContextualizedTasksInfra(object):
     def run_sw_pyspark(self,
                        main_py_file_path,
                        app_name,
-                       queue,
                        command_params,
+                       queue=None,
                        jars=None,
                        files=None,
                        packages=None,
@@ -1189,8 +1215,8 @@ class ContextualizedTasksInfra(object):
                      main_class,
                      main_jar_path,
                      app_name,
-                     queue,
                      command_params,
+                     queue=None,
                      master=None,
                      jars=None,
                      files=None,
@@ -1289,12 +1315,8 @@ class ContextualizedTasksInfra(object):
                                                                                spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
-
         command = 'cd %(jar_path)s;spark2-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -1311,7 +1333,6 @@ class ContextualizedTasksInfra(object):
                       'queue': queue,
                       'app_name': app_name,
                       'add_opts': additional_configs,
-                      'snowflake_env': snowflake_cur_env,
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1322,10 +1343,7 @@ class ContextualizedTasksInfra(object):
                       'yarn_application_tags': yarn_tags_dict_to_str(self.yarn_application_tags)
                   }
 
-        command = TasksInfra.add_command_params(command, command_params,
-                                                value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
-
-
+        command = TasksInfra.add_command_params(command, command_params,  value_wrap=TasksInfra.EXEC_WRAPPERS['bash'])
         return self.run_bash(command).ok
 
     # module is either 'mobile' or 'analytics'
@@ -1355,12 +1373,9 @@ class ContextualizedTasksInfra(object):
         command_params, spark_configs = self.determine_spark_output_partitions(command_params, determine_partitions_by_output, spark_configs)
         additional_configs = self.build_spark_additional_configs(named_spark_args, spark_configs)
 
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
 
         command = 'cd %(jar_path)s;spark-submit' \
                   ' --queue %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
@@ -1376,7 +1391,6 @@ class ContextualizedTasksInfra(object):
                       'queue': queue,
                       'app_name': app_name,
                       'add_opts': additional_configs,
-                      'snowflake_env': snowflake_cur_env,
                       'jars': self.get_jars_list(jar_path, jars_from_lib),
                       'files': ','.join(files or []),
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1514,14 +1528,10 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
         command = 'spark2-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s ' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
@@ -1535,7 +1545,6 @@ class ContextualizedTasksInfra(object):
                       'app_name': app_name if app_name else os.path.basename(main_py_file),
                       'execution_dir': module_dir,
                       'queue': '--queue %s' % queue if queue else '',
-                      'snowflake_env': snowflake_cur_env,
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1625,14 +1634,10 @@ class ContextualizedTasksInfra(object):
         else:
             py_files_cmd = ' --py-files "%s"' % ','.join(final_py_files)
 
-        snowflake_cur_env = os.environ.get('SNOWFLAKE_ENV')
-
         command = 'spark-submit' \
                   ' --name "%(app_name)s"' \
                   ' --master yarn-cluster' \
                   ' %(queue)s' \
-                  ' --conf "spark.yarn.appMasterEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
-                  ' --conf "spark.executorEnv.SNOWFLAKE_ENV=%(snowflake_env)s"' \
                   ' --conf spark.yarn.tags=%(yarn_application_tags)s ' \
                   ' --deploy-mode cluster' \
                   ' --jars "%(jars)s"' \
@@ -1645,7 +1650,6 @@ class ContextualizedTasksInfra(object):
                       'app_name': app_name if app_name else os.path.basename(main_py_file),
                       'execution_dir': module_dir,
                       'queue': '--queue %s' % queue if queue else '',
-                      'snowflake_env': snowflake_cur_env,
                       'files': ','.join(files or []),
                       'py_files_cmd': py_files_cmd,
                       'extra_pkg_cmd': (' --packages %s' % ','.join(packages)) if packages is not None else '',
@@ -1716,6 +1720,7 @@ class ContextualizedTasksInfra(object):
 
     def build_spark_additional_configs(self, named_spark_args, override_spark_configs):
         additional_configs = ''
+
         for key, value in self.hadoop_configs.items():
             additional_configs += ' --conf spark.hadoop.%s=%s' % (key, value)
 
@@ -1733,7 +1738,13 @@ class ContextualizedTasksInfra(object):
 
         if self.should_profile:
             additional_configs += ' --conf "spark.driver.extraJavaOptions=%s"' % JAVA_PROFILER
-            additional_configs += ' --conf "spark.executer.extraJavaOptions=%s"' % JAVA_PROFILER
+            additional_configs += ' --conf "spark.executor.extraJavaOptions=%s"' % JAVA_PROFILER
+
+        # add environment vars:
+        for key, value in self.job_env_vars.items():
+            additional_configs += ' --conf spark.yarn.appMasterEnv.%s=%s' % (key, value)
+            additional_configs += ' --conf spark.executorEnv.%s=%s' % (key, value)
+
         return additional_configs
 
     @staticmethod
@@ -1821,32 +1832,58 @@ class ContextualizedTasksInfra(object):
     DEFAULT_S3_PROFILE = 'research-safe'
 
     def read_s3_configuration(self, property_key, section=DEFAULT_S3_PROFILE):
+        logger.warning("read_s3_configuration is deprecated, use get_secret instead")
+        return self.get_secret(key="{}/{}".format(section, property_key))
+
+    def get_secret(self, key):
+        # get secret - takes from a local file - we will change it to take from Vault
+        section, property_key = key.split(r"/")
         import boto
         config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
         return config.get(section, property_key)
 
-    # Storing the credentials in env variables is probably the least secured option and is disabled by default.
-    # Please set set_env_variables only as a last resort.
     def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
-        access_key = access \
-                     or self.read_s3_configuration('access_key', section=section) \
-                     or self.read_s3_configuration('aws_access_key_id', section=section)
-        self.hadoop_configs['fs.s3a.access.key'] = access_key
-        command_access_key = 'aws configure set aws_access_key_id %s' % access_key
-        print("Setting aws access key: %s" % access_key)
-        self.ctx.run(command_access_key)
-        if set_env_variables:
-            os.environ["AWS_ACCESS_KEY_ID"] = access_key
+        # DEPRECATED
+        logger.warning("set_s3_keys is deprecated, use set_aws_credentials instead")
+        self.set_aws_credentials(profile=section, access_key_id=access, secret_access_key=secret)
 
-        secret_key = secret \
-                     or self.read_s3_configuration('secret_key', section=section) \
-                     or self.read_s3_configuration('aws_secret_access_key', section=section)
-        self.hadoop_configs['fs.s3a.secret.key'] = secret_key
-        command_secret_key = 'aws configure set aws_secret_access_key %s' % secret_key
-        print("Setting aws secret key: %s" % secret_key)
-        self.ctx.run(command_secret_key)
-        if set_env_variables:
-            os.environ["AWS_SECRET_ACCESS_KEY"] = secret_key
+    def set_aws_credentials(self, profile=DEFAULT_S3_PROFILE, access_key_id=None, secret_access_key=None):
+        """
+        Set AWS Credentials in the context hadoop-configurations, java-options, environment variables
+        :param profile: AWS profile name
+        :param access_key_id: optional, by default it will be taken from the AWS profile
+        :param secret_access_key: optional, by default it will be taken from the AWS profile
+        :return:
+        """
+        access_key_id = access_key_id \
+                        or self.get_secret('{}/access_key'.format(profile)) \
+                        or self.get_secret('{}/aws_access_key_id'.format(profile))
+
+        secret_access_key = secret_access_key \
+                            or self.get_secret('{}/secret_key'.format(profile)) \
+                            or self.get_secret('{}/aws_secret_access_key'.format(profile))
+
+        assert access_key_id and secret_access_key
+
+        logger.info("Setting aws credentials {} AWS_ACCESS_KEY_ID {} ,AWS_SECRET_ACCESS_KEY {}"
+                    .format('Profile {} ,'.format(profile) if profile else '', access_key_id, ''.join([secret_access_key[:len(secret_access_key) / 4]] + ["*" for _ in secret_access_key[len(secret_access_key) / 4:]])))
+
+        self.job_env_vars.update({
+            "AWS_ACCESS_KEY_ID": access_key_id,
+            "AWS_SECRET_ACCESS_KEY": secret_access_key,
+        })
+        self.hadoop_configs.update({
+            'fs.s3a.access.key': access_key_id,
+            'fs.s3a.secret.key': secret_access_key,
+            'fs.s3.awsAccessKeyId': access_key_id,  # for EMRFS
+            'fs.s3.awsSecretAccessKey': secret_access_key  # for EMRFS
+        })
+        self.jvm_opts.update({
+            'aws.accessKeyId': access_key_id,
+            'aws.secretKey': secret_access_key,
+        })
+        os.environ["AWS_ACCESS_KEY_ID"] = access_key_id
+        os.environ["AWS_SECRET_ACCESS_KEY"] = secret_access_key
 
     def assert_s3_input_validity(self, bucket_name, path, min_size=0, validate_marker=False, profile=DEFAULT_S3_PROFILE, dynamic_min_size=False):
         s3_conn = s3_connection.get_s3_connection(profile=profile)
@@ -1947,6 +1984,14 @@ class ContextualizedTasksInfra(object):
     @property
     def da_data_sources(self):
         return json.loads(self.__get_common_args().get('da_data_sources', self.get_default_da_data_sources()))
+
+    @property
+    def buffer_percent(self):
+        return self.__get_common_args().get('buffer_percent', self.default_buffer_percent)
+
+    @property
+    def email_list(self):
+        return self.__get_common_args().get('email_list', self.default_email_list)
 
     @property
     def production_base_dir(self):

@@ -4,6 +4,7 @@ from dateutil.relativedelta import relativedelta
 from pylib.common.date_utils import get_dates_range
 from pylib.consistency.consistency_types import ConsistencyDateType, ConsistencyOutputType
 from pylib.hive.common import get_date_partition_path
+from pylib.tasks.output_data_artifact import OutputDataArtifact
 
 OUTPUT_PATH_TYPE_TOTAL = "total"
 OUTPUT_PATH_TYPE_MODEL = "model"
@@ -90,16 +91,16 @@ class ConsistencyPaths(object):
         )
 
     @staticmethod
-    def gen_all_output_paths(base_dir, name, test_date, date_type, countries):
+    def gen_all_output_paths(ti, base_dir, name, test_date, date_type, countries):
         country_outputs = [
-            ConsistencyPaths.gen_output_path(base_dir, name, test_date, ConsistencyOutputType.Countries, date_type, country) for country in countries
+            OutputDataArtifact(ti, ConsistencyPaths.gen_output_path(base_dir, name, test_date, ConsistencyOutputType.Countries, date_type, country)) for country in countries
         ]
 
         model_outputs = [
-            ConsistencyPaths.gen_output_path(base_dir, name, test_date, ConsistencyOutputType.Model, date_type, country) for country in countries
+            OutputDataArtifact(ti, ConsistencyPaths.gen_output_path(base_dir, name, test_date, ConsistencyOutputType.Model, date_type, country)) for country in countries
         ]
 
-        total_output = ConsistencyPaths.gen_output_path(base_dir, name, test_date, ConsistencyOutputType.Total, date_type)
+        total_output = OutputDataArtifact(ti, ConsistencyPaths.gen_output_path(base_dir, name, test_date, ConsistencyOutputType.Total, date_type))
 
         return country_outputs + model_outputs + [total_output]
 
