@@ -356,6 +356,10 @@ class AppsPathResolver(object):
                              'size': 150 * MiB,
                              'marker': True, 'path_type': "daily"},
 
+            'mau_dau_adjusted_estimation_rn': {'main_path': "monthly/mau/estimation/dau-mau-adjusted-rn",
+                                   'size': 1 * MiB, #TODO fix
+                                   'marker': True, 'path_type': "monthly"},
+
             'mau_embee_estimate': {'main_path': "monthly/mau/estimate-embee/estKey=AppContryKey",
                                    'size': 0 * MiB,
                                    'marker': True, 'path_type': "monthly"},
@@ -1706,6 +1710,11 @@ class AppsPathResolver(object):
     def get_mau_pre_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_pre_est'], path_suffix, in_or_out)
+
+    # Replace old mau pdl path.
+    def get_mau_dau_adjusted_estimation_rn(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['mau_dau_adjusted_estimation_rn'], path_suffix, in_or_out)
     #dau
 
     def get_ga(self, in_or_out, path_prefix=None, path_suffix=None):
