@@ -356,6 +356,10 @@ class AppsPathResolver(object):
                              'size': 150 * MiB,
                              'marker': True, 'path_type': "daily"},
 
+            'mau_dau_adjusted_estimation_rn': {'main_path': "monthly/mau/estimation/dau-mau-adjusted-rn",
+                                   'size': 1 * MiB, #TODO fix
+                                   'marker': True, 'path_type': "monthly"},
+
             'mau_embee_estimate': {'main_path': "monthly/mau/estimate-embee/estKey=AppContryKey",
                                    'size': 0 * MiB,
                                    'marker': True, 'path_type': "monthly"},
@@ -558,6 +562,9 @@ class AppsPathResolver(object):
 
             'extractor_kwh_monthly': {'main_path': 'raw-s2s/extractor_kwh_monthly', 'size': 250 * KiB,
                                       'marker': True, 'path_type': "monthly"},
+
+            'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 650 * KiB,
+                                        'marker': True, 'path_type': "monthly"},
 
             'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 80 * MiB,
                                     'marker': False, 'path_type': "daily"},
@@ -924,6 +931,23 @@ class AppsPathResolver(object):
                                      'size': 1 * KiB, 'marker': True,
                                      'path_type': "base_path"},
 
+            # retention
+            'aggregated_retention':{'main_path': "retention/aggregated-retention",
+                                    'size': 50 * MiB, 'marker': True,
+                                    'path_type': "daily"},
+
+            'preprocess_retention': {'main_path': "retention/preprocess-retention",
+                                     'size': 1.5 * MB, 'marker': True,
+                                     'path_type': "daily"},
+
+            'calc_retention': {'main_path': "retention/calc-retention",
+                               'size': 100 * KB, 'marker': True,
+                               'path_type': "daily"},
+
+            'estimated_retention': {'main_path': "retention/estimated-retention",
+                                    'size': 100 * KB, 'marker': True,
+                                    'path_type': "daily"},
+
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -1039,6 +1063,10 @@ class AppsPathResolver(object):
     def get_extractor_kwh_monthly(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_kwh_monthly'], path_suffix, in_or_out)
+
+    def get_extractor_kochava_daily(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_kochava_daily'], path_suffix, in_or_out)
 
     def get_mfour_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
@@ -1682,6 +1710,11 @@ class AppsPathResolver(object):
     def get_mau_pre_est(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['mau_pre_est'], path_suffix, in_or_out)
+
+    # Replace old mau pdl path.
+    def get_mau_dau_adjusted_estimation_rn(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['mau_dau_adjusted_estimation_rn'], path_suffix, in_or_out)
     #dau
 
     def get_ga(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -1800,5 +1833,23 @@ class AppsPathResolver(object):
             1: 2.5 * MB
         }
         return sizes.get(td, 0)
+
+    #retention
+    def get_aggregated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['aggregated_retention'], path_suffix, in_or_out)
+
+    def get_preprocess_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['preprocess_retention'], path_suffix, in_or_out)
+
+    def get_calc_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['calc_retention'], path_suffix, in_or_out)
+
+    def get_estimated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['estimated_retention'], path_suffix, in_or_out)
+
 
 
