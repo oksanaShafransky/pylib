@@ -458,7 +458,7 @@ class AppsPathResolver(object):
 
             'ww_store_downloads_fetch': {
                 'main_path': "daily/downloads/store_downloads/raw_ww_store_fetch",
-                'size': 85 * MiB,
+                'size': 86 * MB,
                 'marker': True, 'path_type': "daily"},
 
             'ww_store_download_country_population': {
