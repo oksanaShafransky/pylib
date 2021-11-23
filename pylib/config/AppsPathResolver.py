@@ -464,7 +464,7 @@ class AppsPathResolver(object):
             'ww_store_download_country_population': {
                 'main_path': "daily/downloads/store_downloads/static/country_pop_adj",
                 'size': 2 * KiB,
-                'marker': True, 'path_type': "daily"},
+                'marker': True, 'path_type': "base_path"},
 
              'ww_store_download_panel_country_share_est_pre_factor': {
                 'main_path': "daily/downloads/store_downloads/estimation/est-panel-country-share/pre-factor",
