@@ -545,10 +545,10 @@ class AppsPathResolver(object):
             'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfourR1008",
                                     'size': 18 * MiB, 'marker': True, 'path_type': "daily"},
 
-            'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 150 * GiB,
+            'bobble_installed_apps': {'main_path': 'raw-s2s/bobble-installed-apps', 'size': 120 * GiB,
                                       'marker': False, 'path_type': "daily"},
 
-            'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 150 * GiB,
+            'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 120 * GiB,
                                      'marker': False, 'path_type': "daily"},
 
             'extractor_ga_daily': {'main_path': 'raw-s2s/extractor_ga_daily', 'size': 10 * MiB,
