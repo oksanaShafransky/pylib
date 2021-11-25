@@ -389,7 +389,7 @@ class AppsPathResolver(object):
                              'size': 5.5 * MB,
                              'marker': True, 'path_type': "daily"},
             'usage_prior': {'main_path': "daily/usage/prior",
-                            'size': 15 * MB,
+                            'size': 14 * MB,
                             'marker': True, 'path_type': "daily"},
             'usage_estimation': {'main_path': "daily/usage/estimation",
                                  'size': 13 * MB,
