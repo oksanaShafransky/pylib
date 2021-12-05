@@ -948,6 +948,10 @@ class AppsPathResolver(object):
                                     'size': 100 * KB, 'marker': True,
                                     'path_type': "daily"},
 
+            'categories_estimated_retention': {'main_path': "retention/categories-estimated-retention",
+                                    'size': 100 * KB, 'marker': True,
+                                    'path_type': "daily"},
+
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -1844,6 +1848,10 @@ class AppsPathResolver(object):
     def get_estimated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['estimated_retention'], path_suffix, in_or_out)
+
+    def get_categories_estimated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                                 self.apps_paths['categories_estimated_retention'], path_suffix, in_or_out)
 
 
 
