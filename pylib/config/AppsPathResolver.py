@@ -927,12 +927,17 @@ class AppsPathResolver(object):
             'countries_full_names': {'main_path': "resources/country-codes-dict",
                                        'size': 1 * KiB, 'marker': False,
                                        'path_type': "base_path"},
+
             'z_norm_dist': {'main_path': "static/norm_dist",
                                      'size': 1 * KiB, 'marker': True,
                                      'path_type': "base_path"},
             'static_matching_predict': {'main_path': "static/old-apps-matching",
                                     'size': 5 * KiB, 'marker': True,
                                     'path_type': "base_path"},
+
+            'static_affinity':{'main_path': "static/affinity",
+                                       'size': 14 * GB, 'marker': True,
+                                       'path_type': "base_path"},
 
             # retention
             'aggregated_retention':{'main_path': "retention/aggregated-retention",
@@ -948,6 +953,10 @@ class AppsPathResolver(object):
                                'path_type': "daily"},
 
             'estimated_retention': {'main_path': "retention/estimated-retention",
+                                    'size': 100 * KB, 'marker': True,
+                                    'path_type': "daily"},
+
+            'categories_estimated_retention': {'main_path': "retention/categories-estimated-retention",
                                     'size': 100 * KB, 'marker': True,
                                     'path_type': "daily"},
 
@@ -1768,6 +1777,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['static_matching_predict'], path_suffix, in_or_out)
 
+    def get_static_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['static_affinity'], path_suffix, in_or_out)
+
     def get_app_panel(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_panel'], path_suffix, in_or_out)
@@ -1850,6 +1863,10 @@ class AppsPathResolver(object):
     def get_estimated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['estimated_retention'], path_suffix, in_or_out)
+
+    def get_categories_estimated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                                 self.apps_paths['categories_estimated_retention'], path_suffix, in_or_out)
 
 
 
