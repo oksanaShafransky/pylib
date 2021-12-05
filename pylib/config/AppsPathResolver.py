@@ -930,6 +930,9 @@ class AppsPathResolver(object):
             'z_norm_dist': {'main_path': "static/norm_dist",
                                      'size': 1 * KiB, 'marker': True,
                                      'path_type': "base_path"},
+            'static_matching_predict': {'main_path': "static/old-apps-matching",
+                                    'size': 5 * KiB, 'marker': True,
+                                    'path_type': "base_path"},
 
             # retention
             'aggregated_retention':{'main_path': "retention/aggregated-retention",
@@ -1761,6 +1764,9 @@ class AppsPathResolver(object):
     def get_z_norm_dist(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['z_norm_dist'], path_suffix, in_or_out)
+    def get_static_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['static_matching_predict'], path_suffix, in_or_out)
 
     def get_app_panel(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
