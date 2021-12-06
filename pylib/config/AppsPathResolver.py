@@ -563,7 +563,7 @@ class AppsPathResolver(object):
             'extractor_kwh_monthly': {'main_path': 'raw-s2s/extractor_kwh_monthly', 'size': 250 * KiB,
                                       'marker': True, 'path_type': "monthly"},
 
-            'preliminary_extractor_kochava_daily': {'main_path': 'raw-s2s/preliminary_extractor_kochava_daily', 'size': 650 * KiB,
+            'extractor_kochava_daily_blacklist': {'main_path': 'raw-s2s/extractor_kochava_daily_blacklist', 'size': 650 * KiB,
                                         'marker': True, 'path_type': "monthly"},
 
             'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 650 * KiB,
@@ -1083,9 +1083,9 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_kochava_daily'], path_suffix, in_or_out)
 
-    def get_preliminary_extractor_kochava_daily(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_extractor_kochava_daily_blacklist(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['preliminary_extractor_kochava_daily'], path_suffix, in_or_out)
+                                             self.apps_paths['extractor_kochava_daily_blacklist'], path_suffix, in_or_out)
 
     def get_mfour_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
