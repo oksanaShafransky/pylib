@@ -829,6 +829,21 @@ class ContextualizedTasksInfra(object):
     def run_python(self, python_executable, command_params, *positional):
         return self.run_bash(self.__compose_python_runner_command(python_executable, command_params, *positional)).ok
 
+    def run_hadoop_jar(self, main_jar_path, main_class, command_params, exports={}, *positional):
+        command = 'cd {execution_dir}; hadoop jar {main_jar} {main_class} {jvm_opts}'.format(
+            execution_dir=self.execution_dir,
+            main_jar=main_jar_path,
+            main_class=main_class,
+            jvm_opts=TasksInfra.add_jvm_options("", self.hadoop_configs)
+            )
+
+        command = TasksInfra.add_command_params(command, command_params, TasksInfra.EXEC_WRAPPERS['python'], *positional)
+
+        for key, value in exports.items():
+            command = "export {key}={value}; {command}".format(key=key, value=value, command=command)
+
+        return self.run_bash(command).ok
+
     def run_r(self, r_executable, command_params):
         return self.run_bash(self.__compose_infra_command(
             "execute Rscript %s/%s %s" % (self.execution_dir, r_executable, ' '.join(command_params)))).ok
