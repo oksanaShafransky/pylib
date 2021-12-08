@@ -829,7 +829,7 @@ class ContextualizedTasksInfra(object):
     def run_python(self, python_executable, command_params, *positional):
         return self.run_bash(self.__compose_python_runner_command(python_executable, command_params, *positional)).ok
 
-    def run_hadoop_jar(self, main_jar_path, main_class, command_params, exports={}, *positional):
+    def run_hadoop_jar(self, main_jar_path, main_class, command_params, env_variables={}, *positional):
         command = 'cd {execution_dir}; hadoop jar {main_jar} {main_class} {jvm_opts}'.format(
             execution_dir=self.execution_dir,
             main_jar=main_jar_path,
@@ -839,7 +839,7 @@ class ContextualizedTasksInfra(object):
 
         command = TasksInfra.add_command_params(command, command_params, TasksInfra.EXEC_WRAPPERS['python'], *positional)
 
-        for key, value in exports.items():
+        for key, value in env_variables.items():
             command = "export {key}={value}; {command}".format(key=key, value=value, command=command)
 
         return self.run_bash(command).ok
