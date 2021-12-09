@@ -566,6 +566,18 @@ class AppsPathResolver(object):
             'extractor_kochava_daily_blacklist': {'main_path': 'raw-s2s/extractor_kochava_daily_blacklist', 'size': 650 * KiB,
                                         'marker': True, 'path_type': "monthly"},
 
+            'ptft_dau_factors': {'main_path': 'static/ptft/dau_new', 'size': 400 * MiB,
+                                        'marker': True, 'path_type': "base_path"},
+
+            'ptft_installs_factors': {'main_path': 'static/ptft/installs', 'size': 600 * MiB,
+                                 'marker': True, 'path_type': "base_path"},
+
+            'ptft_new_users_factors': {'main_path': 'static/ptft/new_users', 'size': 600 * MiB,
+                                 'marker': True, 'path_type': "base_path"},
+
+            'ptft_reach_factors': {'main_path': 'static/ptft/reach', 'size': 1 * GiB,
+                                 'marker': True, 'path_type': "base_path"},
+
             'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 650 * KiB,
                                         'marker': True, 'path_type': "monthly"},
 
@@ -1086,6 +1098,22 @@ class AppsPathResolver(object):
     def get_extractor_kochava_daily_blacklist(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_kochava_daily_blacklist'], path_suffix, in_or_out)
+
+    def get_ptft_dau_factors(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ptft_dau_factors'], path_suffix, in_or_out)
+
+    def get_ptft_installs_factors(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ptft_installs_factors'], path_suffix, in_or_out)
+
+    def get_ptft_new_users_factors(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ptft_new_users_factors'], path_suffix, in_or_out)
+
+    def get_ptft_reach_factors(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                            self.apps_paths['ptft_reach_factors'], path_suffix, in_or_out)
 
     def get_mfour_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
