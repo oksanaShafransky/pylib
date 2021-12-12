@@ -196,10 +196,7 @@ class AppsPathResolver(object):
             'monitoring-usagetime-anomal-stats': {'main_path': "apps-monitoring/usagetime/anomal/stats",
                                                   'size': 20 * KB,
                                                   'marker': True, 'path_type': "daily"},
-            'monitoring-alerts': {'main_path': "apps-monitoring/alerts",
-                                                  'size': 0 * KB,
-                                                  'marker': False, 'path_type': "daily"},
-            'monitoring-mau-window': {'main_path': "apps-monitoring/mau/window",
+             'monitoring-mau-window': {'main_path': "apps-monitoring/mau/window",
                                       'size': 3 * MB,
                                       'marker': True, 'path_type': "monthly"},
             'monitoring-mau-predict': {'main_path': "apps-monitoring/mau/predict",
@@ -500,7 +497,7 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.5 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.4 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
@@ -1616,9 +1613,9 @@ class AppsPathResolver(object):
     def get_monitoring_usagetime_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-usagetime-anomal-stats'], path_suffix, in_or_out)
-    def get_monitoring_alerts(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-alerts'], path_suffix, in_or_out)
+    # def get_monitoring_alerts(self, in_or_out, path_prefix=None, path_suffix=None):
+    #     return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+    #                                          self.apps_paths['monitoring-alerts'], path_suffix, in_or_out)
     def get_monitoring_mau_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-mau-window'], path_suffix, in_or_out)
