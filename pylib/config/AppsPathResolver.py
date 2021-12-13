@@ -151,6 +151,9 @@ class AppsPathResolver(object):
             'monitoring-usagetime-window': {'main_path': "apps-monitoring/usagetime/window",
                                         'size': 4.5 * MB,
                                         'marker': True, 'path_type': "daily"},
+            'monitoring-retention-window': {'main_path': "apps-monitoring/retention/window",
+                                            'size': 900 * KB,
+                                            'marker': True, 'path_type': "daily"},
             'monitoring-dau-predict': {'main_path': "apps-monitoring/dau/predict",
                                       'size': 5.25 * MB,
                                       'marker': True, 'path_type': "daily"},
@@ -166,6 +169,9 @@ class AppsPathResolver(object):
             'monitoring-usagetime-predict': {'main_path': "apps-monitoring/usagetime/predict",
                                          'size': 6.5 * MB,
                                          'marker': True, 'path_type': "daily"},
+            'monitoring-retention-predict': {'main_path': "apps-monitoring/retention/predict",
+                                             'size': 6.5 * MB,
+                                             'marker': True, 'path_type': "daily"},
             'monitoring-dau-anomal-zscores': {'main_path': "apps-monitoring/dau/anomal/zScores",
                                           'size': 100 * KB,
                                           'marker': True, 'path_type': "daily"},
@@ -181,6 +187,12 @@ class AppsPathResolver(object):
             'monitoring-reach-anomal-zscores': {'main_path': "apps-monitoring/reach/anomal/zScores",
                                                 'size': 100 * KB,
                                                 'marker': True, 'path_type': "daily"},
+            'monitoring-retention-anomal-zscores': {'main_path': "apps-monitoring/retention/anomal/zScores",
+                                                'size': 100 * KB,
+                                                'marker': True, 'path_type': "daily"},
+            'monitoring-retention-anomal-stats': {'main_path': "apps-monitoring/retention/anomal/stats",
+                                              'size': 20 * KB,
+                                              'marker': True, 'path_type': "daily"},
             'monitoring-reach-anomal-stats': {'main_path': "apps-monitoring/reach/anomal/stats",
                                               'size': 20 * KB,
                                               'marker': True, 'path_type': "daily"},
@@ -560,19 +572,22 @@ class AppsPathResolver(object):
             'extractor_kwh_monthly': {'main_path': 'raw-s2s/extractor_kwh_monthly', 'size': 250 * KiB,
                                       'marker': True, 'path_type': "monthly"},
 
-            'extractor_kochava_daily_blacklist': {'main_path': 'raw-s2s/extractor_kochava_daily_blacklist', 'size': 650 * KiB,
+            'extractor_kochava_daily_blacklist': {'main_path': 'raw-s2s/kochava_report/extractor_kochava_daily_blacklist', 'size': 650 * KiB,
                                         'marker': True, 'path_type': "monthly"},
 
-            'ptft_dau_factors': {'main_path': 'static/ptft/dau_new', 'size': 400 * MiB,
+            'extractor_kochava_daily_whitelist': {'main_path': 'raw-s2s/kochava_report/extractor_kochava_daily_whitelist', 'size': 650 * KiB,
+                                                  'marker': True, 'path_type': "monthly"},
+
+            'ptft_dau_factors': {'main_path': 'static/ptft/dau_new', 'size': 380 * MiB,
                                         'marker': True, 'path_type': "base_path"},
 
-            'ptft_installs_factors': {'main_path': 'static/ptft/installs', 'size': 600 * MiB,
+            'ptft_installs_factors': {'main_path': 'static/ptft/installs', 'size': 420 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
-            'ptft_new_users_factors': {'main_path': 'static/ptft/new_users', 'size': 600 * MiB,
+            'ptft_new_users_factors': {'main_path': 'static/ptft/new_users', 'size': 450 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
-            'ptft_reach_factors': {'main_path': 'static/ptft/reach', 'size': 1 * GiB,
+            'ptft_reach_factors': {'main_path': 'static/ptft/reach', 'size': 800 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
             'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 650 * KiB,
@@ -1100,6 +1115,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_kochava_daily_blacklist'], path_suffix, in_or_out)
 
+    def get_extractor_kochava_daily_whitelist(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_kochava_daily_whitelist'], path_suffix, in_or_out)
+
     def get_ptft_dau_factors(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ptft_dau_factors'], path_suffix, in_or_out)
@@ -1568,6 +1587,9 @@ class AppsPathResolver(object):
     def get_monitoring_usagetime_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-usagetime-window'], path_suffix, in_or_out)
+    def get_monitoring_retention_window(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-retention-window'], path_suffix, in_or_out)
     def get_monitoring_dau_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-dau-predict'], path_suffix, in_or_out)
@@ -1583,6 +1605,9 @@ class AppsPathResolver(object):
     def get_monitoring_usagetime_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-usagetime-predict'], path_suffix, in_or_out)
+    def get_monitoring_retention_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-retention-predict'], path_suffix, in_or_out)
     def get_monitoring_dau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-dau-anomal-zscores'], path_suffix, in_or_out)
@@ -1598,6 +1623,12 @@ class AppsPathResolver(object):
     def get_monitoring_reach_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-reach-anomal-zscores'], path_suffix, in_or_out)
+    def get_monitoring_retention_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-retention-anomal-zscores'], path_suffix, in_or_out)
+    def get_monitoring_retention_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-retention-anomal-stats'], path_suffix, in_or_out)
     def get_monitoring_reach_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-reach-anomal-stats'], path_suffix, in_or_out)
