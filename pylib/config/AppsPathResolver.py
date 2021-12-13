@@ -395,10 +395,10 @@ class AppsPathResolver(object):
 
             # Usage
             'usage_agg_app_country': {'main_path': "daily/usage/agg",
-                             'size': 5.25 * MB,
+                             'size': 5 * MB,
                              'marker': True, 'path_type': "daily"},
             'usage_prior': {'main_path': "daily/usage/prior",
-                            'size': 12.5 * MB,
+                            'size': 12 * MB,
                             'marker': True, 'path_type': "daily"},
             'usage_estimation': {'main_path': "daily/usage/estimation",
                                  'size': 13 * MB,
