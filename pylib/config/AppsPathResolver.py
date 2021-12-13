@@ -12,6 +12,9 @@ GB = KB ** 3
 EMPTY_STRING = ""
 SCRAPING_BASE_DIR = "/similargroup/scraping"
 
+GOOGLE_PLAY = '0'
+IOS_APP_STORE = '1'
+
 
 def path_join(path, *paths):
     if path[0] != '/':
@@ -904,7 +907,7 @@ class AppsPathResolver(object):
                    'size': 1 * KiB, 'marker': False,
                    'path_type': "daily"},  # TODO fix
 
-            #SCRAPING
+            # SCRAPING
             'app_info': {'main_path': "mobile/app-info",
                                    'size': 850 * MiB, 'marker': True,
                                    'path_type': "daily"},
@@ -921,6 +924,38 @@ class AppsPathResolver(object):
             'ios_app_store_raw_reviews': {'main_path': "iOS-app-store/reviews/raw",
                                         'size': 1 * MiB, 'marker': True,
                                         'path_type': "daily"},
+
+            'google_play_reviews': {'main_path': "google-play/reviews/filtered",
+                                        'size': 1 * MiB, 'marker': True,
+                                        'path_type': "daily"},
+
+            'ios_app_store_reviews': {'main_path': "iOS-app-store/reviews/filtered",
+                                          'size': 1 * MiB, 'marker': True,
+                                          'path_type': "daily"},
+
+            'google_play_processed_reviews': {'main_path': "google-play/reviews/processed",
+                                    'size': 1 * MiB, 'marker': True,
+                                    'path_type': "daily"},
+
+            'ios_app_store_processed_reviews': {'main_path': "iOS-app-store/reviews/processed",
+                                      'size': 1 * MiB, 'marker': True,
+                                      'path_type': "daily"},
+
+            'google_play_aggregated_reviews': {'main_path': "google-play/reviews/aggregated",
+                                              'size': 1 * MiB, 'marker': True,
+                                              'path_type': "daily"},
+
+            'ios_app_store_aggregated_reviews': {'main_path': "iOS-app-store/reviews/aggregated",
+                                                'size': 1 * MiB, 'marker': True,
+                                                'path_type': "daily"},
+
+            'google_play_reviews_per_app': {'main_path': "google-play/reviews/per_app",
+                                               'size': 1 * MiB, 'marker': True,
+                                               'path_type': "daily"},
+
+            'ios_app_store_reviews_per_app': {'main_path': "iOS-app-store/reviews/per_app",
+                                                 'size': 1 * MiB, 'marker': True,
+                                                 'path_type': "daily"},
 
             'google_play_version_db': {'main_path': "google-play/app_version_db",
                          'size': 100 * MiB, 'marker': False,
@@ -1771,19 +1806,30 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
                                              self.apps_paths['app_info'], path_suffix, in_or_out)
 
+    def get_app_info(self, store, in_or_out, path_prefix=None):
+        if store == GOOGLE_PLAY:
+            return self.get_android_app_info(in_or_out, path_prefix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_info(in_or_out, path_prefix)
+
     def get_android_apps_to_scrape(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ww_downloads_to_scrape'], path_suffix, in_or_out)
 
     # Store analysis
+
+    # # Version DB
     def get_google_play_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['google_play_version_db'], path_suffix, in_or_out)
 
-    
     def get_ios_app_store_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_version_db'], path_suffix, in_or_out)
+
+    # # Reviews
+
+    # # # Data Paths
 
     def get_google_play_raw_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
@@ -1792,6 +1838,89 @@ class AppsPathResolver(object):
     def get_ios_app_store_raw_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_raw_reviews'], path_suffix, in_or_out)
+
+    def get_raw_reviews(self,  in_or_out, store, path_prefix=None, path_suffix=None):
+        if store == GOOGLE_PLAY:
+            return self.get_google_play_raw_reviews(in_or_out, path_prefix, path_suffix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_store_raw_reviews(in_or_out, path_prefix, path_suffix)
+
+    def get_google_play_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['google_play_reviews'], path_suffix, in_or_out)
+
+    def get_ios_app_store_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_app_store_reviews'], path_suffix, in_or_out)
+
+    def get_reviews(self,  in_or_out, store, path_prefix=None, path_suffix=None):
+        if store == GOOGLE_PLAY:
+            return self.get_google_play_reviews(in_or_out, path_prefix, path_suffix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_store_reviews(in_or_out, path_prefix, path_suffix)
+
+    def get_google_play_processed_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['google_play_processed_reviews'], path_suffix, in_or_out)
+
+    def get_ios_app_store_processed_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_app_store_processed_reviews'], path_suffix, in_or_out)
+
+    def get_processed_reviews(self,  in_or_out, store, path_prefix=None, path_suffix=None):
+        if store == GOOGLE_PLAY:
+            return self.get_google_play_processed_reviews(in_or_out, path_prefix, path_suffix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_store_processed_reviews(in_or_out, path_prefix, path_suffix)
+
+    def get_google_play_aggregated_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['google_play_aggregated_reviews'], path_suffix, in_or_out)
+
+    def get_ios_app_store_aggregated_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_app_store_aggregated_reviews'], path_suffix, in_or_out)
+
+    def get_aggregated_reviews(self,  in_or_out, store, path_prefix=None, path_suffix=None):
+        if store == GOOGLE_PLAY:
+            return self.get_google_play_aggregated_reviews(in_or_out, path_prefix, path_suffix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_store_aggregated_reviews(in_or_out, path_prefix, path_suffix)
+
+    def get_google_play_reviews_per_app(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['google_play_reviews_per_app'], path_suffix, in_or_out)
+
+    def get_ios_app_store_reviews_per_app(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_app_store_reviews_per_app'], path_suffix, in_or_out)
+
+    def get_reviews_per_app(self, in_or_out, store, path_prefix=None, path_suffix=None):
+        if store == GOOGLE_PLAY:
+            return self.get_google_play_reviews_per_app(in_or_out, path_prefix, path_suffix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_store_reviews_per_app(in_or_out, path_prefix, path_suffix)
+
+    # # # Model Paths
+
+    def get_reviews_nlp_model(self, store, category):
+        pass
+
+    def get_reviews_ml_model(self, store, category):
+        pass
+
+    def get_reviews_inference_model(self, store, category, topic):
+        pass
+
+    # # # Categories and Topics
+
+    def get_category_topics(self, category):
+        pass
+
+    def get_category_thresholds(self, category):
+        pass
+
+    # # Ratings
 
     def get_google_play_ratings_over_time(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
