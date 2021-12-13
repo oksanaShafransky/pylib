@@ -152,7 +152,7 @@ class AppsPathResolver(object):
                                         'size': 4.5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-retention-window': {'main_path': "apps-monitoring/retention/window",
-                                            'size': 4.5 * MB,
+                                            'size': 2.5 * MB,
                                             'marker': True, 'path_type': "daily"},
             'monitoring-dau-predict': {'main_path': "apps-monitoring/dau/predict",
                                       'size': 5.25 * MB,
