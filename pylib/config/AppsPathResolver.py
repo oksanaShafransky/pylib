@@ -1606,7 +1606,8 @@ class AppsPathResolver(object):
     def get_monitoring_usagetime_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-usagetime-predict'], path_suffix, in_or_out)
-    def get_monitoring_retention_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_retention_predict(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
+        self.apps_paths['monitoring-retention-predict']['main_path'] = "apps-monitoring/retention/predict%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-retention-predict'], path_suffix, in_or_out)
     def get_monitoring_dau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -1624,10 +1625,12 @@ class AppsPathResolver(object):
     def get_monitoring_reach_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-reach-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_retention_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_retention_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
+        self.apps_paths['monitoring-retention-anomal-zscores']['main_path'] = "apps-monitoring/retention/zScores%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-retention-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_retention_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_retention_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
+        self.apps_paths['monitoring-retention-anomal-stats']['main_path'] = "apps-monitoring/retention/stats%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-retention-anomal-stats'], path_suffix, in_or_out)
     def get_monitoring_reach_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
