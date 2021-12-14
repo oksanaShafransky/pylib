@@ -188,7 +188,7 @@ class AppsPathResolver(object):
                                                 'size': 100 * KB,
                                                 'marker': True, 'path_type': "daily"},
             'monitoring-retention-anomal-zscores': {'main_path': "apps-monitoring/retention/anomal/zScores",
-                                                'size': 100 * KB,
+                                                'size': 0.4 * KB,
                                                 'marker': True, 'path_type': "daily"},
             'monitoring-retention-anomal-stats': {'main_path': "apps-monitoring/retention/anomal/stats",
                                               'size': 20 * KB,
