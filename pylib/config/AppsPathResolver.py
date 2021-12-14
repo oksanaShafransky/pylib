@@ -170,7 +170,7 @@ class AppsPathResolver(object):
                                          'size': 6.5 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-retention-predict': {'main_path': "apps-monitoring/retention/predict",
-                                             'size': 6.5 * MB,
+                                             'size': 450 * KB,
                                              'marker': True, 'path_type': "daily"},
             'monitoring-dau-anomal-zscores': {'main_path': "apps-monitoring/dau/anomal/zScores",
                                           'size': 100 * KB,
