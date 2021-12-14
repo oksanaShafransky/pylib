@@ -151,7 +151,7 @@ class AppsPathResolver(object):
             'monitoring-usagetime-window': {'main_path': "apps-monitoring/usagetime/window",
                                         'size': 4.5 * MB,
                                         'marker': True, 'path_type': "daily"},
-            'monitoring-retention-window': {'main_path': self.ti.main_path,
+            'monitoring-retention-window': {'main_path': "apps-monitoring/retention/window",
                                             'size': 900 * KB,
                                             'marker': True, 'path_type': "daily"},
             'monitoring-dau-predict': {'main_path': "apps-monitoring/dau/predict",
