@@ -1588,7 +1588,7 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-usagetime-window'], path_suffix, in_or_out)
     def get_monitoring_retention_window(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
-        self.apps_paths['monitoring-retention-window']['main_path'] = "apps-monitoring/retention/window%(td)" % {'td':td}
+        self.apps_paths['monitoring-retention-window']['main_path'] = "apps-monitoring/retention/window%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-retention-window'], path_suffix, in_or_out)
     def get_monitoring_dau_predict(self, in_or_out, path_prefix=None, path_suffix=None):
