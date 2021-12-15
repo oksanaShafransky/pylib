@@ -1806,7 +1806,7 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
                                              self.apps_paths['app_info'], path_suffix, in_or_out)
 
-    def get_app_info(self, store, in_or_out, path_prefix=None):
+    def get_app_info(self, in_or_out, store, path_prefix=None):
         if store == GOOGLE_PLAY:
             return self.get_android_app_info(in_or_out, path_prefix)
         elif store == IOS_APP_STORE:
@@ -1853,7 +1853,7 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_reviews'], path_suffix, in_or_out)
 
-    def get_reviews(self,  in_or_out, store, path_prefix=None, path_suffix=None):
+    def get_reviews(self, in_or_out, store, path_prefix=None, path_suffix=None):
         if store == GOOGLE_PLAY:
             return self.get_google_play_reviews(in_or_out, path_prefix, path_suffix)
         elif store == IOS_APP_STORE:
