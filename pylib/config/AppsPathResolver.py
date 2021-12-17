@@ -560,6 +560,9 @@ class AppsPathResolver(object):
             'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 120 * GiB,
                                      'marker': False, 'path_type': "daily"},
 
+            'source_apps': {'main_path': 'daily/source-apps', 'size': 1 * KB,
+                                     'marker': True, 'path_type': "daily"},
+
             'extractor_ga_daily': {'main_path': 'raw-s2s/extractor_ga_daily', 'size': 10 * MiB,
                                    'marker': True, 'path_type': "monthly"},
 
@@ -773,6 +776,7 @@ class AppsPathResolver(object):
                 'main_path': "daily/estimate/app-engagement-realnumbers-tsv/estkey=AppCountryKey",
                 'size': 900 * MiB, 'marker': True,
                 'path_type': "daily"},
+
             'app_engagement_realnumbers_parquet': {
                 'main_path': "daily/estimate/app-engagement-realnumbers/estkey=AppCountryKey",
                 'size': 400 * MiB, 'marker': True,
@@ -1090,6 +1094,10 @@ class AppsPathResolver(object):
     def get_extractor_mfour1008(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_mfour1008'], path_suffix, in_or_out)
+
+    def get_source_apps(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['source_apps'], path_suffix, in_or_out)
 
     def get_bobble_installed_apps(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
