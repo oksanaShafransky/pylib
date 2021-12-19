@@ -12,6 +12,9 @@ GB = KB ** 3
 EMPTY_STRING = ""
 SCRAPING_BASE_DIR = "/similargroup/scraping"
 
+GOOGLE_PLAY = '0'
+IOS_APP_STORE = '1'
+
 
 def path_join(path, *paths):
     if path[0] != '/':
@@ -958,11 +961,11 @@ class AppsPathResolver(object):
                                        'size': 100 * MiB, 'marker': False,
                                        'path_type': "base_path"},
 
-            'google_play_ratings_over_time': {'main_path': 'google-play/ratings',
+            'google_play_ratings': {'main_path': 'google-play/ratings',
                                       'size': 200 * MB, 'marker': True,
                                       'path_type': 'daily'},
 
-            'ios_app_store_ratings_over_time': {'main_path': 'iOS-app-store/ratings',
+            'ios_app_store_ratings': {'main_path': 'iOS-app-store/ratings',
                                       'size': 10 * MB, 'marker': True,
                                       'path_type': 'daily'},
 
@@ -1823,6 +1826,12 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
                                              self.apps_paths['app_info'], path_suffix, in_or_out)
 
+    def get_raw_android_app_info(self, in_or_out, path_prefix=None, path_suffix="store=android"):
+        pass
+
+    def get_raw_ios_app_info(self, in_or_out, path_prefix=None, path_suffix="store=itunes"):
+        pass
+
     def get_android_apps_to_scrape(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ww_downloads_to_scrape'], path_suffix, in_or_out)
@@ -1853,13 +1862,21 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_reviews_sentiment'], path_suffix, in_or_out)
 
-    def get_google_play_ratings_over_time(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_google_play_ratings(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['google_play_ratings_over_time'], path_suffix, in_or_out)
+                                             self.apps_paths['google_play_ratings'], path_suffix, in_or_out)
 
-    def get_ios_app_store_ratings_over_time(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_ios_app_store_ratings(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ios_app_store_ratings_over_time'], path_suffix, in_or_out)
+                                             self.apps_paths['ios_app_store_ratings'], path_suffix, in_or_out)
+
+    def get_ratings(self, in_or_out, store, path_prefix=None, path_suffix=None):
+        if store == GOOGLE_PLAY:
+            return self.get_google_play_ratings(in_or_out, path_prefix, path_suffix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_store_ratings(in_or_out, path_prefix, path_suffix)
+        else:
+            raise ValueError("%s : is not a recognized store code" % store)
 
     # Static Paths
     def get_countries_full_names(self, in_or_out, path_prefix=None, path_suffix=None):
