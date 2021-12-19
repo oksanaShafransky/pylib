@@ -82,6 +82,26 @@ class AppsPathResolver(object):
                                            required_size=self.required_size,
                                            required_marker=self.required_marker)
 
+        def get_latest_success_data_artifact(self, lookback=None, **kwargs):
+            if self.in_or_out == 'out':
+                raise Exception("AppsPathSolver - Output doesn't have latest success data artifact")
+            self.ti.set_aws_credentials()
+            for path, _ in reversed(self.ti.dates_range_paths(self.full_base_path + '/', lookback)):
+                # Bad practice
+                # if there had been a more specific exception for failure to locate data,
+                # we could've used it instead as the except argument
+                try:
+                    data_artifact = InputDataArtifact(self.ti, path_join(path, self.path_suffix),
+                                                      required_size=self.required_size,
+                                                      required_marker=self.required_marker,
+                                                      **kwargs)
+                except Exception:
+                    continue
+
+                return data_artifact
+
+            raise Exception("InputDataArtifact - Couldn't locate success markers for: %s in any of the datasources" % self.main_path)
+
         # Rerurn base path without date_suffix
         def get_base_path(self):
             return self.full_base_path
