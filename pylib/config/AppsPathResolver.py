@@ -942,7 +942,7 @@ class AppsPathResolver(object):
                                         'size': 1 * MiB, 'marker': True,
                                         'path_type': "daily"},
 
-            'google_play_reviews_sentiment': {'main_path': "iOS-app-store/reviews/sentiment",
+            'google_play_reviews_sentiment': {'main_path': "google-play/reviews/sentiment",
                                           'size': 1 * MiB, 'marker': True,
                                           'path_type': "daily"},
 
