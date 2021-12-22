@@ -518,7 +518,7 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 100 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 95 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
@@ -945,7 +945,7 @@ class AppsPathResolver(object):
                                         'size': 1 * MiB, 'marker': True,
                                         'path_type': "daily"},
 
-            'google_play_reviews_sentiment': {'main_path': "iOS-app-store/reviews/sentiment",
+            'google_play_reviews_sentiment': {'main_path': "google-play/reviews/sentiment",
                                           'size': 1 * MiB, 'marker': True,
                                           'path_type': "daily"},
 
