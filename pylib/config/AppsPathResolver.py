@@ -616,6 +616,12 @@ class AppsPathResolver(object):
 
             'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 10 * MiB,
                                          'marker': True, 'path_type': "daily"},
+
+            'stay_focus_installed_apps': {'main_path': 'raw-s2s/stay_focus-installed-apps', 'size': 2.2 * GiB,
+                                      'marker': False, 'path_type': "daily"},
+
+            'stay_focus_apps_sessions': {'main_path': 'raw-s2s/stay_focus-apps-sessions', 'size': 2.2 * GiB,
+                                          'marker': False, 'path_type': "daily"},
             ###
 
             'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 20 * GiB,
@@ -1985,5 +1991,10 @@ class AppsPathResolver(object):
             return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                                  self.apps_paths['categories_estimated_retention'], path_suffix, in_or_out)
 
+    def get_stay_focus_installed_data(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['stay_focus_installed_apps'], path_suffix, in_or_out)
 
-
+    def get_stay_focus_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['stay_focus_apps_sessions'], path_suffix, in_or_out)
