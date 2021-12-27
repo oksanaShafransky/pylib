@@ -253,7 +253,7 @@ class AppsPathResolver(object):
                                                               'marker': True, 'path_type': "daily"},
 
             'calc_downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/new_calc/aggKey=AppCountryCountrySourceKey",
-                                                              'size': 5 * GB,
+                                                              'size': 4.7 * GB,
                                                               'marker': True, 'path_type': "daily"},
 
 
@@ -398,7 +398,7 @@ class AppsPathResolver(object):
 
             # Usage
             'usage_agg_app_country': {'main_path': "daily/usage/agg",
-                             'size': 5 * MB,
+                             'size': 4.6 * MB,
                              'marker': True, 'path_type': "daily"},
             'usage_prior': {'main_path': "daily/usage/prior",
                             'size': 11 * MB,
