@@ -333,7 +333,7 @@ class AppsPathResolver(object):
                              'marker': True, 'path_type': "daily"},
 
             'dau_for_ptft': {'main_path': "daily/dau/pre-estimate/dau-for-ptft",
-                                    'size': 230 * MB,
+                                    'size': 225 * MB,
                                     'marker': True, 'path_type': "daily"},
 
             'new_users_for_ptft': {'main_path': "daily/downloads/pre-estimate/new-users-for-ptft",
