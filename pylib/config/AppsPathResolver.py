@@ -83,6 +83,12 @@ class AppsPathResolver(object):
                                            required_marker=self.required_marker)
 
         def get_latest_success_data_artifact(self, lookback=None, **kwargs):
+            """
+            Returns the most recent data artifact with a _SUCCESS marker
+            :param lookback: lookback value, timedelta is determined by ti.mode (daily, weekly, snapshot, etc.)
+            :param kwargs: kwargs for the InputDataArtifact object
+            :return: InputDataArtifact of the most recent path within the lookbaack range with a _SUCCESS marker
+            """
             if self.in_or_out == 'out':
                 raise Exception("AppsPathSolver - Output doesn't have latest success data artifact")
             self.ti.set_aws_credentials()
