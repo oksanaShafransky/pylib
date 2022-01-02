@@ -108,6 +108,20 @@ class AppsPathResolver(object):
 
             raise Exception("InputDataArtifact - Couldn't locate success markers for: %s in any of the datasources" % self.main_path)
 
+        def get_model_data_artifact(self, version_suffix=None, **kwargs):
+            """
+            Returns an InputDataArtifact of a model.
+            :param version_suffix:
+            :param kwargs: kwargs for the InputDataArtifact object
+            :return:
+            """
+            if self.in_or_out == 'out' or self.path_type != 'base_path':
+                raise Exception("AppsPathSolver - Not a valid model path")
+            return InputDataArtifact(self.ti, path_join(self.full_base_path, self.path_suffix, version_suffix),
+                                     required_size=self.required_size,
+                                     required_marker=self.required_marker,
+                                     **kwargs)
+
         # Rerurn base path without date_suffix
         def get_base_path(self):
             return self.full_base_path
@@ -972,6 +986,14 @@ class AppsPathResolver(object):
                                       'size': 1 * MiB, 'marker': True,
                                       'path_type': "daily"},
 
+            'google_play_predicted_reviews': {'main_path': "google-play/reviews/predicted",
+                                              'size': 1 * MiB, 'marker': True,
+                                              'path_type': "daily"},
+
+            'ios_app_store_predicted_reviews': {'main_path': "iOS-app-store/reviews/predicted",
+                                                'size': 1 * MiB, 'marker': True,
+                                                'path_type': "daily"},
+
             'google_play_aggregated_reviews': {'main_path': "google-play/reviews/aggregated",
                                               'size': 1 * MiB, 'marker': True,
                                               'path_type': "daily"},
@@ -992,27 +1014,27 @@ class AppsPathResolver(object):
 
             'google_play_reviews_nlp_model': {'main_path': "google-play/reviews/nlp_model",
                                       'size': 0, 'marker': False,
-                                      'path_type': "daily"},
+                                      'path_type': "base_path"},
 
             'ios_app_store_reviews_nlp_model': {'main_path': "iOS-app-store/reviews/nlp_model",
                                               'size': 0, 'marker': False,
-                                              'path_type': "daily"},
+                                              'path_type': "base_path"},
 
             'google_play_reviews_ml_model': {'main_path': "google-play/reviews/ml_model",
                                               'size': 0, 'marker': False,
-                                              'path_type': "daily"},
+                                              'path_type': "base_path"},
 
             'ios_app_store_reviews_ml_model': {'main_path': "iOS-app-store/reviews/ml_model",
                                                 'size': 0, 'marker': False,
-                                                'path_type': "daily"},
+                                                'path_type': "base_path"},
 
             'google_play_reviews_inference_model': {'main_path': "google-play/reviews/inference_model",
                                               'size': 0, 'marker': False,
-                                              'path_type': "daily"},
+                                              'path_type': "base_path"},
 
             'ios_app_store_reviews_inference_model': {'main_path': "iOS-app-store/reviews/inference_model",
                                                 'size': 0, 'marker': False,
-                                                'path_type': "daily"},
+                                                'path_type': "base_path"},
             # # Version DB
 
             'google_play_version_db': {'main_path': "google-play/app_version_db",
@@ -1899,8 +1921,11 @@ class AppsPathResolver(object):
     def get_category_thresholds(self, store, category):
         pass
 
-    def category_topic_check(self, store, category, topic=None):
-        pass
+    def category_check(self, store, category):
+        return True
+
+    def topic_check(self, store, category, topic):
+        return True
 
     # # Format Strings
 
@@ -1940,7 +1965,7 @@ class AppsPathResolver(object):
 
     def get_reviews(self, in_or_out, store, category, path_prefix=None):
 
-        if not self.category_topic_check(store, category):
+        if not self.category_check(store, category):
             raise ValueError(self.CAT_ERROR % (category, store))
 
         path_suffix = self.CAT_PARTITION % category
@@ -1960,21 +1985,41 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_processed_reviews'], path_suffix, in_or_out)
 
-    def get_processed_reviews(self,  in_or_out, store, category, topic=None, path_prefix=None):
+    def get_processed_reviews(self,  in_or_out, store, category, path_prefix=None):
 
-        if not self.category_topic_check(store, category, topic):
-            if not topic:
-                raise ValueError(self.STORE_ERROR % (category, store))
-            else:
-                raise ValueError(self.TOPIC_ERROR %
-                                 (topic, category, store))
+        if not self.category_check(store, category):
+            raise ValueError(self.STORE_ERROR % (category, store))
 
-        path_suffix = self.CAT_TOPIC_PARTITION % (category, topic) if topic else self.CAT_PARTITION % category
+        path_suffix = self.CAT_PARTITION % category
 
         if store == GOOGLE_PLAY:
             return self.get_google_play_processed_reviews(in_or_out, path_prefix, path_suffix)
         elif store == IOS_APP_STORE:
             return self.get_ios_app_store_processed_reviews(in_or_out, path_prefix, path_suffix)
+        else:
+            raise ValueError(self.STORE_ERROR % store)
+
+    def get_google_play_predicted_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['google_play_predicted_reviews'], path_suffix, in_or_out)
+
+    def get_ios_app_store_predicted_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_app_store_predicted_reviews'], path_suffix, in_or_out)
+
+    def get_predicted_reviews(self,  in_or_out, store, category, topic=None, path_prefix=None):
+
+        if not self.category_check(store, category):
+            raise ValueError(self.STORE_ERROR % (category, store))
+        if topic and not self.topic_check(store, category, topic):
+            raise ValueError(self.TOPIC_ERROR % (topic, category, store))
+
+        path_suffix = self.CAT_TOPIC_PARTITION % (category, topic) if topic else self.CAT_PARTITION % category
+
+        if store == GOOGLE_PLAY:
+            return self.get_google_play_predicted_reviews(in_or_out, path_prefix, path_suffix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_store_predicted_reviews(in_or_out, path_prefix, path_suffix)
         else:
             raise ValueError(self.STORE_ERROR % store)
 
@@ -1988,7 +2033,7 @@ class AppsPathResolver(object):
 
     def get_aggregated_reviews(self,  in_or_out, store, category, path_prefix=None):
 
-        if not self.category_topic_check(store, category):
+        if not self.category_check(store, category):
             raise ValueError(self.CAT_ERROR % (category, store))
 
         path_suffix = self.CAT_PARTITION % category
@@ -2010,7 +2055,7 @@ class AppsPathResolver(object):
 
     def get_reviews_per_app(self, in_or_out, store, category, path_prefix=None):
 
-        if not self.category_topic_check(store, category):
+        if not self.category_check(store, category):
             raise ValueError(self.CAT_ERROR % (category, store))
 
         path_suffix = self.CAT_PARTITION % category
@@ -2025,17 +2070,17 @@ class AppsPathResolver(object):
     # # # Model Paths
 
     def get_google_play_reviews_nlp_model(self, category, path_prefix=None):
-        self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
+        return self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
                                       self.apps_paths['google_play_reviews_nlp_model'],
                                       self.CAT_PARTITION % category, 'in')
 
     def get_ios_app_store_reviews_nlp_model(self, category, path_prefix=None):
-        self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
+        return self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
                                       self.apps_paths['ios_app_store_reviews_nlp_model'],
                                       self.CAT_PARTITION % category, 'in')
 
     def get_reviews_nlp_model(self, store, category):
-        if not self.category_topic_check(store, category):
+        if not self.category_check(store, category):
             raise ValueError(self.CAT_ERROR % (category, store))
         if store == GOOGLE_PLAY:
             return self.get_google_play_reviews_nlp_model(category)
@@ -2045,17 +2090,17 @@ class AppsPathResolver(object):
             raise ValueError(self.STORE_ERROR % store)
 
     def get_google_play_reviews_ml_model(self, category, path_prefix=None):
-        self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
+        return self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
                                       self.apps_paths['google_play_reviews_ml_model'],
                                       self.CAT_PARTITION % category, 'in')
 
     def get_ios_app_store_reviews_ml_model(self, category, path_prefix=None):
-        self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
+        return self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
                                       self.apps_paths['ios_app_store_reviews_ml_model'],
                                       self.CAT_PARTITION % category, 'in')
 
     def get_reviews_ml_model(self, store, category):
-        if not self.category_topic_check(store, category):
+        if not self.category_check(store, category):
             raise ValueError(self.CAT_ERROR % (category, store))
         if store == GOOGLE_PLAY:
             return self.get_google_play_reviews_ml_model(category)
@@ -2065,17 +2110,17 @@ class AppsPathResolver(object):
             raise ValueError(self.STORE_ERROR % store)
 
     def get_google_play_reviews_inference_model(self, category, topic, path_prefix=None):
-        self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
+        return self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
                                       self.apps_paths['google_play_reviews_inference_model'],
                                       self.CAT_TOPIC_PARTITION % (category, topic), 'in')
 
     def get_ios_app_store_reviews_inference_model(self, category, topic, path_prefix=None):
-        self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
+        return self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
                                       self.apps_paths['ios_app_store_reviews_inference_model'],
                                       self.CAT_TOPIC_PARTITION % (category, topic), 'in')
 
     def get_reviews_inference_model(self, store, category, topic):
-        if not self.category_topic_check(store, category, topic):
+        if not self.category_check(store, category, topic):
             raise ValueError(self.TOPIC_ERROR % (topic, category, store))
         if store == GOOGLE_PLAY:
             return self.get_google_play_reviews_inference_model(category, topic)
