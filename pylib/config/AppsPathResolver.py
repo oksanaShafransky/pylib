@@ -12,6 +12,9 @@ GB = KB ** 3
 EMPTY_STRING = ""
 SCRAPING_BASE_DIR = "/similargroup/scraping"
 
+GOOGLE_PLAY = '0'
+IOS_APP_STORE = '1'
+
 
 def path_join(path, *paths):
     if path[0] != '/':
@@ -152,7 +155,7 @@ class AppsPathResolver(object):
                                         'size': 4.5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-retention-window': {'main_path': "apps-monitoring/retention/window",
-                                            'size': 900 * KB,
+                                            'size': 300 * KB,
                                             'marker': True, 'path_type': "daily"},
             'monitoring-dau-predict': {'main_path': "apps-monitoring/dau/predict",
                                       'size': 5.25 * MB,
@@ -170,7 +173,7 @@ class AppsPathResolver(object):
                                          'size': 6.5 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-retention-predict': {'main_path': "apps-monitoring/retention/predict",
-                                             'size': 6.5 * MB,
+                                             'size': 450 * KB,
                                              'marker': True, 'path_type': "daily"},
             'monitoring-dau-anomal-zscores': {'main_path': "apps-monitoring/dau/anomal/zScores",
                                           'size': 100 * KB,
@@ -188,7 +191,7 @@ class AppsPathResolver(object):
                                                 'size': 100 * KB,
                                                 'marker': True, 'path_type': "daily"},
             'monitoring-retention-anomal-zscores': {'main_path': "apps-monitoring/retention/anomal/zScores",
-                                                'size': 100 * KB,
+                                                'size': 0.4 * KB,
                                                 'marker': True, 'path_type': "daily"},
             'monitoring-retention-anomal-stats': {'main_path': "apps-monitoring/retention/anomal/stats",
                                               'size': 20 * KB,
@@ -509,13 +512,13 @@ class AppsPathResolver(object):
             'app_country_source_agg': {'main_path': "daily/aggregations/aggKey=AppCountrySourceKey", 'size': 0.9 * GiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6.4 * GB,
+            'extractor_1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1001", 'size': 6 * GB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 100 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 72 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
@@ -559,6 +562,9 @@ class AppsPathResolver(object):
 
             'bobble_apps_sessions': {'main_path': 'raw-s2s/bobble-apps-sessions', 'size': 120 * GiB,
                                      'marker': False, 'path_type': "daily"},
+
+            'source_apps': {'main_path': 'daily/source-apps', 'size': 1 * KB,
+                                     'marker': True, 'path_type': "daily"},
 
             'extractor_ga_daily': {'main_path': 'raw-s2s/extractor_ga_daily', 'size': 10 * MiB,
                                    'marker': True, 'path_type': "monthly"},
@@ -610,13 +616,19 @@ class AppsPathResolver(object):
 
             'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 10 * MiB,
                                          'marker': True, 'path_type': "daily"},
+
+            'stay_focus_installed_apps': {'main_path': 'raw-s2s/stay_focus-installed-apps', 'size': 2.2 * GiB,
+                                      'marker': False, 'path_type': "daily"},
+
+            'stay_focus_apps_sessions': {'main_path': 'raw-s2s/stay_focus-apps-sessions', 'size': 2.2 * GiB,
+                                          'marker': False, 'path_type': "daily"},
             ###
 
             'grouping_1001_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1001", 'size': 20 * GiB,
                                              'marker': True,
                                              'path_type': "daily"},
 
-            'grouping_1001_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1001", 'size': 13 * GiB,
+            'grouping_1001_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1001", 'size': 12 * GiB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -632,7 +644,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size':200 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 165 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -773,6 +785,7 @@ class AppsPathResolver(object):
                 'main_path': "daily/estimate/app-engagement-realnumbers-tsv/estkey=AppCountryKey",
                 'size': 900 * MiB, 'marker': True,
                 'path_type': "daily"},
+
             'app_engagement_realnumbers_parquet': {
                 'main_path': "daily/estimate/app-engagement-realnumbers/estkey=AppCountryKey",
                 'size': 400 * MiB, 'marker': True,
@@ -938,6 +951,14 @@ class AppsPathResolver(object):
                                         'size': 1 * MiB, 'marker': True,
                                         'path_type': "daily"},
 
+            'google_play_reviews_sentiment': {'main_path': "google-play/reviews/sentiment",
+                                          'size': 1 * MiB, 'marker': True,
+                                          'path_type': "daily"},
+
+            'ios_app_store_reviews_sentiment': {'main_path': "iOS-app-store/reviews/sentiment",
+                                          'size': 1 * MiB, 'marker': True,
+                                          'path_type': "daily"},
+
             'google_play_version_db': {'main_path': "google-play/app_version_db",
                          'size': 100 * MiB, 'marker': False,
                          'path_type': "base_path"},
@@ -946,11 +967,11 @@ class AppsPathResolver(object):
                                        'size': 100 * MiB, 'marker': False,
                                        'path_type': "base_path"},
 
-            'google_play_ratings_over_time': {'main_path': 'google-play/ratings',
+            'google_play_ratings': {'main_path': 'google-play/ratings',
                                       'size': 200 * MB, 'marker': True,
                                       'path_type': 'daily'},
 
-            'ios_app_store_ratings_over_time': {'main_path': 'iOS-app-store/ratings',
+            'ios_app_store_ratings': {'main_path': 'iOS-app-store/ratings',
                                       'size': 10 * MB, 'marker': True,
                                       'path_type': 'daily'},
 
@@ -982,6 +1003,22 @@ class AppsPathResolver(object):
             'calc_retention': {'main_path': "retention/calc-retention",
                                'size': 100 * KB, 'marker': True,
                                'path_type': "daily"},
+
+            'ww_smoothing_retention': {'main_path': "retention/ww-smoothing-retention",
+                                               'size': 100 * KB, 'marker': True,
+                                               'path_type': "daily"},
+
+            'category_smoothing_retention': {'main_path': "retention/category-smoothing-retention",
+                                       'size': 100 * KB, 'marker': True,
+                                       'path_type': "daily"},
+
+            'top_app_smoothing_retention': {'main_path': "retention/top-app-smoothing-retention",
+                                       'size': 100 * KB, 'marker': True,
+                                       'path_type': "daily"},
+
+            'final_prior_smoothing_retention': {'main_path': "retention/final-prior-smoothing-retention",
+                                               'size': 100 * KB, 'marker': True,
+                                               'path_type': "daily"},
 
             'estimated_retention': {'main_path': "retention/estimated-retention",
                                     'size': 100 * KB, 'marker': True,
@@ -1082,6 +1119,10 @@ class AppsPathResolver(object):
     def get_extractor_mfour1008(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_mfour1008'], path_suffix, in_or_out)
+
+    def get_source_apps(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['source_apps'], path_suffix, in_or_out)
 
     def get_bobble_installed_apps(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
@@ -1587,7 +1628,8 @@ class AppsPathResolver(object):
     def get_monitoring_usagetime_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-usagetime-window'], path_suffix, in_or_out)
-    def get_monitoring_retention_window(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_retention_window(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
+        self.apps_paths['monitoring-retention-window']['main_path'] = "apps-monitoring/retention/window%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-retention-window'], path_suffix, in_or_out)
     def get_monitoring_dau_predict(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -1605,7 +1647,8 @@ class AppsPathResolver(object):
     def get_monitoring_usagetime_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-usagetime-predict'], path_suffix, in_or_out)
-    def get_monitoring_retention_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_retention_predict(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
+        self.apps_paths['monitoring-retention-predict']['main_path'] = "apps-monitoring/retention/predict%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-retention-predict'], path_suffix, in_or_out)
     def get_monitoring_dau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -1623,10 +1666,12 @@ class AppsPathResolver(object):
     def get_monitoring_reach_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-reach-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_retention_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_retention_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
+        self.apps_paths['monitoring-retention-anomal-zscores']['main_path'] = "apps-monitoring/retention/zScores%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-retention-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_retention_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_retention_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
+        self.apps_paths['monitoring-retention-anomal-stats']['main_path'] = "apps-monitoring/retention/stats%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-retention-anomal-stats'], path_suffix, in_or_out)
     def get_monitoring_reach_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -1803,6 +1848,12 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
                                              self.apps_paths['app_info'], path_suffix, in_or_out)
 
+    def get_raw_android_app_info(self, in_or_out, path_prefix=None, path_suffix="store=android"):
+        pass
+
+    def get_raw_ios_app_info(self, in_or_out, path_prefix=None, path_suffix="store=itunes"):
+        pass
+
     def get_android_apps_to_scrape(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ww_downloads_to_scrape'], path_suffix, in_or_out)
@@ -1825,13 +1876,29 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_raw_reviews'], path_suffix, in_or_out)
 
-    def get_google_play_ratings_over_time(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_google_play_reviews_sentiment(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['google_play_ratings_over_time'], path_suffix, in_or_out)
+                                             self.apps_paths['google_play_reviews_sentiment'], path_suffix, in_or_out)
 
-    def get_ios_app_store_ratings_over_time(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_ios_app_store_reviews_sentiment(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ios_app_store_ratings_over_time'], path_suffix, in_or_out)
+                                             self.apps_paths['ios_app_store_reviews_sentiment'], path_suffix, in_or_out)
+
+    def get_google_play_ratings(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['google_play_ratings'], path_suffix, in_or_out)
+
+    def get_ios_app_store_ratings(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_app_store_ratings'], path_suffix, in_or_out)
+
+    def get_ratings(self, in_or_out, store, path_prefix=None, path_suffix=None):
+        if store == GOOGLE_PLAY:
+            return self.get_google_play_ratings(in_or_out, path_prefix, path_suffix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_store_ratings(in_or_out, path_prefix, path_suffix)
+        else:
+            raise ValueError("%s : is not a recognized store code" % store)
 
     # Static Paths
     def get_countries_full_names(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -1932,6 +1999,22 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['calc_retention'], path_suffix, in_or_out)
 
+    def get_ww_smoothing_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['ww_smoothing_retention'], path_suffix, in_or_out)
+
+    def get_category_smoothing_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['category_smoothing_retention'], path_suffix, in_or_out)
+
+    def get_top_app_smoothing_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['top_app_smoothing_retention'], path_suffix, in_or_out)
+
+    def get_final_prior_smoothing_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['final_prior_smoothing_retention'], path_suffix, in_or_out)
+
     def get_estimated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['estimated_retention'], path_suffix, in_or_out)
@@ -1940,5 +2023,10 @@ class AppsPathResolver(object):
             return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                                  self.apps_paths['categories_estimated_retention'], path_suffix, in_or_out)
 
+    def get_stay_focus_installed_data(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['stay_focus_installed_apps'], path_suffix, in_or_out)
 
-
+    def get_stay_focus_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['stay_focus_apps_sessions'], path_suffix, in_or_out)
