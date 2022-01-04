@@ -584,16 +584,16 @@ class AppsPathResolver(object):
             'extractor_kochava_daily_whitelist': {'main_path': 'raw-s2s/kochava_report/extractor_kochava_daily_whitelist', 'size': 650 * KiB,
                                                   'marker': True, 'path_type': "monthly"},
 
-            'ptft_dau_factors': {'main_path': 'static/ptft/dau_new', 'size': 380 * MiB,
+            'ptft_dau_factors': {'main_path': 'static/ptft/factors/dau', 'size': 380 * MiB,
                                         'marker': True, 'path_type': "base_path"},
 
-            'ptft_installs_factors': {'main_path': 'static/ptft/installs', 'size': 420 * MiB,
+            'ptft_installs_factors': {'main_path': 'static/ptft/factors/installs', 'size': 420 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
-            'ptft_new_users_factors': {'main_path': 'static/ptft/new_users', 'size': 450 * MiB,
+            'ptft_new_users_factors': {'main_path': 'static/ptft/factors/new_users', 'size': 450 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
-            'ptft_reach_factors': {'main_path': 'static/ptft/reach', 'size': 800 * MiB,
+            'ptft_reach_factors': {'main_path': 'static/ptft/factors/reach', 'size': 800 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
             'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 650 * KiB,
