@@ -1013,7 +1013,7 @@ class AppsPathResolver(object):
                                        'path_type': "daily"},
 
             'top_app_smoothing_retention': {'main_path': "retention/top-app-smoothing-retention",
-                                       'size': 18 * MB, 'marker': True,
+                                       'size': 40 * KB, 'marker': True,
                                        'path_type': "daily"},
 
             'final_prior_smoothing_retention': {'main_path': "retention/final-prior-smoothing-retention",
