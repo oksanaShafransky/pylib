@@ -1009,7 +1009,7 @@ class AppsPathResolver(object):
                                                'path_type': "daily"},
 
             'category_smoothing_retention': {'main_path': "retention/category-smoothing-retention",
-                                       'size': 8 * KB, 'marker': True,
+                                       'size': 800, 'marker': True,
                                        'path_type': "daily"},
 
             'top_app_smoothing_retention': {'main_path': "retention/top-app-smoothing-retention",
