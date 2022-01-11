@@ -178,13 +178,13 @@ class AppsPathResolver(object):
             'monitoring-dau-anomal-zscores': {'main_path': "apps-monitoring/dau/anomal/zScores",
                                           'size': 100 * KB,
                                           'marker': True, 'path_type': "daily"},
-            'monitoring-dau-anomal-stats': {'main_path': "apps-monitoring/dau/anomal/stats",
+            'monitoring-dau-anomal-countries': {'main_path': "apps-monitoring/dau/anomal/countries",
                                           'size': 20 * KB,
                                           'marker': True, 'path_type': "daily"},
             'monitoring-downloads-anomal-zscores': {'main_path': "apps-monitoring/downloads/anomal/zScores",
                                                 'size': 35 * KB,
                                                 'marker': True, 'path_type': "daily"},
-            'monitoring-downloads-anomal-stats': {'main_path': "apps-monitoring/downloads/anomal/stats",
+            'monitoring-downloads-anomal-countries': {'main_path': "apps-monitoring/downloads/anomal/countries",
                                               'size': 5 * KB,
                                               'marker': True, 'path_type': "daily"},
             'monitoring-reach-anomal-zscores': {'main_path': "apps-monitoring/reach/anomal/zScores",
@@ -193,22 +193,22 @@ class AppsPathResolver(object):
             'monitoring-retention-anomal-zscores': {'main_path': "apps-monitoring/retention/anomal/zScores",
                                                 'size': 0.4 * KB,
                                                 'marker': True, 'path_type': "daily"},
-            'monitoring-retention-anomal-stats': {'main_path': "apps-monitoring/retention/anomal/stats",
+            'monitoring-retention-anomal-countries': {'main_path': "apps-monitoring/retention/anomal/countries",
                                               'size': 20 * KB,
                                               'marker': True, 'path_type': "daily"},
-            'monitoring-reach-anomal-stats': {'main_path': "apps-monitoring/reach/anomal/stats",
+            'monitoring-reach-anomal-countries': {'main_path': "apps-monitoring/reach/anomal/countries",
                                               'size': 20 * KB,
                                               'marker': True, 'path_type': "daily"},
             'monitoring-sessions-anomal-zscores': {'main_path': "apps-monitoring/sessions/anomal/zScores",
                                                 'size': 100 * KB,
                                                 'marker': True, 'path_type': "daily"},
-            'monitoring-sessions-anomal-stats': {'main_path': "apps-monitoring/sessions/anomal/stats",
+            'monitoring-sessions-anomal-countries': {'main_path': "apps-monitoring/sessions/anomal/countries",
                                               'size': 20 * KB,
                                               'marker': True, 'path_type': "daily"},
             'monitoring-usagetime-anomal-zscores': {'main_path': "apps-monitoring/usagetime/anomal/zScores",
                                                 'size': 100 * KB,
                                                 'marker': True, 'path_type': "daily"},
-            'monitoring-usagetime-anomal-stats': {'main_path': "apps-monitoring/usagetime/anomal/stats",
+            'monitoring-usagetime-anomal-countries': {'main_path': "apps-monitoring/usagetime/anomal/countries",
                                                   'size': 20 * KB,
                                                   'marker': True, 'path_type': "daily"},
              'monitoring-mau-window': {'main_path': "apps-monitoring/mau/window",
@@ -220,7 +220,7 @@ class AppsPathResolver(object):
             'monitoring-mau-anomal-zscores': {'main_path': "apps-monitoring/mau/anomal/zScores",
                                       'size': 0.5 * KB,
                                       'marker': True, 'path_type': "monthly"},
-            'monitoring-mau-anomal-stats': {'main_path': "apps-monitoring/mau/anomal/stats",
+            'monitoring-mau-anomal-countries': {'main_path': "apps-monitoring/mau/anomal/countries",
                                       'size': 0.5 * KB,
                                       'marker': True, 'path_type': "monthly"},
 
@@ -653,7 +653,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 165 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 155 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -1014,15 +1014,15 @@ class AppsPathResolver(object):
                                'path_type': "daily"},
 
             'ww_smoothing_retention': {'main_path': "retention/ww-smoothing-retention",
-                                               'size': 100 * KB, 'marker': True,
+                                               'size': 18 * MB, 'marker': True,
                                                'path_type': "daily"},
 
             'category_smoothing_retention': {'main_path': "retention/category-smoothing-retention",
-                                       'size': 100 * KB, 'marker': True,
+                                       'size': 800, 'marker': True,
                                        'path_type': "daily"},
 
             'top_app_smoothing_retention': {'main_path': "retention/top-app-smoothing-retention",
-                                       'size': 100 * KB, 'marker': True,
+                                       'size': 40 * KB, 'marker': True,
                                        'path_type': "daily"},
 
             'final_prior_smoothing_retention': {'main_path': "retention/final-prior-smoothing-retention",
@@ -1675,15 +1675,15 @@ class AppsPathResolver(object):
     def get_monitoring_dau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-dau-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_dau_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_dau_anomal_countries(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-dau-anomal-stats'], path_suffix, in_or_out)
+                                             self.apps_paths['monitoring-dau-anomal-countries'], path_suffix, in_or_out)
     def get_monitoring_downloads_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-downloads-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_downloads_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_downloads_anomal_countries(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-downloads-anomal-stats'], path_suffix, in_or_out)
+                                             self.apps_paths['monitoring-downloads-anomal-countries'], path_suffix, in_or_out)
     def get_monitoring_reach_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-reach-anomal-zscores'], path_suffix, in_or_out)
@@ -1691,28 +1691,25 @@ class AppsPathResolver(object):
         self.apps_paths['monitoring-retention-anomal-zscores']['main_path'] = "apps-monitoring/retention/zScores%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-retention-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_retention_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
-        self.apps_paths['monitoring-retention-anomal-stats']['main_path'] = "apps-monitoring/retention/stats%(td)s" % {'td':td}
+    def get_monitoring_retention_anomal_countries(self, in_or_out, path_prefix=None, path_suffix=None, td = 0):
+        self.apps_paths['monitoring-retention-anomal-countries']['main_path'] = "apps-monitoring/retention/countries%(td)s" % {'td':td}
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-retention-anomal-stats'], path_suffix, in_or_out)
-    def get_monitoring_reach_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+                                             self.apps_paths['monitoring-retention-anomal-countries'], path_suffix, in_or_out)
+    def get_monitoring_reach_anomal_countries(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-reach-anomal-stats'], path_suffix, in_or_out)
+                                             self.apps_paths['monitoring-reach-anomal-countries'], path_suffix, in_or_out)
     def get_monitoring_sessions_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-sessions-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_sessions_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_sessions_anomal_countries(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-sessions-anomal-stats'], path_suffix, in_or_out)
+                                             self.apps_paths['monitoring-sessions-anomal-countries'], path_suffix, in_or_out)
     def get_monitoring_usagetime_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-usagetime-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_usagetime_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_usagetime_anomal_countries(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-usagetime-anomal-stats'], path_suffix, in_or_out)
-    # def get_monitoring_alerts(self, in_or_out, path_prefix=None, path_suffix=None):
-    #     return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-    #                                          self.apps_paths['monitoring-alerts'], path_suffix, in_or_out)
+                                             self.apps_paths['monitoring-usagetime-anomal-countries'], path_suffix, in_or_out)
     def get_monitoring_mau_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-mau-window'], path_suffix, in_or_out)
@@ -1722,9 +1719,9 @@ class AppsPathResolver(object):
     def get_monitoring_mau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-mau-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_mau_anomal_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_monitoring_mau_anomal_countries(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-mau-anomal-stats'], path_suffix, in_or_out)
+                                             self.apps_paths['monitoring-mau-anomal-countries'], path_suffix, in_or_out)
 
     # dau
     def get_dau_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
