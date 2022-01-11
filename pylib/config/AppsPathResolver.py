@@ -548,10 +548,19 @@ class AppsPathResolver(object):
             'extractor_bobble1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1001",
                                      'size': 500 * MiB, 'marker': True, 'path_type': "daily"},
 
+            'extractor_stay_focus1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1001",
+                                     'size': 500 * MiB, 'marker': True, 'path_type': "daily"},
+
             'extractor_bobble1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1005",
                                      'size': 10 * MiB, 'marker': True, 'path_type': "daily"},
 
+            'extractor_stay_focus1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1005",
+                                     'size': 10 * MiB, 'marker': True, 'path_type': "daily"},
+
             'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
+                                     'size': 1 * GiB, 'marker': True, 'path_type': "daily"},
+
+            'extractor_stay_focus1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1008",
                                      'size': 1 * GiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfourR1008",
@@ -1108,13 +1117,25 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_bobble1001'], path_suffix, in_or_out)
 
+    def get_extractor_stay_focus1001(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_stay_focus1001'], path_suffix, in_or_out)
+
     def get_extractor_bobble1005(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_bobble1005'], path_suffix, in_or_out)
 
+    def get_extractor_stay_focus1005(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_stay_focus1005'], path_suffix, in_or_out)
+
     def get_extractor_bobble1008(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['extractor_bobble1008'], path_suffix, in_or_out)
+
+    def get_extractor_stay_focus1008(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['extractor_stay_focus1008'], path_suffix, in_or_out)
 
     def get_extractor_mfour1008(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
