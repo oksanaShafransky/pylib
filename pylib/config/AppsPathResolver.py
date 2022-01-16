@@ -178,9 +178,6 @@ class AppsPathResolver(object):
             'monitoring-dau-anomal-zscores': {'main_path': "apps-monitoring/dau/anomal/zScores",
                                           'size': 100 * KB,
                                           'marker': True, 'path_type': "daily"},
-            'monitoring-dau-anomal-countries': {'main_path': "apps-monitoring/dau/anomal/countries",
-                                          'size': 20 * KB,
-                                          'marker': True, 'path_type': "daily"},
             'monitoring-downloads-anomal-zscores': {'main_path': "apps-monitoring/downloads/anomal/zScores",
                                                 'size': 35 * KB,
                                                 'marker': True, 'path_type': "daily"},
@@ -1679,9 +1676,6 @@ class AppsPathResolver(object):
     def get_monitoring_dau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-dau-anomal-zscores'], path_suffix, in_or_out)
-    def get_monitoring_dau_anomal_countries(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['monitoring-dau-anomal-countries'], path_suffix, in_or_out)
     def get_monitoring_downloads_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-downloads-anomal-zscores'], path_suffix, in_or_out)
