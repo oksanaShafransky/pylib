@@ -968,6 +968,10 @@ class AppsPathResolver(object):
                                           'size': 1 * MiB, 'marker': True,
                                           'path_type': "daily"},
 
+            'version_db_dump': {'main_path': "all-store-version-db-dump",
+                                                'size': 1 * MiB, 'marker': True,
+                                                'path_type': "daily"},
+
             'google_play_version_db': {'main_path': "google-play/app_version_db",
                          'size': 100 * MiB, 'marker': False,
                          'path_type': "base_path"},
@@ -1885,6 +1889,10 @@ class AppsPathResolver(object):
     def get_ios_app_store_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_version_db'], path_suffix, in_or_out)
+
+    def get_version_db_dump(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['version_db_dump'], path_suffix, in_or_out)
 
     def get_google_play_raw_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
