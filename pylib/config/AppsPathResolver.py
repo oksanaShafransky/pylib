@@ -1031,19 +1031,19 @@ class AppsPathResolver(object):
                                       'path_type': "daily"},
 
             'google_play_inferred_reviews': {'main_path': "google-play/reviews/inferred",
-                                              'size': 1 * MiB, 'marker': False,
+                                              'size': 0 * MiB, 'marker': False,
                                               'path_type': "daily"},
 
             'ios_app_store_inferred_reviews': {'main_path': "iOS-app-store/reviews/inferred",
-                                                'size': 1 * MiB, 'marker': False,
+                                                'size': 0 * MiB, 'marker': False,
                                                 'path_type': "daily"},
 
             'google_play_aggregated_reviews': {'main_path': "google-play/reviews/aggregated",
-                                              'size': 1 * MiB, 'marker': False,
+                                              'size': 0 * MiB, 'marker': False,
                                               'path_type': "daily"},
 
             'ios_app_store_aggregated_reviews': {'main_path': "iOS-app-store/reviews/aggregated",
-                                                'size': 1 * MiB, 'marker': False,
+                                                'size': 0 * MiB, 'marker': False,
                                                 'path_type': "daily"},
 
             'google_play_reviews_per_app': {'main_path': "google-play/reviews/per_app",
