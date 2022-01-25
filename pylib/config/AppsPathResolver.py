@@ -2012,6 +2012,7 @@ class AppsPathResolver(object):
 
     STORE_ERROR = "%s : is not a recognized store code"
 
+
     # # # Data Paths
 
     def get_google_play_raw_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
