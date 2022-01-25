@@ -1022,27 +1022,27 @@ class AppsPathResolver(object):
                                           'size': 1 * MiB, 'marker': True,
                                           'path_type': "daily"},
 
-            'google_play_nlp_transformed_reviews': {'main_path': "google-play/reviews/nlp_transformed",
+            'google_play_nlp_transformed_reviews': {'main_path': "google-play/reviews/topic_analysis/nlp_transformed",
                                     'size': 1 * MiB, 'marker': True,
                                     'path_type': "daily"},
 
-            'ios_app_store_nlp_transformed_reviews': {'main_path': "iOS-app-store/reviews/nlp_transformed",
+            'ios_app_store_nlp_transformed_reviews': {'main_path': "iOS-app-store/reviews/topic_analysis/nlp_transformed",
                                       'size': 1 * MiB, 'marker': True,
                                       'path_type': "daily"},
 
-            'google_play_inferred_reviews': {'main_path': "google-play/reviews/inferred",
+            'google_play_inferred_reviews': {'main_path': "google-play/reviews/topic_analysis/inferred",
                                               'size': 0 * MiB, 'marker': False,
                                               'path_type': "daily"},
 
-            'ios_app_store_inferred_reviews': {'main_path': "iOS-app-store/reviews/inferred",
+            'ios_app_store_inferred_reviews': {'main_path': "iOS-app-store/reviews/topic_analysis/inferred",
                                                 'size': 0 * MiB, 'marker': False,
                                                 'path_type': "daily"},
 
-            'google_play_aggregated_reviews': {'main_path': "google-play/reviews/aggregated",
+            'google_play_reviews_topic_analysis': {'main_path': "google-play/reviews/topic_analysis/aggregated",
                                               'size': 0 * MiB, 'marker': False,
                                               'path_type': "daily"},
 
-            'ios_app_store_aggregated_reviews': {'main_path': "iOS-app-store/reviews/aggregated",
+            'ios_app_store_reviews_topic_analysis': {'main_path': "iOS-app-store/reviews/topic_analysis/aggregated",
                                                 'size': 0 * MiB, 'marker': False,
                                                 'path_type': "daily"},
 
@@ -1056,19 +1056,19 @@ class AppsPathResolver(object):
 
             # # # Model Paths
 
-            'google_play_reviews_nlp_pipeline': {'main_path': "google-play/reviews/nlp_pipeline",
+            'google_play_reviews_nlp_pipeline': {'main_path': "google-play/reviews/topic_analysis/nlp_pipeline",
                                       'size': 0, 'marker': False,
                                       'path_type': "base_path"},
 
-            'ios_app_store_reviews_nlp_pipeline': {'main_path': "iOS-app-store/reviews/nlp_pipeline",
+            'ios_app_store_reviews_nlp_pipeline': {'main_path': "iOS-app-store/reviews/topic_analysis/nlp_pipeline",
                                               'size': 0, 'marker': False,
                                               'path_type': "base_path"},
 
-            'google_play_reviews_inference_model': {'main_path': "google-play/reviews/inference_model",
+            'google_play_reviews_inference_model': {'main_path': "google-play/reviews/topic_analysis/inference_model",
                                               'size': 0, 'marker': False,
                                               'path_type': "base_path"},
 
-            'ios_app_store_reviews_inference_model': {'main_path': "iOS-app-store/reviews/inference_model",
+            'ios_app_store_reviews_inference_model': {'main_path': "iOS-app-store/reviews/topic_analysis/inference_model",
                                                 'size': 0, 'marker': False,
                                                 'path_type': "base_path"},
             # # Version DB
@@ -2012,8 +2012,9 @@ class AppsPathResolver(object):
 
     STORE_ERROR = "%s : is not a recognized store code"
 
-
     # # # Data Paths
+
+    # # # # General
 
     def get_google_play_raw_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
@@ -2049,6 +2050,26 @@ class AppsPathResolver(object):
             return self.get_ios_app_store_preprocessed_reviews(in_or_out, path_prefix, path_suffix)
         else:
             raise ValueError(self.STORE_ERROR % store)
+
+    # # # # Sentiment Analysis
+
+    def get_google_play_reviews_sentiment(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['google_play_reviews_sentiment'], path_suffix, in_or_out)
+
+    def get_ios_app_store_reviews_sentiment(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_app_store_reviews_sentiment'], path_suffix, in_or_out)
+
+    def get_reviews_sentiment(self, in_or_out, store, path_prefix=None, path_suffix=None):
+        if store == GOOGLE_PLAY:
+            return self.get_google_play_nlp_transformed_reviews(in_or_out, path_prefix, path_suffix)
+        elif store == IOS_APP_STORE:
+            return self.get_ios_app_store_nlp_transformed_reviews(in_or_out, path_prefix, path_suffix)
+        else:
+            raise ValueError(self.STORE_ERROR % store)
+
+    # # # # Topic Analysis
 
     def get_google_play_nlp_transformed_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
@@ -2093,22 +2114,22 @@ class AppsPathResolver(object):
         else:
             raise ValueError(self.STORE_ERROR % store)
 
-    def get_google_play_aggregated_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_google_play_reviews_topic_analysis(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['google_play_aggregated_reviews'], path_suffix, in_or_out)
+                                             self.apps_paths['google_play_reviews_topic_analysis'], path_suffix, in_or_out)
 
-    def get_ios_app_store_aggregated_reviews(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_ios_app_store_reviews_topic_analysis(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ios_app_store_aggregated_reviews'], path_suffix, in_or_out)
+                                             self.apps_paths['ios_app_store_reviews_topic_analysis'], path_suffix, in_or_out)
 
-    def get_aggregated_reviews(self,  in_or_out, store, category=None, path_prefix=None):
+    def get_reviews_topic_analysis(self,  in_or_out, store, category=None, path_prefix=None):
 
         path_suffix = self.CAT_PARTITION % category if category else ""
 
         if store == GOOGLE_PLAY:
-            return self.get_google_play_aggregated_reviews(in_or_out, path_prefix, path_suffix)
+            return self.get_google_play_reviews_topic_analysis(in_or_out, path_prefix, path_suffix)
         elif store == IOS_APP_STORE:
-            return self.get_ios_app_store_aggregated_reviews(in_or_out, path_prefix, path_suffix)
+            return self.get_ios_app_store_reviews_topic_analysis(in_or_out, path_prefix, path_suffix)
         else:
             raise ValueError(self.STORE_ERROR % store)
 
@@ -2132,6 +2153,8 @@ class AppsPathResolver(object):
             raise ValueError(self.STORE_ERROR % store)
 
     # # # Model Paths
+
+    # # # # Topic Analysis
 
     def get_google_play_reviews_nlp_pipeline(self, category, path_prefix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base('in', path_prefix),
@@ -2172,14 +2195,6 @@ class AppsPathResolver(object):
             return self.get_ios_app_store_reviews_inference_model(category, topic)
         else:
             raise ValueError(self.STORE_ERROR % store)
-
-    def get_google_play_reviews_sentiment(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['google_play_reviews_sentiment'], path_suffix, in_or_out)
-
-    def get_ios_app_store_reviews_sentiment(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ios_app_store_reviews_sentiment'], path_suffix, in_or_out)
 
     # # Ratings
 
