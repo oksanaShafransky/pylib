@@ -58,8 +58,10 @@ def get_days_in_month(month_dt):
 def first_day_of_last_month(dt):
     return last_day_of_prev_month(dt).replace(day=1)
 
+
 def first_day_of_month(dt):
     return nth_day_of_month(dt, 1)
+
 
 def nth_day_of_month(dt, n):
     return dt.replace(day=n)
