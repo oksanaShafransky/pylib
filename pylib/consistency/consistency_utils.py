@@ -448,7 +448,6 @@ class ConsistencyTestInfra(object):
             benchmark_mode=benchmark_mode,
         )
 
-
         # list all outputs for output assert and managed output dirs
         all_outputs = ConsistencyPaths.gen_all_output_paths(
             base_dir=self.ti.calc_dir,
