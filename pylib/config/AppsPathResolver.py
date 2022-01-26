@@ -592,7 +592,7 @@ class AppsPathResolver(object):
                                      'size': 10 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_stay_focus1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1005",
-                                     'size': 5 * MiB, 'marker': True, 'path_type': "daily"},
+                                     'size': 3 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
                                      'size': 1 * GiB, 'marker': True, 'path_type': "daily"},
