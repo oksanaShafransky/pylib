@@ -583,13 +583,13 @@ class AppsPathResolver(object):
                                      'size': 500 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_stay_focus1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1001",
-                                     'size': 280 * MiB, 'marker': True, 'path_type': "daily"},
+                                     'size': 30 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1005",
                                      'size': 10 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_stay_focus1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1005",
-                                     'size': 5 * MiB, 'marker': True, 'path_type': "daily"},
+                                     'size': 3 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
                                      'size': 1 * GiB, 'marker': True, 'path_type': "daily"},
