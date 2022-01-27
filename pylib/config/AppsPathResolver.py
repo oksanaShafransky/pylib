@@ -982,7 +982,7 @@ class AppsPathResolver(object):
                                    'path_type': "daily"},
 
             'ww_downloads_to_scrape': {'main_path': "scraping/ww-downloads-to-scrape",
-                         'size': 6.2 * MB, 'marker': True,
+                         'size': 6.1 * MB, 'marker': True,
                          'path_type': "daily"},
 
             # store-analysis
