@@ -2084,9 +2084,9 @@ class AppsPathResolver(object):
 
     def get_reviews_sentiment(self, in_or_out, store, path_prefix=None, path_suffix=None):
         if store == GOOGLE_PLAY:
-            return self.get_google_play_nlp_transformed_reviews(in_or_out, path_prefix, path_suffix)
+            return self.get_google_play_reviews_sentiment(in_or_out, path_prefix, path_suffix)
         elif store == IOS_APP_STORE:
-            return self.get_ios_app_store_nlp_transformed_reviews(in_or_out, path_prefix, path_suffix)
+            return self.get_ios_app_store_reviews_sentiment(in_or_out, path_prefix, path_suffix)
         else:
             raise ValueError(self.STORE_ERROR % store)
 
