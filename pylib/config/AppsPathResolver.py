@@ -1,5 +1,6 @@
 from pylib.tasks.input_data_artifact import InputDataArtifact, InputRangedDataArtifact, DEFAULT_SUFFIX_FORMAT
 from pylib.tasks.output_data_artifact import OutputDataArtifact
+from datetime import date
 
 GiB = 1024 ** 3
 MiB = 1024 ** 2
@@ -1151,6 +1152,21 @@ class AppsPathResolver(object):
                                     'path_type': "daily"},
 
         }
+        self.paths_dates_suffix = {
+            'dau_factors': [
+                date(2021, 6, 30),
+                date(2021, 7, 18)
+            ],
+            'installs_factors': [
+                date(2021, 6, 30)
+            ],
+            'new_users_factors': [
+                date(2021, 6, 30)
+            ],
+            'reach_factors': [
+                date(2021, 6, 30)
+            ]
+        }
 
     def __get_base_dir(self, in_or_out, path_prefix):
         base_dir = self.ti.base_dir if in_or_out == "in" else self.ti.calc_dir
@@ -1176,6 +1192,16 @@ class AppsPathResolver(object):
     def __create_app_path_object(self, base_dir, path_details, *args, **kwargs):
         return AppsPathResolver.AppPath(self.ti, base_dir, path_details['main_path'], path_details['size'],
                                         path_details['marker'], path_details['path_type'], *args, **kwargs)
+
+    def __get_max_date_below_exec_date(self, date_suffix_key):
+        dates = self.paths_dates_suffix[date_suffix_key]
+        max_date = None
+        for d in dates:
+            if d < self.ti.date and (max_date is None or d > max_date):
+                max_date = d
+        if max_date is None:
+            raise Exception(("AppsPathSolver - Couldn't find a date before execution date!"))
+        return max_date
 
     # Paths Getters
     def get_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -1295,18 +1321,26 @@ class AppsPathResolver(object):
                                              self.apps_paths['extractor_kochava_daily_whitelist'], path_suffix, in_or_out)
 
     def get_ptft_dau_factors(self, in_or_out, path_prefix=None, path_suffix=None):
+        if in_or_out == 'in' and path_suffix is None:
+            path_suffix = self.ti.year_month_day(self.__get_max_date_below_exec_date('dau_factors'))
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ptft_dau_factors'], path_suffix, in_or_out)
 
     def get_ptft_installs_factors(self, in_or_out, path_prefix=None, path_suffix=None):
+        if in_or_out == 'in' and path_suffix is None:
+            path_suffix = self.ti.year_month_day(self.__get_max_date_below_exec_date('installs_factors'))
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ptft_installs_factors'], path_suffix, in_or_out)
 
     def get_ptft_new_users_factors(self, in_or_out, path_prefix=None, path_suffix=None):
+        if in_or_out == 'in' and path_suffix is None:
+            path_suffix = self.ti.year_month_day(self.__get_max_date_below_exec_date('new_users_factors'))
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ptft_new_users_factors'], path_suffix, in_or_out)
 
     def get_ptft_reach_factors(self, in_or_out, path_prefix=None, path_suffix=None):
+        if in_or_out == 'in' and path_suffix is None:
+            path_suffix = self.ti.year_month_day(self.__get_max_date_below_exec_date('reach_factors'))
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                             self.apps_paths['ptft_reach_factors'], path_suffix, in_or_out)
 
