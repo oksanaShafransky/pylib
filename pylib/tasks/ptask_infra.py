@@ -42,7 +42,6 @@ from pylib.aws.data_checks import is_s3_folder_big_enough, validate_success, get
 from pylib.aws.s3 import s3_connection
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 from os import environ
-from pylib.tasks.input_data_artifact import InputDataArtifact
 
 logger = logging.getLogger('ptask')
 
@@ -873,6 +872,7 @@ class ContextualizedTasksInfra(object):
         for path, date in reversed(TasksInfra.dates_range_paths(directory, mode, start_date, lookback)):
                 final_path = path + sub_dir
                 print("Try to find latest success in: " + final_path)
+                from pylib.tasks.input_data_artifact import InputDataArtifact # to avoit circuit decendancies
                 path_data_artifact = InputDataArtifact(self, final_path, required_size=min_size_bytes or 1)
                 check_size = path_data_artifact.check_size()
                 if check_size:
