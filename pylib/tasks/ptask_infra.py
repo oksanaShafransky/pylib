@@ -872,7 +872,7 @@ class ContextualizedTasksInfra(object):
         for path, date in reversed(TasksInfra.dates_range_paths(directory, mode, start_date, lookback)):
                 final_path = path + sub_dir
                 print("Try to find latest success in: " + final_path)
-                path_data_artifact = DataArtifact(final_path, required_size=min_size_bytes or 1)
+                path_data_artifact = InputDataArtifact(final_path, required_size=min_size_bytes or 1)
                 check_size = path_data_artifact.check_size()
                 if check_size:
                     print("latest success date for %s is %s" % (directory, date))
