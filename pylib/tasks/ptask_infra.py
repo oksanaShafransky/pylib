@@ -42,6 +42,7 @@ from pylib.aws.data_checks import is_s3_folder_big_enough, validate_success, get
 from pylib.aws.s3 import s3_connection
 from pylib.config.SnowflakeConfig import SnowflakeConfig
 from os import environ
+from pylib.tasks.input_data_artifact import InputDataArtifact
 
 logger = logging.getLogger('ptask')
 
