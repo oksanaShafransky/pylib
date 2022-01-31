@@ -879,6 +879,8 @@ class ContextualizedTasksInfra(object):
                     if check_size:
                         print("latest success date for %s is %s" % (directory, date))
                         return path_data_artifact.resolved_path, path_data_artifact.locate_data_source.effective_size, date
+                except:
+                    pass
         print("No latest success date found for %s" % directory)
         return None, None, None
 
