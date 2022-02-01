@@ -872,15 +872,11 @@ class ContextualizedTasksInfra(object):
         for path, date in reversed(TasksInfra.dates_range_paths(directory, mode, start_date, lookback)):
                 final_path = path + sub_dir
                 print("Try to find latest success in: " + final_path)
-                from pylib.tasks.input_data_artifact import InputDataArtifact # to avoit circuit decendancies
-                try:
-                    path_data_artifact = InputDataArtifact(self, final_path, required_size=min_size_bytes or 1)
-                    check_size = path_data_artifact.locate_data_source.effective_size
-                    if check_size:
-                        print("latest success date for %s is %s" % (directory, date))
-                        return path_data_artifact.resolved_path, path_data_artifact.locate_data_source.effective_size, date
-                except:
-                    pass
+                path_data_artifact = DataArtifact(final_path, required_size=min_size_bytes or 1)
+                check_size = path_data_artifact.check_size()
+                if check_size:
+                    print("latest success date for %s is %s" % (directory, date))
+                    return path_data_artifact.resolved_path, path_data_artifact.actual_size, date
         print("No latest success date found for %s" % directory)
         return None, None, None
 
