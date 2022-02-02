@@ -2369,19 +2369,19 @@ class AppsPathResolver(object):
                                              self.apps_paths['calc_retention'], path_suffix, in_or_out)
 
     def get_ww_smoothing_retention(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ww_smoothing_retention'], path_suffix, in_or_out)
 
     def get_category_smoothing_retention(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['category_smoothing_retention'], path_suffix, in_or_out)
 
     def get_top_app_smoothing_retention(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['top_app_smoothing_retention'], path_suffix, in_or_out)
 
     def get_final_prior_smoothing_retention(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['final_prior_smoothing_retention'], path_suffix, in_or_out)
 
     def get_estimated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
