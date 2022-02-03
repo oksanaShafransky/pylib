@@ -487,7 +487,7 @@ class AppsPathResolver(object):
 
             'installs_alpha_estimation': {
                 'main_path': "daily/downloads/installs/estimation/app-downloads-alph/estkey=AppCountryKey",
-                'size': 270 * MiB,
+                'size': 250 * MiB,
                 'marker': True, 'path_type': "daily"},
 
             'installs_alpha_estimation_ww': {
