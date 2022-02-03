@@ -384,7 +384,7 @@ class AppsPathResolver(object):
                                     'marker': True, 'path_type': "daily"},
 
             'ww_store_download_for_ptft': {'main_path': "daily/downloads/pre-estimate/ww_store_download_for_ptft",
-                                  'size': 325 * MiB,  'marker': True, 'path_type': "daily"},
+                                  'size': 240 * MiB,  'marker': True, 'path_type': "daily"},
 
 
 
@@ -497,7 +497,7 @@ class AppsPathResolver(object):
 
             'reach_estimation': {
                 'main_path': "daily/downloads/installed-apps/estimation/reach/estkey=AppCountryKey",
-                'size': 600 * MiB,
+                'size': 550 * MiB,
                 'marker': True, 'path_type': "daily"},
 
             'reach_and_downloads': {
