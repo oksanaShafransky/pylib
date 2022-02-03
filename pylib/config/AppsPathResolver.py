@@ -384,7 +384,7 @@ class AppsPathResolver(object):
                                     'marker': True, 'path_type': "daily"},
 
             'ww_store_download_for_ptft': {'main_path': "daily/downloads/pre-estimate/ww_store_download_for_ptft",
-                                  'size': 325 * MiB,  'marker': True, 'path_type': "daily"},
+                                  'size': 240 * MiB,  'marker': True, 'path_type': "daily"},
 
 
 
