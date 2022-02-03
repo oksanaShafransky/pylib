@@ -383,6 +383,12 @@ class AppsPathResolver(object):
                                     'size': 325 * MiB,
                                     'marker': True, 'path_type': "daily"},
 
+            'ww_store_download_for_ptft': {'main_path': "daily/downloads/pre-estimate/ww_store_download_for_ptft",
+                                  'size': 325 * MiB,  'marker': True, 'path_type': "daily"},
+
+
+
+
             'dau_sqs_preliminary': {'main_path': "daily/dau/pre-estimate/sqs-preliminary",
                                     'size': 200 * MiB,
                                     'marker': True, 'path_type': "daily"},
@@ -430,6 +436,7 @@ class AppsPathResolver(object):
             'mau_android_factors': {'main_path': "snapshot/estimate/app-mau-factors",
                               'size': 1 * KB,
                               'marker': True, 'path_type': "monthly"},
+
 
             # Usage
             'usage_agg_app_country': {'main_path': "daily/usage/agg",
@@ -639,6 +646,13 @@ class AppsPathResolver(object):
 
             'ptft_reach_factors': {'main_path': 'static/ptft/factors/reach', 'size': 800 * MiB,
                                  'marker': True, 'path_type': "base_path"},
+
+            'ptft_ww_store_download_factors_new_users_share': {'main_path': 'static/ptft/factors/ww_store_download/new_users_share', 'size': 800 * MiB,
+                                 'marker': True, 'path_type': "base_path"},
+
+            'ptft_ww_store_download_factors_installs_share': {'main_path': 'static/ptft/factors/ww_store_download/installs_share', 'size': 800 * MiB,
+                                 'marker': True, 'path_type': "base_path"},
+
 
             'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 650 * KiB,
                                         'marker': True, 'path_type': "monthly"},
@@ -1165,7 +1179,11 @@ class AppsPathResolver(object):
             ],
             'reach_factors': [
                 date(2021, 6, 30)
-            ]
+            ],
+
+            'ww_store_download_factors': [
+                date(2021, 6, 30)
+            ],
         }
 
     def __get_base_dir(self, in_or_out, path_prefix):
@@ -1343,6 +1361,23 @@ class AppsPathResolver(object):
             path_suffix = self.ti.year_month_day(self.__get_max_date_below_exec_date('reach_factors'))
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                             self.apps_paths['ptft_reach_factors'], path_suffix, in_or_out)
+
+
+    def get_ptft_ww_store_download_factors_installs_share(self, in_or_out, path_prefix=None, path_suffix=None):
+        if in_or_out == 'in' and path_suffix is None:
+            path_suffix = self.ti.year_month_day(self.__get_max_date_below_exec_date('ww_store_download_factors'))
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                            self.apps_paths['ptft_ww_store_download_factors_installs_share'], path_suffix, in_or_out)
+
+
+    def get_ptft_ww_store_download_factors_new_users_share(self, in_or_out, path_prefix=None, path_suffix=None):
+        if in_or_out == 'in' and path_suffix is None:
+            path_suffix = self.ti.year_month_day(self.__get_max_date_below_exec_date('ww_store_download_factors'))
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                            self.apps_paths['ptft_ww_store_download_factors_new_users_share'], path_suffix, in_or_out)
+
+
+
 
     def get_mfour_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
@@ -1924,6 +1959,11 @@ class AppsPathResolver(object):
     def get_installs_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['installs_for_ptft'], path_suffix, in_or_out)
+
+    def get_ww_store_download_for_ptft(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_store_download_for_ptft'], path_suffix, in_or_out)
+
 
     def get_sqs_calc(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
