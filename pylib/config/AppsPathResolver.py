@@ -474,7 +474,7 @@ class AppsPathResolver(object):
                                            'marker': True, 'path_type': "daily"},#TODO Delete After 1.12.2020 release
 
             'new_user_alpha_estimation': {'main_path': "daily/downloads/new_users/estimation/app-downloads-alph/estkey=AppCountryKey",
-                                          'size': 270 * MiB,
+                                          'size': 250 * MiB,
                                           'marker': True, 'path_type': "daily"},
 
             'new_user_features': {'main_path': "daily/downloads/new_users/features",
