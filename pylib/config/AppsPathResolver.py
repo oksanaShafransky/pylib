@@ -647,10 +647,10 @@ class AppsPathResolver(object):
             'ptft_reach_factors': {'main_path': 'static/ptft/factors/reach', 'size': 800 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
-            'ptft_ww_store_download_factors_new_users_share': {'main_path': 'static/ptft/factors/ww_store_download/new_users_share', 'size': 800 * MiB,
+            'ptft_ww_store_download_factors_new_users_share': {'main_path': 'static/ptft/factors/ww_store_download/new_users_share', 'size': 500 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
-            'ptft_ww_store_download_factors_installs_share': {'main_path': 'static/ptft/factors/ww_store_download/installs_share', 'size': 800 * MiB,
+            'ptft_ww_store_download_factors_installs_share': {'main_path': 'static/ptft/factors/ww_store_download/installs_share', 'size': 500 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
 
