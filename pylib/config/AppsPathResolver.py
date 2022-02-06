@@ -190,7 +190,7 @@ class AppsPathResolver(object):
                                         'size': 5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-unique-installs-window': {'main_path': "apps-monitoring/uniqueinstalls/window",
-                                        'size': 4.5 * MB,
+                                        'size': 4.0 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-sessions-window': {'main_path': "apps-monitoring/sessions/window",
                                         'size': 4 * MB,
@@ -477,7 +477,7 @@ class AppsPathResolver(object):
                                            'marker': True, 'path_type': "daily"},#TODO Delete After 1.12.2020 release
 
             'new_user_alpha_estimation': {'main_path': "daily/downloads/new_users/estimation/app-downloads-alph/estkey=AppCountryKey",
-                                          'size': 270 * MiB,
+                                          'size': 250 * MiB,
                                           'marker': True, 'path_type': "daily"},
 
             'new_user_features': {'main_path': "daily/downloads/new_users/features",
@@ -650,10 +650,10 @@ class AppsPathResolver(object):
             'ptft_reach_factors': {'main_path': 'static/ptft/factors/reach', 'size': 800 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
-            'ptft_ww_store_download_factors_new_users_share': {'main_path': 'static/ptft/factors/ww_store_download/new_users_share', 'size': 800 * MiB,
+            'ptft_ww_store_download_factors_new_users_share': {'main_path': 'static/ptft/factors/ww_store_download/new_users_share', 'size': 350 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
-            'ptft_ww_store_download_factors_installs_share': {'main_path': 'static/ptft/factors/ww_store_download/installs_share', 'size': 800 * MiB,
+            'ptft_ww_store_download_factors_installs_share': {'main_path': 'static/ptft/factors/ww_store_download/installs_share', 'size': 350 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
 
