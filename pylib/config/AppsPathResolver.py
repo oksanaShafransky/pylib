@@ -278,6 +278,9 @@ class AppsPathResolver(object):
             'downloads_sources_for_analyze': {'main_path': "daily/downloads/downloads-sources-for-analyze",
                                               'size': 1 * KiB,
                                               'marker': True, 'path_type': "daily"},
+            'downloads_intermediate_sources_for_analyze': {'main_path': "daily/downloads/downloads-intermediate-sources-for-analyze",
+                                              'size': 1 * KiB,
+                                              'marker': True, 'path_type': "daily"},
 
             'downloads_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/aggKey=AppCountryCountrySourceKey",
                                                          'size': 5.8 * GiB,
@@ -1728,6 +1731,10 @@ class AppsPathResolver(object):
     def get_new_users_db(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['new_users_db'], path_suffix, in_or_out)
+
+    def get_downloads_intermediate_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['downloads_intermediate_sources_for_analyze'], path_suffix, in_or_out)
 
     def get_downloads_sfa(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
