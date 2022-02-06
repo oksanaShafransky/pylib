@@ -1175,13 +1175,16 @@ class AppsPathResolver(object):
                 date(2021, 7, 18)
             ],
             'installs_factors': [
-                date(2021, 6, 30)
+                date(2021, 6, 30),
+                date(2022, 1, 19)
             ],
             'new_users_factors': [
-                date(2021, 6, 30)
+                date(2021, 6, 30),
+                date(2022, 1, 19)
             ],
             'reach_factors': [
-                date(2021, 6, 30)
+                date(2021, 6, 30),
+                date(2022, 1, 19)
             ],
 
             'ww_store_download_factors': [
