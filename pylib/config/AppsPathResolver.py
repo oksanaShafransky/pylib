@@ -569,7 +569,7 @@ class AppsPathResolver(object):
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
                                'marker': True, 'path_type': "daily"}, # TODO update real size
 
-            'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 50 * MiB,
+            'extractor_5555': {'main_path': "daily/extractors/extracted-metric-data/rtype=R5555", 'size': 110 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1008", 'size': 15 * MiB,
@@ -594,19 +594,19 @@ class AppsPathResolver(object):
                                      'size': 500 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_stay_focus1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1001",
-                                     'size': 1 * MiB, 'marker': True, 'path_type': "daily"},
+                                     'size': 350 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1005",
                                      'size': 10 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_stay_focus1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1005",
-                                     'size': 1 * MiB, 'marker': True, 'path_type': "daily"},
+                                     'size': 10 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
                                      'size': 1 * GiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_stay_focus1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1008",
-                                     'size': 1 * MiB, 'marker': True, 'path_type': "daily"},
+                                     'size': 85 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_mfour1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=mfourR1008",
                                     'size': 18 * MiB, 'marker': True, 'path_type': "daily"},
