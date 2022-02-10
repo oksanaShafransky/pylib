@@ -855,7 +855,7 @@ class AppsPathResolver(object):
             # Snapshot/WindowF
             'app_scores': {
                 'main_path': "%(mode)s/app-scores/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
-                'size': 100 * MiB, 'marker': False,  # Size close for both window ,and snapshot
+                'size': 97 * MiB, 'marker': False,  # Size close for both window ,and snapshot
                 'path_type': self.ti.mode_type},
 
             'app_scores_with_info': {
