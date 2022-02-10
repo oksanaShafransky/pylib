@@ -860,7 +860,7 @@ class AppsPathResolver(object):
 
             'app_scores_with_info': {
                 'main_path': "%(mode)s/app-scores-with-info/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
-                'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 140 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': self.ti.mode_type},
 
             'category_ranks': {
