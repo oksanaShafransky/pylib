@@ -2393,7 +2393,7 @@ class AppsPathResolver(object):
                                                  self.apps_paths['app_scores_with_info'], path_suffix, in_or_out)
 
     def get_category_ranks(self, in_or_out, path_prefix=None, path_suffix=None, os='android'):
-        return self.__create_app_path_object(self.__get_os_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_os_base(in_or_out, path_prefix, os),
                                                  self.apps_paths['category_ranks'], path_suffix, in_or_out)
 
     def get_category_ranks_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -2401,7 +2401,7 @@ class AppsPathResolver(object):
                                          self.apps_paths['category_ranks_parquet'], path_suffix, in_or_out)
 
     def get_store_category_ranks(self, in_or_out, path_prefix=None, path_suffix=None, os='android'):
-        return self.__create_app_path_object(self.__get_os_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_os_base(in_or_out, path_prefix, os),
                                          self.apps_paths['store_category_ranks'], path_suffix, in_or_out)
 
     def get_trending_apps(self, in_or_out, path_prefix=None, path_suffix=None):
