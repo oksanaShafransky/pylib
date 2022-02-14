@@ -875,7 +875,7 @@ class AppsPathResolver(object):
 
             'trending_apps_parquet': {
                 'main_path': "%(mode)s/trending-apps-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
-                'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 35 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': self.ti.mode_type},
 
             'category_ranks_parquet': {
@@ -885,7 +885,7 @@ class AppsPathResolver(object):
 
             'store_category_ranks': {
                 'main_path': "%(mode)s/store_category_ranks/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
-                'size': 140 * MB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 100 * MB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': self.ti.mode_type},
 
             'usage_climbing_apps': {
@@ -902,7 +902,7 @@ class AppsPathResolver(object):
 
             'usage_ranking_apps': {
                 'main_path': "%(mode)s/usage-ranking-apps-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
-                'size': 2 * MiB,
+                'size': 1 * MiB,
                 'marker': True,
                 'path_type': self.ti.mode_type},
 
@@ -2393,6 +2393,7 @@ class AppsPathResolver(object):
                                                  self.apps_paths['app_scores_with_info'], path_suffix, in_or_out)
 
     def get_category_ranks(self, in_or_out, path_prefix=None, path_suffix=None, os='android'):
+        self.apps_paths['category_ranks']['size'] = self.get_category_ranks_required_size(os)
         return self.__create_app_path_object(self.__get_os_base(in_or_out, path_prefix, os),
                                                  self.apps_paths['category_ranks'], path_suffix, in_or_out)
 
@@ -2401,6 +2402,7 @@ class AppsPathResolver(object):
                                          self.apps_paths['category_ranks_parquet'], path_suffix, in_or_out)
 
     def get_store_category_ranks(self, in_or_out, path_prefix=None, path_suffix=None, os='android'):
+        self.apps_paths['store_category_ranks']['size'] = self.get_store_category_ranks_required_size(os)
         return self.__create_app_path_object(self.__get_os_base(in_or_out, path_prefix, os),
                                          self.apps_paths['store_category_ranks'], path_suffix, in_or_out)
 
@@ -2441,6 +2443,20 @@ class AppsPathResolver(object):
             1: 2.5 * MB
         }
         return sizes.get(td, 0)
+
+    def get_category_ranks_required_size(self, os):
+        sizes = {
+            'android': 100 * MB,
+            'ios': 8 * MB
+        }
+        return sizes.get(os, 0)
+
+    def get_store_category_ranks_required_size(self, os):
+        sizes = {
+            'android': 140 * MB,
+            'ios': 12 * MB
+        }
+        return sizes.get(os, 0)
 
     #retention
     def get_aggregated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
