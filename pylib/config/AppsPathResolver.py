@@ -145,7 +145,7 @@ class AppsPathResolver(object):
 
 
             #Atlanta Project
-            'aa_android_mau': {'main_path': "android/estimation/mau",
+            'aa_android_engagement': {'main_path': "android/estimation/engagement",
                                    'size': 1 * MiB,
                                    'marker': True, 'path_type': "monthly"},
 
@@ -1265,9 +1265,9 @@ class AppsPathResolver(object):
 
     #Atlanta Getters
 
-    def get_aa_android_mau(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_aa_android_engagement(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
-                                             self.apps_paths['aa_android_mau'], path_suffix, in_or_out)
+                                             self.apps_paths['aa_android_engagement'], path_suffix, in_or_out)
 
     # Paths Getters
     def get_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
