@@ -143,6 +143,12 @@ class AppsPathResolver(object):
                                 'size': 1,
                                 'marker': True, 'path_type': "daily"},
 
+
+            #Atlanta Project
+            'aa_android_mau': {'main_path': "android/estimation/mau",
+                                   'size': 1 * MiB,
+                                   'marker': True, 'path_type': "monthly"},
+
             #APPS MATCHING
             'sanitized-app-info': {'main_path': "apps-matching/sanitized",
                                    'size': 800 * MiB,
@@ -1212,6 +1218,10 @@ class AppsPathResolver(object):
         base_dir = self.ti.base_dir if in_or_out == "in" else self.ti.calc_dir
         return base_dir if not path_prefix else path_join(path_prefix, base_dir)
 
+    def __get_atlanta_base(self, in_or_out, path_prefix):
+        base_dir = self.__get_base_dir(in_or_out, path_prefix)
+        return path_join(base_dir, "atlanta")
+
     def __get_android_apps_analytics_base(self, in_or_out, path_prefix):
         base_dir = self.__get_base_dir(in_or_out, path_prefix)
         return path_join(base_dir, "android-apps-analytics")
@@ -1251,6 +1261,13 @@ class AppsPathResolver(object):
         if max_date is None:
             raise Exception(("AppsPathSolver - Couldn't find a date before execution date!"))
         return max_date
+
+
+    #Atlanta Getters
+
+    def get_aa_android_mau(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
+                                             self.apps_paths['aa_android_mau'], path_suffix, in_or_out)
 
     # Paths Getters
     def get_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
