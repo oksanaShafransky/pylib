@@ -662,6 +662,9 @@ class AppsPathResolver(object):
             'ptft_ww_store_download_factors_installs_share': {'main_path': 'static/ptft/factors/ww_store_download/installs_share', 'size': 350 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
+            'country_codes': {'main_path': 'country_codes', 'size': 1 * KB,
+                                    'marker': True, 'path_type': "daily"},
+
 
             'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 650 * KiB,
                                         'marker': True, 'path_type': "monthly"},
@@ -1424,7 +1427,9 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                             self.apps_paths['ptft_ww_store_download_factors_new_users_share'], path_suffix, in_or_out)
 
-
+    def get_country_codes(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['country_codes'], path_suffix, in_or_out)
 
 
     def get_mfour_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
