@@ -154,11 +154,11 @@ class AppsPathResolver(object):
                                       'marker': True, 'path_type': "monthly"},
 
             'aa_android_d30_retention': {'main_path': "android/estimation/retention-d30",
-                                      'size': 1 * MiB,
+                                      'size': 500 * KiB,
                                       'marker': True, 'path_type': "monthly"},
 
             'aa_ios_d30_retention': {'main_path': "ios/estimation/retention-d30",
-                                  'size': 1 * MiB,
+                                  'size': 200 * KiB,
                                   'marker': True, 'path_type': "monthly"},
 
             'aa_android_cross_affinity': {'main_path': "android/estimation/cross-affinity",
