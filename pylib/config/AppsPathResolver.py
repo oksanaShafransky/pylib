@@ -153,6 +153,14 @@ class AppsPathResolver(object):
                                       'size': 1 * MiB,
                                       'marker': True, 'path_type': "monthly"},
 
+            'aa_android_d30_retention': {'main_path': "android/estimation/retention-d30",
+                                      'size': 1 * MiB,
+                                      'marker': True, 'path_type': "monthly"},
+
+            'aa_ios_d30_retention': {'main_path': "ios/estimation/retention-d30",
+                                  'size': 1 * MiB,
+                                  'marker': True, 'path_type': "monthly"},
+
             #APPS MATCHING
             'sanitized-app-info': {'main_path': "apps-matching/sanitized",
                                    'size': 800 * MiB,
@@ -1279,6 +1287,14 @@ class AppsPathResolver(object):
     def get_aa_ios_engagement(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
                                              self.apps_paths['aa_ios_engagement'], path_suffix, in_or_out)
+
+    def get_aa_android_d30_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
+                                             self.apps_paths['aa_android_d30_retention'], path_suffix, in_or_out)
+
+    def get_aa_ios_d30_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
+                                             self.apps_paths['aa_ios_d30_retention'], path_suffix, in_or_out)
 
     # Paths Getters
     def get_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
