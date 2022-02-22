@@ -734,7 +734,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 140 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 115 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -1212,6 +1212,14 @@ class AppsPathResolver(object):
             'categories_estimated_retention': {'main_path': "retention/categories-estimated-retention",
                                     'size': 100 * KB, 'marker': True,
                                     'path_type': "daily"},
+
+
+            ### Usage Patterns
+            'usage_patterns_session_list': {'main_path': "daily/usage-patterns/intermediates/raw-sessions",
+                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_dow_agg': {'main_path': "daily/usage-patterns/dow/intermediates/aggregation",
+                                            'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
         }
         self.paths_dates_suffix = {
@@ -2565,3 +2573,11 @@ class AppsPathResolver(object):
     def get_stay_focus_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['stay_focus_apps_sessions'], path_suffix, in_or_out)
+
+    def get_usage_patterns_session_list(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_session_list'], path_suffix, in_or_out)
+
+    def get_usage_patterns_dow_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_dow_agg'], path_suffix, in_or_out)
