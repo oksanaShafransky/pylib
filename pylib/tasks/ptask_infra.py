@@ -1857,12 +1857,12 @@ class ContextualizedTasksInfra(object):
         config = boto.pyami.config.Config(path='/etc/aws-conf/.s3cfg')
         return config.get(section, property_key)
 
-    def set_s3_keys(self, access=None, secret=None, section=DEFAULT_S3_PROFILE, set_env_variables=False):
+    def set_s3_keys(self, access=None, secret=None, section=None, set_env_variables=False):
         # DEPRECATED
         logger.warning("set_s3_keys is deprecated, use set_aws_credentials instead")
         self.set_aws_credentials(profile=section, access_key_id=access, secret_access_key=secret)
 
-    def set_aws_credentials(self, profile=DEFAULT_S3_PROFILE, access_key_id=None, secret_access_key=None):
+    def set_aws_credentials(self, profile=None, access_key_id=None, secret_access_key=None):
         """
         Set AWS Credentials in the context hadoop-configurations, java-options, environment variables
         :param profile: AWS profile name
@@ -1870,6 +1870,9 @@ class ContextualizedTasksInfra(object):
         :param secret_access_key: optional, by default it will be taken from the AWS profile
         :return:
         """
+
+        profile = SnowflakeConfig().get_service_name(service_name="aws-profile") if profile is None else profile
+
         access_key_id = access_key_id \
                         or self.get_secret('{}/access_key'.format(profile)) \
                         or self.get_secret('{}/aws_access_key_id'.format(profile))
