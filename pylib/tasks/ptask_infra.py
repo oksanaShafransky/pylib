@@ -699,6 +699,13 @@ class ContextualizedTasksInfra(object):
         self.kill_yarn_zombie_applications()
         return self.run_bash(cmd)
 
+    def run_hadoop_ls(self, path):
+        cmd = "hadoop fs {jvm_opts} -ls -q {target_path} | awk '{{print $8}}'".format(
+            jvm_opts=TasksInfra.add_jvm_options("", self.hadoop_configs),
+            target_path=path)
+
+        return self.run_bash(cmd).stdout
+
     def run_hadoop(self, jar_path, jar_name, main_class, command_params, determine_reduces_by_output=False,
                    jvm_opts=None, default_num_reducers=200):
         command_params, jvm_opts = self.determine_mr_output_partitions(command_params, determine_reduces_by_output,
