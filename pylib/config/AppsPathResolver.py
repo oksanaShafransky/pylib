@@ -143,6 +143,32 @@ class AppsPathResolver(object):
                                 'size': 1,
                                 'marker': True, 'path_type': "daily"},
 
+
+            #Atlanta Project
+            'aa_android_engagement': {'main_path': "android/estimation/engagement",
+                                   'size': 1 * MiB,
+                                   'marker': True, 'path_type': "monthly"},
+
+            'aa_ios_engagement': {'main_path': "ios/estimation/engagement",
+                                      'size': 1 * MiB,
+                                      'marker': True, 'path_type': "monthly"},
+
+            'aa_android_d30_retention': {'main_path': "android/estimation/retention-d30",
+                                      'size': 500 * KiB,
+                                      'marker': True, 'path_type': "monthly"},
+
+            'aa_ios_d30_retention': {'main_path': "ios/estimation/retention-d30",
+                                  'size': 200 * KiB,
+                                  'marker': True, 'path_type': "monthly"},
+
+            'aa_android_cross_affinity': {'main_path': "android/estimation/cross-affinity",
+                                         'size': 1 * MiB,
+                                         'marker': True, 'path_type': "monthly"},
+
+            'aa_ios_cross_affinity': {'main_path': "ios/estimation/cross-affinity",
+                                     'size': 1 * MiB,
+                                     'marker': True, 'path_type': "monthly"},
+
             #APPS MATCHING
             'sanitized-app-info': {'main_path': "apps-matching/sanitized",
                                    'size': 800 * MiB,
@@ -563,7 +589,7 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 68 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 62 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
@@ -600,7 +626,7 @@ class AppsPathResolver(object):
                                      'size': 10 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_stay_focus1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1005",
-                                     'size': 10 * MB, 'marker': True, 'path_type': "daily"},
+                                     'size': 9 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
                                      'size': 1 * GiB, 'marker': True, 'path_type': "daily"},
@@ -656,6 +682,9 @@ class AppsPathResolver(object):
             'ptft_ww_store_download_factors_installs_share': {'main_path': 'static/ptft/factors/ww_store_download/installs_share', 'size': 350 * MiB,
                                  'marker': True, 'path_type': "base_path"},
 
+            'country_codes': {'main_path': 'country_codes', 'size': 1 * KB,
+                                    'marker': True, 'path_type': "daily"},
+
 
             'extractor_kochava_daily': {'main_path': 'raw-s2s/extractor_kochava_daily', 'size': 650 * KiB,
                                         'marker': True, 'path_type': "monthly"},
@@ -705,7 +734,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 140 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 115 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -860,7 +889,7 @@ class AppsPathResolver(object):
 
             'app_scores_with_info': {
                 'main_path': "%(mode)s/app-scores-with-info/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
-                'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'size': 140 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': self.ti.mode_type},
 
             'category_ranks': {
@@ -873,9 +902,19 @@ class AppsPathResolver(object):
                 'size': 26 * MiB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': self.ti.mode_type},
 
+            'trending_apps_parquet': {
+                'main_path': "%(mode)s/trending-apps-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
+                'size': 35 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'path_type': self.ti.mode_type},
+
             'category_ranks_parquet': {
                 'main_path': "%(mode)s/category-ranks-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 150 * MiB, 'marker': True,  # Size close for both window ,and snapshot
+                'path_type': self.ti.mode_type},
+
+            'store_category_ranks': {
+                'main_path': "%(mode)s/store_category_ranks/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
+                'size': 100 * MB, 'marker': True,  # Size close for both window ,and snapshot
                 'path_type': self.ti.mode_type},
 
             'usage_climbing_apps': {
@@ -887,6 +926,12 @@ class AppsPathResolver(object):
             'usage_slipping_apps': {
                 'main_path': "%(mode)s/usage-slipping-apps/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
                 'size': 2 * MiB,
+                'marker': True,
+                'path_type': self.ti.mode_type},
+
+            'usage_ranking_apps': {
+                'main_path': "%(mode)s/usage-ranking-apps-parquet/type=%(mode_type)s" % {'mode': self.ti.mode, 'mode_type': self.ti.mode_type},
+                'size': 1 * MiB,
                 'marker': True,
                 'path_type': self.ti.mode_type},
 
@@ -1030,7 +1075,7 @@ class AppsPathResolver(object):
                                                 'path_type': "daily"},
 
             'google_play_preprocessed_reviews': {'main_path': "google-play/reviews/preprocessed",
-                                        'size': 0 * MiB, 'marker': True,
+                                        'size': 1 * MiB, 'marker': True,
                                         'path_type': "daily"},
 
             'ios_app_store_preprocessed_reviews': {'main_path': "iOS-app-store/reviews/preprocessed",
@@ -1038,7 +1083,7 @@ class AppsPathResolver(object):
                                           'path_type': "daily"},
 
             'google_play_analyzed_reviews': {'main_path': "google-play/reviews/analyzed",
-                                                 'size': 0 * MiB, 'marker': True,
+                                                 'size': 1 * MiB, 'marker': True,
                                                  'path_type': "daily"},
 
             'ios_app_store_analyzed_reviews': {'main_path': "iOS-app-store/reviews/analyzed",
@@ -1046,7 +1091,7 @@ class AppsPathResolver(object):
                                                    'path_type': "daily"},
 
             'google_play_nlp_transformed_reviews': {'main_path': "google-play/reviews/topic_analysis/nlp_transformed",
-                                    'size': 0 * MiB, 'marker': True,
+                                    'size': 1 * MiB, 'marker': True,
                                     'path_type': "daily"},
 
             'ios_app_store_nlp_transformed_reviews': {'main_path': "iOS-app-store/reviews/topic_analysis/nlp_transformed",
@@ -1168,6 +1213,17 @@ class AppsPathResolver(object):
                                     'size': 100 * KB, 'marker': True,
                                     'path_type': "daily"},
 
+
+            ### Usage Patterns
+            'usage_patterns_session_list': {'main_path': "daily/usage-patterns/intermediates/raw-sessions",
+                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_dow_raw_estimation': {'main_path': "daily/usage-patterns/dow/intermediates/raw-estimation",
+                                            'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_dow_beta_binomial_estimation': {'main_path': "daily/usage-patterns/dow/intermediates/beta_binomial_estimation",
+                                                  'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
         }
         self.paths_dates_suffix = {
             'dau_factors': [
@@ -1196,9 +1252,22 @@ class AppsPathResolver(object):
         base_dir = self.ti.base_dir if in_or_out == "in" else self.ti.calc_dir
         return base_dir if not path_prefix else path_join(path_prefix, base_dir)
 
+    def __get_atlanta_base(self, in_or_out, path_prefix):
+        base_dir = self.__get_base_dir(in_or_out, path_prefix)
+        return path_join(base_dir, "atlanta")
+
     def __get_android_apps_analytics_base(self, in_or_out, path_prefix):
         base_dir = self.__get_base_dir(in_or_out, path_prefix)
         return path_join(base_dir, "android-apps-analytics")
+
+    def __get_ios_analytics_base(self, in_or_out, path_prefix):
+        base_dir = self.__get_base_dir(in_or_out, path_prefix)
+        return path_join(base_dir, "ios-analytics")
+
+    def __get_os_base(self, in_or_out, path_prefix, os):
+        if os != 'android' and os !='ios':
+            raise ValueError("Operation System could be only 'android' or 'ios'")
+        return self.__get_android_apps_analytics_base(in_or_out, path_prefix) if os == 'android' else self.__get_ios_analytics_base(in_or_out, path_prefix)
 
     def __get_store_analytics_base(self, in_or_out, path_prefix):
         base_dir = self.__get_base_dir(in_or_out, path_prefix)
@@ -1226,6 +1295,34 @@ class AppsPathResolver(object):
         if max_date is None:
             raise Exception(("AppsPathSolver - Couldn't find a date before execution date!"))
         return max_date
+
+
+    #Atlanta Getters
+
+    def get_aa_android_engagement(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
+                                             self.apps_paths['aa_android_engagement'], path_suffix, in_or_out)
+
+    def get_aa_ios_engagement(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
+                                             self.apps_paths['aa_ios_engagement'], path_suffix, in_or_out)
+
+    def get_aa_android_d30_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
+                                             self.apps_paths['aa_android_d30_retention'], path_suffix, in_or_out)
+
+    def get_aa_ios_d30_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
+                                             self.apps_paths['aa_ios_d30_retention'], path_suffix, in_or_out)
+
+    def get_aa_android_cross_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
+                                             self.apps_paths['aa_android_cross_affinity'], path_suffix, in_or_out)
+
+    def get_aa_ios_cross_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_atlanta_base(in_or_out, path_prefix),
+                                             self.apps_paths['aa_ios_cross_affinity'], path_suffix, in_or_out)
+
 
     # Paths Getters
     def get_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -1382,7 +1479,9 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                             self.apps_paths['ptft_ww_store_download_factors_new_users_share'], path_suffix, in_or_out)
 
-
+    def get_country_codes(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['country_codes'], path_suffix, in_or_out)
 
 
     def get_mfour_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -2367,17 +2466,27 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                                  self.apps_paths['app_scores_with_info'], path_suffix, in_or_out)
 
-    def get_category_ranks(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+    def get_category_ranks(self, in_or_out, path_prefix=None, path_suffix=None, os='android'):
+        self.apps_paths['category_ranks']['size'] = self.get_category_ranks_required_size(os)
+        return self.__create_app_path_object(self.__get_os_base(in_or_out, path_prefix, os),
                                                  self.apps_paths['category_ranks'], path_suffix, in_or_out)
 
     def get_category_ranks_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                          self.apps_paths['category_ranks_parquet'], path_suffix, in_or_out)
 
+    def get_store_category_ranks(self, in_or_out, path_prefix=None, path_suffix=None, os='android'):
+        self.apps_paths['store_category_ranks']['size'] = self.get_store_category_ranks_required_size(os)
+        return self.__create_app_path_object(self.__get_os_base(in_or_out, path_prefix, os),
+                                         self.apps_paths['store_category_ranks'], path_suffix, in_or_out)
+
     def get_trending_apps(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['trending_apps'], path_suffix, in_or_out)
+
+    def get_trending_apps_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['trending_apps_parquet'], path_suffix, in_or_out)
 
     def get_usage_climbing_apps(self, in_or_out, path_prefix=None, path_suffix=None, td=0):
         self.apps_paths['usage_climbing_apps']['size'] = self.get_usage_climbing_apps_required_size(td)
@@ -2388,6 +2497,10 @@ class AppsPathResolver(object):
         self.apps_paths['usage_slipping_apps']['size'] = self.get_usage_slipping_apps_required_size(td)
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_slipping_apps'], path_suffix, in_or_out)
+
+    def get_usage_ranking_apps(self, in_or_out, path_prefix=None, path_suffix=None, td=0):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_ranking_apps'], path_suffix, in_or_out)
 
     def get_usage_climbing_apps_required_size(self, td):
         sizes = {
@@ -2404,6 +2517,20 @@ class AppsPathResolver(object):
             1: 2.5 * MB
         }
         return sizes.get(td, 0)
+
+    def get_category_ranks_required_size(self, os):
+        sizes = {
+            'android': 100 * MB,
+            'ios': 8 * MB
+        }
+        return sizes.get(os, 0)
+
+    def get_store_category_ranks_required_size(self, os):
+        sizes = {
+            'android': 140 * MB,
+            'ios': 12 * MB
+        }
+        return sizes.get(os, 0)
 
     #retention
     def get_aggregated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
@@ -2449,3 +2576,15 @@ class AppsPathResolver(object):
     def get_stay_focus_apps_sessions(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['stay_focus_apps_sessions'], path_suffix, in_or_out)
+
+    def get_usage_patterns_session_list(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_session_list'], path_suffix, in_or_out)
+
+    def get_usage_patterns_dow_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_dow_raw_estimation'], path_suffix, in_or_out)
+
+    def get_usage_patterns_dow_beta_binomial_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_dow_beta_binomial_estimation'], path_suffix, in_or_out)
