@@ -1075,7 +1075,7 @@ class AppsPathResolver(object):
                                                 'path_type': "daily"},
 
             'google_play_preprocessed_reviews': {'main_path': "google-play/reviews/preprocessed",
-                                        'size': 1 * MiB, 'marker': True,
+                                        'size': 0 * MiB, 'marker': True,
                                         'path_type': "daily"},
 
             'ios_app_store_preprocessed_reviews': {'main_path': "iOS-app-store/reviews/preprocessed",
@@ -1083,7 +1083,7 @@ class AppsPathResolver(object):
                                           'path_type': "daily"},
 
             'google_play_analyzed_reviews': {'main_path': "google-play/reviews/analyzed",
-                                                 'size': 1 * MiB, 'marker': True,
+                                                 'size': 0 * MiB, 'marker': True,
                                                  'path_type': "daily"},
 
             'ios_app_store_analyzed_reviews': {'main_path': "iOS-app-store/reviews/analyzed",
@@ -1091,7 +1091,7 @@ class AppsPathResolver(object):
                                                    'path_type': "daily"},
 
             'google_play_nlp_transformed_reviews': {'main_path': "google-play/reviews/topic_analysis/nlp_transformed",
-                                    'size': 1 * MiB, 'marker': True,
+                                    'size': 0 * MiB, 'marker': True,
                                     'path_type': "daily"},
 
             'ios_app_store_nlp_transformed_reviews': {'main_path': "iOS-app-store/reviews/topic_analysis/nlp_transformed",
