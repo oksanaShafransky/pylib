@@ -626,7 +626,7 @@ class AppsPathResolver(object):
                                      'size': 10 * MiB, 'marker': True, 'path_type': "daily"},
 
             'extractor_stay_focus1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=stayFocusR1005",
-                                     'size': 10 * MB, 'marker': True, 'path_type': "daily"},
+                                     'size': 9 * MB, 'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1008': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1008",
                                      'size': 1 * GiB, 'marker': True, 'path_type': "daily"},
@@ -1218,8 +1218,11 @@ class AppsPathResolver(object):
             'usage_patterns_session_list': {'main_path': "daily/usage-patterns/intermediates/raw-sessions",
                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_agg': {'main_path': "daily/usage-patterns/dow/intermediates/aggregation",
+            'usage_patterns_dow_raw_estimation': {'main_path': "daily/usage-patterns/dow/intermediates/raw-estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_dow_beta_binomial_estimation': {'main_path': "daily/usage-patterns/dow/intermediates/beta_binomial_estimation",
+                                                  'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
         }
         self.paths_dates_suffix = {
@@ -2578,6 +2581,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_session_list'], path_suffix, in_or_out)
 
-    def get_usage_patterns_dow_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_dow_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_dow_agg'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_dow_raw_estimation'], path_suffix, in_or_out)
+
+    def get_usage_patterns_dow_beta_binomial_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_dow_beta_binomial_estimation'], path_suffix, in_or_out)
