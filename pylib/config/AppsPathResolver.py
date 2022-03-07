@@ -878,7 +878,7 @@ class AppsPathResolver(object):
 
             'app_engagement_realnumbers_parquet': {
                 'main_path': "daily/estimate/app-engagement-realnumbers/estkey=AppCountryKey",
-                'size': 120 * MiB, 'marker': True,
+                'size': 150 * MB, 'marker': True,
                 'path_type': "daily"},
 
             # Snapshot/WindowF
