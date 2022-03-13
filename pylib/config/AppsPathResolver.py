@@ -1049,6 +1049,10 @@ class AppsPathResolver(object):
                          'path_type': "daily"},
 
             # store-analysis
+            'store_ranks': {'main_path': "mobile/store-ranks/type=last-1",
+                            'size': 135 * MiB, 'marker': True,
+                            'path_type': "daily"},
+
 
             # # Reviews
 
@@ -2183,6 +2187,13 @@ class AppsPathResolver(object):
                                              self.apps_paths['ww_downloads_to_scrape'], path_suffix, in_or_out)
 
     # Store analysis
+    def get_android_store_ranks(self, in_or_out, path_prefix=None, path_suffix="store=0"):
+        return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
+                                             self.apps_paths['store_ranks'], path_suffix, in_or_out)
+
+    def get_ios_store_ranks(self, in_or_out, path_prefix=None, path_suffix="store=1"):
+        return self.__create_app_path_object(self.__get_scraping_base(path_prefix),
+                                             self.apps_paths['store_ranks'], path_suffix, in_or_out)
 
     # # Version DB
     def get_google_play_version_db(self, in_or_out, path_prefix=None, path_suffix=None):
