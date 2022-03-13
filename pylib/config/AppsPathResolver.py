@@ -1050,7 +1050,7 @@ class AppsPathResolver(object):
 
             # store-analysis
             'store_ranks': {'main_path': "mobile/store-ranks/type=last-1",
-                            'size': 135 * MiB, 'marker': True,
+                            'size': 50 * MiB, 'marker': True,
                             'path_type': "daily"},
 
 
