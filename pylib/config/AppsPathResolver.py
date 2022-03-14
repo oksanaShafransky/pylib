@@ -190,7 +190,13 @@ class AppsPathResolver(object):
                                             'size': 20 * MiB,
                                             'marker': True, 'path_type': "daily"},
             'matching-training-data': {'main_path': "apps-matching/train-data",
-                                       'size': 4 * MiB,
+                                       'size': 7 * MB,
+                                       'marker': True, 'path_type': "daily"},
+            'matching-train-data': {'main_path': "apps-matching/train",
+                                       'size': 4 * MB,
+                                       'marker': True, 'path_type': "daily"},
+            'matching-test-data': {'main_path': "apps-matching/test",
+                                       'size': 1 * MB,
                                        'marker': True, 'path_type': "daily"},
             'matching-classification-data': {'main_path': "apps-matching/classification-data",
                                              'size': 30 * MiB,
@@ -198,8 +204,11 @@ class AppsPathResolver(object):
             'matching-model': {'main_path': "apps-matching/model",
                                'size': 1 * KiB,
                                'marker': False, 'path_type': "daily"},
+            'matching-raw-predict': {'main_path': "apps-matching/predict-raw",
+                                 'size': 21 * MB,
+                                 'marker': True, 'path_type': "daily"},
             'matching-predict': {'main_path': "apps-matching/predict",
-                                 'size': 5 * MiB,
+                                 'size': 20 * MB,
                                  'marker': True, 'path_type': "daily"},
             'matching-tests': {'main_path': "apps-matching/tests",
                                      'size': 5 * MiB,
@@ -1925,12 +1934,21 @@ class AppsPathResolver(object):
     def get_matching_training_data(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-training-data'], path_suffix, in_or_out)
+    def get_matching_train_data(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-train-data'], path_suffix, in_or_out)
+    def get_matching_test_data(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-test-data'], path_suffix, in_or_out)
     def get_matching_classification_data(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-classification-data'], path_suffix, in_or_out)
     def get_matching_model(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-model'], path_suffix, in_or_out)
+    def get_matching_raw_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-raw-predict'], path_suffix, in_or_out)
     def get_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-predict'], path_suffix, in_or_out)
