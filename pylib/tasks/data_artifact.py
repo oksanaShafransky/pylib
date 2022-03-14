@@ -36,6 +36,11 @@ class DataArtifact(object):
                 self.data_sources.append(S3DataSource(self.raw_path, self.min_required_size,
                                                       self.check_marker, d.get("name"), d.get("prefix"),
                                                       self.original_required_size, self.email_list))
+
+            elif d_type == DatasourceTypes.S3A.value:
+                self.data_sources.append(S3DataSource(self.raw_path, self.min_required_size,
+                                                      self.check_marker, d.get("name"), d.get("prefix"),
+                                                      self.original_required_size, self.email_list, schema="s3a"))
             else:
                 raise Exception("DataArtifact: unknown data source:%s options - %s"
                                 % (d_type, {d.name: d.value for d in DatasourceTypes}))
