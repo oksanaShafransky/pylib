@@ -1172,6 +1172,12 @@ class AppsPathResolver(object):
                                           'size': 100 * MiB, 'marker': False,
                                           'path_type': "base_path"},
 
+            # # GA4 extractor
+
+            'app_store_ga4_extractor': {'main_path': "general/ga4_extractor",
+                                        'size': 25 * MB, 'marker': True,
+                                        'path_type': "daily"},
+
             # # Ratings
 
             'google_play_ratings': {'main_path': 'google-play/ratings',
@@ -2229,6 +2235,10 @@ class AppsPathResolver(object):
     def get_ios_app_store_timeline_db(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['ios_app_store_timeline_db'], path_suffix, in_or_out)
+
+    def get_ga4_extractor(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['app_store_ga4_extractor'], path_suffix, in_or_out)
 
     def get_version_db_dump(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
