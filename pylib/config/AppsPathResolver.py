@@ -208,7 +208,7 @@ class AppsPathResolver(object):
                                  'size': 21 * MB,
                                  'marker': True, 'path_type': "daily"},
             'matching-predict': {'main_path': "apps-matching/predict",
-                                 'size': 20 * MB,
+                                 'size': 15 * MB,
                                  'marker': True, 'path_type': "daily"},
             'matching-tests': {'main_path': "apps-matching/tests",
                                      'size': 5 * MiB,
