@@ -196,7 +196,7 @@ class AppsPathResolver(object):
                                        'size': 4 * MB,
                                        'marker': True, 'path_type': "daily"},
             'matching-test-data': {'main_path': "apps-matching/test",
-                                       'size': 1 * MB,
+                                       'size': 20 * KB,
                                        'marker': True, 'path_type': "daily"},
             'matching-classification-data': {'main_path': "apps-matching/classification-data",
                                              'size': 30 * MiB,
