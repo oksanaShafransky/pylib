@@ -458,6 +458,16 @@ class ContextualizedTasksInfra(object):
                 ans = ans and test_size(directory, min_size_bytes, is_strict)
         return ans
 
+    def get_configuration(self, key):
+        # TODO make appropriate fallback mechanism for getting configurations
+        env_var_key = "SW_" + key.upper().replace("-", "_")
+        logger.debug("checking %s (%s) conf in environment-vars" % (key, env_var_key))
+        if env_var_key in os.environ:
+            logger.debug("found %s (%s) conf in environment-vars:[%s]" % (key, env_var_key,os.environ[env_var_key]))
+            return os.environ[env_var_key]
+        logger.debug("taking %s conf from snowflake" % key)
+        return SnowflakeConfig().get_service_name(service_name=key)
+
     def is_valid_output_exists(self, directories, min_size_bytes=0, validate_marker=False):
         self.log_lineage_hdfs(directories, 'output')
         return self.__is_hdfs_collection_valid(directories, min_size_bytes, validate_marker)
@@ -1877,8 +1887,7 @@ class ContextualizedTasksInfra(object):
         :param secret_access_key: optional, by default it will be taken from the AWS profile
         :return:
         """
-
-        profile = SnowflakeConfig().get_service_name(service_name="aws-profile") if profile is None else profile
+        profile = self.get_configuration("aws-profile") if profile is None else profile
 
         access_key_id = access_key_id \
                         or self.get_secret('{}/access_key'.format(profile)) \
