@@ -622,7 +622,7 @@ class AppsPathResolver(object):
             'extractor_1019': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1019", 'size': 20 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 50 * MiB,
+            'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 120 * MiB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1001",
@@ -701,19 +701,19 @@ class AppsPathResolver(object):
             'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 80 * MiB,
                                     'marker': False, 'path_type': "daily"},
 
-            'embee_app_session': {'main_path': "raw-stats-embee/app_session", 'size': 10 * MiB,
+            'embee_app_session': {'main_path': "raw-stats-embee/app_session", 'size': 480 * MiB,
                                   'marker': True, 'path_type': "daily"},
 
-            'embee_device_info': {'main_path': "raw-stats-embee/device_info", 'size': 10 * MiB,
+            'embee_device_info': {'main_path': "raw-stats-embee/device_info", 'size': 110 * MiB,
                                   'marker': True, 'path_type': "daily"},
 
-            'embee_demographics': {'main_path': "raw-stats-embee/demographics", 'size': 3 * MiB,
+            'embee_demographics': {'main_path': "raw-stats-embee/demographics", 'size': 6 * MiB,
                                    'marker': True, 'path_type': "daily"},
 
             'embee_naive_estimation': {'main_path': "raw-stats-embee/naive_estimation", 'size': 0 * MiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 10 * MiB,
+            'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 3 * GiB,
                                          'marker': True, 'path_type': "daily"},
 
             'stay_focus_installed_apps': {'main_path': 'raw-s2s/stay_focus-installed-apps', 'size': 0.48 * GiB,
@@ -775,7 +775,7 @@ class AppsPathResolver(object):
                                                       'marker': True,
                                                       'path_type': "daily"},
 
-            'grouping_1111_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 400 * MiB,
+            'grouping_1111_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 3 * GiB,
                                              'marker': True,
                                              'path_type': "daily"},
 
