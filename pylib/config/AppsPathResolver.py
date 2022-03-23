@@ -1278,16 +1278,16 @@ class AppsPathResolver(object):
                                  'size': 60 * MB, 'marker': True, 'path_type': "daily"},
 
             'apps_all_age_aggregate': {'main_path': "demographics/demographic_distribution/snapshot/age/apps_all_age_aggregate",
-                             'size': 60 * MB, 'marker': True, 'path_type': "daily"},
+                             'size': 60 * MB, 'marker': False, 'path_type': "monthly"},
 
             'apps_country_age_aggregate': {'main_path': "demographics/demographic_distribution/snaphot/age/apps_country_age_aggregate",
-                                 'size': 200 * MB, 'marker': True, 'path_type': "daily"},
+                                 'size': 200 * MB, 'marker': False, 'path_type': "monthly"},
 
             'apps_all_gender_aggregate': {'main_path': "demographics/demographic_distribution/snapshot/gender/apps_all_gender_aggregate",
-                                'size': 50 * MB, 'marker': True, 'path_type': "daily"},
+                                'size': 50 * MB, 'marker': False, 'path_type': "monthly"},
 
             'apps_country_gender_aggregate': {'main_path': "demographics/demographic_distribution/snapshot/gender/apps_country_gender_aggregate",
-                                    'size': 180 * MB, 'marker': True, 'path_type': "daily"},
+                                    'size': 180 * MB, 'marker': False, 'path_type': "monthly"},
         }
         self.paths_dates_suffix = {
             'dau_factors': [
