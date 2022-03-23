@@ -190,13 +190,13 @@ class AppsPathResolver(object):
                                             'size': 20 * MiB,
                                             'marker': True, 'path_type': "daily"},
             'matching-training-data': {'main_path': "apps-matching/train-data",
-                                       'size': 7 * MB,
+                                       'size': 6.5 * MB,
                                        'marker': True, 'path_type': "daily"},
             'matching-train-data': {'main_path': "apps-matching/train",
-                                       'size': 4 * MB,
+                                       'size': 7 * MB,
                                        'marker': True, 'path_type': "daily"},
             'matching-test-data': {'main_path': "apps-matching/test",
-                                       'size': 1 * MB,
+                                       'size': 3 * MB,
                                        'marker': True, 'path_type': "daily"},
             'matching-classification-data': {'main_path': "apps-matching/classification-data",
                                              'size': 30 * MiB,
@@ -208,7 +208,7 @@ class AppsPathResolver(object):
                                  'size': 21 * MB,
                                  'marker': True, 'path_type': "daily"},
             'matching-predict': {'main_path': "apps-matching/predict",
-                                 'size': 20 * MB,
+                                 'size': 15 * MB,
                                  'marker': True, 'path_type': "daily"},
             'matching-tests': {'main_path': "apps-matching/tests",
                                      'size': 5 * MiB,
@@ -598,7 +598,7 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 62 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 53 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
@@ -622,7 +622,7 @@ class AppsPathResolver(object):
             'extractor_1019': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1019", 'size': 20 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 50 * MiB,
+            'extractor_1111': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1111", 'size': 120 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_bobble1001': {'main_path': "daily/extractors/extracted-metric-data/rtype=bobbleR1001",
@@ -701,19 +701,19 @@ class AppsPathResolver(object):
             'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 80 * MiB,
                                     'marker': False, 'path_type': "daily"},
 
-            'embee_app_session': {'main_path': "raw-stats-embee/app_session", 'size': 10 * MiB,
+            'embee_app_session': {'main_path': "raw-stats-embee/app_session", 'size': 480 * MiB,
                                   'marker': True, 'path_type': "daily"},
 
-            'embee_device_info': {'main_path': "raw-stats-embee/device_info", 'size': 10 * MiB,
+            'embee_device_info': {'main_path': "raw-stats-embee/device_info", 'size': 110 * MiB,
                                   'marker': True, 'path_type': "daily"},
 
-            'embee_demographics': {'main_path': "raw-stats-embee/demographics", 'size': 3 * MiB,
+            'embee_demographics': {'main_path': "raw-stats-embee/demographics", 'size': 6 * MiB,
                                    'marker': True, 'path_type': "daily"},
 
             'embee_naive_estimation': {'main_path': "raw-stats-embee/naive_estimation", 'size': 0 * MiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 10 * MiB,
+            'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 3 * GiB,
                                          'marker': True, 'path_type': "daily"},
 
             'stay_focus_installed_apps': {'main_path': 'raw-s2s/stay_focus-installed-apps', 'size': 0.48 * GiB,
@@ -743,7 +743,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 115 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 110 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -775,7 +775,7 @@ class AppsPathResolver(object):
                                                       'marker': True,
                                                       'path_type': "daily"},
 
-            'grouping_1111_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 400 * MiB,
+            'grouping_1111_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 3 * GiB,
                                              'marker': True,
                                              'path_type': "daily"},
 
@@ -1054,7 +1054,7 @@ class AppsPathResolver(object):
                                    'path_type': "daily"},
 
             'ww_downloads_to_scrape': {'main_path': "scraping/ww-downloads-to-scrape",
-                         'size': 5.8 * MB, 'marker': True,
+                         'size': 5.6 * MB, 'marker': True,
                          'path_type': "daily"},
 
             # store-analysis
