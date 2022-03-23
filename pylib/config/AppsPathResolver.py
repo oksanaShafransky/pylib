@@ -1254,9 +1254,7 @@ class AppsPathResolver(object):
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             #demographics
-            'stats_mobile': {'main_path': "stats-mobile/raw", 'size': 7 * GiB,
-                                                      'marker': False,
-                                                      'path_type': "base_path"},
+            'raw_stats_mobile': {'main_path': "stats-mobile/raw", 'size': 15 * GiB, 'marker': True, 'path_type': "daily"},
 
             'user_info': {'main_path': "demographics/user_info",
                           'size': 1 * MB, 'marker': True, 'path_type': "daily"},
@@ -2684,9 +2682,9 @@ class AppsPathResolver(object):
                                              self.apps_paths['usage_patterns_dow_beta_binomial_estimation'], path_suffix, in_or_out)
 
     #demographics
-    def get_stats_mobile(self, in_or_out, path_prefix=None, path_suffix="is_valid=true"):
+    def get_raw_stats_mobile(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
-                                             self.apps_paths['stats-mobile'], path_suffix, in_or_out)
+                                             self.apps_paths['raw_stats_mobile'], path_suffix, in_or_out)
 
     def get_user_info(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
