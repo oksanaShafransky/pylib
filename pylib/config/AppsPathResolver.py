@@ -1266,16 +1266,16 @@ class AppsPathResolver(object):
                           'size': 1 * MB, 'marker': True, 'path_type': "base_path"},
 
             'apps_all_age': {'main_path': "demographics/demographic_distribution/age/apps_all_age",
-                          'size': 20 * MB, 'marker': True, 'path_type': "daily"},
+                          'size': 20 * MB, 'marker': False, 'path_type': "daily"},
 
             'apps_country_age': {'main_path': "demographics/demographic_distribution/age/apps_country_age",
-                             'size': 60 * MB, 'marker': True, 'path_type': "daily"},
+                             'size': 60 * MB, 'marker': False, 'path_type': "daily"},
 
             'apps_all_gender': {'main_path': "demographics/demographic_distribution/gender/apps_all_gender",
-                             'size': 20 * MB, 'marker': True, 'path_type': "daily"},
+                             'size': 20 * MB, 'marker': False, 'path_type': "daily"},
 
             'apps_country_gender': {'main_path': "demographics/demographic_distribution/gender/apps_country_gender",
-                                 'size': 60 * MB, 'marker': True, 'path_type': "daily"},
+                                 'size': 60 * MB, 'marker': False, 'path_type': "daily"},
 
             'apps_all_age_aggregate': {'main_path': "demographics/demographic_distribution/snapshot/age/apps_all_age_aggregate",
                              'size': 60 * MB, 'marker': False, 'path_type': "monthly"},
