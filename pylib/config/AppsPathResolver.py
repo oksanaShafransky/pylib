@@ -398,7 +398,7 @@ class AppsPathResolver(object):
                                             'marker': True, 'path_type': "daily"},
 
             'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
-                             'size': 1 * GiB,
+                             'size': 1.05 * GB,
                              'marker': True, 'path_type': "daily"},
 
             'dau_calc_join_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceJoinedKey",
