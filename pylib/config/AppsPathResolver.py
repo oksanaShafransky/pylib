@@ -211,8 +211,14 @@ class AppsPathResolver(object):
                                  'size': 15 * MB,
                                  'marker': True, 'path_type': "daily"},
             'matching-tests': {'main_path': "apps-matching/tests",
-                                     'size': 5 * MiB,
-                                     'marker': True, 'path_type': "daily"},
+                               'size': 5 * MiB,
+                               'marker': True, 'path_type': "daily"},
+            'matching-stats-candidates': {'main_path': "apps-matching/stats/candidates",
+                               'size': 1 * MiB,
+                               'marker': True, 'path_type': "daily"},
+            'matching-stats-prediction': {'main_path': "apps-matching/stats/prediction",
+                               'size': 1 * MiB,
+                               'marker': True, 'path_type': "daily"},
 
             # MONITORING
             'monitoring-dau-window': {'main_path': "apps-monitoring/dau/window",
@@ -1996,6 +2002,12 @@ class AppsPathResolver(object):
     def get_matching_tests(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-tests'], path_suffix, in_or_out)
+    def get_matching_candidates_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-stats-candidates'], path_suffix, in_or_out)
+    def get_matching_prediction_stats(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-stats-prediction'], path_suffix, in_or_out)
 
     # apps monitoring
     def get_monitoring_dau_window(self, in_or_out, path_prefix=None, path_suffix=None):
