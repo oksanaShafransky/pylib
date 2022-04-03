@@ -1897,7 +1897,7 @@ class ContextualizedTasksInfra(object):
                             or self.get_secret('{}/secret_key'.format(profile)) \
                             or self.get_secret('{}/aws_secret_access_key'.format(profile))
 
-        assert access_key_id and secret_access_key
+        assert access_key_id and secret_access_key, "cant find credentials"
 
         logger.info("Setting aws credentials {} AWS_ACCESS_KEY_ID {} ,AWS_SECRET_ACCESS_KEY {}"
                     .format('Profile {} ,'.format(profile) if profile else '', access_key_id, ''.join([secret_access_key[:len(secret_access_key) / 4]] + ["*" for _ in secret_access_key[len(secret_access_key) / 4:]])))

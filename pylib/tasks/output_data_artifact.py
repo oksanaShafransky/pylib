@@ -52,7 +52,7 @@ class OutputDataArtifact(DataArtifact):
 
 if __name__ == '__main__':
     # da = InputDataArtifact('path')
-    override = [{"type": "s3", "name": "similargroup-backup-retention", "prefix": "/mrp"}]
+    override = [{"type": "s3a", "name": "similargroup-backup-retention", "prefix": "/mrp"}]
     da = OutputDataArtifact('/similargroup/data/android-apps-analytics/daily/extractors/extracted-metric-data/rtype=R1001/year=20/month=11/day=30',
                             required_size=10000, required_marker=True, override_data_sources=override)
     print(da.resolved_path)
