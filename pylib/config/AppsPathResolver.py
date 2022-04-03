@@ -1256,7 +1256,7 @@ class AppsPathResolver(object):
             'usage_patterns_dow_source_raw_estimation': {'main_path': "usage-patterns/dow/intermediates/sources-raw-estimation",
                                                          'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_raw_estimation': {'main_path': "daily/usage-patterns/dow/intermediates/raw-estimation",
+            'usage_patterns_dow_raw_estimation': {'main_path': "usage-patterns/dow/intermediates/raw-estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_dow_beta_binomial_estimation': {'main_path': "usage-patterns/dow/intermediates/beta_binomial_estimation",
