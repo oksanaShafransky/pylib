@@ -411,7 +411,7 @@ class AppsPathResolver(object):
                              'marker': True, 'path_type': "daily"},
 
             'dau_calc_join_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceJoinedKey",
-                             'size': 1.05 * GB,
+                             'size': 1 * GB,
                              'marker': True, 'path_type': "daily"},
 
             'dau_for_ptft': {'main_path': "daily/dau/pre-estimate/dau-for-ptft",
