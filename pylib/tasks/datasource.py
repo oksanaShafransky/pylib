@@ -23,6 +23,7 @@ def human_size(raw_size):
 
 class DatasourceTypes(Enum):
    S3 = "s3"
+   S3A = "s3a"
    HDFS = "hdfs"
 
 
@@ -108,13 +109,14 @@ class DataSource(object):
 class S3DataSource(DataSource):
 
     def __init__(self, collection, required_size, required_marker, bucket_name, prefix, original_required_size,
-                 email_list):
+                 email_list, schema="s3"):
         super(S3DataSource, self).__init__(collection, prefix, required_size, required_marker, original_required_size,
                                            email_list)
         self.bucket_name = bucket_name
         self.prefix = prefix
         self.prefixed_collection = "%s%s" % (self.prefix, self.collection)
-        self.full_uri = "s3a://%s%s" % (self.bucket_name, self.prefixed_collection)
+        self.schema = schema
+        self.full_uri = "%s://%s%s" % (self.schema, self.bucket_name, self.prefixed_collection)
 
     def log_success(self):
         logger.info(

@@ -74,6 +74,7 @@ class SnowflakeConfig:
                       headers=headers)
 
     def get_service_name(self, env=None, service_name=None, task_id=None):
+        # TODO - should we cache the answer on the local-machine? improve performance
         if env is None:
             env = self.def_env
         # Must be first line in the function

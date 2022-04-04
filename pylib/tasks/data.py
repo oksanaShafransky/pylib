@@ -86,7 +86,7 @@ class DataArtifact(object):
 
     def _resolve_s3_size(self):
         path = self._resolve_s3_path_by_size()
-        return size_on_s3('s3://%s' % path) if path else 0
+        return size_on_s3('s3a://%s' % path) if path else 0
 
     def _resolve_s3_path_by_size(self):
         def paths_by_buckets():
@@ -94,7 +94,7 @@ class DataArtifact(object):
             return [self._s3_path(b.get('name'), b.get('prefix')) for b in bucks]
 
         def filter_by_size(path):
-            return size_on_s3('s3://%s' % path) > 0
+            return size_on_s3('s3a://%s' % path) > 0
 
         return next(ifilter(filter_by_size, paths_by_buckets()), None)
 
@@ -124,8 +124,8 @@ class DataArtifact(object):
                 return False
 
             logger.info('Checking that dir %s on s3 is larger than %d...' % (effective_s3_path, self.min_required_size))
-            effective_size = size_on_s3('s3://%s' % effective_s3_path)
-            if self.check_marker and not exists_s3(os.path.join('s3://%s' % effective_s3_path, SUCCESS_MARKER)):
+            effective_size = size_on_s3('s3a://%s' % effective_s3_path)
+            if self.check_marker and not exists_s3(os.path.join('s3a://%s' % effective_s3_path, SUCCESS_MARKER)):
                 check_marker_ok = False
 
         for reporter in reporters:

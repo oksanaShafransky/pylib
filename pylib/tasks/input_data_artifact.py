@@ -8,6 +8,11 @@ DEFAULT_SUFFIX_FORMAT = '''year=%y/month=%m/day=%d'''
 
 logger = logging.getLogger('data_artifact')
 
+
+class InputDataArtifactNotFoundError(IOError):
+    pass
+
+
 class InputRangedDataArtifact(object):
 
     def __init__(self, ti, collection_path, dates, suffix_format=DEFAULT_SUFFIX_FORMAT, *args, **kwargs):
@@ -65,7 +70,9 @@ class InputDataArtifact(DataArtifact):
             d.log_fail_to_find()
 
         # If we got here we should fail Data artifact with no collection found
-        raise Exception("InputDataArtifact - Couldn't locate collection: %s in any of the datasources" % self.raw_path)
+        raise InputDataArtifactNotFoundError(
+            "InputDataArtifact - Couldn't locate collection: %s in any of the datasources" % self.raw_path
+        )
 
     # This function is deprecated
     def assert_input_validity(self, *reporters):
