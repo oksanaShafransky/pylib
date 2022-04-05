@@ -66,7 +66,7 @@ class PtaskInvoker(Program):
             Argument(names=('profile', 'prf'), kind=bool,
                      help="Profile flag - run containers with yourkit profiler"),
             Argument(names=('branch', 'br'), help="The logical data branch of this command", optional=True),
-            Argument(names=('ignore_size_check', 'isc'), help="Ignore size check of input/output data artifact", optional=True),
+            Argument(names=('ignore_size_check', 'isc'), kind=bool, default=False, help="Ignore size check of input/output data artifact", optional=True),
         ]
         return core_args + extra_args
 
