@@ -414,7 +414,7 @@ class AppsPathResolver(object):
                              'marker': True, 'path_type': "daily"},
 
             'dau_calc_join_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=AppCountrySourceJoinedKey",
-                             'size': 1.05 * GB,
+                             'size': 1 * GB,
                              'marker': True, 'path_type': "daily"},
 
             'dau_for_ptft': {'main_path': "daily/dau/pre-estimate/dau-for-ptft",
@@ -610,7 +610,7 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 48 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 47 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
@@ -755,7 +755,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 100 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 98 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -1256,7 +1256,7 @@ class AppsPathResolver(object):
 
 
             ### Usage Patterns
-            'usage_patterns_session_list': {'main_path': "usage-patterns/intermediates/raw-sessions",
+            'usage_patterns_session_list': {'main_path': "usage-patterns/dow/intermediates/raw-sessions",
                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_dow_source_raw_estimation': {'main_path': "usage-patterns/dow/intermediates/sources-raw-estimation",
@@ -1297,37 +1297,37 @@ class AppsPathResolver(object):
             #demographics
             'raw_stats_mobile': {'main_path': "stats-mobile/raw", 'size': 15 * GiB, 'marker': True, 'path_type': "daily"},
 
-            'user_info': {'main_path': "demographics/user_info",
+            'user_info': {'main_path': "mobile-analytics/demographics/user_info",
                           'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'age_model': {'main_path': "demographics/models/android_age_model_multinomial",
+            'age_model': {'main_path': "mobile-analytics/demographics/models/android_age_model_multinomial",
                           'size': 50 * MB, 'marker': True, 'path_type': "base_path"},
 
-            'gender_model': {'main_path': "demographics/models/android_gender_model_no_pca",
+            'gender_model': {'main_path': "mobile-analytics/demographics/models/android_gender_model_no_pca",
                           'size': 1 * MB, 'marker': True, 'path_type': "base_path"},
 
-            'apps_all_age': {'main_path': "demographics/demographic_distribution/age/apps_all_age",
+            'apps_all_age': {'main_path': "mobile-analytics/demographics/demographic_distribution/age/apps_all_age",
                           'size': 20 * MB, 'marker': False, 'path_type': "daily"},
 
-            'apps_country_age': {'main_path': "demographics/demographic_distribution/age/apps_country_age",
+            'apps_country_age': {'main_path': "mobile-analytics/demographics/demographic_distribution/age/apps_country_age",
                              'size': 60 * MB, 'marker': False, 'path_type': "daily"},
 
-            'apps_all_gender': {'main_path': "demographics/demographic_distribution/gender/apps_all_gender",
+            'apps_all_gender': {'main_path': "mobile-analytics/demographics/demographic_distribution/gender/apps_all_gender",
                              'size': 20 * MB, 'marker': False, 'path_type': "daily"},
 
-            'apps_country_gender': {'main_path': "demographics/demographic_distribution/gender/apps_country_gender",
+            'apps_country_gender': {'main_path': "mobile-analytics/demographics/demographic_distribution/gender/apps_country_gender",
                                  'size': 60 * MB, 'marker': False, 'path_type': "daily"},
 
-            'apps_all_age_aggregate': {'main_path': "demographics/demographic_distribution/snapshot/age/apps_all_age_aggregate",
+            'apps_all_age_aggregate': {'main_path': "mobile-analytics/snapshot/app-demographics/age/apps_all_age",
                              'size': 60 * MB, 'marker': False, 'path_type': "monthly"},
 
-            'apps_country_age_aggregate': {'main_path': "demographics/demographic_distribution/snaphot/age/apps_country_age_aggregate",
+            'apps_country_age_aggregate': {'main_path': "mobile-analytics/snapshot/app-demographics/age/apps_country_age",
                                  'size': 200 * MB, 'marker': False, 'path_type': "monthly"},
 
-            'apps_all_gender_aggregate': {'main_path': "demographics/demographic_distribution/snapshot/gender/apps_all_gender_aggregate",
+            'apps_all_gender_aggregate': {'main_path': "mobile-analytics/snapshot/app-demographics/gender/apps_all_gender",
                                 'size': 50 * MB, 'marker': False, 'path_type': "monthly"},
 
-            'apps_country_gender_aggregate': {'main_path': "demographics/demographic_distribution/snapshot/gender/apps_country_gender_aggregate",
+            'apps_country_gender_aggregate': {'main_path': "mobile-analytics/snapshot/app-demographics/gender/apps_country_gender",
                                     'size': 180 * MB, 'marker': False, 'path_type': "monthly"},
         }
         self.paths_dates_suffix = {
@@ -2777,45 +2777,45 @@ class AppsPathResolver(object):
                                              self.apps_paths['raw_stats_mobile'], path_suffix, in_or_out)
 
     def get_user_info(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['user_info'], path_suffix, in_or_out)
 
     def get_age_model(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['age_model'], path_suffix, in_or_out)
 
     def get_gender_model(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['gender_model'], path_suffix, in_or_out)
 
     def get_apps_all_age(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_all_age'], path_suffix, in_or_out)
 
     def get_apps_all_gender(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_all_gender'], path_suffix, in_or_out)
 
     def get_apps_country_age(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_country_age'], path_suffix, in_or_out)
 
     def get_apps_country_gender(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_country_gender'], path_suffix, in_or_out)
 
     def get_apps_all_age_aggregate(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_all_age_aggregate'], path_suffix, in_or_out)
 
     def get_apps_all_gender_aggregate(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_all_gender_aggregate'], path_suffix, in_or_out)
     def get_apps_country_age_aggregate(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_country_age_aggregate'], path_suffix, in_or_out)
 
     def get_apps_country_gender_aggregate(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_country_gender_aggregate'], path_suffix, in_or_out)
 
