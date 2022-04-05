@@ -112,7 +112,7 @@ class PtaskInvoker(Program):
         if self.args.branch.value:
             sw_tasks['branch'] = self.args.branch.value
         if self.args.ignore_size_check.value:
-            sw_tasks['ignore_size_check'] = self.args.ignore_size_check.value
+            sw_tasks['ignore_size_check'] = True
 
         if 'TASK_ID' in os.environ:
             sw_tasks['has_task_id'] = True
