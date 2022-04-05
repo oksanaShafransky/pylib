@@ -2787,7 +2787,7 @@ class AppsPathResolver(object):
                                              self.apps_paths['apps_all_age'], path_suffix, in_or_out)
 
     def get_apps_all_gender(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_mobile_analytics_base(in_or_out, path_prefix),
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_all_gender'], path_suffix, in_or_out)
 
     def get_apps_country_age(self, in_or_out, path_prefix=None, path_suffix=None):
