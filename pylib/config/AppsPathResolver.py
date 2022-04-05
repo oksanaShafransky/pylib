@@ -1253,7 +1253,7 @@ class AppsPathResolver(object):
 
 
             ### Usage Patterns
-            'usage_patterns_session_list': {'main_path': "usage-patterns/intermediates/raw-sessions",
+            'usage_patterns_session_list': {'main_path': "usage-patterns/dow/intermediates/raw-sessions",
                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_dow_source_raw_estimation': {'main_path': "usage-patterns/dow/intermediates/sources-raw-estimation",
