@@ -1255,43 +1255,48 @@ class AppsPathResolver(object):
                                     'path_type': "daily"},
 
 
+
             ### Usage Patterns
-            'usage_patterns_session_list': {'main_path': "usage-patterns/dow/intermediates/raw-sessions",
+
+            'country_workweek_days': {'main_path': "static/country_workweek_days",
+                                            'size': 1 * MB, 'marker': True, 'path_type': "base_path"},
+
+            'usage_patterns_session_list': {'main_path': "usage_patterns/dow/intermediates/raw_sessions",
                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_source_raw_estimation': {'main_path': "usage-patterns/dow/intermediates/sources-raw-estimation",
+            'usage_patterns_dow_source_raw_estimation': {'main_path': "usage_patterns/dow/intermediates/sources_raw_estimation",
                                                          'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_raw_estimation': {'main_path': "usage-patterns/dow/intermediates/raw-estimation",
+            'usage_patterns_dow_raw_estimation': {'main_path': "usage_patterns/dow/intermediates/raw_estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_beta_binomial_estimation': {'main_path': "usage-patterns/dow/intermediates/beta_binomial_estimation",
+            'usage_patterns_dow_beta_binomial_estimation': {'main_path': "usage_patterns/dow/intermediates/beta_binomial_estimation",
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_prior_estimation': {'main_path': "usage-patterns/dow/intermediates/priors_estimation",
+            'usage_patterns_dow_prior_estimation': {'main_path': "usage_patterns/dow/intermediates/priors_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_final_estimation': {'main_path': "usage-patterns/dow/final_estimation",
+            'usage_patterns_dow_final_estimation': {'main_path': "usage_patterns/dow/final_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
             
 
-            'usage_patterns_tod_session_list': {'main_path': "usage-patterns/tod/intermediates/raw-sessions",
+            'usage_patterns_tod_session_list': {'main_path': "usage_patterns/tod/intermediates/raw_sessions",
                                                 'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_tod_raw_estimation': {'main_path': "usage-patterns/tod/intermediates/raw-estimation",
+            'usage_patterns_tod_raw_estimation': {'main_path': "usage_patterns/tod/intermediates/raw_estimation",
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_tod_source_raw_estimation': {'main_path': "usage-patterns/tod/intermediates/sources-raw-estimation",
+            'usage_patterns_tod_source_raw_estimation': {'main_path': "usage_patterns/tod/intermediates/sources_raw_estimation",
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_tod_beta_binomial_estimation': {'main_path': "usage-patterns/tod/intermediates/beta_binomial_estimation",
+            'usage_patterns_tod_beta_binomial_estimation': {'main_path': "usage_patterns/tod/intermediates/beta_binomial_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
 
-            'usage_patterns_tod_prior_estimation': {'main_path': "usage-patterns/tod/intermediates/priors_estimation",
+            'usage_patterns_tod_prior_estimation': {'main_path': "usage_patterns/tod/intermediates/priors_estimation",
                                                     'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_tod_final_estimation': {'main_path': "usage-patterns/tod/final_estimation",
+            'usage_patterns_tod_final_estimation': {'main_path': "usage_patterns/tod/final_estimation",
                                                     'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             #demographics
@@ -2771,6 +2776,9 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_tod_final_estimation'], path_suffix, in_or_out)
 
+    def get_country_workweek_days(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['country_workweek_days'], path_suffix, in_or_out)
     #demographics
     def get_raw_stats_mobile(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
