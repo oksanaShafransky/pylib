@@ -60,6 +60,7 @@ class InputDataArtifact(DataArtifact):
                 d.assert_marker()
                 if self.ti.ignore_size_check is True:
                     logger.info("InputDataArtifact: Ignoring datasource validate size")
+                    d.is_size_validated = True
                 else:
                     logger.info("InputDataArtifact: Datasource validate size, required_size: " + str(self.min_required_size))
                     d.assert_size()
