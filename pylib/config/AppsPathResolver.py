@@ -1259,7 +1259,7 @@ class AppsPathResolver(object):
             ### Usage Patterns
 
             'country_workweek_days': {'main_path': "static/country_workweek_days",
-                                            'size': 1 * MB, 'marker': True, 'path_type': "base_path"},
+                                            'size': 1 , 'marker': True, 'path_type': "base_path"},
 
             'usage_patterns_session_list': {'main_path': "usage_patterns/dow/intermediates/raw_sessions",
                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
