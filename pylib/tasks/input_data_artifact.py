@@ -58,8 +58,11 @@ class InputDataArtifact(DataArtifact):
                 # From here if something breaks datasource will throw exception
                 logger.info("InputDataArtifact: Datasource validate marker, required_marker: " + str(self.check_marker))
                 d.assert_marker()
-                logger.info("InputDataArtifact: Datasource validate size, required_size: " + str(self.min_required_size))
-                d.assert_size()
+                if self.ti.ignore_size_check is True:
+                    logger.info("InputDataArtifact: Ignoring datasource validate size")
+                else:
+                    logger.info("InputDataArtifact: Datasource validate size, required_size: " + str(self.min_required_size))
+                    d.assert_size()
 
             if d.is_exist and d.is_marker_validated and d.is_size_validated:
                 # We found a datasource
