@@ -409,8 +409,8 @@ class ContextualizedTasksInfra(object):
     default_spark_configs = {
         # default executor profile 1.5G per core
         'spark.driver.memory': "4g",
-        'spark.executor.memory': '6g',
-        'spark.executor.cores': '4'
+        'spark.executor.memory': '12g',
+        'spark.executor.cores': '8'
     }
 
     def __init__(self, ctx):
