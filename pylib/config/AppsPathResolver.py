@@ -1270,6 +1270,9 @@ class AppsPathResolver(object):
             'usage_patterns_dow_raw_estimation': {'main_path': "usage_patterns/dow/intermediates/raw_estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
+            'usage_patterns_dow_raw_estimation_with_ww': {'main_path': "usage_patterns/dow/intermediates/raw_estimation_with_ww",
+                                                          'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
             'usage_patterns_dow_beta_binomial_estimation': {'main_path': "usage_patterns/dow/intermediates/beta_binomial_estimation",
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
@@ -1284,6 +1287,9 @@ class AppsPathResolver(object):
                                                 'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_tod_raw_estimation': {'main_path': "usage_patterns/tod/intermediates/raw_estimation",
+                                                  'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_tod_raw_estimation_with_ww': {'main_path': "usage_patterns/tod/intermediates/raw_estimation_with_ww",
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_tod_source_raw_estimation': {'main_path': "usage_patterns/tod/intermediates/sources_raw_estimation",
@@ -2736,6 +2742,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_dow_raw_estimation'], path_suffix, in_or_out)
 
+    def get_usage_patterns_dow_raw_estimation_with_ww(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_dow_raw_estimation_with_ww'], path_suffix, in_or_out)
+
     def get_usage_patterns_dow_source_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_dow_source_raw_estimation'], path_suffix, in_or_out)
@@ -2759,6 +2769,10 @@ class AppsPathResolver(object):
     def get_usage_patterns_tod_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_tod_raw_estimation'], path_suffix, in_or_out)
+
+    def get_usage_patterns_tod_raw_estimation_with_ww(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_tod_raw_estimation_with_ww'], path_suffix, in_or_out)
 
     def get_usage_patterns_tod_source_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
