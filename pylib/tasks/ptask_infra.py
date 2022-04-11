@@ -409,8 +409,8 @@ class ContextualizedTasksInfra(object):
     default_spark_configs = {
         # default executor profile 1.5G per core
         'spark.driver.memory': "4g",
-        'spark.executor.memory': '6g',
-        'spark.executor.cores': '4'
+        'spark.executor.memory': '12g',
+        'spark.executor.cores': '8'
     }
 
     def __init__(self, ctx):
@@ -2137,3 +2137,7 @@ class ContextualizedTasksInfra(object):
     @property
     def branch(self):
         return self.__get_common_args().get('branch')
+
+    @property
+    def ignore_size_check(self):
+        return self.__get_common_args().get('ignore_size_check', False)
