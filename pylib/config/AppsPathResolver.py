@@ -610,7 +610,7 @@ class AppsPathResolver(object):
             'extractor_1003': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1003", 'size': 200 * MiB,
                                'marker': True, 'path_type': "daily"},
 
-            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 47 * MB,
+            'extractor_1005': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005", 'size': 44 * MB,
                                'marker': True, 'path_type': "daily"},
 
             'extractor_1005_on_server_side': {'main_path': "daily/extractors/extracted-metric-data/rtype=R1005OnServerSide", 'size': 20 * MiB,
@@ -755,7 +755,7 @@ class AppsPathResolver(object):
                                              'marker': False, #TODO revert to True.
                                              'path_type': "daily"},
 
-            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 98 * MB,
+            'grouping_1005_report_parquet_upsolver': {'main_path': "stats-mobile/parquet_adjusted/rtype=R1005", 'size': 92 * MB,
                                              'marker': False,
                                              'path_type': "daily"},
 
@@ -1255,44 +1255,33 @@ class AppsPathResolver(object):
                                     'path_type': "daily"},
 
 
+
             ### Usage Patterns
-            'usage_patterns_session_list': {'main_path': "usage-patterns/dow/intermediates/raw-sessions",
+
+            'country_workweek_days': {'main_path': "static/country_workweek_days",
+                                            'size': 1 , 'marker': True, 'path_type': "base_path"},
+
+            'usage_patterns_session_list': {'main_path': "usage_patterns/{mode}/intermediates/raw_sessions",
                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_source_raw_estimation': {'main_path': "usage-patterns/dow/intermediates/sources-raw-estimation",
+            'usage_patterns_source_raw_estimation': {'main_path': "usage_patterns/{mode}/intermediates/sources_raw_estimation",
                                                          'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_raw_estimation': {'main_path': "usage-patterns/dow/intermediates/raw-estimation",
+            'usage_patterns_raw_estimation': {'main_path': "usage_patterns/{mode}/intermediates/raw_estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_beta_binomial_estimation': {'main_path': "usage-patterns/dow/intermediates/beta_binomial_estimation",
-                                                  'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+            'usage_patterns_raw_estimation_with_ww': {'main_path': "usage_patterns/{mode}/intermediates/raw_estimation_with_ww",
+                                                          'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_prior_estimation': {'main_path': "usage-patterns/dow/intermediates/priors_estimation",
+            'usage_patterns_beta_binomial_estimation': {'main_path': "usage_patterns/{mode}/intermediates/beta_binomial_estimation",
+                                                  'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+            'usage_patterns_category_bucket_estimation': {'main_path': "usage_patterns/{mode}/category_bucket_estimation",
+                                                              'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+            'usage_patterns_prior_estimation': {'main_path': "usage_patterns/dow/intermediates/priors_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_dow_final_estimation': {'main_path': "usage-patterns/dow/final_estimation",
-                                                            'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-            
-
-            'usage_patterns_tod_session_list': {'main_path': "usage-patterns/tod/intermediates/raw-sessions",
-                                                'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-
-            'usage_patterns_tod_raw_estimation': {'main_path': "usage-patterns/tod/intermediates/raw-estimation",
-                                                  'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-
-            'usage_patterns_tod_source_raw_estimation': {'main_path': "usage-patterns/tod/intermediates/sources-raw-estimation",
-                                                  'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-
-            'usage_patterns_tod_beta_binomial_estimation': {'main_path': "usage-patterns/tod/intermediates/beta_binomial_estimation",
-                                                            'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-
-
-            'usage_patterns_tod_prior_estimation': {'main_path': "usage-patterns/tod/intermediates/priors_estimation",
-                                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-
-            'usage_patterns_tod_final_estimation': {'main_path': "usage-patterns/tod/final_estimation",
-                                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+            'usage_patterns_final_estimation': {'main_path': "usage_patterns/{mode}/final_estimation",
+                                                     'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             #demographics
             'raw_stats_mobile': {'main_path': "stats-mobile/raw", 'size': 15 * GiB, 'marker': True, 'path_type': "daily"},
@@ -2723,54 +2712,54 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['stay_focus_apps_sessions'], path_suffix, in_or_out)
 
-    def get_usage_patterns_session_list(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_session_list(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_session_list']['main_path'] = self.apps_paths['usage_patterns_session_list']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_session_list'], path_suffix, in_or_out)
 
-    def get_usage_patterns_dow_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_raw_estimation']['main_path'] = self.apps_paths['usage_patterns_raw_estimation']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_dow_raw_estimation'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_raw_estimation'], path_suffix, in_or_out)
 
-    def get_usage_patterns_dow_source_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_raw_estimation_with_ww(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_raw_estimation_with_ww']['main_path'] = self.apps_paths['usage_patterns_raw_estimation_with_ww']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_dow_source_raw_estimation'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_raw_estimation_with_ww'], path_suffix, in_or_out)
 
-    def get_usage_patterns_dow_beta_binomial_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_source_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_source_raw_estimation']['main_path'] = self.apps_paths['usage_patterns_source_raw_estimation']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_dow_beta_binomial_estimation'], path_suffix, in_or_out)
-    
-    def get_usage_patterns_dow_prior_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_dow_prior_estimation'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_source_raw_estimation'], path_suffix, in_or_out)
 
-    def get_usage_patterns_dow_final_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_beta_binomial_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_beta_binomial_estimation']['main_path'] = self.apps_paths['usage_patterns_beta_binomial_estimation']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_dow_final_estimation'], path_suffix, in_or_out)
-    
-    def get_usage_patterns_tod_session_list(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_tod_session_list'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_beta_binomial_estimation'], path_suffix, in_or_out)
 
-    def get_usage_patterns_tod_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_prior_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_prior_estimation']['main_path'] = self.apps_paths['usage_patterns_prior_estimation']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_tod_raw_estimation'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_prior_estimation'], path_suffix, in_or_out)
 
-    def get_usage_patterns_tod_source_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_category_bucket_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_category_bucket_estimation']['main_path'] = self.apps_paths['usage_patterns_category_bucket_estimation']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_tod_source_raw_estimation'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_category_bucket_estimation'], path_suffix, in_or_out)
 
-    def get_usage_patterns_tod_beta_binomial_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_final_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_final_estimation']['main_path'] = self.apps_paths['usage_patterns_final_estimation']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_tod_beta_binomial_estimation'], path_suffix, in_or_out)
-    
-    def get_usage_patterns_tod_prior_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_tod_prior_estimation'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_final_estimation'], path_suffix, in_or_out)
 
-    def get_usage_patterns_tod_final_estimation(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_patterns_monitoring_estimation_window(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_monitoring_estimation_window']['main_path'] = self.apps_paths['usage_patterns_monitoring_estimation_window']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_tod_final_estimation'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_monitoring_estimation_window'], path_suffix, in_or_out)
 
+    def get_country_workweek_days(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['country_workweek_days'], path_suffix, in_or_out)
     #demographics
     def get_raw_stats_mobile(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
