@@ -207,12 +207,12 @@ class AppsPathResolver(object):
             'matching-raw-predict': {'main_path': "apps-matching/predict-raw",
                                  'size': 21 * MB,
                                  'marker': True, 'path_type': "daily"},
+            'matching-predict-sanitized': {'main_path': "apps-matching/predict-sanitized",
+                                         'size': 19 * MiB,
+                                         'marker': True, 'path_type': "daily"},
             'matching-predict': {'main_path': "apps-matching/predict",
-                                 'size': 15 * MB,
+                                 'size': 19 * MB,
                                  'marker': True, 'path_type': "daily"},
-            'matching-tests': {'main_path': "apps-matching/tests",
-                               'size': 5 * MiB,
-                               'marker': True, 'path_type': "daily"},
             'matching-stats-candidates-coverage': {'main_path': "apps-matching/stats/candidates/coverage",
                                'size': 1 * KB,
                                'marker': True, 'path_type': "daily"},
@@ -2031,12 +2031,12 @@ class AppsPathResolver(object):
     def get_matching_raw_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-raw-predict'], path_suffix, in_or_out)
+    def get_matching_predict_sanitized(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                         self.apps_paths['matching-predict-sanitized'], path_suffix, in_or_out)
     def get_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-predict'], path_suffix, in_or_out)
-    def get_matching_tests(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['matching-tests'], path_suffix, in_or_out)
     def get_matching_stats_candidates_coverage(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-stats-candidates-coverage'], path_suffix, in_or_out)
