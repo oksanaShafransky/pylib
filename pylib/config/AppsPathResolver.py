@@ -1277,7 +1277,7 @@ class AppsPathResolver(object):
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
             'usage_patterns_category_bucket_estimation': {'main_path': "usage_patterns/{mode}/category_bucket_estimation",
                                                               'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-            'usage_patterns_prior_estimation': {'main_path': "usage_patterns/dow/intermediates/priors_estimation",
+            'usage_patterns_prior_estimation': {'main_path': "usage_patterns/{mode}/intermediates/priors_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_final_estimation': {'main_path': "usage_patterns/{mode}/final_estimation",
