@@ -2747,8 +2747,9 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_beta_binomial_estimation'], path_suffix, in_or_out)
 
-        def get_usage_patterns_weeks_merged(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-            self.apps_paths['usage_patterns_weeks_merged']['main_path'] = self.apps_paths['usage_patterns_weeks_merged']['main_path'].format(mode=mode.lower())
+
+    def get_usage_patterns_weeks_merged_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_weeks_merged']['main_path'] = self.apps_paths['usage_patterns_weeks_merged']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_weeks_merged'], path_suffix, in_or_out)
 
