@@ -1275,6 +1275,10 @@ class AppsPathResolver(object):
 
             'usage_patterns_beta_binomial_estimation': {'main_path': "usage_patterns/{mode}/intermediates/beta_binomial_estimation",
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_weeks_merged': {'main_path': "usage_patterns/{mode}/intermediates/weeks_merged",
+                                                        'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
             'usage_patterns_category_bucket_estimation': {'main_path': "usage_patterns/{mode}/category_bucket_estimation",
                                                               'size': 1 * MB, 'marker': True, 'path_type': "daily"},
             'usage_patterns_prior_estimation': {'main_path': "usage_patterns/{mode}/intermediates/priors_estimation",
@@ -1282,6 +1286,12 @@ class AppsPathResolver(object):
 
             'usage_patterns_final_estimation': {'main_path': "usage_patterns/{mode}/final_estimation",
                                                      'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_stability_estimation': {'main_path': "usage_patterns/{mode}/stability-monitoring/stability_estimation",
+                                                'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_clean_for_monitoring': {'main_path': "usage_patterns/{mode}/stability-monitoring/clean_metric",
+                                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             #demographics
             'raw_stats_mobile': {'main_path': "stats-mobile/raw", 'size': 15 * GiB, 'marker': True, 'path_type': "daily"},
@@ -2737,6 +2747,11 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_beta_binomial_estimation'], path_suffix, in_or_out)
 
+        def get_usage_patterns_weeks_merged(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+            self.apps_paths['usage_patterns_weeks_merged']['main_path'] = self.apps_paths['usage_patterns_weeks_merged']['main_path'].format(mode=mode.lower())
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_weeks_merged'], path_suffix, in_or_out)
+
     def get_usage_patterns_prior_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
         self.apps_paths['usage_patterns_prior_estimation']['main_path'] = self.apps_paths['usage_patterns_prior_estimation']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
@@ -2752,10 +2767,17 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_patterns_final_estimation'], path_suffix, in_or_out)
 
-    def get_usage_patterns_monitoring_estimation_window(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_monitoring_estimation_window']['main_path'] = self.apps_paths['usage_patterns_monitoring_estimation_window']['main_path'].format(mode=mode.lower())
+
+    def get_usage_patterns_stability_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_stability_estimation']['main_path'] = self.apps_paths['usage_patterns_stability_estimation']['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_monitoring_estimation_window'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_patterns_stability_estimation'], path_suffix, in_or_out)
+
+
+    def get_usage_patterns_clean_for_monitoring(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        self.apps_paths['usage_patterns_clean_for_monitoring']['main_path'] = self.apps_paths['usage_patterns_clean_for_monitoring']['main_path'].format(mode=mode.lower())
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['usage_patterns_clean_for_monitoring'], path_suffix, in_or_out)
 
     def get_country_workweek_days(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
