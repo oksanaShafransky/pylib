@@ -1,6 +1,7 @@
 from pylib.tasks.input_data_artifact import InputDataArtifact, InputRangedDataArtifact, DEFAULT_SUFFIX_FORMAT
 from pylib.tasks.output_data_artifact import OutputDataArtifact
 from datetime import date
+import copy
 
 GiB = 1024 ** 3
 MiB = 1024 ** 2
@@ -1287,10 +1288,10 @@ class AppsPathResolver(object):
             'usage_patterns_final_estimation': {'main_path': "usage_patterns/{mode}/final_estimation",
                                                      'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_stability_estimation': {'main_path': "usage_patterns/{mode}/stability-monitoring/stability_estimation",
+            'usage_patterns_stability_estimation': {'main_path': "usage_patterns/{mode}/stability_monitoring/stability_estimation",
                                                 'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_clean_for_monitoring': {'main_path': "usage_patterns/{mode}/stability-monitoring/clean_metric",
+            'usage_patterns_clean_for_monitoring': {'main_path': "usage_patterns/{mode}/stability_monitoring/clean_metric",
                                                     'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             #demographics
@@ -2723,62 +2724,71 @@ class AppsPathResolver(object):
                                              self.apps_paths['stay_focus_apps_sessions'], path_suffix, in_or_out)
 
     def get_usage_patterns_session_list(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_session_list']['main_path'] = self.apps_paths['usage_patterns_session_list']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_session_list'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_session_list'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_raw_estimation']['main_path'] = self.apps_paths['usage_patterns_raw_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_raw_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_raw_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_raw_estimation_with_ww(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_raw_estimation_with_ww']['main_path'] = self.apps_paths['usage_patterns_raw_estimation_with_ww']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_raw_estimation_with_ww'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_raw_estimation_with_ww'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_source_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_source_raw_estimation']['main_path'] = self.apps_paths['usage_patterns_source_raw_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_source_raw_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_source_raw_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_beta_binomial_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_beta_binomial_estimation']['main_path'] = self.apps_paths['usage_patterns_beta_binomial_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_beta_binomial_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_beta_binomial_estimation'], path_suffix, in_or_out)
-
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_weeks_merged_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_weeks_merged']['main_path'] = self.apps_paths['usage_patterns_weeks_merged']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_weeks_merged'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_weeks_merged'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_prior_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_prior_estimation']['main_path'] = self.apps_paths['usage_patterns_prior_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_prior_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_prior_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_category_bucket_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_category_bucket_estimation']['main_path'] = self.apps_paths['usage_patterns_category_bucket_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_category_bucket_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_category_bucket_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_final_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_final_estimation']['main_path'] = self.apps_paths['usage_patterns_final_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_final_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_final_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
 
     def get_usage_patterns_stability_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_stability_estimation']['main_path'] = self.apps_paths['usage_patterns_stability_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_stability_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_stability_estimation'], path_suffix, in_or_out)
-
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_clean_for_monitoring(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_clean_for_monitoring']['main_path'] = self.apps_paths['usage_patterns_clean_for_monitoring']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_clean_for_monitoring'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_clean_for_monitoring'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_country_workweek_days(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
