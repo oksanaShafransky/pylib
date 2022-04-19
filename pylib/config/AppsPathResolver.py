@@ -1265,27 +1265,28 @@ class AppsPathResolver(object):
             'country_workweek_days': {'main_path': "static/country_workweek_days",
                                             'size': 1 , 'marker': True, 'path_type': "base_path"},
 
-            'usage_patterns_session_list': {'main_path': "usage_patterns/{mode}/intermediates/raw_sessions",
+            'usage_patterns_session_list': {'main_path': "usage_patterns/{mode}/raw_sessions",
                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_source_raw_estimation': {'main_path': "usage_patterns/{mode}/intermediates/sources_raw_estimation",
+            'usage_patterns_source_raw_estimation': {'main_path': "usage_patterns/{mode}/sources_raw_estimation",
                                                          'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_raw_estimation': {'main_path': "usage_patterns/{mode}/intermediates/raw_estimation",
+            'usage_patterns_raw_estimation': {'main_path': "usage_patterns/{mode}/raw_estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_raw_estimation_with_ww': {'main_path': "usage_patterns/{mode}/intermediates/raw_estimation_with_ww",
+            'usage_patterns_raw_estimation_with_ww': {'main_path': "usage_patterns/{mode}/raw_estimation_with_ww",
                                                           'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_beta_binomial_estimation': {'main_path': "usage_patterns/{mode}/intermediates/beta_binomial_estimation",
+            'usage_patterns_beta_binomial_estimation': {'main_path': "usage_patterns/{mode}/merged_weeks_estimation",
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_weeks_merged': {'main_path': "usage_patterns/{mode}/intermediates/weeks_merged",
+            'usage_patterns_weeks_merged': {'main_path': "usage_patterns/{mode}/merged_weeks_estimation",
                                                         'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_category_bucket_estimation': {'main_path': "usage_patterns/{mode}/category_bucket_estimation",
+            'usage_patterns_category_estimation': {'main_path': "usage_patterns/{mode}/category_estimation",
                                                               'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-            'usage_patterns_prior_estimation': {'main_path': "usage_patterns/{mode}/intermediates/priors_estimation",
+
+            'usage_patterns_prior_estimation': {'main_path': "usage_patterns/{mode}/priors_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_final_estimation': {'main_path': "usage_patterns/{mode}/final_estimation",
@@ -2771,8 +2772,8 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              apps_paths, path_suffix, in_or_out)
 
-    def get_usage_patterns_category_bucket_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_category_bucket_estimation'])
+    def get_usage_patterns_category_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_category_estimation'])
         apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              apps_paths, path_suffix, in_or_out)
