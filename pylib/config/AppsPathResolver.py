@@ -211,6 +211,9 @@ class AppsPathResolver(object):
             'matching-predict-sanitized': {'main_path': "apps-matching/predict-sanitized",
                                          'size': 19 * MiB,
                                          'marker': True, 'path_type': "daily"},
+            'matching-predict-consistency': {'main_path': "apps-matching/predict-consistency",
+                                           'size': 19 * MiB,
+                                           'marker': True, 'path_type': "daily"},
             'matching-predict': {'main_path': "apps-matching/predict",
                                  'size': 19 * MB,
                                  'marker': True, 'path_type': "daily"},
@@ -2034,6 +2037,9 @@ class AppsPathResolver(object):
     def get_matching_predict_sanitized(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                          self.apps_paths['matching-predict-sanitized'], path_suffix, in_or_out)
+    def get_matching_predict_consistency(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-predict-consistency'], path_suffix, in_or_out)
     def get_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-predict'], path_suffix, in_or_out)
