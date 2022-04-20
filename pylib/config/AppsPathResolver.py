@@ -1259,6 +1259,43 @@ class AppsPathResolver(object):
                                     'path_type': "daily"},
 
 
+            # install_retention
+            'aggregated_install_retention':{'main_path': "installretention/aggregated-installretention",
+                                    'size': 50 * MiB, 'marker': True,
+                                    'path_type': "daily"},
+
+            'preprocess_install_retention': {'main_path': "installretention/preprocess-installretention",
+                                     'size': 1.5 * MB, 'marker': True,
+                                     'path_type': "daily"},
+
+            'calc_install_retention': {'main_path': "installretention/calc-installretention",
+                               'size': 100 * KB, 'marker': True,
+                               'path_type': "daily"},
+
+            'ww_smoothing_install_retention': {'main_path': "installretention/ww-smoothing-installretention",
+                                       'size': 18 * MB, 'marker': True,
+                                       'path_type': "daily"},
+
+            'category_smoothing_install_retention': {'main_path': "installretention/category-smoothing-installretention",
+                                             'size': 800, 'marker': True,
+                                             'path_type': "daily"},
+
+            'top_app_smoothing_install_retention': {'main_path': "installretention/top-app-smoothing-installretention",
+                                            'size': 40 * KB, 'marker': True,
+                                            'path_type': "daily"},
+
+            'final_prior_smoothing_install_retention': {'main_path': "installretention/final-prior-smoothing-installretention",
+                                                'size': 100 * KB, 'marker': True,
+                                                'path_type': "daily"},
+
+            'estimated_install_retention': {'main_path': "installretention/estimated-installretention",
+                                    'size': 100 * KB, 'marker': True,
+                                    'path_type': "daily"},
+
+            'categories_estimated_install_retention': {'main_path': "installretention/categories-estimated-installretention",
+                                               'size': 100 * KB, 'marker': True,
+                                               'path_type': "daily"},
+
 
             ### Usage Patterns
 
