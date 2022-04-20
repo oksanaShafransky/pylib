@@ -2722,6 +2722,43 @@ class AppsPathResolver(object):
             return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                                  self.apps_paths['categories_estimated_retention'], path_suffix, in_or_out)
 
+    #install_retention
+    def get_aggregated_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['aggregated_install_retention'], path_suffix, in_or_out)
+
+    def get_preprocess_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['preprocess_install_retention'], path_suffix, in_or_out)
+
+    def get_calc_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['calc_install_retention'], path_suffix, in_or_out)
+
+    def get_ww_smoothing_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_smoothing_install_retention'], path_suffix, in_or_out)
+
+    def get_category_smoothing_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['category_smoothing_install_retention'], path_suffix, in_or_out)
+
+    def get_top_app_smoothing_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['top_app_smoothing_install_retention'], path_suffix, in_or_out)
+
+    def get_final_prior_smoothing_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['final_prior_smoothing_install_retention'], path_suffix, in_or_out)
+
+    def get_estimated_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['estimated_install_retention'], path_suffix, in_or_out)
+
+    def get_categories_estimated_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['categories_estimated_install_retention'], path_suffix, in_or_out)
+
     def get_stay_focus_installed_data(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['stay_focus_installed_apps'], path_suffix, in_or_out)
