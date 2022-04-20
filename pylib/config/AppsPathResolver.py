@@ -241,7 +241,7 @@ class AppsPathResolver(object):
                                         'size': 5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-unique-installs-window': {'main_path': "apps-monitoring/uniqueinstalls/window",
-                                        'size': 4.0 * MB,
+                                        'size': 3.5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-sessions-window': {'main_path': "apps-monitoring/sessions/window",
                                         'size': 4 * MB,
