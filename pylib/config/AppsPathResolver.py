@@ -262,7 +262,7 @@ class AppsPathResolver(object):
                                          'size': 7 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-unique-installs-predict': {'main_path': "apps-monitoring/uniqueinstalls/predict",
-                                         'size': 6 * MB,
+                                         'size': 4.5 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-sessions-predict': {'main_path': "apps-monitoring/sessions/predict",
                                          'size': 6 * MB,
