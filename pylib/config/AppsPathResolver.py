@@ -250,7 +250,7 @@ class AppsPathResolver(object):
                                         'size': 5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-unique-installs-window': {'main_path': "apps-monitoring/uniqueinstalls/window",
-                                        'size': 3.5 * MB,
+                                        'size': 2.5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-sessions-window': {'main_path': "apps-monitoring/sessions/window",
                                         'size': 4 * MB,
@@ -1330,7 +1330,7 @@ class AppsPathResolver(object):
                                                         'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_category_estimation': {'main_path': "usage_patterns/{mode}/category_estimation",
-                                                              'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+                                                              'size': 1 * KB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_prior_estimation': {'main_path': "usage_patterns/{mode}/priors_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
