@@ -1213,6 +1213,10 @@ class AppsPathResolver(object):
                                     'size': 5 * KiB, 'marker': True,
                                     'path_type': "base_path"},
 
+            'new_static_matching_predict': {'main_path': "static/new-apps-matching",
+                                        'size': 5 * KiB, 'marker': True,
+                                        'path_type': "base_path"},
+
             'static_affinity':{'main_path': "static/affinity",
                                        'size': 14 * GB, 'marker': True,
                                        'path_type': "base_path"},
@@ -2563,6 +2567,10 @@ class AppsPathResolver(object):
     def get_static_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['static_matching_predict'], path_suffix, in_or_out)
+
+    def get_new_static_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                                 self.apps_paths['new_static_matching_predict'], path_suffix, in_or_out)
 
     def get_static_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
