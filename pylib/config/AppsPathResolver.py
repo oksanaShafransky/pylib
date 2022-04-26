@@ -1269,7 +1269,7 @@ class AppsPathResolver(object):
 
 
             # install_retention
-            'aggregated_install_retention':{'main_path': "installretention/aggregated-installretention",
+            'aggregated_install_retention_1001':{'main_path': "installretention/aggregated-installretention-1001",
                                     'size': 50 * MiB, 'marker': True,
                                     'path_type': "daily"},
 
@@ -2778,9 +2778,9 @@ class AppsPathResolver(object):
                                                  self.apps_paths['categories_estimated_retention'], path_suffix, in_or_out)
 
     #install_retention
-    def get_aggregated_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_aggregated_install_retention_1001(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['aggregated_install_retention'], path_suffix, in_or_out)
+                                             self.apps_paths['aggregated_install_retention_1001'], path_suffix, in_or_out)
 
     def get_preprocess_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
