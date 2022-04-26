@@ -250,7 +250,7 @@ class AppsPathResolver(object):
                                         'size': 5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-unique-installs-window': {'main_path': "apps-monitoring/uniqueinstalls/window",
-                                        'size': 3.5 * MB,
+                                        'size': 2.5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-sessions-window': {'main_path': "apps-monitoring/sessions/window",
                                         'size': 4 * MB,
@@ -1226,6 +1226,10 @@ class AppsPathResolver(object):
                                     'size': 5 * KiB, 'marker': True,
                                     'path_type': "base_path"},
 
+            'new_static_matching_predict': {'main_path': "static/new-apps-matching",
+                                        'size': 5 * KiB, 'marker': True,
+                                        'path_type': "base_path"},
+
             'static_affinity':{'main_path': "static/affinity",
                                        'size': 14 * GB, 'marker': True,
                                        'path_type': "base_path"},
@@ -1320,7 +1324,7 @@ class AppsPathResolver(object):
             'usage_patterns_raw_estimation': {'main_path': "usage_patterns/{mode}/raw_estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_raw_estimation_with_ww': {'main_path': "usage_patterns/{mode}/raw_estimation_with_ww",
+            'usage_patterns_estimation_with_ww': {'main_path': "usage_patterns/{mode}/usage_patterns_estimation_with_ww",
                                                           'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_beta_binomial_estimation': {'main_path': "usage_patterns/{mode}/merged_weeks_estimation",
@@ -1330,7 +1334,7 @@ class AppsPathResolver(object):
                                                         'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_category_estimation': {'main_path': "usage_patterns/{mode}/category_estimation",
-                                                              'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+                                                              'size': 1 * KB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_prior_estimation': {'main_path': "usage_patterns/{mode}/priors_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
@@ -2637,6 +2641,10 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['static_matching_predict'], path_suffix, in_or_out)
 
+    def get_new_static_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                                 self.apps_paths['new_static_matching_predict'], path_suffix, in_or_out)
+
     def get_static_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['static_affinity'], path_suffix, in_or_out)
@@ -2834,11 +2842,6 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              apps_paths, path_suffix, in_or_out)
 
-    def get_usage_patterns_raw_estimation_with_ww(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_raw_estimation_with_ww'])
-        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_source_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
         apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_source_raw_estimation'])
@@ -2846,14 +2849,15 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              apps_paths, path_suffix, in_or_out)
 
-    def get_usage_patterns_beta_binomial_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_beta_binomial_estimation'])
+
+    def get_usage_patterns_weeks_merged_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_weeks_merged'])
         apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              apps_paths, path_suffix, in_or_out)
 
-    def get_usage_patterns_weeks_merged_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_weeks_merged'])
+    def get_usage_patterns_estimation_with_ww(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_estimation_with_ww'])
         apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              apps_paths, path_suffix, in_or_out)
