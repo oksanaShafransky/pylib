@@ -1,6 +1,7 @@
 from pylib.tasks.input_data_artifact import InputDataArtifact, InputRangedDataArtifact, DEFAULT_SUFFIX_FORMAT
 from pylib.tasks.output_data_artifact import OutputDataArtifact
 from datetime import date
+import copy
 
 GiB = 1024 ** 3
 MiB = 1024 ** 2
@@ -189,6 +190,12 @@ class AppsPathResolver(object):
             'matching-image-features-android': {'main_path': "apps-matching/image-features-android",
                                             'size': 20 * MiB,
                                             'marker': True, 'path_type': "daily"},
+            'matching-language-features-ios': {'main_path': "apps-matching/language-features-ios",
+                                            'size': 20 * MiB,
+                                            'marker': True, 'path_type': "daily"},
+            'matching-language-features-android': {'main_path': "apps-matching/language-features-android",
+                                                'size': 20 * MiB,
+                                                'marker': True, 'path_type': "daily"},
             'matching-training-data': {'main_path': "apps-matching/train-data",
                                        'size': 6.5 * MB,
                                        'marker': True, 'path_type': "daily"},
@@ -207,12 +214,15 @@ class AppsPathResolver(object):
             'matching-raw-predict': {'main_path': "apps-matching/predict-raw",
                                  'size': 21 * MB,
                                  'marker': True, 'path_type': "daily"},
+            'matching-predict-sanitized': {'main_path': "apps-matching/predict-sanitized",
+                                         'size': 19 * MiB,
+                                         'marker': True, 'path_type': "daily"},
+            'matching-predict-consistency': {'main_path': "apps-matching/predict-consistency",
+                                           'size': 19 * MiB,
+                                           'marker': True, 'path_type': "daily"},
             'matching-predict': {'main_path': "apps-matching/predict",
-                                 'size': 15 * MB,
+                                 'size': 19 * MB,
                                  'marker': True, 'path_type': "daily"},
-            'matching-tests': {'main_path': "apps-matching/tests",
-                               'size': 5 * MiB,
-                               'marker': True, 'path_type': "daily"},
             'matching-stats-candidates-coverage': {'main_path': "apps-matching/stats/candidates/coverage",
                                'size': 1 * KB,
                                'marker': True, 'path_type': "daily"},
@@ -223,6 +233,9 @@ class AppsPathResolver(object):
                                'size': 1 * MiB,
                                'marker': True, 'path_type': "daily"},
             'matching-stats-prediction-accuracy': {'main_path': "apps-matching/stats/prediction/accuracy",
+                                                   'size': 1 * MiB,
+                                                   'marker': True, 'path_type': "daily"},
+            'matching-stats-prediction-manual-accuracy': {'main_path': "apps-matching/stats/prediction-manual/accuracy",
                                                    'size': 1 * MiB,
                                                    'marker': True, 'path_type': "daily"},
 
@@ -237,7 +250,7 @@ class AppsPathResolver(object):
                                         'size': 5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-unique-installs-window': {'main_path': "apps-monitoring/uniqueinstalls/window",
-                                        'size': 4.0 * MB,
+                                        'size': 2.5 * MB,
                                         'marker': True, 'path_type': "daily"},
             'monitoring-sessions-window': {'main_path': "apps-monitoring/sessions/window",
                                         'size': 4 * MB,
@@ -258,7 +271,7 @@ class AppsPathResolver(object):
                                          'size': 7 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-unique-installs-predict': {'main_path': "apps-monitoring/uniqueinstalls/predict",
-                                         'size': 6 * MB,
+                                         'size': 4.5 * MB,
                                          'marker': True, 'path_type': "daily"},
             'monitoring-sessions-predict': {'main_path': "apps-monitoring/sessions/predict",
                                          'size': 6 * MB,
@@ -1259,33 +1272,81 @@ class AppsPathResolver(object):
                                     'path_type': "daily"},
 
 
+            # install_retention
+            'aggregated_install_retention':{'main_path': "installretention/aggregated-installretention",
+                                    'size': 50 * MiB, 'marker': True,
+                                    'path_type': "daily"},
+
+            'preprocess_install_retention': {'main_path': "installretention/preprocess-installretention",
+                                     'size': 1.5 * MB, 'marker': True,
+                                     'path_type': "daily"},
+
+            'calc_install_retention': {'main_path': "installretention/calc-installretention",
+                               'size': 100 * KB, 'marker': True,
+                               'path_type': "daily"},
+
+            'ww_smoothing_install_retention': {'main_path': "installretention/ww-smoothing-installretention",
+                                       'size': 18 * MB, 'marker': True,
+                                       'path_type': "daily"},
+
+            'category_smoothing_install_retention': {'main_path': "installretention/category-smoothing-installretention",
+                                             'size': 800, 'marker': True,
+                                             'path_type': "daily"},
+
+            'top_app_smoothing_install_retention': {'main_path': "installretention/top-app-smoothing-installretention",
+                                            'size': 40 * KB, 'marker': True,
+                                            'path_type': "daily"},
+
+            'final_prior_smoothing_install_retention': {'main_path': "installretention/final-prior-smoothing-installretention",
+                                                'size': 100 * KB, 'marker': True,
+                                                'path_type': "daily"},
+
+            'estimated_install_retention': {'main_path': "installretention/estimated-installretention",
+                                    'size': 100 * KB, 'marker': True,
+                                    'path_type': "daily"},
+
+            'categories_estimated_install_retention': {'main_path': "installretention/categories-estimated-installretention",
+                                               'size': 100 * KB, 'marker': True,
+                                               'path_type': "daily"},
+
 
             ### Usage Patterns
 
             'country_workweek_days': {'main_path': "static/country_workweek_days",
                                             'size': 1 , 'marker': True, 'path_type': "base_path"},
 
-            'usage_patterns_session_list': {'main_path': "usage_patterns/{mode}/intermediates/raw_sessions",
+            'usage_patterns_session_list': {'main_path': "usage_patterns/{mode}/raw_sessions",
                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_source_raw_estimation': {'main_path': "usage_patterns/{mode}/intermediates/sources_raw_estimation",
+            'usage_patterns_source_raw_estimation': {'main_path': "usage_patterns/{mode}/sources_raw_estimation",
                                                          'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_raw_estimation': {'main_path': "usage_patterns/{mode}/intermediates/raw_estimation",
+            'usage_patterns_raw_estimation': {'main_path': "usage_patterns/{mode}/raw_estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_raw_estimation_with_ww': {'main_path': "usage_patterns/{mode}/intermediates/raw_estimation_with_ww",
+            'usage_patterns_estimation_with_ww': {'main_path': "usage_patterns/{mode}/usage_patterns_estimation_with_ww",
                                                           'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_beta_binomial_estimation': {'main_path': "usage_patterns/{mode}/intermediates/beta_binomial_estimation",
+            'usage_patterns_beta_binomial_estimation': {'main_path': "usage_patterns/{mode}/merged_weeks_estimation",
                                                   'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-            'usage_patterns_category_bucket_estimation': {'main_path': "usage_patterns/{mode}/category_bucket_estimation",
-                                                              'size': 1 * MB, 'marker': True, 'path_type': "daily"},
-            'usage_patterns_prior_estimation': {'main_path': "usage_patterns/dow/intermediates/priors_estimation",
+
+            'usage_patterns_weeks_merged': {'main_path': "usage_patterns/{mode}/merged_weeks_estimation",
+                                                        'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_category_estimation': {'main_path': "usage_patterns/{mode}/category_estimation",
+                                                              'size': 1 * KB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_prior_estimation': {'main_path': "usage_patterns/{mode}/priors_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_final_estimation': {'main_path': "usage_patterns/{mode}/final_estimation",
                                                      'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_stability_estimation': {'main_path': "usage_patterns/{mode}/stability_monitoring/stability_estimation",
+                                                'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
+            'usage_patterns_clean_for_monitoring': {'main_path': "usage_patterns/{mode}/stability_monitoring/clean_metric",
+                                                    'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             #demographics
             'raw_stats_mobile': {'main_path': "stats-mobile/raw", 'size': 15 * GiB, 'marker': True, 'path_type': "daily"},
@@ -2006,6 +2067,12 @@ class AppsPathResolver(object):
     def get_matching_image_features_android(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-image-features-android'], path_suffix, in_or_out)
+    def get_matching_language_features_ios(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-language-features-ios'], path_suffix, in_or_out)
+    def get_matching_language_features_android(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-language-features-android'], path_suffix, in_or_out)
     def get_matching_training_data(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-training-data'], path_suffix, in_or_out)
@@ -2024,12 +2091,15 @@ class AppsPathResolver(object):
     def get_matching_raw_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-raw-predict'], path_suffix, in_or_out)
+    def get_matching_predict_sanitized(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                         self.apps_paths['matching-predict-sanitized'], path_suffix, in_or_out)
+    def get_matching_predict_consistency(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-predict-consistency'], path_suffix, in_or_out)
     def get_matching_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-predict'], path_suffix, in_or_out)
-    def get_matching_tests(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['matching-tests'], path_suffix, in_or_out)
     def get_matching_stats_candidates_coverage(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-stats-candidates-coverage'], path_suffix, in_or_out)
@@ -2042,6 +2112,9 @@ class AppsPathResolver(object):
     def get_matching_stats_prediction_accuracy(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-stats-prediction-accuracy'], path_suffix, in_or_out)
+    def get_matching_stats_prediction_vs_manual_accuracy(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                         self.apps_paths['matching-stats-prediction-manual-accuracy'], path_suffix, in_or_out)
 
 
     # apps monitoring
@@ -2712,6 +2785,43 @@ class AppsPathResolver(object):
             return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                                  self.apps_paths['categories_estimated_retention'], path_suffix, in_or_out)
 
+    #install_retention
+    def get_aggregated_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['aggregated_install_retention'], path_suffix, in_or_out)
+
+    def get_preprocess_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['preprocess_install_retention'], path_suffix, in_or_out)
+
+    def get_calc_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['calc_install_retention'], path_suffix, in_or_out)
+
+    def get_ww_smoothing_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_smoothing_install_retention'], path_suffix, in_or_out)
+
+    def get_category_smoothing_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['category_smoothing_install_retention'], path_suffix, in_or_out)
+
+    def get_top_app_smoothing_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['top_app_smoothing_install_retention'], path_suffix, in_or_out)
+
+    def get_final_prior_smoothing_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['final_prior_smoothing_install_retention'], path_suffix, in_or_out)
+
+    def get_estimated_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['estimated_install_retention'], path_suffix, in_or_out)
+
+    def get_categories_estimated_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['categories_estimated_install_retention'], path_suffix, in_or_out)
+
     def get_stay_focus_installed_data(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['stay_focus_installed_apps'], path_suffix, in_or_out)
@@ -2721,49 +2831,67 @@ class AppsPathResolver(object):
                                              self.apps_paths['stay_focus_apps_sessions'], path_suffix, in_or_out)
 
     def get_usage_patterns_session_list(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_session_list']['main_path'] = self.apps_paths['usage_patterns_session_list']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_session_list'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_session_list'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_raw_estimation']['main_path'] = self.apps_paths['usage_patterns_raw_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_raw_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_raw_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
-    def get_usage_patterns_raw_estimation_with_ww(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_raw_estimation_with_ww']['main_path'] = self.apps_paths['usage_patterns_raw_estimation_with_ww']['main_path'].format(mode=mode.lower())
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_raw_estimation_with_ww'], path_suffix, in_or_out)
 
     def get_usage_patterns_source_raw_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_source_raw_estimation']['main_path'] = self.apps_paths['usage_patterns_source_raw_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_source_raw_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_source_raw_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
-    def get_usage_patterns_beta_binomial_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_beta_binomial_estimation']['main_path'] = self.apps_paths['usage_patterns_beta_binomial_estimation']['main_path'].format(mode=mode.lower())
+
+    def get_usage_patterns_weeks_merged_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_weeks_merged'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_beta_binomial_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
+
+    def get_usage_patterns_estimation_with_ww(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_estimation_with_ww'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_prior_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_prior_estimation']['main_path'] = self.apps_paths['usage_patterns_prior_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_prior_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_prior_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
-    def get_usage_patterns_category_bucket_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_category_bucket_estimation']['main_path'] = self.apps_paths['usage_patterns_category_bucket_estimation']['main_path'].format(mode=mode.lower())
+    def get_usage_patterns_category_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_category_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_category_bucket_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_final_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_final_estimation']['main_path'] = self.apps_paths['usage_patterns_final_estimation']['main_path'].format(mode=mode.lower())
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_final_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_final_estimation'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
 
-    def get_usage_patterns_monitoring_estimation_window(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
-        self.apps_paths['usage_patterns_monitoring_estimation_window']['main_path'] = self.apps_paths['usage_patterns_monitoring_estimation_window']['main_path'].format(mode=mode.lower())
+
+    def get_usage_patterns_stability_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_stability_estimation'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_patterns_monitoring_estimation_window'], path_suffix, in_or_out)
+                                             apps_paths, path_suffix, in_or_out)
+
+    def get_usage_patterns_clean_for_monitoring(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_clean_for_monitoring'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_country_workweek_days(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
