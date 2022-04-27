@@ -1324,7 +1324,7 @@ class AppsPathResolver(object):
             'usage_patterns_raw_estimation': {'main_path': "usage_patterns/{mode}/raw_estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_estimation_with_ww': {'main_path': "usage_patterns/{mode}/usage_patterns_estimation_with_ww",
+            'usage_patterns_estimation_with_ww': {'main_path': "usage_patterns/{mode}/estimation_with_ww",
                                                           'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_beta_binomial_estimation': {'main_path': "usage_patterns/{mode}/merged_weeks_estimation",
