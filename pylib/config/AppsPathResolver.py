@@ -1274,8 +1274,11 @@ class AppsPathResolver(object):
 
             # install_retention
             'aggregated_install_retention_1001':{'main_path': "installretention/aggregated-installretention-1001",
-                                    'size': 50 * MiB, 'marker': True,
-                                    'path_type': "daily"},
+                                                 'size': 50 * MiB, 'marker': True,
+                                                 'path_type': "daily"},
+            'aggregated_install_retention_1005':{'main_path': "installretention/aggregated-installretention-1005",
+                                                 'size': 50 * MiB, 'marker': True,
+                                                 'path_type': "daily"},
 
             'preprocess_install_retention': {'main_path': "installretention/preprocess-installretention",
                                      'size': 1.5 * MB, 'marker': True,
