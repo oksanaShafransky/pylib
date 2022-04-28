@@ -2789,6 +2789,9 @@ class AppsPathResolver(object):
     def get_aggregated_install_retention_1001(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['aggregated_install_retention_1001'], path_suffix, in_or_out)
+    def get_aggregated_install_retention_1005(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                            self.apps_paths['aggregated_install_retention_1005'], path_suffix, in_or_out)
 
     def get_preprocess_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
