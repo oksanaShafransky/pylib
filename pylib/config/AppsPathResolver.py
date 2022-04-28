@@ -1355,10 +1355,10 @@ class AppsPathResolver(object):
                           'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'age_model': {'main_path': "mobile-analytics/demographics/models/android_age_model_multinomial",
-                          'size': 50 * MB, 'marker': True, 'path_type': "base_path"},
+                          'size': 28 * MB, 'marker': True, 'path_type': "base_path"},
 
             'gender_model': {'main_path': "mobile-analytics/demographics/models/android_gender_model_no_pca",
-                          'size': 1 * MB, 'marker': True, 'path_type': "base_path"},
+                          'size': 425 * KB, 'marker': True, 'path_type': "base_path"},
 
             'apps_all_age': {'main_path': "mobile-analytics/demographics/demographic_distribution/age/apps_all_age",
                           'size': 20 * MB, 'marker': False, 'path_type': "daily"},
