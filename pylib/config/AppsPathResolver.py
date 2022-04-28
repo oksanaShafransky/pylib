@@ -1273,9 +1273,12 @@ class AppsPathResolver(object):
 
 
             # install_retention
-            'aggregated_install_retention':{'main_path': "installretention/aggregated-installretention",
-                                    'size': 50 * MiB, 'marker': True,
-                                    'path_type': "daily"},
+            'aggregated_install_retention_1001':{'main_path': "installretention/aggregated-installretention-1001",
+                                                 'size': 50 * MiB, 'marker': True,
+                                                 'path_type': "daily"},
+            'aggregated_install_retention_1005':{'main_path': "installretention/aggregated-installretention-1005",
+                                                 'size': 50 * MiB, 'marker': True,
+                                                 'path_type': "daily"},
 
             'preprocess_install_retention': {'main_path': "installretention/preprocess-installretention",
                                      'size': 1.5 * MB, 'marker': True,
@@ -1324,7 +1327,7 @@ class AppsPathResolver(object):
             'usage_patterns_raw_estimation': {'main_path': "usage_patterns/{mode}/raw_estimation",
                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
-            'usage_patterns_estimation_with_ww': {'main_path': "usage_patterns/{mode}/usage_patterns_estimation_with_ww",
+            'usage_patterns_estimation_with_ww': {'main_path': "usage_patterns/{mode}/estimation_with_ww",
                                                           'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
             'usage_patterns_beta_binomial_estimation': {'main_path': "usage_patterns/{mode}/merged_weeks_estimation",
@@ -2786,9 +2789,12 @@ class AppsPathResolver(object):
                                                  self.apps_paths['categories_estimated_retention'], path_suffix, in_or_out)
 
     #install_retention
-    def get_aggregated_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_aggregated_install_retention_1001(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['aggregated_install_retention'], path_suffix, in_or_out)
+                                             self.apps_paths['aggregated_install_retention_1001'], path_suffix, in_or_out)
+    def get_aggregated_install_retention_1005(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                            self.apps_paths['aggregated_install_retention_1005'], path_suffix, in_or_out)
 
     def get_preprocess_install_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
