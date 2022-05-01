@@ -1367,7 +1367,7 @@ class AppsPathResolver(object):
                           'size': 20 * MB, 'marker': False, 'path_type': "daily"},
 
             'apps_country_age': {'main_path': "mobile-analytics/demographics/demographic_distribution/age/apps_country_age",
-                             'size': 60 * MB, 'marker': False, 'path_type': "daily"},
+                             'size': 55 * MB, 'marker': False, 'path_type': "daily"},
 
             'apps_all_gender': {'main_path': "mobile-analytics/demographics/demographic_distribution/gender/apps_all_gender",
                              'size': 20 * MB, 'marker': False, 'path_type': "daily"},
