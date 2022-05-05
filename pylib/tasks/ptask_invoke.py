@@ -67,6 +67,7 @@ class PtaskInvoker(Program):
                      help="Profile flag - run containers with yourkit profiler"),
             Argument(names=('branch', 'br'), help="The logical data branch of this command", optional=True),
             Argument(names=('ignore_size_check', 'isc'), kind=bool, default=False, help="Ignore size check of input/output data artifact", optional=True),
+            Argument(names=('ignore_marker_check', 'imc'), kind=bool, default=False, help="Ignore marker check of input/output data artifact", optional=True),
         ]
         return core_args + extra_args
 
@@ -113,6 +114,8 @@ class PtaskInvoker(Program):
             sw_tasks['branch'] = self.args.branch.value
         if self.args.ignore_size_check.value:
             sw_tasks['ignore_size_check'] = True
+        if self.args.ignore_marker_check.value:
+            sw_tasks['ignore_marker_check'] = True
 
         if 'TASK_ID' in os.environ:
             sw_tasks['has_task_id'] = True
