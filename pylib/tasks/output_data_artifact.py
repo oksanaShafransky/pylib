@@ -24,9 +24,13 @@ class OutputDataArtifact(DataArtifact):
         logger.info("Checking datasource: " + repr(self.locate_data_source))
         logger.info("OutputDataArtifact: Datasource check if dir exists on collection: " + self.raw_path)
         if self.locate_data_source.is_dir_exist():
-            # From here if something breaks datasource will throw exception
-            logger.info("OutputDataArtifact: Datasource validate marker, required_marker: " + str(self.check_marker))
-            self.locate_data_source.assert_marker()
+            if self.ti.ignore_marker_check is True:
+                logger.info("OutputDataArtifact: Ignoring datasource validate marker")
+                self.locate_data_source.is_marker_validated = True
+            else:
+                # From here if something breaks datasource will throw exception
+                logger.info("OutputDataArtifact: Datasource validate marker, required_marker: " + str(self.check_marker))
+                self.locate_data_source.assert_marker()
             if self.ti.ignore_size_check is True:
                 logger.info("OutputDataArtifact: Ignoring datasource validate size")
                 self.locate_data_source.is_size_validated = True

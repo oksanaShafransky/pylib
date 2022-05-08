@@ -2141,3 +2141,7 @@ class ContextualizedTasksInfra(object):
     @property
     def ignore_size_check(self):
         return self.__get_common_args().get('ignore_size_check', False)
+
+    @property
+    def ignore_marker_check(self):
+        return self.__get_common_args().get('ignore_marker_check', False)

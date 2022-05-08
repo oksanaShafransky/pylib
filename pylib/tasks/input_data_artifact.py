@@ -55,9 +55,13 @@ class InputDataArtifact(DataArtifact):
             logger.info("Checking datasource: " + repr(d))
             logger.info("InputDataArtifact: Datasource check if dir exists on collection: " + self.raw_path)
             if d.is_dir_exist():
-                # From here if something breaks datasource will throw exception
-                logger.info("InputDataArtifact: Datasource validate marker, required_marker: " + str(self.check_marker))
-                d.assert_marker()
+                if self.ti.ignore_marker_check is True:
+                    logger.info("InputDataArtifact: Ignoring datasource validate marker")
+                    d.is_marker_validated = True
+                else:
+                    # From here if something breaks datasource will throw exception
+                    logger.info("InputDataArtifact: Datasource validate marker, required_marker: " + str(self.check_marker))
+                    d.assert_marker()
                 if self.ti.ignore_size_check is True:
                     logger.info("InputDataArtifact: Ignoring datasource validate size")
                     d.is_size_validated = True
