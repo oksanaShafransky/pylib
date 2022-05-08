@@ -1386,6 +1386,18 @@ class AppsPathResolver(object):
 
             'apps_country_gender_aggregate': {'main_path': "mobile-analytics/snapshot/app-demographics/gender/apps_country_gender",
                                     'size': 180 * MB, 'marker': False, 'path_type': "monthly"},
+
+            #ios_mau statics
+            'new_apps_matching_static': {'main_path': "ios-analytics/snapshot/mau_dp/ios_mau_static/new_apps_matching_static",
+                                              'size': 180 * MB, 'marker': True, 'path_type': "monthly"},
+
+            'new_ios_conv': {'main_path': "ios-analytics/snapshot/mau_dp/ios_mau_static/new_ios_conv",
+                                         'size': 180 * MB, 'marker': True, 'path_type': "monthly"},
+
+            'old_coverage_static': {'main_path': "ios-analytics/snapshot/mau_dp/ios_mau_static/old_coverage_static",
+                                         'size': 180 * MB, 'marker': True, 'path_type': "monthly"},
+
+
         }
         self.paths_dates_suffix = {
             'dau_factors': [
@@ -2950,3 +2962,15 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['apps_country_gender_aggregate'], path_suffix, in_or_out)
 
+    #ios mau
+    def get_new_apps_matching_static(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['new_apps_matching_static'], path_suffix, in_or_out)
+
+    def get_new_ios_conv(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                                 self.apps_paths['new_ios_conv'], path_suffix, in_or_out)
+
+    def get_old_coverage_static(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['old_coverage_static'], path_suffix, in_or_out)
