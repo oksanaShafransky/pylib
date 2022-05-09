@@ -185,11 +185,17 @@ class AppsPathResolver(object):
                 'size': 1 * KiB,
                 'marker': True, 'path_type': "base_path"},
             'matching-image-features-ios': {'main_path': "apps-matching/image-features-ios",
-                                            'size': 20 * MiB,
+                                            'size': 200 * MiB,
                                             'marker': True, 'path_type': "daily"},
             'matching-image-features-android': {'main_path': "apps-matching/image-features-android",
-                                            'size': 20 * MiB,
+                                            'size': 200 * MiB,
                                             'marker': True, 'path_type': "daily"},
+            'matching-hash-image-features-ios': {'main_path': "apps-matching/hash-image-features-ios",
+                                            'size': 200 * MiB,
+                                            'marker': True, 'path_type': "daily"},
+            'matching-hash-image-features-android': {'main_path': "apps-matching/hash-image-features-android",
+                                                'size': 200 * MiB,
+                                                'marker': True, 'path_type': "daily"},
             'matching-language-features-ios': {'main_path': "apps-matching/language-features-ios",
                                             'size': 7 * MiB,
                                             'marker': True, 'path_type': "daily"},
@@ -2082,6 +2088,12 @@ class AppsPathResolver(object):
     def get_matching_image_features_android(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-image-features-android'], path_suffix, in_or_out)
+    def get_matching_hash_image_features_ios(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-hash-image-features-ios'], path_suffix, in_or_out)
+    def get_matching_hash_image_features_android(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['matching-hash-image-features-android'], path_suffix, in_or_out)
     def get_matching_language_features_ios(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-language-features-ios'], path_suffix, in_or_out)
