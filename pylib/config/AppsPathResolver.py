@@ -194,7 +194,7 @@ class AppsPathResolver(object):
                                             'size': 50 * MB,
                                             'marker': True, 'path_type': "daily"},
             'matching-hash-image-features-android': {'main_path': "apps-matching/hash-image-features-android",
-                                                'size': 100 * MB,
+                                                'size': 70 * MB,
                                                 'marker': True, 'path_type': "daily"},
             'matching-language-features-ios': {'main_path': "apps-matching/language-features-ios",
                                             'size': 7 * MB,
