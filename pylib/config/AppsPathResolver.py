@@ -1348,6 +1348,9 @@ class AppsPathResolver(object):
             'usage_patterns_prior_estimation': {'main_path': "usage_patterns/{mode}/priors_estimation",
                                                             'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
+            'usage_patterns_for_serving': {'main_path': "usage_patterns/{mode}/for_serving",
+                                           'size': 1 * MB, 'marker': True, 'path_type': "daily"},
+
             'usage_patterns_final_estimation': {'main_path': "usage_patterns/{mode}/final_estimation",
                                                      'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
@@ -2910,6 +2913,11 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              apps_paths, path_suffix, in_or_out)
 
+    def get_usage_patterns_for_serving(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_for_serving'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             apps_paths, path_suffix, in_or_out)
 
     def get_usage_patterns_stability_estimation(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
         apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_stability_estimation'])
