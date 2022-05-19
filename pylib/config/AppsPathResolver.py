@@ -236,14 +236,17 @@ class AppsPathResolver(object):
                                                    'size': 1 * KB,
                                                    'marker': True, 'path_type': "daily"},
             'matching-stats-prediction-coverage': {'main_path': "apps-matching/stats/prediction/coverage",
-                               'size': 1 * MiB,
+                               'size': 1 * KB,
                                'marker': True, 'path_type': "daily"},
             'matching-stats-prediction-accuracy': {'main_path': "apps-matching/stats/prediction/accuracy",
-                                                   'size': 1 * MiB,
+                                                   'size': 1 * KB,
                                                    'marker': True, 'path_type': "daily"},
             'matching-stats-prediction-manual-accuracy': {'main_path': "apps-matching/stats/prediction-manual/accuracy",
-                                                   'size': 1 * MiB,
-                                                   'marker': True, 'path_type': "daily"},
+                                                          'size': 1 * KB,
+                                                          'marker': True, 'path_type': "daily"},
+            'matching-rds': {'main_path': "apps-matching/rds",
+                                                          'size': 1 * KB,
+                                                          'marker': True, 'path_type': "daily"},
 
             # MONITORING
             'monitoring-dau-window': {'main_path': "apps-monitoring/dau/window",
@@ -2144,7 +2147,10 @@ class AppsPathResolver(object):
                                              self.apps_paths['matching-stats-prediction-accuracy'], path_suffix, in_or_out)
     def get_matching_stats_prediction_vs_manual_accuracy(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                         self.apps_paths['matching-stats-prediction-manual-accuracy'], path_suffix, in_or_out)
+                                             self.apps_paths['matching-stats-prediction-manual-accuracy'], path_suffix, in_or_out)
+    def get_matching_rds(self, in_or_out, path_prefix=None, path_suffix=None):
+    return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                         self.apps_paths['matching-rds'], path_suffix, in_or_out)
 
 
     # apps monitoring
