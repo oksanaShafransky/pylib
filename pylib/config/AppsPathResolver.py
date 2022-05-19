@@ -2149,8 +2149,8 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['matching-stats-prediction-manual-accuracy'], path_suffix, in_or_out)
     def get_matching_rds(self, in_or_out, path_prefix=None, path_suffix=None):
-    return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                         self.apps_paths['matching-rds'], path_suffix, in_or_out)
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                            self.apps_paths['matching-rds'], path_suffix, in_or_out)
 
 
     # apps monitoring
