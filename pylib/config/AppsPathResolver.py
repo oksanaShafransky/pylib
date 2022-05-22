@@ -1417,6 +1417,29 @@ class AppsPathResolver(object):
                                          'size': 180 * MB, 'marker': True, 'path_type': "monthly"},
 
 
+            'get_downloads_raw_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/raw/aggKey=AppCountryCountrySourceKey",
+                                                                 'size': 4.2 * GB,
+                                                                 'marker': True, 'path_type': "daily"},
+            'get_static_mobidays_fix_downloads_app_country_country_source_agg': {'main_path': "static/mobidays-mitigation/downloads/aggregations/mobidays_fix_static/aggKey=AppCountryCountrySourceKey",
+                                                                                 'size': 4.2 * GB,
+                                                                                 'marker': True, 'path_type': "daily"},
+
+            'get_dau_raw_app_country_source_agg': {'main_path': "daily/dau/aggregations/raw/aggKey=AppCountrySourceKey",
+                                                   'size': 1 * MiB,
+                                                   'marker': True, 'path_type': "daily"},
+
+            'get_static_mobidays_fix_app_country_source_agg': {'main_path': "static/mobidays-mitigation/dau/aggregations/static_mobidays_fix/aggKey=AppCountrySourceKey",
+                                                               'size': 1 ,
+                                                               'marker': True, 'path_type': "daily"},
+
+            'get_dau_raw_country_source_agg': {'main_path': "daily/dau/aggregations/raw/aggKey=CountrySourceKey",
+                                               'size': 300 * MiB,
+                                               'marker': True, 'path_type': "daily"},
+
+            'get_static_mobidays_fix_country_source_agg': {'main_path': "static/mobidays-mitigation/dau/aggregations/static_mobidays_fix/aggKey=CountrySourceKey",
+                                                           'size': 1 ,
+                                                           'marker': True, 'path_type': "daily"},
+
         }
         self.paths_dates_suffix = {
             'dau_factors': [
@@ -3014,3 +3037,31 @@ class AppsPathResolver(object):
     def get_old_coverage_static(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['old_coverage_static'], path_suffix, in_or_out)
+
+
+
+    def get_downloads_raw_app_country_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['get_downloads_raw_app_country_country_source_agg'], path_suffix, in_or_out)
+
+    def get_static_mobidays_fix_downloads_app_country_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['get_static_mobidays_fix_downloads_app_country_country_source_agg'], path_suffix, in_or_out)
+
+
+    def get_dau_raw_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['get_dau_raw_app_country_source_agg'], path_suffix, in_or_out)
+
+    def get_static_mobidays_fix_app_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['get_static_mobidays_fix_app_country_source_agg'], path_suffix, in_or_out)
+
+    def get_dau_raw_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['get_dau_raw_country_source_agg'], path_suffix, in_or_out)
+
+    def get_static_mobidays_fix_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['get_static_mobidays_fix_country_source_agg'], path_suffix, in_or_out)
+
