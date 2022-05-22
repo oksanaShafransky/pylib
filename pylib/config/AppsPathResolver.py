@@ -1420,8 +1420,9 @@ class AppsPathResolver(object):
             'get_downloads_raw_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/raw/aggKey=AppCountryCountrySourceKey",
                                                                  'size': 4.2 * GB,
                                                                  'marker': True, 'path_type': "daily"},
+
             'get_static_mobidays_fix_downloads_app_country_country_source_agg': {'main_path': "static/mobidays-mitigation/downloads/aggregations/new_calc/aggKey=AppCountryCountrySourceKey",
-                                                                                 'size': 4.2 * GB,
+                                                                                 'size': 1 ,
                                                                                  'marker': True, 'path_type': "daily"},
 
             'get_dau_raw_app_country_source_agg': {'main_path': "daily/dau/aggregations/raw/aggKey=AppCountrySourceKey",
@@ -1433,7 +1434,7 @@ class AppsPathResolver(object):
                                                                'marker': True, 'path_type': "daily"},
 
             'get_dau_raw_country_source_agg': {'main_path': "daily/dau/aggregations/raw/aggKey=CountrySourceKey",
-                                               'size': 70 * MiB,
+                                               'size': 70 * KB,
                                                'marker': True, 'path_type': "daily"},
 
             'get_static_mobidays_fix_country_source_agg': {'main_path': "static/mobidays-mitigation/dau/aggregations/new_calc/aggKey=CountrySourceKey",
