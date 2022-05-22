@@ -1420,7 +1420,7 @@ class AppsPathResolver(object):
             'get_downloads_raw_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/raw/aggKey=AppCountryCountrySourceKey",
                                                                  'size': 4.2 * GB,
                                                                  'marker': True, 'path_type': "daily"},
-            'get_static_mobidays_fix_downloads_app_country_country_source_agg': {'main_path': "static/mobidays-mitigation/downloads/aggregations/mobidays_fix_static/aggKey=AppCountryCountrySourceKey",
+            'get_static_mobidays_fix_downloads_app_country_country_source_agg': {'main_path': "static/mobidays-mitigation/downloads/aggregations/new_calc/aggKey=AppCountryCountrySourceKey",
                                                                                  'size': 4.2 * GB,
                                                                                  'marker': True, 'path_type': "daily"},
 
@@ -1428,15 +1428,15 @@ class AppsPathResolver(object):
                                                    'size': 1 * MiB,
                                                    'marker': True, 'path_type': "daily"},
 
-            'get_static_mobidays_fix_app_country_source_agg': {'main_path': "static/mobidays-mitigation/dau/aggregations/static_mobidays_fix/aggKey=AppCountrySourceKey",
+            'get_static_mobidays_fix_app_country_source_agg': {'main_path': "static/mobidays-mitigation/dau/aggregations/new_calc/aggKey=AppCountrySourceKey",
                                                                'size': 1 ,
                                                                'marker': True, 'path_type': "daily"},
 
             'get_dau_raw_country_source_agg': {'main_path': "daily/dau/aggregations/raw/aggKey=CountrySourceKey",
-                                               'size': 300 * MiB,
+                                               'size': 70 * MiB,
                                                'marker': True, 'path_type': "daily"},
 
-            'get_static_mobidays_fix_country_source_agg': {'main_path': "static/mobidays-mitigation/dau/aggregations/static_mobidays_fix/aggKey=CountrySourceKey",
+            'get_static_mobidays_fix_country_source_agg': {'main_path': "static/mobidays-mitigation/dau/aggregations/new_calc/aggKey=CountrySourceKey",
                                                            'size': 1 ,
                                                            'marker': True, 'path_type': "daily"},
 
