@@ -511,9 +511,12 @@ class AppsPathResolver(object):
 
 
             # Usage
-            'usage_agg_app_country': {'main_path': "daily/usage/agg",
+            'usage_agg_app_country_before_mobidays_fix': {'main_path': "daily/usage/pre-agg",
                              'size': 5 * MB,
                              'marker': True, 'path_type': "daily"},
+            'usage_agg_app_country_after_mobidays_fix': {'main_path': "daily/usage/agg",
+                                      'size': 5 * MB,
+                                      'marker': True, 'path_type': "daily"},
             'usage_prior': {'main_path': "daily/usage/prior",
                             'size': 11 * MB,
                             'marker': True, 'path_type': "daily"},
@@ -2324,9 +2327,12 @@ class AppsPathResolver(object):
                                              self.apps_paths['dau_with_ww_estimate'], path_suffix, in_or_out)
 
     # usage
-    def get_usage_agg_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_usage_agg_app_country_before_mobidays_fix(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['usage_agg_app_country'], path_suffix, in_or_out)
+                                             self.apps_paths['usage_agg_app_country_before_mobidays_fix'], path_suffix, in_or_out)
+    def get_usage_agg_app_country(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                                 self.apps_paths['usage_agg_app_country_after_mobidays_fix'], path_suffix, in_or_out)
     def get_usage_prior(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['usage_prior'], path_suffix, in_or_out)
