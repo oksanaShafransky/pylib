@@ -1243,6 +1243,10 @@ class AppsPathResolver(object):
                                        'size': 14 * GB, 'marker': True,
                                        'path_type': "base_path"},
 
+            'static_mobidays_usage_fix': {'main_path': "static/mobidays-mitigation/usage/agg",
+                                      'size': 5 * MB, 'marker': True,
+                                          'path_type': "base_path"},
+
             # retention
             'aggregated_retention':{'main_path': "retention/aggregated-retention",
                                     'size': 50 * MiB, 'marker': True,
@@ -2684,6 +2688,10 @@ class AppsPathResolver(object):
     def get_static_affinity(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['static_affinity'], path_suffix, in_or_out)
+
+    def get_static_mobidays_usage_fix(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                         self.apps_paths['static_mobidays_usage_fix'], path_suffix, in_or_out)
 
     def get_app_panel(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
