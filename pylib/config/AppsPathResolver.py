@@ -512,10 +512,10 @@ class AppsPathResolver(object):
 
             # Usage
             'usage_agg_app_country_before_mobidays_fix': {'main_path': "daily/usage/pre-agg",
-                             'size': 5 * MB,
+                             'size': 10 * MB,
                              'marker': True, 'path_type': "daily"},
             'usage_agg_app_country_after_mobidays_fix': {'main_path': "daily/usage/agg",
-                                      'size': 5 * MB,
+                                      'size': 10 * MB,
                                       'marker': True, 'path_type': "daily"},
             'usage_prior': {'main_path': "daily/usage/prior",
                             'size': 11 * MB,
@@ -1247,7 +1247,7 @@ class AppsPathResolver(object):
                                        'path_type': "base_path"},
 
             'static_mobidays_usage_fix': {'main_path': "static/mobidays-mitigation/usage/agg",
-                                      'size': 5 * MB, 'marker': True,
+                                      'size': 1 * MB, 'marker': True,
                                           'path_type': "base_path"},
 
             # retention
