@@ -428,7 +428,7 @@ class AppsPathResolver(object):
                                             'marker': True, 'path_type': "daily"},
 
             'calc_dau_country_source_agg': {'main_path': "daily/dau/aggregations/new_calc/aggKey=CountrySourceKey",
-                                            'size': 70 * KiB,
+                                            'size': 10 * KiB,
                                             'marker': True, 'path_type': "daily"},
 
             'dau_join_agg': {'main_path': "daily/dau/aggregations/aggKey=AppCountrySourceJoinedKey",
@@ -1434,7 +1434,7 @@ class AppsPathResolver(object):
                                                                'marker': True, 'path_type': "daily"},
 
             'get_dau_raw_country_source_agg': {'main_path': "daily/dau/aggregations/raw/aggKey=CountrySourceKey",
-                                               'size': 70 * KB,
+                                               'size': 10 * KB,
                                                'marker': True, 'path_type': "daily"},
 
             'get_static_mobidays_fix_country_source_agg': {'main_path': "static/mobidays-mitigation/dau/aggregations/new_calc/aggKey=CountrySourceKey",
