@@ -1255,6 +1255,10 @@ class AppsPathResolver(object):
                                     'size': 50 * MiB, 'marker': True,
                                     'path_type': "daily"},
 
+            'aggregated_retention_before_mobidays':{'main_path': "retention/aggregated-retention-before-mobidays",
+                                    'size': 50 * MiB, 'marker': True,
+                                    'path_type': "daily"},
+
             'preprocess_retention': {'main_path': "retention/preprocess-retention",
                                      'size': 1.5 * MB, 'marker': True,
                                      'path_type': "daily"},
@@ -2826,6 +2830,10 @@ class AppsPathResolver(object):
     def get_aggregated_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['aggregated_retention'], path_suffix, in_or_out)
+
+    def get_aggregated_retention_before_mobidays(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['aggregated_retention_before_mobidays'], path_suffix, in_or_out)
 
     def get_preprocess_retention(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
