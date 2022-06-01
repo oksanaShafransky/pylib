@@ -1259,6 +1259,10 @@ class AppsPathResolver(object):
                                     'size': 50 * MiB, 'marker': True,
                                     'path_type': "daily"},
 
+            'static_mobidays_retention_fix': {'main_path': "static/mobidays-mitigation/retention/agg",
+                                              'size': 1 * MB, 'marker': True,
+                                              'path_type': "base_path"},
+
             'preprocess_retention': {'main_path': "retention/preprocess-retention",
                                      'size': 1.5 * MB, 'marker': True,
                                      'path_type': "daily"},
@@ -3073,4 +3077,8 @@ class AppsPathResolver(object):
     def get_static_mobidays_fix_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['get_static_mobidays_fix_country_source_agg'], path_suffix, in_or_out)
+
+    def get_static_mobidays_retention_fix(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['static_mobidays_retention_fix'], path_suffix, in_or_out)
 
