@@ -51,7 +51,7 @@ def collect_resources(application_stats):
 
 def aggregate_resources(applications):
     ret = UsedResources()
-    for app in applications:
+    for app in applications.values():
         ret += collect_resources(app)
 
     return ret
