@@ -255,6 +255,9 @@ class AppsPathResolver(object):
             'monitoring-dau-window': {'main_path': "apps-monitoring/dau/window",
                                   'size': 3.75 * MB,
                                   'marker': True, 'path_type': "daily"},
+            'monitoring-open-rate-window': {'main_path': "apps-monitoring/open_rate/window",
+                                      'size': 3.75 * MB,
+                                      'marker': True, 'path_type': "daily"},
             'monitoring-downloads-window': {'main_path': "apps-monitoring/downloads/window",
                                         'size': 60 * KB,
                                         'marker': True, 'path_type': "daily"},
@@ -276,6 +279,9 @@ class AppsPathResolver(object):
             'monitoring-dau-predict': {'main_path': "apps-monitoring/dau/predict",
                                       'size': 5.25 * MB,
                                       'marker': True, 'path_type': "daily"},
+            'monitoring-open-rate-predict': {'main_path': "apps-monitoring/open_rate/predict",
+                                       'size': 5.25 * MB,
+                                       'marker': True, 'path_type': "daily"},
             'monitoring-downloads-predict': {'main_path': "apps-monitoring/downloads/predict",
                                          'size': 100 * KB,
                                          'marker': True, 'path_type': "daily"},
@@ -297,6 +303,9 @@ class AppsPathResolver(object):
             'monitoring-dau-anomal-zscores': {'main_path': "apps-monitoring/dau/anomal/zScores",
                                           'size': 100 * KB,
                                           'marker': True, 'path_type': "daily"},
+            'monitoring-open-rate-anomal-zscores': {'main_path': "apps-monitoring/open_rate/anomal/zScores",
+                                              'size': 100 * KB,
+                                              'marker': True, 'path_type': "daily"},
             'monitoring-downloads-anomal-zscores': {'main_path': "apps-monitoring/downloads/anomal/zScores",
                                                 'size': 35 * KB,
                                                 'marker': True, 'path_type': "daily"},
@@ -2202,6 +2211,9 @@ class AppsPathResolver(object):
     def get_monitoring_dau_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-dau-window'], path_suffix, in_or_out)
+    def get_monitoring_open_rate_window(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-open-rate-window'], path_suffix, in_or_out)
     def get_monitoring_downloads_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-downloads-window'], path_suffix, in_or_out)
@@ -2224,6 +2236,9 @@ class AppsPathResolver(object):
     def get_monitoring_dau_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-dau-predict'], path_suffix, in_or_out)
+    def get_monitoring_open_rate_predict(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-open-rate-predict'], path_suffix, in_or_out)
     def get_monitoring_downloads_predict(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-downloads-predict'], path_suffix, in_or_out)
@@ -2246,6 +2261,9 @@ class AppsPathResolver(object):
     def get_monitoring_dau_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-dau-anomal-zscores'], path_suffix, in_or_out)
+    def get_monitoring_open_rate_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['monitoring-open-rate-anomal-zscores'], path_suffix, in_or_out)
     def get_monitoring_downloads_anomal_zscores(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['monitoring-downloads-anomal-zscores'], path_suffix, in_or_out)
