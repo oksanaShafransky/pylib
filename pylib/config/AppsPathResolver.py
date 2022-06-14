@@ -828,6 +828,15 @@ class AppsPathResolver(object):
                                              'marker': True,
                                              'path_type': "daily"},
 
+            'mdm_2001_report': {'main_path': "stats-ios/orc/rtype=2001", 'size': 10 * MB,
+                                             'marker': True,
+                                             'path_type': "daily"},
+
+            'mdm_snapshot': {'main_path': "%s/mdm/type=%s" % (self.ti.mode, self.ti.mode_type),
+                             'size': 1 * MB,
+                             'marker': True,
+                             'path_type': "monthly"},
+
             'agg_app_country_source_days_back':{'main_path': "daily/retention/aggregations/aggKey=AppCountrySourceDaysbackKey",
                                                 'size': 50 * MiB,
                                                 'marker': True, 'path_type': "daily"},
@@ -1446,7 +1455,7 @@ class AppsPathResolver(object):
             'apps_country_gender_aggregate': {'main_path': "mobile-analytics/snapshot/app-demographics/gender/apps_country_gender",
                                     'size': 180 * MB, 'marker': False, 'path_type': "monthly"},
 
-            #ios_mau statics
+            #ios_mau
             'new_apps_matching_static': {'main_path': "ios-analytics/snapshot/mau_dp/ios_mau_static/new_apps_matching_static",
                                               'size': 180 * MB, 'marker': True, 'path_type': "monthly"},
 
@@ -1456,6 +1465,11 @@ class AppsPathResolver(object):
             'old_coverage_static': {'main_path': "ios-analytics/snapshot/mau_dp/ios_mau_static/old_coverage_static",
                                          'size': 180 * MB, 'marker': True, 'path_type': "monthly"},
 
+            'ios_features_10': {'main_path': "%s/mau_dp/features10" % (self.ti.mode),
+                               'size': 1 * MB, 'marker': True, 'path_type': "monthly"},
+
+            'ios_features_11': {'main_path': "%s/mau_dp/features11" % (self.ti.mode),
+                               'size': 1 * MB, 'marker': True, 'path_type': "monthly"},
 
             'get_downloads_raw_app_country_country_source_agg': {'main_path': "daily/downloads/aggregations/raw/aggKey=AppCountryCountrySourceKey",
                                                                  'size': 4 * GB,
@@ -1821,6 +1835,14 @@ class AppsPathResolver(object):
     def get_grouping_1111_report_parquet(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['grouping_1111_report_parquet'], path_suffix, in_or_out)
+
+    def get_mdm_2001_report(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
+                                             self.apps_paths['mdm_2001_report'], path_suffix, in_or_out)
+
+    def get_mdm_snapshot(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_ios_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['mdm_snapshot'], path_suffix, in_or_out)
 
     def get_agg_app_country_delta_key(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
@@ -3115,7 +3137,13 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_base_dir(in_or_out, path_prefix),
                                              self.apps_paths['old_coverage_static'], path_suffix, in_or_out)
 
+    def get_ios_features_10(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_ios_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_features_10'], path_suffix, in_or_out)
 
+    def get_ios_features_11(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_ios_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ios_features_11'], path_suffix, in_or_out)
 
     def get_downloads_raw_app_country_country_source_agg(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
