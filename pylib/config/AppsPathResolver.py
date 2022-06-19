@@ -1419,6 +1419,11 @@ class AppsPathResolver(object):
             'usage_patterns_clean_for_monitoring': {'main_path': "usage_patterns/{mode}/stability_monitoring/clean_metric",
                                                     'size': 1 * MB, 'marker': True, 'path_type': "daily"},
 
+            'usage_patterns_final_estimation_snapshot': {'main_path': "usage_patterns/snapshot/{mode}/final_estimation",
+                                                                  'size': 1 * MB, 'marker': True, 'path_type': "monthly"},
+
+            'usage_patterns_category_final_estimation_snapshot': {'main_path': "usage_patterns/snapshot/{mode}/category_final_estimation",
+                                                'size': 1 * KB, 'marker': True, 'path_type': "monthly"},
             #demographics
             'raw_stats_mobile': {'main_path': "stats-mobile/raw", 'size': 15 * GiB, 'marker': True, 'path_type': "daily"},
 
@@ -3069,6 +3074,18 @@ class AppsPathResolver(object):
 
     def get_usage_patterns_clean_for_monitoring(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
         apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_clean_for_monitoring'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             apps_paths, path_suffix, in_or_out)
+
+    def get_usage_patterns_final_estimation_snapshot(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_final_estimation_snapshot'])
+        apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             apps_paths, path_suffix, in_or_out)
+
+    def get_usage_patterns_category_final_estimation_snapshot(self, in_or_out, path_prefix=None, path_suffix=None, mode="DOW"):
+        apps_paths = copy.deepcopy(self.apps_paths['usage_patterns_category_final_estimation_snapshot'])
         apps_paths['main_path'] = apps_paths['main_path'].format(mode=mode.lower())
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              apps_paths, path_suffix, in_or_out)
