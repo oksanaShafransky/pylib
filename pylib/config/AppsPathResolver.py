@@ -1256,6 +1256,10 @@ class AppsPathResolver(object):
                                             'size': 12 * MB, 'marker': True,
                                             'path_type': "daily"},
 
+            'ga4_processed_ls': {'main_path': "general/ga4_extractor/processed_ls",
+                                 'size': 12 * MB, 'marker': True,
+                                 'path_type': "daily"},
+
             # # Ratings
 
             'google_play_ratings': {'main_path': 'google-play/ratings',
@@ -2563,6 +2567,10 @@ class AppsPathResolver(object):
     def get_ga4_filling_full_table(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['app_store_ga4_filling_table'], path_suffix, in_or_out)
+
+    def get_ga4_processed_ls(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ga4_processed_ls'], path_suffix, in_or_out)
 
     def get_version_db_dump(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_store_analytics_base(in_or_out, path_prefix),
