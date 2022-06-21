@@ -750,7 +750,7 @@ class AppsPathResolver(object):
             'mfour_apps_sessions': {'main_path': 'raw-s2s/mfour-apps-sessions', 'size': 80 * MiB,
                                     'marker': False, 'path_type': "daily"},
 
-            'embee_app_session': {'main_path': "raw-stats-embee/app_session", 'size': 480 * MiB,
+            'embee_app_session': {'main_path': "raw-stats-embee/app_session", 'size': 440 * MiB,
                                   'marker': True, 'path_type': "daily"},
 
             'embee_device_info': {'main_path': "raw-stats-embee/device_info", 'size': 110 * MiB,
