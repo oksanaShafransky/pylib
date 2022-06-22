@@ -1253,7 +1253,7 @@ class AppsPathResolver(object):
                                            'path_type': "base_path"},
 
             'app_store_ga4_filling_table': {'main_path': "general/ga4_extractor/prophet/full_table",
-                                            'size': 12 * MB, 'marker': True,
+                                            'size': 1 * KB, 'marker': True,
                                             'path_type': "daily"},
 
             'ga4_processed_ls': {'main_path': "general/ga4_extractor/processed_ls",
