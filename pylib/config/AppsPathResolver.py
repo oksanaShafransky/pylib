@@ -762,7 +762,7 @@ class AppsPathResolver(object):
             'embee_naive_estimation': {'main_path': "raw-stats-embee/naive_estimation", 'size': 0 * MiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 3 * GiB,
+            'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 2.9 * GiB,
                                          'marker': True, 'path_type': "daily"},
 
             'stay_focus_installed_apps': {'main_path': 'raw-s2s/stay_focus-installed-apps', 'size': 0.48 * GiB,
