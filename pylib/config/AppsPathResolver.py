@@ -1340,6 +1340,26 @@ class AppsPathResolver(object):
                                     'size': 100 * KB, 'marker': True,
                                     'path_type': "daily"},
 
+            #OPEN RATE
+            'agg_open_rate': {'main_path': "open-rate/agg-open-rate",
+                                   'size': 800 * MiB,
+                                   'marker': True, 'path_type': "daily"},
+
+            'base_open_rate': {'main_path': "open-rate/base-open-rate",
+                              'size': 800 * MiB,
+                              'marker': True, 'path_type': "daily"},
+
+            'hist_prior_open_rate': {'main_path': "open-rate/hist-prior-open-rate",
+                              'size': 800 * MiB,
+                              'marker': True, 'path_type': "daily"},
+
+            'weighted_open_rate': {'main_path': "open-rate/weighted-open-rate",
+                              'size': 800 * MiB,
+                              'marker': True, 'path_type': "daily"},
+
+            'final_ww_open_rate': {'main_path': "open-rate/final-ww-open-rate",
+                              'size': 800 * MiB,
+                              'marker': True, 'path_type': "daily"},
 
             # install_retention
             'aggregated_install_retention_1001':{'main_path': "installretention/aggregated-installretention-1001",
@@ -2257,7 +2277,22 @@ class AppsPathResolver(object):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                             self.apps_paths['matching-rds'], path_suffix, in_or_out)
 
-
+    #open_rate
+    def get_agg_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['agg_open_rate'], path_suffix, in_or_out)
+    def get_base_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['base_open_rate'], path_suffix, in_or_out)
+    def get_hist_prior_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['hist_prior_open_rate'], path_suffix, in_or_out)
+    def get_weighted_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+            return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                                 self.apps_paths['weighted_open_rate'], path_suffix, in_or_out)
+    def get_final_ww_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['final_ww_open_rate'], path_suffix, in_or_out)
     # apps monitoring
     def get_monitoring_dau_window(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
