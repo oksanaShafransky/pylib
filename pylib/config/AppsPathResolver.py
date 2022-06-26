@@ -1342,23 +1342,23 @@ class AppsPathResolver(object):
 
             #OPEN RATE
             'agg_open_rate': {'main_path': "open-rate/agg-open-rate",
-                                   'size': 140 * MiB,
+                                   'size': 1.4 * MiB,
                                    'marker': True, 'path_type': "daily"},
 
             'base_open_rate': {'main_path': "open-rate/base-open-rate",
-                              'size': 100 * MiB,
+                              'size': 1 * MiB,
                               'marker': True, 'path_type': "daily"},
 
             'hist_prior_open_rate': {'main_path': "open-rate/hist-prior-open-rate",
-                              'size': 100 * MiB,
+                              'size': 1 * MiB,
                               'marker': True, 'path_type': "daily"},
 
             'weighted_open_rate': {'main_path': "open-rate/weighted-open-rate",
-                              'size': 100 * MiB,
+                              'size': 1 * MiB,
                               'marker': True, 'path_type': "daily"},
 
             'final_ww_open_rate': {'main_path': "open-rate/final-ww-open-rate",
-                              'size': 140 * MiB,
+                              'size': 1 * MiB,
                               'marker': True, 'path_type': "daily"},
 
             # install_retention
