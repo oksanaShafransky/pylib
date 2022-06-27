@@ -762,7 +762,7 @@ class AppsPathResolver(object):
             'embee_naive_estimation': {'main_path': "raw-stats-embee/naive_estimation", 'size': 0 * MiB,
                                        'marker': True, 'path_type': "daily"},
 
-            'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 3 * GiB,
+            'embee_joined_data_output': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 2.9 * GiB,
                                          'marker': True, 'path_type': "daily"},
 
             'stay_focus_installed_apps': {'main_path': 'raw-s2s/stay_focus-installed-apps', 'size': 0.48 * GiB,
@@ -824,7 +824,7 @@ class AppsPathResolver(object):
                                                       'marker': True,
                                                       'path_type': "daily"},
 
-            'grouping_1111_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 3 * GiB,
+            'grouping_1111_report_parquet': {'main_path': "stats-mobile/parquet/rtype=R1111", 'size': 2.9 * GiB,
                                              'marker': True,
                                              'path_type': "daily"},
 
@@ -1112,7 +1112,7 @@ class AppsPathResolver(object):
                                    'path_type': "daily"},
 
             'ww_downloads_to_scrape': {'main_path': "scraping/ww-downloads-to-scrape",
-                         'size': 5.3 * MB, 'marker': True,
+                         'size': 5.0 * MB, 'marker': True,
                          'path_type': "daily"},
 
             # store-analysis
