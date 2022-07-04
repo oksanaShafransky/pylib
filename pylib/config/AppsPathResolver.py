@@ -1345,9 +1345,13 @@ class AppsPathResolver(object):
                                    'size': 1.4 * MiB,
                                    'marker': True, 'path_type': "daily"},
 
-            'history_prior_agg_open_rate': {'main_path': "open-rate/history_prior_agg-open-rate",
-                              'size': 1.4 * MiB,
+            'history_prior_agg_open_rate': {'main_path': "open-rate/history_prior_agg_open_rate",
+                              'size': 100 * KB,
                               'marker': True, 'path_type': "daily"},
+
+            'ww_prior_agg_open_rate': {'main_path': "open-rate/ww_prior_agg_open_rate",
+                                            'size': 100 * KB,
+                                            'marker': True, 'path_type': "daily"},
 
             'base_open_rate': {'main_path': "open-rate/base-open-rate",
                               'size': 1 * MiB,
@@ -2288,6 +2292,9 @@ class AppsPathResolver(object):
     def get_history_prior_agg_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['history_prior_agg_open_rate'], path_suffix, in_or_out)
+    def get_ww_prior_agg_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
+                                             self.apps_paths['ww_prior_agg_open_rate'], path_suffix, in_or_out)
     def get_base_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['base_open_rate'], path_suffix, in_or_out)
