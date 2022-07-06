@@ -1341,31 +1341,23 @@ class AppsPathResolver(object):
                                     'path_type': "daily"},
 
             #OPEN RATE
-            'agg_open_rate': {'main_path': "open-rate/agg-open-rate",
+            'source_raw_estimation_open_rate': {'main_path': "open-rate/source_raw_estimation_open_rate",
                                    'size': 1.4 * MiB,
                                    'marker': True, 'path_type': "daily"},
 
-            'history_prior_agg_open_rate': {'main_path': "open-rate/history_prior_agg_open_rate",
+            'merge_sources_open_rate': {'main_path': "open-rate/merge_sources_open_rate",
                               'size': 100 * KB,
                               'marker': True, 'path_type': "daily"},
 
-            'ww_prior_agg_open_rate': {'main_path': "open-rate/ww_prior_agg_open_rate",
+            'priors_open_rate': {'main_path': "open-rate/priors_open_rate",
                                             'size': 100 * KB,
                                             'marker': True, 'path_type': "daily"},
 
-            'base_open_rate': {'main_path': "open-rate/base-open-rate",
+            'combined_open_rate': {'main_path': "open-rate/combined_open_rate",
                               'size': 1 * MiB,
                               'marker': True, 'path_type': "daily"},
 
-            'hist_prior_open_rate': {'main_path': "open-rate/hist-prior-open-rate",
-                              'size': 1 * MiB,
-                              'marker': True, 'path_type': "daily"},
-
-            'weighted_open_rate': {'main_path': "open-rate/weighted-open-rate",
-                              'size': 1 * MiB,
-                              'marker': True, 'path_type': "daily"},
-
-            'final_ww_open_rate': {'main_path': "open-rate/final-ww-open-rate",
+            'final_ww_open_rate': {'main_path': "open-rate/final_ww_open_rate",
                               'size': 1 * MiB,
                               'marker': True, 'path_type': "daily"},
 
@@ -2286,24 +2278,18 @@ class AppsPathResolver(object):
                                             self.apps_paths['matching-rds'], path_suffix, in_or_out)
 
     #open_rate
-    def get_agg_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+    def get_source_raw_estimation_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['agg_open_rate'], path_suffix, in_or_out)
-    def get_history_prior_agg_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+                                             self.apps_paths['source_raw_estimation_open_rate'], path_suffix, in_or_out)
+    def get_merge_sources_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['history_prior_agg_open_rate'], path_suffix, in_or_out)
-    def get_ww_prior_agg_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+                                             self.apps_paths['merge_sources_open_rate'], path_suffix, in_or_out)
+    def get_priors_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['ww_prior_agg_open_rate'], path_suffix, in_or_out)
-    def get_base_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['base_open_rate'], path_suffix, in_or_out)
-    def get_hist_prior_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
-        return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                             self.apps_paths['hist_prior_open_rate'], path_suffix, in_or_out)
-    def get_weighted_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
+                                             self.apps_paths['priors_open_rate'], path_suffix, in_or_out)
+    def get_combined_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
             return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
-                                                 self.apps_paths['weighted_open_rate'], path_suffix, in_or_out)
+                                                 self.apps_paths['combined_open_rate'], path_suffix, in_or_out)
     def get_final_ww_open_rate(self, in_or_out, path_prefix=None, path_suffix=None):
         return self.__create_app_path_object(self.__get_android_apps_analytics_base(in_or_out, path_prefix),
                                              self.apps_paths['final_ww_open_rate'], path_suffix, in_or_out)
